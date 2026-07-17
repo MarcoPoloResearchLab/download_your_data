@@ -8,7 +8,181 @@ Format: `- [ ] [B042] (P1) {I007} Title`
 
 ## BugFixes
 
+- [ ] [B001] (P1) {I002,I003} Calibrate definition-request classification before accepting semantic results
+  Goal:
+  Make definition analysis precise enough that accepted results can be used without treating broad semantic similarity as a definition request.
+
+  Requirements:
+  - Treat the current 5,903 accepted results and 20,262 review cases from 26,167 embedded messages as an uncalibrated baseline, not a completed classifier.
+  - Build a deterministic labeled corpus covering explicit definitions, paraphrased definition requests, follow-up references, translations, pronunciation and usage requests, broad explanation requests, and unrelated negatives.
+  - Keep retrieved candidates, accepted results, and review cases as distinct typed outcomes.
+  - Do not promote unverified semantic-only matches into accepted results.
+  - Record model identity, prefix identity, thresholds, and evaluation metrics in every audit artifact.
+  - Commit only synthetic or deliberately anonymized evaluation data; never commit personal conversation content.
+
+  Deliverables:
+  - Reproducible classifier evaluation command and fixture.
+  - Calibrated lexical and semantic thresholds with documented precision and recall.
+  - Report output that clearly distinguishes accepted, rejected, and review results.
+
+  Validation:
+  - Achieve at least 95% precision and 90% recall on the labeled evaluation corpus.
+  - Run the classifier against a private historical sample and record aggregate before-and-after counts without committing source text.
+  - `make test`
+
+- [ ] [B002] (P1) {I002,I003} Fail fast when definition-analysis inference is unavailable
+  Goal:
+  Report missing or incompatible local inference before scanning an archive or starting report generation.
+
+  Requirements:
+  - Preflight semantic prototype embeddings before querying historical messages when semantic analysis is enabled.
+  - Preflight the verifier model before querying historical messages when verification is enabled.
+  - Return typed, actionable errors for an unavailable server, no loaded model, model mismatch, and dimension mismatch.
+  - Include the configured endpoint boundary and the required `lms load` action without exposing conversation content.
+  - Propagate cancellation through readiness checks, archive queries, classification, and report writing.
+  - Do not create partial report files when readiness fails.
+
+  Deliverables:
+  - Shared inference-readiness contract used by definition analysis and archive indexing.
+  - Public CLI coverage for each readiness failure.
+  - Bounded, paged archive scanning after readiness succeeds.
+
+  Validation:
+  - Black-box CLI test proving a missing model fails before history scanning or report creation.
+  - Black-box CLI test proving a ready deterministic inference server completes the same workflow.
+  - `make test`
+
 ## Improvements
+
+- [x] [I001] (P1) Establish the canonical local server and validation foundation
+  Goal:
+  Replace the backendless Pages runtime with the first forward-only local application boundary.
+
+  Requirements:
+  - Serve the current frontend and a structured health endpoint from one Go process.
+  - Bind only to a validated loopback address.
+  - Establish repository-native formatting, lint, test, browser, and CI targets.
+  - Exercise the shipped application through real HTTP and browser entry points.
+
+  Deliverables:
+  - Canonical Go application entry point and embedded frontend assets.
+  - `make fmt`, `make lint`, `make test`, `make test-browser`, and `make ci`.
+  - Current local-only setup documentation.
+
+  Validation:
+  - `make ci`
+  - `git diff --check`
+  - `git status --short`
+
+- [x] [I002] (P1) Incorporate the target-owned conversation archive engine
+  Goal:
+  Move every maintained ChatIndex capability into this repository and end the separate-project boundary.
+
+  Requirements:
+  - Own export inspection, graph import, SQLite storage, embeddings, hybrid retrieval, definition analysis, reports, and their tests in this module.
+  - Preserve the operator CLI as a target-owned entry point while the browser workflows are built.
+  - Rewrite package ownership to the current module without a remote dependency, local path replacement, subprocess adapter, or compatibility bridge.
+  - Carry the deterministic fixtures, fake inference server, smoke workflow, and architecture documentation into the current repository.
+  - Leave the standalone `chatIndex` directory unchanged and abandoned after parity validation passes here.
+
+  Deliverables:
+  - Target-owned conversation archive packages and `cmd/chatindex`.
+  - Repository-native ChatIndex build and smoke targets.
+  - Passing package, CLI, smoke, and full CI validation.
+
+  Validation:
+  - `make test`
+  - `make build-chatindex`
+  - `make smoke-chatindex`
+  - `make ci`
+
+- [ ] [I003] (P1) {I002} Normalize the incorporated engine to the forward-only product contract
+  Goal:
+  Remove copied project identity and persistence compatibility paths before new application APIs depend on them.
+
+  Requirements:
+  - Replace ChatIndex-specific product names, model aliases, errors, configuration keys, build targets, and durable documentation with `download_your_data`-owned terms.
+  - Establish one first-release database schema for this product and delete copied schema-v1-through-v3 migration code and tests.
+  - Reject databases outside the current schema with an actionable archive re-import instruction; do not add compatibility reads, automatic migrations, or aliases.
+  - Use `DOWNLOAD_YOUR_DATA_INFERENCE_BASE_URL` as the only inference URL environment key.
+  - Remove the old key instead of reading both names.
+
+  Deliverables:
+  - One current product-owned schema and inference identity.
+  - Updated source, tests, commands, and architecture documentation with no active ChatIndex contract.
+  - Explicit rejection coverage for non-current databases and configuration.
+
+  Validation:
+  - Repository search confirms active source and docs contain no `CHATINDEX_`, `ChatIndex`, or `chatindex` product contract.
+  - `make ci`
+
+- [ ] [I004] (P1) {I003} Establish a retrieval-quality and completeness gate
+  Goal:
+  Prove that local hybrid search finds relevant conversations and suppresses unrelated semantic matches before the browser depends on it.
+
+  Requirements:
+  - Build a deterministic search evaluation corpus covering exact terms, paraphrases, negatives, date filters, archive filters, multiple excerpts, and conversation aggregation.
+  - Bind every index and query to the same provider, endpoint boundary, model identity, dimensions, document prefix, query prefix, builder version, and corpus policy.
+  - Reject mixed or mismatched vector identities instead of selecting a nearby configuration.
+  - Require every eligible searchable message to be indexed or carry a typed exclusion reason.
+  - Keep thresholds model-specific and versioned; do not reuse a threshold after identity or corpus-policy changes.
+  - Keep private conversation text out of committed evaluation fixtures and logs.
+
+  Deliverables:
+  - Repository-native `make eval-search` gate with deterministic inference.
+  - Coverage audit reporting eligible, indexed, excluded, stale, and failed document counts.
+  - Versioned ranking and cutoff configuration with an explainable evaluation report.
+
+  Validation:
+  - Every positive fixture returns its expected conversation in the top five.
+  - Explicit negative fixtures remain below the accepted semantic cutoff.
+  - Eligible-document coverage is 100% before a generation can become ready.
+  - `make eval-search`
+
+- [ ] [I005] (P1) {I003} Establish the secure local data and inference boundary
+  Goal:
+  Give every HTTP, storage, and inference operation one validated local runtime configuration.
+
+  Requirements:
+  - Validate `DOWNLOAD_YOUR_DATA_DATA_DIR`, `DOWNLOAD_YOUR_DATA_INFERENCE_BASE_URL`, and a closed inference-boundary value at process startup.
+  - Default to loopback inference; require an explicit `authorized-remote` boundary for any non-loopback LM Studio URL and never accept an inference URL from an HTTP request.
+  - Accept only normalized HTTP or HTTPS base URLs without credentials, query strings, or fragments.
+  - Confine all generation, upload, database, vector, cache, and temporary paths beneath the configured data root.
+  - Create private directories and files with owner-only permissions and reject unsafe roots or escaped paths.
+  - Validate loopback `Host` and browser `Origin`, require a per-process CSRF token for mutations, and expose no wildcard CORS policy.
+  - Remove unused raw export metadata from the canonical schema and keep logs limited to opaque IDs, counts, states, durations, and typed errors.
+  - Expose a non-secret capabilities payload containing inference boundary, readiness, model identity, archive limits, and data-root readiness.
+
+  Deliverables:
+  - Smart-constructed runtime configuration shared by server, jobs, search, and operator commands.
+  - Private generation-path abstraction and minimized current schema.
+  - HTTP security middleware and capabilities endpoint.
+
+  Validation:
+  - Black-box startup tests reject invalid URLs, unsafe data roots, non-loopback inference without authorization, invalid hosts, invalid origins, and missing CSRF tokens.
+  - Filesystem tests prove path confinement and owner-only permissions.
+  - `make test`
+
+- [ ] [I006] (P1) {I003,P003} Consolidate operator workflows into the product command
+  Goal:
+  Ship one product-owned executable without retaining a transitional ChatIndex binary or alias.
+
+  Requirements:
+  - Make `download-your-data` own `serve`, `inspect`, `import`, `index`, `search`, and `definitions` entry points.
+  - Delete `cmd/chatindex`, `build/chatindex`, ChatIndex-named Make targets, and old command documentation after command parity passes.
+  - Keep definition analysis and reproducible reports as operator subcommands for the first release.
+  - Share packages and validated runtime configuration with the browser backend; do not invoke one command from another as a subprocess.
+  - Preserve one canonical command spelling only.
+
+  Deliverables:
+  - One application binary with server and operator subcommands.
+  - Updated smoke workflow and operator documentation.
+  - Deleted transitional command surfaces without compatibility aliases.
+
+  Validation:
+  - Black-box command smoke covers inspect, import, index, hybrid search, definitions, and serve.
+  - Repository search finds no shipped `chatindex` executable, command, or build target.
+  - `make ci`
 
 ## Maintenance
 
@@ -33,6 +207,9 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Confirm recurring entries remain open and keep the `R` suffix.
   - Confirm no active, blocked, recurring, or planning work was archived.
 
+  Last run:
+  - 2026-07-15: normalized the integration backlog and added the missing quality, security, packaging, command-consolidation, and retirement work as dependency-linked issues.
+
 - [ ] [M401R] (P2) Polish open issues
   Goal:
   Keep unresolved work executable by making each open issue concrete, ordered, and testable.
@@ -53,6 +230,9 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Sample the open entries after the pass and confirm each has clear next actions and validation expectations.
   - Confirm no recurring runbook was marked complete.
   - Confirm duplicates were merged or explicitly cross-referenced.
+
+  Last run:
+  - 2026-07-15: polished four existing feature issues, added eight focused open follow-ups, and found no external blocker beyond each issue's recorded dependencies.
 
 - [ ] [M402R] (P2) Architecture and policy review
   Goal:
@@ -180,6 +360,214 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Confirm docs describe the current canonical path only.
   - Confirm issue archive and active tracker references remain consistent.
 
+- [ ] [M408] (P1) {F005} Retire the abandoned standalone ChatIndex checkout
+  Goal:
+  Remove the obsolete local project boundary after the first target-owned release proves complete parity.
+
+  Requirements:
+  - Confirm the target release owns every maintained engine, command, fixture, report, and validation capability without a filesystem or module dependency on the standalone checkout.
+  - Search active local documentation and automation for references to the old directory or a nonexistent remote repository and remove them at their owning source.
+  - Identify databases, vectors, exports, and reports under the standalone directory for explicit operator disposition; do not silently delete or copy personal data.
+  - Remove `/Users/tyemirov/Development/chatIndex` only after explicit operator approval for that destructive step.
+  - Do not create `MarcoPoloResearchLab/chatindex` or any replacement compatibility repository.
+
+  Deliverables:
+  - Evidence that the target repository passes independently of the standalone checkout.
+  - Operator-approved disposition of non-source data.
+  - Removed standalone checkout and stale external references.
+
+  Validation:
+  - Run target `make ci` with the standalone path unavailable.
+  - Search confirms the target has no runtime, build, test, or documentation dependency on the old path or repository.
+  - `git status --short`
+
 ## Features
 
+- [ ] [F001] (P1) {I001,I002,I005} Add the OpenAI archive generation lifecycle
+  Goal:
+  Accept an OpenAI data-export ZIP and atomically build one active local conversation-search generation.
+
+  Requirements:
+  - Integrate the repository-owned conversation archive engine directly instead of invoking its CLI.
+  - Define `POST /api/providers/openai/generations`, `PUT /api/providers/openai/generations/{generationID}/archive`, `GET /api/providers/openai`, and `GET /api/providers/openai/generations/{generationID}/events` as the canonical create, upload, snapshot, and progress contract.
+  - Validate request, upload, ZIP, and OpenAI-export boundaries once and return typed payloads and errors.
+  - Use a closed persisted state machine: `receiving`, `validating`, `importing`, `indexing`, `ready`, or `failed`.
+  - Allow one building generation at a time and reject conflicting creation or upload requests.
+  - Enforce centralized limits for compressed bytes, the recognized conversation entry, entry count, compression ratio, inference batch size, and working-disk use.
+  - Reject malformed, encrypted, ambiguous, or duplicate conversation payloads and never extract arbitrary ZIP paths.
+  - Preflight local inference before expensive import or indexing work.
+  - Store SQLite and vector artifacts under a private generation-owned staging directory.
+  - Activate a generation only after import, index-identity, and eligible-document completeness checks pass.
+  - Remove the source ZIP and transient extraction data after the reader closes on success or failure.
+
+  Deliverables:
+  - Typed provider, generation, progress-event, capabilities, and error payloads.
+  - Persisted job repository and bounded background worker.
+  - Atomic active-generation pointer and private staging layout.
+
+  Validation:
+  - Black-box HTTP test with a synthetic OpenAI export and deterministic embedding server.
+  - Failure test proving an incomplete generation never becomes active.
+  - Security tests for oversized, malformed, encrypted, ambiguous, and traversal-shaped archives.
+  - Cancellation and client-disconnect tests proving work and temporary files are bounded.
+
+- [ ] [F002] (P1) {F001} Add the OpenAI upload and indexing experience
+  Goal:
+  Add OpenAI to the provider registry and provide ZIP upload, progress, failure, and replacement states.
+
+  Requirements:
+  - Add OpenAI to every supported locale in the provider registry with current export instructions.
+  - Migrate the browser application to checked ES modules and validated API payloads.
+  - Vendor required styles and scripts and tighten the CSP to self-owned assets; the local application must not require a CDN, font host, or other browser-side network dependency.
+  - Render one authoritative workflow state and emit intent-specific events.
+  - Display backend-owned upload bytes, generation progress, readiness, and actionable LM Studio errors without simulated timers.
+  - Run an inference readiness check before asking the user to upload a large archive.
+  - Explain exactly which message text reaches the configured inference endpoint and that attachments do not.
+  - Support keyboard operation, accessible status announcements, retry, and explicit replacement confirmation.
+  - Clean up object URLs, event streams, and pending requests.
+
+  Validation:
+  - Playwright coverage of upload, progress, failure, and ready states through the real server.
+  - Playwright coverage of keyboard flow, accessible announcements, replacement confirmation, reconnect, and retry.
+  - Browser-network assertion proving the shipped page requests no external asset.
+
+- [ ] [F003] (P1) {F001,F002,I004} Add hybrid semantic conversation search
+  Goal:
+  Search the active OpenAI archive by meaning and exact terms with conversation-level results.
+
+  Requirements:
+  - Define `POST /api/providers/openai/search` as a validated, cancellable query contract against exactly one active ready generation.
+  - Default to hybrid retrieval over the active ready generation.
+  - Support bounded query text, date, archive, result-limit, and excerpt-count filters through typed requests.
+  - Return stable conversation IDs, titles, timestamps, archive state, scores, match reason, and supporting excerpts.
+  - Use deterministic ordering and a stable continuation cursor when the result cap is reached.
+  - Return typed `not_ready`, `inference_unavailable`, `model_mismatch`, `invalid_query`, and `canceled` failures.
+  - Keep advanced ranking details hidden unless requested.
+  - Never write query text or returned excerpts to logs or browser persistence.
+
+  Validation:
+  - Black-box search test with known lexical and semantic results.
+  - Playwright coverage of query, filters, results, empty state, and failure state.
+  - Contract tests for query limits, cancellation, deterministic ordering, pagination, and inference-identity mismatch.
+
+- [ ] [F004] (P1) {F001,F002,F003} Complete replacement, restart, and deletion contracts
+  Goal:
+  Make the local archive lifecycle safe across replacement, interruption, restart, and deletion.
+
+  Requirements:
+  - Keep the active generation searchable while a replacement generation builds.
+  - Persist progress checkpoints and resume an interrupted build without dual reads or duplicate vector rows.
+  - Reconcile receiving, building, failed, and orphaned staging directories at startup.
+  - Commit generation readiness and the active pointer in one transaction, then delete the obsolete generation after successful activation.
+  - Keep one process-owned generation lease so concurrent servers or jobs cannot mutate the same library.
+  - Replay ordered server-sent events after reconnect without duplicating state transitions.
+  - Expose explicit cancellation for a building generation and explicit confirmation for full provider deletion.
+  - Treat a changed model, endpoint boundary, dimensions, prefix, builder version, or corpus policy as a new generation identity that requires reindexing.
+  - Delete every database, WAL/SHM file, vector, cache, source archive, and temporary upload on library deletion.
+  - Never log conversation content or search queries.
+
+  Validation:
+  - Black-box restart, failed replacement, successful replacement, and complete deletion scenarios.
+  - Crash-point tests around checkpoint, readiness, active-pointer commit, and obsolete-generation cleanup.
+  - Concurrency test proving a second server or builder cannot mutate the active library.
+  - Filesystem audit proving canceled, failed, replaced, and deleted generations leave no private payload behind.
+
+- [ ] [F005] (P1) {B001,B002,F004,I006} Package the first canonical local release
+  Goal:
+  Deliver a self-contained Apple Silicon application artifact that owns the server, browser assets, archive engine, and operator workflows.
+
+  Requirements:
+  - Build one `download-your-data` executable for macOS arm64 with embedded browser assets and no dependency on the source checkout.
+  - Keep LM Studio as an explicit local runtime dependency and provide first-run readiness guidance for the required model and alias.
+  - Start on loopback, use the canonical private data root, and open the local application without introducing hosted mode.
+  - Include version, schema, model-identity, data-location, backup, replacement, and deletion guidance.
+  - Keep `make release`, any future publication step, and any future deployment step as separate contracts.
+  - Do not package personal archives, databases, vectors, reports, caches, or local environment files.
+
+  Deliverables:
+  - Reproducible `make release` artifact and checksum.
+  - First-run and troubleshooting documentation for LM Studio, archive upload, search, backup, and deletion.
+  - Release validation that runs from the extracted artifact with a temporary home and deterministic local inference server.
+
+  Validation:
+  - Black-box artifact smoke covers first start, health, capabilities, upload, ready state, hybrid search, definitions, restart, replacement, and deletion.
+  - Browser test proves the packaged application has no external frontend requests.
+  - `make ci`
+  - `make release`
+
 ## Planning
+
+- [x] [P001] (P1) Confirm the first canonical deployment and inference contract
+  Goal:
+  Select one deployment contract before backend implementation begins.
+
+  Deliverables:
+  - The first release is local-only.
+  - One loopback Go server owns the frontend and API.
+  - Personal archives, databases, and vectors remain on the local machine.
+  - LM Studio inference remains configurable without introducing a hosted application mode.
+
+  Validation:
+  - Confirm downstream feature issues depend on the local-only server foundation.
+
+- [x] [P002] (P1) Confirm ownership of the conversation archive engine
+  Goal:
+  Resolve whether ChatIndex remains a separate project or becomes part of this application.
+
+  Deliverables:
+  - All maintained ChatIndex functionality is incorporated into `download_your_data`.
+  - No `MarcoPoloResearchLab/chatindex` repository is created.
+  - The standalone local `chatIndex` directory is abandoned after target-repository parity passes.
+
+  Validation:
+  - Confirm `F001` depends on the target-owned engine rather than an external module or process.
+
+- [x] [P003] (P1) {I002} Confirm first-release coverage for incorporated analysis tools
+  Goal:
+  Define how every incorporated engine capability remains reachable after the standalone project is retired.
+
+  Deliverables:
+  - The browser first release owns OpenAI upload, status, replacement, hybrid search, and deletion workflows.
+  - Definition-request analysis and reproducible report generation remain supported operator commands in the product executable for the first release.
+  - Export inspection, import, indexing, and direct search remain operator diagnostics backed by the same packages and runtime configuration as the server.
+  - Browser duplication of operator-only analysis is not required for the first canonical release.
+  - There is one product executable and no transitional ChatIndex binary after command consolidation.
+
+  Validation:
+  - Confirm `I006` owns command consolidation and `F005` validates both browser and operator surfaces from the packaged artifact.
+
+- [ ] [P004] (P1) Produce the privacy-safe authenticated instruction screenshot set
+  Goal:
+  Establish and execute one operator-assisted capture contract that lets an agent prepare every missing platform screenshot from the current authenticated interfaces without receiving or persisting credentials, changing account state, or publishing personal information.
+
+  Requirements:
+  - Treat the current registry as the required inventory: Facebook, Instagram, LinkedIn, TikTok, X, YouTube, and Google; two screenshot purposes per platform; four site locales (`en`, `es`, `fr`, and `ru`).
+  - Produce 14 canonical screenshots shared by all locales, not 56 duplicated locale-specific files. Keep screenshot identity, path, provenance, and capture metadata in one shared manifest; keep localized alt text and captions in locale-owned content.
+  - Before capture, reconcile every instruction, screenshot purpose, direct route, and help link against the current official provider workflow. The verified starting references are Facebook export help (`https://www.facebook.com/help/212802592074644`), Instagram export help (`https://www.facebook.com/help/181231772500920`), LinkedIn data download help (`https://www.linkedin.com/help/linkedin/answer/a1339364/downloading-your-account-data`), TikTok data request help (`https://support.tiktok.com/en/account-and-privacy/personalized-ads-and-data/requesting-your-data`), X archive help (`https://help.x.com/en/managing-your-account/how-to-download-your-x-archive`), and Google Takeout help (`https://support.google.com/accounts/answer/3024190`). Replace stale instructions and links at their owning source instead of documenting old and new paths together.
+  - Use the user's existing authenticated Chrome session for the supported web flows: Meta Accounts Center for Facebook and Instagram, LinkedIn Settings & Privacy, X account settings, and Google Takeout for both YouTube-only and full-Google exports. Do not clone the default browser profile, export cookies or storage, save Playwright authentication state, or build a reusable credential-bearing automation profile.
+  - Use an operator-connected mobile surface for TikTok because its current official export workflow is app-owned. Prefer iPhone Mirroring on a compatible Mac and iPhone; if no supported authenticated mobile surface is available, record the exact TikTok capture blocker rather than substituting an unofficial web flow, mock, or stale screenshot.
+  - Require the operator to perform every sign-in, password, passcode, MFA, CAPTCHA, account/profile selection, and other identity-verification step. The agent may resume read-only navigation only after the operator states that the authenticated surface is ready.
+  - Limit agent actions to opening the allowlisted settings routes, navigating to the documented panels, normalizing the visual state, and capturing images. Do not start or cancel an export, request an archive, download personal data, connect an external destination, change a setting, accept a new permission, or cross any provider's final submission boundary solely to obtain a screenshot.
+  - Define the 14-shot manifest before opening authenticated pages. Each entry must name the platform, screenshot ID, instructional purpose, expected visible labels, official source, direct route, desktop or mobile surface, operator checkpoint, forbidden final action, output path, viewport, capture date, and review status.
+  - Capture web panels in English at a fixed desktop viewport, 100% zoom, light theme, and CSS-pixel scale. Capture TikTok in a consistent portrait mobile frame. Clip to the smallest panel that still preserves navigational context; hide animations, carets, transient notifications, browser chrome, and unrelated account content.
+  - Remove names, handles, email addresses, phone numbers, avatars, organizations, account identifiers, locations, notifications, private counts, and other user-specific content with opaque capture-time masks or cropping. Do not rely on blur, and do not commit raw authenticated screenshots.
+  - Write raw captures only to a private temporary directory outside the repository. Publish only reviewed, metadata-free local assets beneath `images/instructions/`, then remove the raw temporary captures after the sanitized derivatives are approved.
+  - Confirm that publishing each provider interface screenshot for instructional use is compatible with the provider's current brand, copyright, and terms guidance. Record provenance and any required attribution in the manifest; do not import screenshots from unofficial guides or search results.
+  - Remove all placeholder copy and empty screenshot sources once the complete set is accepted. The product must either have the current complete canonical set or fail validation; do not retain placeholder tiles, partial locale wiring, or fallback assets.
+
+  Deliverables:
+  - A checked-in capture runbook and 14-entry screenshot manifest containing the platform-specific routes, user handoffs, read-only stop boundaries, capture specification, provenance, and recapture date.
+  - Fourteen privacy-reviewed local screenshot assets covering the two declared purposes for all seven platform sections.
+  - One shared screenshot registry referenced by all four localized instruction sets, with localized alt text and captions and no duplicated image contract.
+  - Current provider instructions and official references that match the labels visible in the accepted screenshots.
+  - A repository-native screenshot validator and browser coverage that reject missing files, empty sources, duplicate locale-owned assets, remote image URLs, invalid dimensions, unexpected metadata, and placeholder rendering.
+
+  Validation:
+  - Machine-check that the shared manifest contains exactly 14 unique screenshot IDs and local tracked assets, every locale maps all seven platforms to the same two canonical IDs, and no image source is empty or remote.
+  - Inspect every final image at full resolution and confirm that it contains no credentials, identity-verification material, personal identifiers, private account content, browser chrome, or embedded metadata.
+  - Compare every image and instruction path with the current live provider labels and its recorded official reference on the capture date; reject the set if any path is stale or any shot requires crossing its recorded submission boundary.
+  - Exercise `en`, `es`, `fr`, and `ru` at desktop and mobile application viewports and assert that all screenshots load, preserve aspect ratio, render useful localized alternatives, and do not show placeholder tiles.
+  - `make test-browser`
+  - `make ci`
+  - `git diff --check`
+  - `git status --short`
