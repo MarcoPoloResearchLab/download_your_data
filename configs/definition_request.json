@@ -1,0 +1,102 @@
+{
+  "name": "definition_request",
+  "description": "A request for the meaning, definition, usage, interpretation, or grammatical meaning of a word, phrase, idiom, or technical term.",
+  "positive_examples": [
+    "define incredulous",
+    "what does this word mean",
+    "what does stoppage time mean",
+    "explain the meaning of this phrase",
+    "I don't understand the word preening",
+    "is sauntered another word for walked",
+    "what is meant by berth",
+    "how is the word wily used here",
+    "what is the difference between these two meanings",
+    "what does that expression mean in this sentence"
+  ],
+  "negative_examples": [
+    "what is the weather tomorrow",
+    "explain how Docker works",
+    "why did the stock decline",
+    "what happened during the war",
+    "how can I implement this algorithm",
+    "what is the best school nearby",
+    "summarize this article",
+    "what is on my calendar today"
+  ],
+  "lexical_rules": [
+    {
+      "name": "define",
+      "pattern": "(?i)^\\s*(?:please\\s+)?define\\s+[\"'“”]?(.+?)[\"'“”]?\\s*[?.!]*\\s*$",
+      "score": 1.0,
+      "term_group": 1,
+      "category": ""
+    },
+    {
+      "name": "what_does_mean",
+      "pattern": "(?i)\\bwhat\\s+does\\s+[\"'“”]?(.+?)[\"'“”]?\\s+mean\\b",
+      "score": 1.0,
+      "term_group": 1,
+      "category": ""
+    },
+    {
+      "name": "meaning_of",
+      "pattern": "(?i)\\b(?:the\\s+)?meaning\\s+of\\s+[\"'“”]?(.+?)[\"'“”]?(?:\\?|$)",
+      "score": 0.98,
+      "term_group": 1,
+      "category": ""
+    },
+    {
+      "name": "meant_by",
+      "pattern": "(?i)\\bwhat\\s+is\\s+meant\\s+by\\s+[\"'“”]?(.+?)[\"'“”]?(?:\\?|$)",
+      "score": 0.98,
+      "term_group": 1,
+      "category": ""
+    },
+    {
+      "name": "explain_meaning",
+      "pattern": "(?i)\\bexplain\\s+(?:the\\s+)?meaning\\s+of\\s+[\"'“”]?(.+?)[\"'“”]?(?:\\?|$)",
+      "score": 0.98,
+      "term_group": 1,
+      "category": ""
+    },
+    {
+      "name": "dont_understand_word",
+      "pattern": "(?i)\\bI\\s+(?:do\\s+not|don't)\\s+understand\\s+(?:the\\s+)?(?:word|phrase|term|expression)?\\s*[\"'“”]?(.+?)[\"'“”]?(?:\\.|\\?|$)",
+      "score": 0.9,
+      "term_group": 1,
+      "category": ""
+    },
+    {
+      "name": "used_here",
+      "pattern": "(?i)\\bhow\\s+is\\s+(?:the\\s+)?(?:word|phrase|term)?\\s*[\"'“”]?(.+?)[\"'“”]?\\s+used\\s+(?:here|in\\s+this)\\b",
+      "score": 0.9,
+      "term_group": 1,
+      "category": "usage"
+    },
+    {
+      "name": "another_word",
+      "pattern": "(?i)\\bis\\s+[\"'“”]?(.+?)[\"'“”]?\\s+(?:just\\s+)?another\\s+(?:word|way\\s+to\\s+say)\\b",
+      "score": 0.9,
+      "term_group": 1,
+      "category": "usage"
+    },
+    {
+      "name": "what_is_term",
+      "pattern": "(?i)^\\s*(?:what\\s+is|what's)\\s+(?:the\\s+)?(?:word|phrase|term|expression)\\s+[\"'“”]?(.+?)[\"'“”]?\\s*[?.!]*\\s*$",
+      "score": 0.95,
+      "term_group": 1,
+      "category": ""
+    },
+    {
+      "name": "short_what_is",
+      "pattern": "(?i)^\\s*(?:what\\s+is|what's)\\s+[\"'“”]?([^?]{1,80}?)[\"'“”]?\\s*\\?\\s*$",
+      "score": 0.62,
+      "term_group": 1,
+      "category": ""
+    }
+  ],
+  "semantic_threshold": 0.43,
+  "semantic_margin": 0.01,
+  "review_threshold": 0.35,
+  "lexical_review_score": 0.55
+}
