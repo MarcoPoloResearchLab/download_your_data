@@ -15,6 +15,7 @@ import (
 
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/inference"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/product"
+	netflixlibrary "github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix/library"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/runtimeconfig"
 )
 
@@ -84,10 +85,34 @@ type requestErrorResponse struct {
 }
 
 type requestErrorPayload struct {
-	Code string `json:"code"`
+	Code         string `json:"code"`
+	GenerationID string `json:"generation_id,omitempty"`
+	Row          int    `json:"row,omitempty"`
 }
 
-func newApplicationHandler(config runtimeconfig.Config, logger *slog.Logger) (http.Handler, error) {
+type applicationHandler struct {
+	handler          http.Handler
+	netflixWorkspace *netflixlibrary.Workspace
+}
+
+func (handler *applicationHandler) ServeHTTP(
+	responseWriter http.ResponseWriter,
+	request *http.Request,
+) {
+	handler.handler.ServeHTTP(responseWriter, request)
+}
+
+func (handler *applicationHandler) Close() error {
+	if handler == nil || handler.netflixWorkspace == nil {
+		return nil
+	}
+	return handler.netflixWorkspace.Close()
+}
+
+func newApplicationHandler(
+	config runtimeconfig.Config,
+	logger *slog.Logger,
+) (*applicationHandler, error) {
 	if logger == nil {
 		return nil, errors.New("create application handler: logger is required")
 	}
@@ -98,12 +123,26 @@ func newApplicationHandler(config runtimeconfig.Config, logger *slog.Logger) (ht
 	if staticRootError != nil {
 		return nil, fmt.Errorf("open embedded application assets: %w", staticRootError)
 	}
+	netflixWorkspace, workspaceError := netflixlibrary.Open(
+		config.DataRoot(),
+		config.NetflixLibrary(),
+		config.NetflixLease(),
+		config.NetflixTMDBCache(),
+		config.TMDBConfigured(),
+	)
+	if workspaceError != nil {
+		return nil, fmt.Errorf("open Netflix provider workspace: %w", workspaceError)
+	}
 
 	routes := http.NewServeMux()
 	routes.HandleFunc("GET "+healthPath, writeHealth(logger))
 	routes.HandleFunc("GET "+capabilitiesPath, writeCapabilities(config, logger))
+	registerNetflixRoutes(routes, netflixWorkspace, logger)
 	routes.Handle("/", http.FileServer(http.FS(staticRoot)))
-	return applySecurityHeaders(applyLocalRequestBoundary(config, routes)), nil
+	return &applicationHandler{
+		handler:          applySecurityHeaders(applyLocalRequestBoundary(config, routes)),
+		netflixWorkspace: netflixWorkspace,
+	}, nil
 }
 
 func writeHealth(logger *slog.Logger) http.HandlerFunc {

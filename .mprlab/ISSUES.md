@@ -591,7 +591,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - `make ci`
   - `make release`
 
-- [ ] [F006] (P1) {I001,I005,I007} Add the local Netflix generation lifecycle
+- [x] [F006] (P1) {I001,I005,I007} Add the local Netflix generation lifecycle
   Goal:
   Accept one Netflix viewing-activity CSV and atomically activate a private local generation with raw analytics.
 

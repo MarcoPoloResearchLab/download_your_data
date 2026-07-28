@@ -24,6 +24,7 @@ func TestApplicationHTTPContract(testContext *testing.T) {
 	if handlerError != nil {
 		testContext.Fatalf("create application handler: %v", handlerError)
 	}
+	defer handler.Close()
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
@@ -139,6 +140,7 @@ func TestCapabilitiesExposeOnlyTMDBConfiguredState(testContext *testing.T) {
 	if handlerError != nil {
 		testContext.Fatalf("create application handler: %v", handlerError)
 	}
+	defer handler.Close()
 	request := httptest.NewRequest(
 		http.MethodGet,
 		"http://127.0.0.1:8787"+capabilitiesPath,
@@ -170,6 +172,7 @@ func TestLocalRequestBoundaryRejectsInvalidHostOriginAndCSRF(testContext *testin
 	if handlerError != nil {
 		testContext.Fatalf("create application handler: %v", handlerError)
 	}
+	defer handler.Close()
 
 	testCases := []struct {
 		name         string

@@ -77,6 +77,8 @@ type Config struct {
 	inferenceBoundary InferenceBoundary
 	tmdbReadToken     tmdb.ReadToken
 	tmdbConfigured    bool
+	netflixLibrary    privatepath.File
+	netflixLease      privatepath.File
 	netflixTMDBCache  privatepath.File
 	csrfToken         string
 }
@@ -175,6 +177,24 @@ func Load(
 			fmt.Errorf("resolve Netflix TMDB cache: %w", cacheError),
 		)
 	}
+	netflixLibrary, libraryError := dataRoot.File(
+		filepath.FromSlash(product.NetflixLibraryStateRelativePath),
+	)
+	if libraryError != nil {
+		return Config{}, newConfigurationError(
+			ErrorInvalidProviderPath,
+			fmt.Errorf("resolve Netflix library state: %w", libraryError),
+		)
+	}
+	netflixLease, leaseError := dataRoot.File(
+		filepath.FromSlash(product.NetflixLibraryLeaseRelativePath),
+	)
+	if leaseError != nil {
+		return Config{}, newConfigurationError(
+			ErrorInvalidProviderPath,
+			fmt.Errorf("resolve Netflix library lease: %w", leaseError),
+		)
+	}
 
 	return Config{
 		listenAddress:     listenAddress,
@@ -184,6 +204,8 @@ func Load(
 		inferenceBoundary: inferenceBoundary,
 		tmdbReadToken:     tmdbReadToken,
 		tmdbConfigured:    tmdbConfigured,
+		netflixLibrary:    netflixLibrary,
+		netflixLease:      netflixLease,
 		netflixTMDBCache:  netflixTMDBCache,
 		csrfToken:         hex.EncodeToString(tokenHash[:]),
 	}, nil
@@ -235,6 +257,16 @@ func (config Config) TMDBReadToken() (tmdb.ReadToken, bool) {
 // TMDBConfigured reports only whether the server credential is available.
 func (config Config) TMDBConfigured() bool {
 	return config.tmdbConfigured
+}
+
+// NetflixLibrary returns the sole private provider lifecycle repository.
+func (config Config) NetflixLibrary() privatepath.File {
+	return config.netflixLibrary
+}
+
+// NetflixLease returns the sole private cross-process provider lease.
+func (config Config) NetflixLease() privatepath.File {
+	return config.netflixLease
 }
 
 // NetflixTMDBCache returns the sole private provider cache location.

@@ -76,6 +76,22 @@ func ParseLocalDate(rawDate string) (LocalDate, error) {
 	}, nil
 }
 
+// ParseISODate validates an API-facing YYYY-MM-DD local calendar date.
+func ParseISODate(rawDate string) (LocalDate, error) {
+	parsedDate, parseError := time.Parse(releaseDateLayout, rawDate)
+	if parseError != nil || parsedDate.Format(releaseDateLayout) != rawDate {
+		return LocalDate{}, fmt.Errorf(
+			"%w: expected YYYY-MM-DD",
+			ErrInvalidViewingDate,
+		)
+	}
+	return LocalDate{
+		year:  parsedDate.Year(),
+		month: parsedDate.Month(),
+		day:   parsedDate.Day(),
+	}, nil
+}
+
 // ISO returns the date in YYYY-MM-DD form.
 func (date LocalDate) ISO() string {
 	return date.asTime().Format(releaseDateLayout)

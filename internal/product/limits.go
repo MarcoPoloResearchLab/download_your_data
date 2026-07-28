@@ -13,6 +13,32 @@ const (
 	MaxArchiveWorkingBytes int64 = 4 * 1024 * 1024 * 1024
 	// DefaultInferenceBatchSize is the canonical local embedding batch size.
 	DefaultInferenceBatchSize = 64
+	// MaxNetflixViewingCSVBytes bounds one uncompressed viewing-activity upload.
+	MaxNetflixViewingCSVBytes int64 = 64 * 1024 * 1024
+	// MaxNetflixViewingRows bounds one local generation.
+	MaxNetflixViewingRows = 250_000
+	// MaxNetflixUniqueTitles bounds derived identities in one generation.
+	MaxNetflixUniqueTitles = 100_000
+	// MaxNetflixTitleBytes bounds one raw or derived title.
+	MaxNetflixTitleBytes = 8 * 1024
+	// MaxNetflixFieldBytes bounds every non-title CSV field.
+	MaxNetflixFieldBytes = 16 * 1024
+	// MaxNetflixWorkingBytes bounds one generation's source and built artifacts.
+	MaxNetflixWorkingBytes int64 = 512 * 1024 * 1024
+	// MaxNetflixProgressEvents bounds the persisted event journal per generation.
+	MaxNetflixProgressEvents = 256
+	// MaxNetflixGenerationHistory bounds the persisted provider generation journal.
+	MaxNetflixGenerationHistory = 256
+	// MaxNetflixConcurrentBuilds is the sole provider build concurrency.
+	MaxNetflixConcurrentBuilds = 1
+	// MaxNetflixRecordPageSize bounds one records response.
+	MaxNetflixRecordPageSize = 200
+	// DefaultNetflixRecordPageSize is the canonical first records page size.
+	DefaultNetflixRecordPageSize = 50
+	// MaxNetflixJSONRequestBytes bounds lifecycle mutation payloads.
+	MaxNetflixJSONRequestBytes int64 = 4 * 1024
+	// MinNetflixViewingYear is Netflix's launch year and the earliest accepted viewing date.
+	MinNetflixViewingYear = 1997
 	// MaxTMDBQueryBytes bounds one derived title query.
 	MaxTMDBQueryBytes = 512
 	// MaxTMDBResponseBytes bounds every decoded TMDB response independently.

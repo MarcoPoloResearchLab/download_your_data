@@ -73,6 +73,22 @@ The browser cannot override the configured inference URL. The local HTTP server 
 
 Conversation databases use the sole first-release identity `download_your_data/1` and schema contract `openai-conversation-archive-1`. A brand-new empty database is initialized with that exact minimized schema. Any nonempty database with a different identity, version, contract, or incomplete object set is rejected with an archive-and-reimport instruction; the application does not read, migrate, or repair another persisted shape.
 
+## Netflix viewing activity
+
+The Netflix provider accepts only the current per-profile Viewing activity CSV with the exact `Title,Date` column set in either order. It does not accept the full Netflix personal-information archive. A local import uses these canonical routes:
+
+- `GET /api/providers/netflix` for the provider snapshot and current limits.
+- `POST /api/providers/netflix/generations` with `{"analysis_level":"local"}` to create one receiving generation.
+- `PUT /api/providers/netflix/generations/{generationID}/viewing-activity` with `Content-Type: text/csv` to stage the CSV.
+- `GET /api/providers/netflix/generations/{generationID}/events` for ordered resumable progress.
+- `GET /api/providers/netflix/generations/{generationID}/analytics` and `/records` for ready local results.
+- `DELETE /api/providers/netflix/generations/{generationID}` to cancel and remove a non-active generation.
+- `DELETE /api/providers/netflix` with `{"confirmation":"delete-netflix-provider"}` to remove the complete provider library and TMDB cache.
+
+The server accepts at most one building generation, keeps the existing ready generation active while a replacement builds, and swaps the active pointer only after it revalidates every record, title identity, date, count, analytics result, and artifact hash. Upload bytes are removed after import success or failure; only a complete staged upload needed to resume a nonterminal generation survives an orderly process restart.
+
+Provider state uses the sole current `netflix-generation-library-v1` contract at `<data-root>/providers/netflix/library.json`. Immutable ready records and analytics live below `<data-root>/providers/netflix/generations/{generationID}`. The provider holds an operating-system lease for its entire lifetime, and every directory and file remains owner-only.
+
 ## Optional Netflix metadata
 
 Raw Netflix viewing-activity import and analytics remain local and do not require TMDB. Optional metadata enrichment is a separate, explicitly initiated operation that sends only unique derived title queries to TMDB. It never sends viewing dates, source CSV bytes, profile data, or complete activity rows.

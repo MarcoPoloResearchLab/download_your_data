@@ -51,6 +51,23 @@ Production uses TMDB's documented [API Read Access Token as a Bearer credential]
 
 `make eval-netflix-matcher` is the named release gate. The initial 11-case synthetic corpus records five matched, three review, and three unmatched outcomes, with accepted-match precision `1.000` and expected-accept recall `1.000`. The gate requires precision `1.00` and recall `0.90`; popularity is retained only as source evidence and never participates in scoring.
 
+### Implemented local generation boundary
+
+The target now owns the current local lifecycle through these persisted identities:
+
+| Boundary | Current identity |
+| --- | --- |
+| Provider repository | `netflix-generation-library-v1` |
+| Local records | `netflix-local-records-v1` |
+| Local analytics | `netflix-local-analytics-v1` |
+| Record cursor | `netflix-record-cursor-v1` |
+
+The sole state and lease paths are `providers/netflix/library.json` and `providers/netflix/library.lock` beneath the private data root. Immutable ready artifacts live under `providers/netflix/generations/{generationID}`. The state document and every artifact are validated against the exact current contract on open and read; foreign, permissive, incomplete, or stale persisted shapes are rejected.
+
+One uncompressed CSV is limited to 64 MiB, 250,000 activity rows, 100,000 unique title identities, 8 KiB titles, 16 KiB fields, and 512 MiB of generation working data. The provider permits one building generation, retains at most 256 lifecycle events per generation and 256 generation entries, and returns at most 200 records per page. Dates must resolve between Netflix's 1997 launch year and the server's current UTC date. These are product constants exposed by the provider capability payload, not user settings.
+
+Creation persists `receiving`; a complete staged upload advances through `validating` and `importing`; activation persists `ready` only after record, date, title-identity, count, analytics, and artifact-hash checks agree. A failed or canceled build never changes the active pointer and loses all staged payload. An orderly shutdown may retain only the complete source needed to resume a nonterminal checkpoint, while the operating-system lease remains held until its upload and worker have stopped.
+
 ## Source Capability Disposition
 
 | Standalone capability | Target disposition |

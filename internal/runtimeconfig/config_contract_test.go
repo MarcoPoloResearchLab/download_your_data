@@ -41,6 +41,12 @@ func TestLoadBuildsTheCanonicalLocalRuntime(testContext *testing.T) {
 	if config.NetflixTMDBCache().RelativePath() != filepath.FromSlash(product.NetflixTMDBCacheRelativePath) {
 		testContext.Fatalf("unexpected Netflix cache path %q", config.NetflixTMDBCache().RelativePath())
 	}
+	if config.NetflixLibrary().RelativePath() != filepath.FromSlash(product.NetflixLibraryStateRelativePath) {
+		testContext.Fatalf("unexpected Netflix library path %q", config.NetflixLibrary().RelativePath())
+	}
+	if config.NetflixLease().RelativePath() != filepath.FromSlash(product.NetflixLibraryLeaseRelativePath) {
+		testContext.Fatalf("unexpected Netflix lease path %q", config.NetflixLease().RelativePath())
+	}
 	if config.TMDBConfigured() {
 		testContext.Fatalf("TMDB must be not configured by default")
 	}

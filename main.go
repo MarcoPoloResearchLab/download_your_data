@@ -47,11 +47,19 @@ func run(
 	applicationContext context.Context,
 	config runtimeconfig.Config,
 	logger *slog.Logger,
-) error {
+) (runError error) {
 	handler, handlerError := newApplicationHandler(config, logger)
 	if handlerError != nil {
 		return handlerError
 	}
+	defer func() {
+		if closeError := handler.Close(); closeError != nil {
+			runError = errors.Join(
+				runError,
+				fmt.Errorf("close application workspaces: %w", closeError),
+			)
+		}
+	}()
 
 	listener, listenError := (&net.ListenConfig{}).Listen(
 		applicationContext,
