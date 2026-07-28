@@ -184,6 +184,80 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Repository search finds no shipped `chatindex` executable, command, or build target.
   - `make ci`
 
+- [ ] [I007] (P1) Incorporate the Netflix viewing-history domain
+  Goal:
+  Move the maintained local Netflix CSV and analytics capabilities into this repository without importing the standalone runtime boundary.
+
+  Requirements:
+  - Follow `docs/netflix-provider-plan.md` as the canonical incorporation contract.
+  - Own validated viewing-activity rows, local dates, versioned title identities, deterministic aggregation, and enriched CSV shapes beneath the current module.
+  - Replace the source parser's broad colon truncation, invalid-record fallbacks, and unchecked row indexing with typed edge validation.
+  - Preserve raw titles and dates exactly while keeping derived title identity explicit and versioned.
+  - Carry every maintained dashboard measure into deterministic target-owned aggregation with accurate activity terminology and match-coverage inputs.
+  - Add synthetic fixtures for films, episodic titles, punctuation, localized text, ambiguous titles, invalid headers, short rows, invalid dates, duplicate columns, cancellation, and empty input.
+  - Do not copy the source HTTP server, templates, CDN assets, duplicate CLI implementation, tracked SQLite cache, module namespace, or standalone filesystem path.
+  - Leave `/Users/tyemirov/Development/netflix` unchanged and abandoned after target parity; do not add a Go module, path replacement, subprocess, or sidecar dependency.
+
+  Deliverables:
+  - Target-owned Netflix provider domain, CSV adapter, analytics, export shape, fixtures, and public-contract tests.
+  - Capability disposition documentation tied to source revision `e4079718730533aa15141b567fa378def66b1265`.
+  - No network dependency in this slice.
+
+  Validation:
+  - Black-box package or command tests prove valid import, exact rejection, cancellation, deterministic aggregation, and enriched CSV round-trip.
+  - Repository search finds no active import or runtime reference to `github.com/tyemirov/netflix` or `/Users/tyemirov/Development/netflix`.
+  - `make test`
+  - `make ci`
+
+- [ ] [I008] (P1) {I005,I007} Establish the TMDB enrichment and matching boundary
+  Goal:
+  Enrich Netflix title identities through one privacy-explicit, server-owned TMDB client with measurable match quality.
+
+  Requirements:
+  - Use `DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN` as the sole server-side credential and report only a configured/not-configured capability to the browser.
+  - Use Bearer authentication against the fixed official HTTPS API origin; allow endpoint injection only in tests.
+  - Send only unique derived title queries after explicit user initiation; never send dates, source CSV bytes, profile data, or complete viewing rows.
+  - Return closed `matched`, `review`, and `unmatched` outcomes with matcher identity and evidence.
+  - Build a deterministic labeled corpus covering exact films and series, episodic titles, punctuation, localized titles, remakes, ambiguous popularity, unrelated negatives, and no-result cases.
+  - Never accept an ambiguous or low-confidence result merely because it is popular.
+  - Centralize bounded concurrency, response sizes, rate control, `Retry-After`, retry budget, cancellation, and contextual errors.
+  - Persist cache entries only beneath the private data root with query, locale, client, matcher, and freshness identity; delete the cache with the provider.
+  - Include the current TMDB attribution and approved-logo requirements in the product Credits contract.
+  - Make no real TMDB request in tests or CI.
+
+  Deliverables:
+  - Injected official-boundary TMDB client, matcher, private cache, capability state, and evaluation command.
+  - Deterministic fake-TMDB integration harness covering search, details, rate limits, malformed responses, cancellation, and outages.
+  - Precision, review, and unmatched metrics recorded with every matcher evaluation.
+
+  Validation:
+  - Evaluation thresholds are recorded before accepted matches can become product metadata.
+  - Fake-server tests prove the token is in the authorization header and absent from URLs, payloads, logs, and persisted provider data.
+  - Incomplete remote work returns a typed failure rather than partial accepted metadata.
+  - `make test`
+  - `make ci`
+
+- [ ] [I009] (P1) {I006,I007,I008} Preserve Netflix operator parity in the single product executable
+  Goal:
+  Keep useful Netflix inspection, enrichment, and CSV export operations without shipping `tmdbenrich` or a second server.
+
+  Requirements:
+  - Add provider-scoped `netflix inspect`, `netflix enrich`, and `netflix export` operations to `download-your-data`.
+  - Reuse the same validated provider packages, runtime configuration, match contract, cache, and export adapter as the browser backend.
+  - Keep one canonical command spelling and delete copied Cobra, Viper, Zap, flag, worker, and cache configuration surfaces.
+  - Preserve cancellation, bounded progress, contextual errors, and private-data logging rules.
+  - Do not invoke the browser server, another command, the standalone executable, or the standalone checkout as a subprocess.
+
+  Deliverables:
+  - Product-owned Netflix operator commands and deterministic smoke workflow.
+  - Updated operator documentation within the single-executable contract.
+  - No target-owned `tmdbenrich` binary, alias, package, or build target.
+
+  Validation:
+  - Black-box smoke covers inspect, fake-TMDB enrichment, cache reuse, and enriched CSV export.
+  - Repository search finds no shipped `tmdbenrich` command or standalone Netflix runtime reference.
+  - `make ci`
+
 ## Maintenance
 
 - [ ] [M400R] (P2) Backlog hygiene and archive
@@ -381,6 +455,28 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Search confirms the target has no runtime, build, test, or documentation dependency on the old path or repository.
   - `git status --short`
 
+- [ ] [M409] (P1) {F008,I009} Retire the abandoned standalone Netflix checkout
+  Goal:
+  Remove the obsolete Netflix project boundary after a target-owned release proves browser and operator parity.
+
+  Requirements:
+  - Confirm the target owns viewing-history validation, import, analytics, TMDB enrichment, matching outcomes, cache, dashboard, CSV export, operator commands, fixtures, and validation without the standalone checkout.
+  - Prove the released target artifact runs without a module, subprocess, HTTP, build, test, documentation, or filesystem dependency on the source repository.
+  - Inspect `/Users/tyemirov/Development/netflix` for untracked or private runtime data and record explicit operator disposition without printing or copying personal content.
+  - Do not import or preserve `netflix_cache.sqlite` as a target artifact.
+  - Remove `/Users/tyemirov/Development/netflix` only after explicit operator approval for that destructive action.
+  - Do not retain or create a compatibility repository, package, binary, service, or redirect for the old boundary.
+
+  Deliverables:
+  - Target release and parity evidence tied to the incorporated source revision.
+  - Operator-approved disposition of any non-source data.
+  - Removed standalone checkout and stale owning-source references.
+
+  Validation:
+  - Run target `make ci` and artifact smoke with the standalone path unavailable.
+  - `go list -m all` and repository search find no dependency on `github.com/tyemirov/netflix` or the old checkout.
+  - `git status --short`
+
 ## Features
 
 - [ ] [F001] (P1) {I001,I002,I005} Add the OpenAI archive generation lifecycle
@@ -495,6 +591,96 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - `make ci`
   - `make release`
 
+- [ ] [F006] (P1) {I001,I005,I007} Add the local Netflix generation lifecycle
+  Goal:
+  Accept one Netflix viewing-activity CSV and atomically activate a private local generation with raw analytics.
+
+  Requirements:
+  - Define `GET /api/providers/netflix`, `POST /api/providers/netflix/generations`, `PUT /api/providers/netflix/generations/{generationID}/viewing-activity`, and `GET /api/providers/netflix/generations/{generationID}/events` as the canonical snapshot, create, upload, and progress contract.
+  - Define generation analytics, cursor-paged records, cancellation, and complete provider deletion through the paths recorded in `docs/netflix-provider-plan.md`.
+  - Accept only the current per-profile Viewing activity CSV contract; do not treat a full Netflix personal-information archive as the same input.
+  - Validate request, upload, CSV, header, row, field, date, and generation boundaries once and return typed payloads and errors.
+  - Use the closed `receiving`, `validating`, `importing`, `enriching`, `ready`, and `failed` lifecycle with an explicit `local` or `tmdb` analysis level.
+  - Allow one building generation while keeping one ready generation active; reject conflicting creation and upload requests.
+  - Enforce centralized compressed-independent byte, row, title, field, date, working-disk, progress, and concurrency limits.
+  - Store parsed rows, title identities, analytics inputs, and checkpoints under a private generation staging directory.
+  - Remove source CSV bytes after the validated reader closes on success or failure.
+  - Activate only after row, date, title-identity, count, and analytics completeness checks pass.
+  - Keep logs limited to opaque IDs, counts, states, durations, and typed failures.
+
+  Deliverables:
+  - Typed Netflix provider, generation, capability, progress, analytics, record, and error payloads.
+  - Private persisted job repository, bounded worker, provider lease, and atomic active-generation pointer.
+  - Raw activity analytics covering activity count, unique titles, date range, monthly activity, weekday rhythm, and top raw titles without TMDB.
+
+  Validation:
+  - Black-box HTTP test imports a synthetic Netflix CSV and queries its active raw analytics.
+  - Failure tests prove invalid, oversized, canceled, incomplete, and conflicting generations never become active and leave no source upload behind.
+  - Restart and lease tests prove checkpoints and single-process mutation ownership.
+  - Filesystem tests prove path confinement, owner-only permissions, replacement isolation, and complete deletion.
+  - `make ci`
+
+- [ ] [F007] (P1) {F006,I008} Add the TMDB replacement, matching, and export lifecycle
+  Goal:
+  Build a complete enriched replacement from the active raw Netflix generation without sacrificing local availability or privacy.
+
+  Requirements:
+  - Create TMDB analysis as a new generation derived from an explicit ready source generation.
+  - Require a configured server-side token and explicit user initiation before any unique derived title query leaves the machine.
+  - Keep the active raw generation readable while enrichment builds and activate the replacement atomically only after request and metadata completeness passes.
+  - Persist every title as `matched`, `review`, or `unmatched`; omit metadata for non-accepted outcomes and report exact coverage.
+  - Fail the replacement on exhausted transport, protocol, cache, or metadata errors instead of activating partial remote work.
+  - Resume safe checkpoints after restart without duplicate requests, rows, or cache entries.
+  - Replay ordered progress after browser reconnect and support explicit cancellation without changing the active generation.
+  - Stream the canonical enriched CSV from a declared ready generation with raw values, match status, matcher identity, and accepted metadata.
+  - Keep TMDB cache identity and accepted metadata reproducible; a matcher or cache-contract change requires a new generation.
+  - Remove generation data, cache, WAL/SHM files, exports, and staging state through the declared cancellation, replacement, and provider-deletion contracts.
+
+  Deliverables:
+  - Enriched-generation orchestration, progress, cache provenance, match coverage, analytics, and streaming CSV export.
+  - Typed not-configured, consent-required, rate-limited, unavailable, invalid-response, incomplete, canceled, and stale-source errors.
+  - Required TMDB attribution payload for the browser Credits surface.
+
+  Validation:
+  - Fake-TMDB black-box test covers accepted, review, unmatched, cached, rate-limited, canceled, failed, resumed, and successfully activated generations.
+  - Test proves the active raw generation remains readable through failed and canceled enrichment.
+  - Export round-trip preserves raw rows and exposes deterministic match and metadata fields.
+  - Filesystem and log audits prove no token, title, date, source row, temporary export, or orphaned provider data escapes its contract.
+  - `make ci`
+
+- [ ] [F008] (P1) {F002,F006,F007} Add the Netflix provider workspace
+  Goal:
+  Make Netflix a first-class localized provider with import, progress, analysis, enrichment, export, replacement, and deletion in the shared application shell.
+
+  Requirements:
+  - Add `netflix` to every supported locale in the canonical provider registry with current Viewing activity download instructions and official help.
+  - Distinguish workspace-capable providers from guide-only providers without duplicating backend workflow state in localized content.
+  - Replace the wrapping platform masthead and marketing hero with the compact provider catalog and MPR workspace described in `docs/netflix-provider-plan.md`.
+  - Render one backend-owned Netflix state across empty, validating, importing, ready-local, not-configured, enriching, ready-enriched, review, failure, canceled, and replacement states.
+  - Provide separate Overview, Catalog, and Match quality views with shared date and match-status filters.
+  - Preserve all maintained source analytics: activity and unique-title KPIs, media type, genres, genres by viewing year, monthly activity, original language, origin country, release data, ratings, runtimes, seasons, episodes, weekday-by-genre activity, and top titles.
+  - Label rows as activities or plays rather than completed views and show exact match coverage.
+  - Keep import, TMDB enrichment, retry, cancel, replace, CSV export, and full delete as independent intent-specific controls.
+  - Explain the local-only raw path and the exact TMDB title-query boundary before enrichment.
+  - Display approved TMDB attribution and the current non-endorsement notice in Credits.
+  - Use checked ES modules and self-owned styles, scripts, fonts, icons, and chart assets with no browser-side third-party request.
+  - Provide keyboard operation, focus visibility, accessible progress announcements, chart summaries and tables, responsive rail collapse, and reduced-motion behavior.
+  - Clean up event streams, pending requests, object URLs, chart instances, and subscriptions.
+
+  Deliverables:
+  - Localized Netflix catalog entry, empty/import state, provider workspace, dashboard views, match-quality view, state rail, and Credits attribution.
+  - Compact dark-first MPR tokens and components adapted to the shared provider shell.
+  - Browser fixtures and tests for the complete raw and enriched workflows.
+
+  Validation:
+  - Playwright covers every declared state and user action through the real local server and deterministic fake TMDB.
+  - Accessibility coverage asserts keyboard flow, names, focus, live announcements, status semantics, chart alternatives, contrast, and reduced motion.
+  - Desktop and mobile coverage proves the main/rail composition, dense filters, tables, charts, and destructive confirmations remain usable.
+  - Browser network assertion proves no external frontend asset request and no TMDB call before explicit enrichment.
+  - All four locales resolve the same `netflix` provider identity and backend state without missing copy or placeholder assets.
+  - `make test-browser`
+  - `make ci`
+
 ## Planning
 
 - [x] [P001] (P1) Confirm the first canonical deployment and inference contract
@@ -571,3 +757,22 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - `make ci`
   - `git diff --check`
   - `git status --short`
+
+- [x] [P005] (P1) Confirm the Netflix provider incorporation contract
+  Goal:
+  Select one ownership, privacy, lifecycle, UI, and retirement contract before Netflix implementation begins.
+
+  Deliverables:
+  - `download_your_data` is the sole maintained owner; no module, path, subprocess, HTTP sidecar, copied database, CLI alias, or compatibility boundary survives.
+  - The first accepted input is the per-profile Netflix Viewing activity CSV, not the separate full-account personal-information archive.
+  - Raw import and raw analytics remain local and require no TMDB account.
+  - TMDB enrichment is a separate explicit operation using a server-only read token and sends only unique derived title queries.
+  - A raw generation remains active while an enriched replacement builds and activates atomically.
+  - The shared compact provider catalog and Netflix MPR workspace own browser import, status, analytics, enrichment, export, replacement, and deletion.
+  - Useful CLI capability moves under the single product executable rather than preserving `tmdbenrich`.
+  - The standalone checkout remains unchanged until released target parity passes and destructive removal receives explicit operator approval.
+  - `docs/netflix-provider-plan.md` records the complete accepted contract and delivery sequence.
+
+  Validation:
+  - Confirm `I007`, `I008`, `I009`, `F006`, `F007`, `F008`, and `M409` cover incorporation through retirement without a legacy bridge.
+  - Confirm downstream API, UI, privacy, validation, and release requirements cite the same canonical plan.
