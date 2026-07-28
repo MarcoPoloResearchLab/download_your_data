@@ -1,6 +1,6 @@
 # Conversation Archive Engine Architecture
 
-This engine is owned by `download_your_data`. It has no external ChatIndex module, service, repository, or subprocess boundary. The target-owned operator CLI and the local web backend consume the same packages and persisted contracts.
+This engine is owned by `download_your_data`. It has no external module, service, repository, subprocess, or filesystem boundary. The product-owned operator command and the local web backend consume the same packages and persisted contracts.
 
 ## Data flow
 
@@ -81,14 +81,20 @@ Conversation-search documents use a separate deterministic builder. Every visibl
 
 Both inference operations use OpenAI-compatible HTTP shapes but default to the loopback server at `http://127.0.0.1:1234/v1`:
 
-- embeddings use `/v1/embeddings`, provider label `lmstudio`, model alias `chatindex-nomic`, and 768 dimensions
-- optional verification uses `/v1/chat/completions`, model alias `chatindex-verifier`, and strict JSON Schema output
+- embeddings use `/v1/embeddings`, provider label `lmstudio`, model alias `download-your-data-embedding`, and 768 dimensions
+- optional verification uses `/v1/chat/completions`, model alias `download-your-data-verifier`, and strict JSON Schema output
 
 The aliases are resolved by the local inference server. API keys are optional and are read only from an explicitly named environment variable. A non-loopback endpoint must be supplied explicitly and is reported as a remote inference boundary before text is sent.
 
-`CHATINDEX_INFERENCE_BASE_URL` changes the default LM Studio server for local inference. Command flags take precedence: `index build --base-url`, `search --base-url`, `embed --base-url`, `definitions --base-url` for semantic prototype generation, and `definitions --verify-base-url` for verification. Non-loopback endpoints require the additional `--allow-remote` authorization gate.
+`DOWNLOAD_YOUR_DATA_INFERENCE_BASE_URL` changes the default LM Studio server for local inference. Command flags take precedence: `index build --base-url`, `search --base-url`, `embed --base-url`, `definitions --base-url` for semantic prototype generation, and `definitions --verify-base-url` for verification. Non-loopback endpoints require the additional `--allow-remote` authorization gate.
 
 Conversation indexing uses `search_document: ` and query embedding uses `search_query: `. A synthetic, non-user readiness request validates the loaded model and dimensions before a search index row is created. Query vectors are cached by model, effective endpoint, query prefix, and normalized query.
+
+## Persistence boundary
+
+The conversation database has one first-release schema identity: owner `download_your_data`, version `1`. Opening an empty database creates that complete schema in one transaction. Opening a nonempty database validates the owner, version, and every required table and index before any archive operation begins.
+
+A database with another identity, version, or incomplete current shape is rejected with an instruction to archive it and re-import the original OpenAI export into a new database. There are no automatic migrations, compatibility reads, or schema-repair writes.
 
 ## Vector consistency
 
@@ -112,7 +118,7 @@ Vectors are appended and flushed before their rows are committed to SQLite. At s
 
 Normal embedding runs fill missing rows. `--refresh-stale` also rebuilds the contextual search text, compares its hash with the stored row, and appends a replacement vector only when the prepared input changed.
 
-Conversation retrieval uses separate schema-v4 `search_indexes`, `search_documents`, `search_documents_fts`, and `query_embedding_cache` tables. Its index identity contains both asymmetric prefixes, provider, model, dimensions, endpoint, builder version, and corpus policy. This prevents classification vectors from being selected for retrieval.
+Conversation retrieval uses the current schema's separate `search_indexes`, `search_documents`, `search_documents_fts`, and `query_embedding_cache` tables. Its index identity contains both asymmetric prefixes, provider, model, dimensions, endpoint, builder version, and corpus policy. This prevents classification vectors from being selected for retrieval.
 
 Search document hashes cover prepared text and filter-relevant metadata. Index rebuilds append replacements only for changed documents, delete documents that are no longer eligible, and become ready only after stored and desired document counts reconcile.
 

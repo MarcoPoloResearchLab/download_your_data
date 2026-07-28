@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	_ "github.com/MarcoPoloResearchLab/download_your_data/internal/sqlite3"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/sqlite3"
 )
 
 type Store struct {
@@ -24,16 +24,16 @@ func Open(databasePath string) (*Store, error) {
 		return nil, fmt.Errorf("create database directory: %w", directoryError)
 	}
 
-	database, openError := sql.Open("chatindex-sqlite3", absolutePath)
+	database, openError := sql.Open(sqlite3.DriverName, absolutePath)
 	if openError != nil {
 		return nil, fmt.Errorf("open SQLite database: %w", openError)
 	}
 	database.SetMaxOpenConns(1)
 
 	store := &Store{database: database, databasePath: absolutePath}
-	if migrationError := store.migrate(context.Background()); migrationError != nil {
+	if schemaError := store.initializeOrValidateSchema(context.Background()); schemaError != nil {
 		database.Close()
-		return nil, migrationError
+		return nil, schemaError
 	}
 	return store, nil
 }

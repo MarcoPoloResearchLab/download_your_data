@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/domain"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/product"
 )
 
 func (store *Store) ResolveSearchVectorPath(config domain.SearchIndexConfig) string {
@@ -207,7 +208,10 @@ func (store *Store) LatestReadySearchIndex(contextValue context.Context) (domain
 		contextValue,
 		`WHERE status = 'ready' ORDER BY COALESCE(completed_at_ms, created_at_ms) DESC, search_index_id DESC LIMIT 1`,
 		nil,
-		"no ready conversation search index exists; run chatindex index build first",
+		fmt.Sprintf(
+			"no ready conversation search index exists; run %s index build first",
+			product.ArchiveCommandName,
+		),
 	)
 }
 

@@ -10,7 +10,7 @@ import (
 )
 
 func TestImporterPreservesArchivedConversationsAndBranches(testContext *testing.T) {
-	databasePath := filepath.Join(testContext.TempDir(), "chatindex.db")
+	databasePath := filepath.Join(testContext.TempDir(), "archive.db")
 	openedStore, openError := store.Open(databasePath)
 	if openError != nil {
 		testContext.Fatalf("open store: %v", openError)
@@ -43,7 +43,7 @@ func TestImporterPreservesArchivedConversationsAndBranches(testContext *testing.
 }
 
 func TestImporterPreservesRepeatedSourceMessageIDsAsDistinctOccurrences(testContext *testing.T) {
-	databasePath := filepath.Join(testContext.TempDir(), "chatindex.db")
+	databasePath := filepath.Join(testContext.TempDir(), "archive.db")
 	openedStore, openError := store.Open(databasePath)
 	if openError != nil {
 		testContext.Fatalf("open store: %v", openError)
@@ -161,7 +161,7 @@ func TestImporterPreservesRepeatedSourceMessageIDsAsDistinctOccurrences(testCont
 }
 
 func TestEmbeddingContextExcludesAssistantThoughtRecords(testContext *testing.T) {
-	databasePath := filepath.Join(testContext.TempDir(), "chatindex.db")
+	databasePath := filepath.Join(testContext.TempDir(), "archive.db")
 	openedStore, openError := store.Open(databasePath)
 	if openError != nil {
 		testContext.Fatalf("open store: %v", openError)

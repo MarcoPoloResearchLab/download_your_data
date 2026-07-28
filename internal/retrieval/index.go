@@ -89,7 +89,10 @@ func (service *IndexService) Run(contextValue context.Context, options IndexOpti
 		service.ExcludedMessages = 0
 	}
 	runStartedAt := time.Now()
-	preflightVectors, preflightError := service.Embedder.Embed(contextValue, []string{"chatindex retrieval readiness check"})
+	preflightVectors, preflightError := service.Embedder.Embed(
+		contextValue,
+		[]string{"download_your_data retrieval readiness check"},
+	)
 	if preflightError != nil {
 		return domain.SearchIndexConfig{}, 0, fmt.Errorf("search embedding model preflight failed: %w", preflightError)
 	}

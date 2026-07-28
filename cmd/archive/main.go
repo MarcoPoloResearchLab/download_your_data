@@ -15,6 +15,7 @@ import (
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/inference"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/ingest"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/intent"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/product"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/report"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/retrieval"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/store"
@@ -68,7 +69,10 @@ func runInspect(arguments []string) error {
 		return parseError
 	}
 	if flagSet.NArg() != 1 {
-		return fmt.Errorf("usage: chatindex inspect <openai-export.zip|conversations.json|directory>")
+		return fmt.Errorf(
+			"usage: %s inspect <openai-export.zip|conversations.json|directory>",
+			product.ArchiveCommandName,
+		)
 	}
 	collection, discoverError := exportformat.DiscoverSources(flagSet.Arg(0))
 	if discoverError != nil {
@@ -106,13 +110,17 @@ func runInspect(arguments []string) error {
 
 func runImport(arguments []string) error {
 	flagSet := flag.NewFlagSet("import", flag.ContinueOnError)
-	databasePath := flagSet.String("db", "chatindex.db", "SQLite database path")
+	databasePath := flagSet.String("db", product.DefaultArchiveDatabasePath, "SQLite database path")
 	forceImport := flagSet.Bool("force", false, "import even when the same export hash was already completed")
 	if parseError := flagSet.Parse(arguments); parseError != nil {
 		return parseError
 	}
 	if flagSet.NArg() != 1 {
-		return fmt.Errorf("usage: chatindex import [--db chatindex.db] <openai-export.zip>")
+		return fmt.Errorf(
+			"usage: %s import [--db %s] <openai-export.zip>",
+			product.ArchiveCommandName,
+			product.DefaultArchiveDatabasePath,
+		)
 	}
 
 	openedStore, openError := store.Open(*databasePath)
@@ -150,7 +158,7 @@ func runImport(arguments []string) error {
 
 func runStatus(arguments []string) error {
 	flagSet := flag.NewFlagSet("status", flag.ContinueOnError)
-	databasePath := flagSet.String("db", "chatindex.db", "SQLite database path")
+	databasePath := flagSet.String("db", product.DefaultArchiveDatabasePath, "SQLite database path")
 	if parseError := flagSet.Parse(arguments); parseError != nil {
 		return parseError
 	}
@@ -223,7 +231,7 @@ func runStatus(arguments []string) error {
 func runEmbed(arguments []string) error {
 	flagSet := flag.NewFlagSet("embed", flag.ContinueOnError)
 	configuredBaseURL := inference.ConfiguredBaseURL(os.Getenv(inference.BaseURLEnvironment))
-	databasePath := flagSet.String("db", "chatindex.db", "SQLite database path")
+	databasePath := flagSet.String("db", product.DefaultArchiveDatabasePath, "SQLite database path")
 	provider := flagSet.String("provider", inference.DefaultEmbeddingProvider, "embedding provider label")
 	model := flagSet.String("model", inference.DefaultEmbeddingModel, "embedding model or local server alias")
 	dimensions := flagSet.Int("dimensions", inference.DefaultEmbeddingDimensions, "embedding dimensions")
@@ -291,11 +299,11 @@ func runEmbed(arguments []string) error {
 
 func runIndex(arguments []string) error {
 	if len(arguments) == 0 || arguments[0] != "build" {
-		return fmt.Errorf("usage: chatindex index build [options]")
+		return fmt.Errorf("usage: %s index build [options]", product.ArchiveCommandName)
 	}
 	flagSet := flag.NewFlagSet("index build", flag.ContinueOnError)
 	configuredBaseURL := inference.ConfiguredBaseURL(os.Getenv(inference.BaseURLEnvironment))
-	databasePath := flagSet.String("db", "chatindex.db", "SQLite database path")
+	databasePath := flagSet.String("db", product.DefaultArchiveDatabasePath, "SQLite database path")
 	name := flagSet.String("name", retrieval.DefaultIndexName, "conversation search index name")
 	provider := flagSet.String("provider", inference.DefaultEmbeddingProvider, "embedding provider label")
 	model := flagSet.String("model", inference.DefaultEmbeddingModel, "embedding model or local server alias")
@@ -390,7 +398,7 @@ func runIndex(arguments []string) error {
 func runSearch(arguments []string) error {
 	flagSet := flag.NewFlagSet("search", flag.ContinueOnError)
 	configuredBaseURLOverride := strings.TrimSpace(os.Getenv(inference.BaseURLEnvironment))
-	databasePath := flagSet.String("db", "chatindex.db", "SQLite database path")
+	databasePath := flagSet.String("db", product.DefaultArchiveDatabasePath, "SQLite database path")
 	query := flagSet.String("query", "", "natural-language conversation search query")
 	mode := flagSet.String("mode", retrieval.SearchModeHybrid, "hybrid, semantic, or lexical")
 	limit := flagSet.Int("limit", 50, "maximum conversations; zero returns every qualifying conversation")
@@ -586,7 +594,7 @@ func runDefinitions(arguments []string) error {
 	flagSet := flag.NewFlagSet("definitions", flag.ContinueOnError)
 	configuredBaseURL := inference.ConfiguredBaseURL(os.Getenv(inference.BaseURLEnvironment))
 	configuredBaseURLOverride := strings.TrimSpace(os.Getenv(inference.BaseURLEnvironment))
-	databasePath := flagSet.String("db", "chatindex.db", "SQLite database path")
+	databasePath := flagSet.String("db", product.DefaultArchiveDatabasePath, "SQLite database path")
 	months := flagSet.Int("months", 3, "lookback in calendar months when --since is omitted")
 	sinceValue := flagSet.String("since", "", "start date or RFC3339 timestamp")
 	untilValue := flagSet.String("until", "", "inclusive end date or exclusive RFC3339 timestamp")
@@ -862,33 +870,39 @@ func validateInferenceBoundary(operation string, baseURL string, allowRemote boo
 }
 
 func printUsage() {
-	fmt.Printf(`chatindex %s
+	fmt.Printf(`%[1]s %[2]s
 
 Local semantic indexing for ChatGPT data exports.
 
 Usage:
-  chatindex inspect <openai-export.zip>
-  chatindex import [--db chatindex.db] <openai-export.zip>
-  chatindex status [--db chatindex.db]
-  chatindex embed [options]
-  chatindex index build [options]
-  chatindex search --query <topic> [options]
-  chatindex definitions [options]
-  chatindex version
+  %[1]s inspect <openai-export.zip>
+  %[1]s import [--db %[3]s] <openai-export.zip>
+  %[1]s status [--db %[3]s]
+  %[1]s embed [options]
+  %[1]s index build [options]
+  %[1]s search --query <topic> [options]
+  %[1]s definitions [options]
+  %[1]s version
 
 Typical conversation-search workflow:
-  chatindex inspect openai-export.zip
-  chatindex import --db chatindex.db openai-export.zip
-  lms load <embedding-model> --identifier chatindex-nomic
+  %[1]s inspect openai-export.zip
+  %[1]s import --db %[3]s openai-export.zip
+  lms load <embedding-model> --identifier %[4]s
   lms server start
-  chatindex index build --db chatindex.db
-  chatindex search --db chatindex.db --query anime
+  %[1]s index build --db %[3]s
+  %[1]s search --db %[3]s --query anime
 
 Optional definition-request workflow:
-  chatindex embed --db chatindex.db
-  lms load <instruction-model> --identifier chatindex-verifier
-  chatindex definitions --db chatindex.db --months 3 --verify --output definitions.csv
+  %[1]s embed --db %[3]s
+  lms load <instruction-model> --identifier %[5]s
+  %[1]s definitions --db %[3]s --months 3 --verify --output definitions.csv
 
 Run a command with -h for its flags.
-`, version)
+`,
+		product.ArchiveCommandName,
+		version,
+		product.DefaultArchiveDatabasePath,
+		inference.DefaultEmbeddingModel,
+		inference.DefaultVerifierModel,
+	)
 }

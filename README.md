@@ -2,7 +2,7 @@
 
 `download_your_data` is a local-first application for obtaining and working with personal data exports. The canonical application is served by a Go process bound to the local machine; personal data is not uploaded to a hosted service.
 
-The repository owns its complete conversation archive engine: OpenAI export inspection, branch-preserving import, SQLite storage, local embeddings, hybrid semantic and lexical retrieval, definition-request analysis, and reproducible reports. There is no external ChatIndex service or module dependency.
+The repository owns its complete conversation archive engine: OpenAI export inspection, branch-preserving import, SQLite storage, local embeddings, hybrid semantic and lexical retrieval, definition-request analysis, and reproducible reports. There is no external archive-engine service, module, subprocess, or filesystem dependency.
 
 ## Requirements
 
@@ -35,20 +35,22 @@ The full gate checks formatting, Go static analysis, public HTTP behavior, and t
 
 ## Conversation archive operator CLI
 
-The target-owned CLI remains available while the browser archive workflows are built:
+The product-owned archive command remains available while its operator subcommands are consolidated into the main executable:
 
 ```bash
-make build-chatindex
-./build/chatindex inspect ~/Downloads/openai-export.zip
-./build/chatindex import --db ~/.download-your-data/archive.db ~/Downloads/openai-export.zip
-./build/chatindex index build --db ~/.download-your-data/archive.db
-./build/chatindex search --db ~/.download-your-data/archive.db --query "anime"
+make build-archive
+./build/download-your-data-archive inspect ~/Downloads/openai-export.zip
+./build/download-your-data-archive import --db ~/.download-your-data/archive.db ~/Downloads/openai-export.zip
+./build/download-your-data-archive index build --db ~/.download-your-data/archive.db
+./build/download-your-data-archive search --db ~/.download-your-data/archive.db --query "anime"
 ```
 
 Run its complete deterministic workflow with:
 
 ```bash
-make smoke-chatindex
+make smoke-archive
 ```
 
-The local inference endpoint defaults to LM Studio at `http://127.0.0.1:1234/v1`. Override it with `CHATINDEX_INFERENCE_BASE_URL`; non-loopback inference still requires explicit authorization at the operation boundary.
+The local inference endpoint defaults to LM Studio at `http://127.0.0.1:1234/v1`. Override it with `DOWNLOAD_YOUR_DATA_INFERENCE_BASE_URL`; non-loopback inference still requires explicit authorization at the operation boundary.
+
+Conversation databases use the sole first-release identity `download_your_data/1`. A brand-new empty database is initialized with that schema. Any nonempty database with a different identity, version, or incomplete object set is rejected with an archive-and-reimport instruction; the application does not read, migrate, or repair another persisted shape.

@@ -23,7 +23,7 @@ func (embedder *recordingEmbedder) Embed(_ context.Context, inputs []string) ([]
 }
 
 func TestServiceMarksCompleteConfigurationReadyAndRefreshesOnlyStaleText(testContext *testing.T) {
-	databasePath := filepath.Join(testContext.TempDir(), "chatindex.db")
+	databasePath := filepath.Join(testContext.TempDir(), "archive.db")
 	openedStore, openError := store.Open(databasePath)
 	if openError != nil {
 		testContext.Fatalf("open store: %v", openError)
@@ -40,7 +40,7 @@ func TestServiceMarksCompleteConfigurationReadyAndRefreshesOnlyStaleText(testCon
 	service := Service{Store: openedStore, Embedder: recorder}
 	options := ServiceOptions{
 		Provider:    "lmstudio",
-		Model:       "chatindex-nomic",
+		Model:       "download-your-data-embedding",
 		Dimensions:  3,
 		BaseURL:     "http://127.0.0.1:1234/v1",
 		InputPrefix: "classification: ",
@@ -91,7 +91,7 @@ func TestServiceMarksCompleteConfigurationReadyAndRefreshesOnlyStaleText(testCon
 }
 
 func TestServiceKeepsLimitedRunBuildingUntilResumeCompletes(testContext *testing.T) {
-	databasePath := filepath.Join(testContext.TempDir(), "chatindex.db")
+	databasePath := filepath.Join(testContext.TempDir(), "archive.db")
 	openedStore, openError := store.Open(databasePath)
 	if openError != nil {
 		testContext.Fatalf("open store: %v", openError)
@@ -108,7 +108,7 @@ func TestServiceKeepsLimitedRunBuildingUntilResumeCompletes(testContext *testing
 	service := Service{Store: openedStore, Embedder: recorder}
 	options := ServiceOptions{
 		Provider:        "lmstudio",
-		Model:           "chatindex-nomic",
+		Model:           "download-your-data-embedding",
 		Dimensions:      3,
 		BaseURL:         "http://127.0.0.1:1234/v1",
 		InputPrefix:     "classification: ",

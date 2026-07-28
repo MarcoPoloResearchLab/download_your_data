@@ -4,14 +4,14 @@ CGO_ENABLED ?= 1
 
 export CGO_ENABLED
 
-.PHONY: build build-chatindex ci fmt fmt-check lint run smoke-chatindex test test-browser
+.PHONY: build build-archive ci fmt fmt-check lint run smoke-archive test test-browser
 
 build:
 	$(GO) build -o build/download-your-data .
 
-build-chatindex:
+build-archive:
 	mkdir -p build
-	$(GO) build -trimpath -o build/chatindex ./cmd/chatindex
+	$(GO) build -trimpath -o build/download-your-data-archive ./cmd/archive
 
 run:
 	$(GO) run .
@@ -34,7 +34,7 @@ test:
 test-browser:
 	PLAYWRIGHT_CLI_VERSION=$(PLAYWRIGHT_CLI_VERSION) ./scripts/browser-smoke.sh
 
-smoke-chatindex: build-chatindex
-	./scripts/chatindex-smoke.sh ./build/chatindex
+smoke-archive: build-archive
+	./scripts/archive-smoke.sh ./build/download-your-data-archive
 
-ci: fmt-check lint test test-browser smoke-chatindex
+ci: fmt-check lint test test-browser smoke-archive

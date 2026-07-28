@@ -59,7 +59,7 @@ func TestHTTPVerifierUsesStructuredLocalRequestWithoutAPIKey(testContext *testin
 		if decodeError := json.NewDecoder(request.Body).Decode(&payload); decodeError != nil {
 			testContext.Errorf("decode request: %v", decodeError)
 		}
-		if payload["model"] != "chatindex-verifier" {
+		if payload["model"] != "download-your-data-verifier" {
 			testContext.Errorf("unexpected verifier model %v", payload["model"])
 		}
 		responseFormat, exists := payload["response_format"].(map[string]any)
@@ -76,7 +76,7 @@ func TestHTTPVerifierUsesStructuredLocalRequestWithoutAPIKey(testContext *testin
 
 	verifier := HTTPVerifier{
 		BaseURL: server.URL + "/v1",
-		Model:   "chatindex-verifier",
+		Model:   "download-your-data-verifier",
 	}
 	results, verifyError := verifier.Verify(context.Background(), []VerificationInput{{
 		MessageID:   "message-1",
@@ -91,7 +91,7 @@ func TestHTTPVerifierUsesStructuredLocalRequestWithoutAPIKey(testContext *testin
 }
 
 func TestCachedVerifierResumesFromStoredResults(testContext *testing.T) {
-	openedStore, openError := store.Open(filepath.Join(testContext.TempDir(), "chatindex.db"))
+	openedStore, openError := store.Open(filepath.Join(testContext.TempDir(), "archive.db"))
 	if openError != nil {
 		testContext.Fatalf("open store: %v", openError)
 	}
@@ -165,7 +165,7 @@ func TestHTTPVerifierSplitsFailedBatch(testContext *testing.T) {
 
 	verifier := HTTPVerifier{
 		BaseURL:    server.URL + "/v1",
-		Model:      "chatindex-verifier",
+		Model:      "download-your-data-verifier",
 		BatchSize:  2,
 		MaxRetries: 0,
 	}

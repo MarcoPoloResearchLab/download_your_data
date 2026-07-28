@@ -28,8 +28,8 @@ func TestReadOptionalAPIKeyRequiresNamedEnvironmentValue(testContext *testing.T)
 	if apiKey, keyError := readOptionalAPIKey(""); keyError != nil || apiKey != "" {
 		testContext.Fatalf("empty environment name should disable authentication: key=%q error=%v", apiKey, keyError)
 	}
-	testContext.Setenv("CHATINDEX_TEST_API_KEY", "secret")
-	apiKey, keyError := readOptionalAPIKey("CHATINDEX_TEST_API_KEY")
+	testContext.Setenv("DOWNLOAD_YOUR_DATA_TEST_API_KEY", "secret")
+	apiKey, keyError := readOptionalAPIKey("DOWNLOAD_YOUR_DATA_TEST_API_KEY")
 	if keyError != nil || apiKey != "secret" {
 		testContext.Fatalf("read named API key: key=%q error=%v", apiKey, keyError)
 	}
@@ -61,7 +61,7 @@ func TestScenarioCLIIndexesVisibleConversationTextAndProducesLexicalSearchReport
 	defer server.Close()
 
 	workingDirectory := testContext.TempDir()
-	databasePath := filepath.Join(workingDirectory, "chatindex.db")
+	databasePath := filepath.Join(workingDirectory, "archive.db")
 	sourcePath := filepath.Join("..", "..", "testdata", "synthetic-openai-export.zip")
 	if importError := run([]string{"import", "--db", databasePath, sourcePath}); importError != nil {
 		testContext.Fatalf("import CLI fixture: %v", importError)
@@ -110,7 +110,7 @@ func TestScenarioCLIReportsExactModelLoadCommandWhenLMStudioHasNoModel(testConte
 	defer server.Close()
 
 	workingDirectory := testContext.TempDir()
-	databasePath := filepath.Join(workingDirectory, "chatindex.db")
+	databasePath := filepath.Join(workingDirectory, "archive.db")
 	sourcePath := filepath.Join("..", "..", "testdata", "synthetic-openai-export.zip")
 	if importError := run([]string{"import", "--db", databasePath, sourcePath}); importError != nil {
 		testContext.Fatalf("import CLI fixture: %v", importError)

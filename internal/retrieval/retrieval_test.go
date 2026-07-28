@@ -421,7 +421,7 @@ func TestScenarioExplicitRebuildReplacesAnIncompatibleSearchIndex(testContext *t
 
 func openRetrievalFixture(testContext *testing.T) *store.Store {
 	testContext.Helper()
-	openedStore, openError := store.Open(filepath.Join(testContext.TempDir(), "chatindex.db"))
+	openedStore, openError := store.Open(filepath.Join(testContext.TempDir(), "archive.db"))
 	if openError != nil {
 		testContext.Fatalf("open retrieval fixture: %v", openError)
 	}

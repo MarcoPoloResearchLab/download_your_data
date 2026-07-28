@@ -2,6 +2,18 @@ package inference
 
 import "testing"
 
+func TestDefaultsUseTheProductOwnedInferenceIdentity(testContext *testing.T) {
+	if BaseURLEnvironment != "DOWNLOAD_YOUR_DATA_INFERENCE_BASE_URL" {
+		testContext.Fatalf("unexpected inference environment key %q", BaseURLEnvironment)
+	}
+	if DefaultEmbeddingModel != "download-your-data-embedding" {
+		testContext.Fatalf("unexpected embedding model alias %q", DefaultEmbeddingModel)
+	}
+	if DefaultVerifierModel != "download-your-data-verifier" {
+		testContext.Fatalf("unexpected verifier model alias %q", DefaultVerifierModel)
+	}
+}
+
 func TestNormalizeBaseURLDefaultsToLocalLMStudio(testContext *testing.T) {
 	if received := NormalizeBaseURL(""); received != DefaultBaseURL {
 		testContext.Fatalf("expected %q, received %q", DefaultBaseURL, received)

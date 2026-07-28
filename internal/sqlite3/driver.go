@@ -26,10 +26,11 @@ import (
 	"unsafe"
 )
 
-const driverName = "chatindex-sqlite3"
+// DriverName is the canonical product-owned SQLite driver identity.
+const DriverName = "download-your-data-sqlite3"
 
 func init() {
-	sql.Register(driverName, &Driver{})
+	sql.Register(DriverName, &Driver{})
 }
 
 type Driver struct{}

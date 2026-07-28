@@ -96,7 +96,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - `make smoke-chatindex`
   - `make ci`
 
-- [ ] [I003] (P1) {I002} Normalize the incorporated engine to the forward-only product contract
+- [x] [I003] (P1) {I002} Normalize the incorporated engine to the forward-only product contract
   Goal:
   Remove copied project identity and persistence compatibility paths before new application APIs depend on them.
 
@@ -165,11 +165,11 @@ Format: `- [ ] [B042] (P1) {I007} Title`
 
 - [ ] [I006] (P1) {I003,P003} Consolidate operator workflows into the product command
   Goal:
-  Ship one product-owned executable without retaining a transitional ChatIndex binary or alias.
+  Ship one product-owned executable without retaining a transitional archive binary or alias.
 
   Requirements:
   - Make `download-your-data` own `serve`, `inspect`, `import`, `index`, `search`, and `definitions` entry points.
-  - Delete `cmd/chatindex`, `build/chatindex`, ChatIndex-named Make targets, and old command documentation after command parity passes.
+  - Delete `cmd/archive`, `build/download-your-data-archive`, the archive build and smoke targets, and transitional command documentation after command parity passes.
   - Keep definition analysis and reproducible reports as operator subcommands for the first release.
   - Share packages and validated runtime configuration with the browser backend; do not invoke one command from another as a subprocess.
   - Preserve one canonical command spelling only.
@@ -181,7 +181,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
 
   Validation:
   - Black-box command smoke covers inspect, import, index, hybrid search, definitions, and serve.
-  - Repository search finds no shipped `chatindex` executable, command, or build target.
+  - Repository search finds no shipped second archive executable, command, or build target.
   - `make ci`
 
 - [x] [I007] (P1) Incorporate the Netflix viewing-history domain

@@ -29,7 +29,7 @@ func TestHTTPEmbedderUsesCompatibleLocalRequestWithoutAPIKey(testContext *testin
 		if decodeError := json.NewDecoder(request.Body).Decode(&payload); decodeError != nil {
 			testContext.Errorf("decode request: %v", decodeError)
 		}
-		if payload.Model != "chatindex-nomic" || payload.Dimensions != 3 || len(payload.Input) != 1 || payload.Input[0] != "classification: local test" {
+		if payload.Model != "download-your-data-embedding" || payload.Dimensions != 3 || len(payload.Input) != 1 || payload.Input[0] != "classification: local test" {
 			testContext.Errorf("unexpected embedding request: %+v", payload)
 		}
 		responseWriter.Header().Set("Content-Type", "application/json")
@@ -39,7 +39,7 @@ func TestHTTPEmbedderUsesCompatibleLocalRequestWithoutAPIKey(testContext *testin
 
 	embedder := HTTPEmbedder{
 		BaseURL:     server.URL + "/v1",
-		Model:       "chatindex-nomic",
+		Model:       "download-your-data-embedding",
 		Dimensions:  3,
 		InputPrefix: "classification: ",
 	}
