@@ -184,7 +184,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Repository search finds no shipped `chatindex` executable, command, or build target.
   - `make ci`
 
-- [ ] [I007] (P1) Incorporate the Netflix viewing-history domain
+- [x] [I007] (P1) Incorporate the Netflix viewing-history domain
   Goal:
   Move the maintained local Netflix CSV and analytics capabilities into this repository without importing the standalone runtime boundary.
 
