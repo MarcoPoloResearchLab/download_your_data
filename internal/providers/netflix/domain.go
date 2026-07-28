@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	titleIdentityVersion = "netflix-title-v1"
+	// TitleIdentityVersion is the current derived-title grouping contract.
+	TitleIdentityVersion = "netflix-title-v1"
 	viewingDateLayout    = "1/2/06"
 	releaseDateLayout    = "2006-01-02"
 )
@@ -148,7 +149,7 @@ func (identity TitleIdentity) Version() string {
 func (identity TitleIdentity) valid() bool {
 	return identity.searchTitle != "" &&
 		identity.key != "" &&
-		identity.version == titleIdentityVersion
+		identity.version == TitleIdentityVersion
 }
 
 func newTitleIdentity(rawTitle string) TitleIdentity {
@@ -160,12 +161,12 @@ func newTitleIdentity(rawTitle string) TitleIdentity {
 			searchTitle = seriesTitle
 		}
 	}
-	hashInput := titleIdentityVersion + "\x00" + strings.ToLower(searchTitle)
+	hashInput := TitleIdentityVersion + "\x00" + strings.ToLower(searchTitle)
 	hashValue := sha256.Sum256([]byte(hashInput))
 	return TitleIdentity{
 		searchTitle: searchTitle,
 		key:         hex.EncodeToString(hashValue[:]),
-		version:     titleIdentityVersion,
+		version:     TitleIdentityVersion,
 	}
 }
 

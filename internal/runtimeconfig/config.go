@@ -15,6 +15,7 @@ import (
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/inference"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/privatepath"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/product"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix/tmdb"
 )
 
 const (
@@ -36,8 +37,10 @@ const (
 	ErrorInvalidDataRoot          ErrorCode = "invalid_data_root"
 	ErrorInvalidInferenceURL      ErrorCode = "invalid_inference_url"
 	ErrorInvalidInferenceBoundary ErrorCode = "invalid_inference_boundary"
+	ErrorInvalidTMDBToken         ErrorCode = "invalid_tmdb_token"
 	ErrorCSRFEntropyUnavailable   ErrorCode = "csrf_entropy_unavailable"
 	ErrorInvalidArchivePath       ErrorCode = "invalid_archive_path"
+	ErrorInvalidProviderPath      ErrorCode = "invalid_provider_path"
 	ErrorUnknownRuntimeConfig     ErrorCode = "invalid_runtime_configuration"
 )
 
@@ -72,6 +75,9 @@ type Config struct {
 	archiveDatabase   privatepath.File
 	inferenceBaseURL  inference.BaseURL
 	inferenceBoundary InferenceBoundary
+	tmdbReadToken     tmdb.ReadToken
+	tmdbConfigured    bool
+	netflixTMDBCache  privatepath.File
 	csrfToken         string
 }
 
@@ -130,6 +136,12 @@ func Load(
 	if boundaryError != nil {
 		return Config{}, newConfigurationError(ErrorInvalidInferenceBoundary, boundaryError)
 	}
+	tmdbReadToken, tmdbConfigured, tmdbTokenError := tmdb.OptionalReadToken(
+		lookupEnvironment(tmdb.ReadTokenEnvironment),
+	)
+	if tmdbTokenError != nil {
+		return Config{}, newConfigurationError(ErrorInvalidTMDBToken, tmdbTokenError)
+	}
 
 	csrfEntropy := make([]byte, csrfEntropyBytes)
 	if _, entropyError := io.ReadFull(entropy, csrfEntropy); entropyError != nil {
@@ -154,6 +166,15 @@ func Load(
 			fmt.Errorf("resolve archive database: %w", databaseError),
 		)
 	}
+	netflixTMDBCache, cacheError := dataRoot.File(
+		filepath.FromSlash(product.NetflixTMDBCacheRelativePath),
+	)
+	if cacheError != nil {
+		return Config{}, newConfigurationError(
+			ErrorInvalidProviderPath,
+			fmt.Errorf("resolve Netflix TMDB cache: %w", cacheError),
+		)
+	}
 
 	return Config{
 		listenAddress:     listenAddress,
@@ -161,6 +182,9 @@ func Load(
 		archiveDatabase:   archiveDatabase,
 		inferenceBaseURL:  inferenceBaseURL,
 		inferenceBoundary: inferenceBoundary,
+		tmdbReadToken:     tmdbReadToken,
+		tmdbConfigured:    tmdbConfigured,
+		netflixTMDBCache:  netflixTMDBCache,
 		csrfToken:         hex.EncodeToString(tokenHash[:]),
 	}, nil
 }
@@ -201,6 +225,21 @@ func (config Config) InferenceBaseURL() inference.BaseURL {
 // InferenceBoundary returns the closed inference authorization state.
 func (config Config) InferenceBoundary() InferenceBoundary {
 	return config.inferenceBoundary
+}
+
+// TMDBReadToken returns the server-only credential when configured.
+func (config Config) TMDBReadToken() (tmdb.ReadToken, bool) {
+	return config.tmdbReadToken, config.tmdbConfigured
+}
+
+// TMDBConfigured reports only whether the server credential is available.
+func (config Config) TMDBConfigured() bool {
+	return config.tmdbConfigured
+}
+
+// NetflixTMDBCache returns the sole private provider cache location.
+func (config Config) NetflixTMDBCache() privatepath.File {
+	return config.netflixTMDBCache
 }
 
 // CSRFToken returns the ephemeral process mutation token.

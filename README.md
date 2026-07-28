@@ -72,3 +72,25 @@ DOWNLOAD_YOUR_DATA_INFERENCE_BOUNDARY=authorized-remote \
 The browser cannot override the configured inference URL. The local HTTP server accepts only loopback hosts and same-origin browser requests, requires its per-process CSRF token for mutation requests, and does not enable cross-origin access. `GET /api/capabilities` reports the current non-secret runtime boundary, model identity, readiness state, archive limits, and data-root readiness.
 
 Conversation databases use the sole first-release identity `download_your_data/1` and schema contract `openai-conversation-archive-1`. A brand-new empty database is initialized with that exact minimized schema. Any nonempty database with a different identity, version, contract, or incomplete object set is rejected with an archive-and-reimport instruction; the application does not read, migrate, or repair another persisted shape.
+
+## Optional Netflix metadata
+
+Raw Netflix viewing-activity import and analytics remain local and do not require TMDB. Optional metadata enrichment is a separate, explicitly initiated operation that sends only unique derived title queries to TMDB. It never sends viewing dates, source CSV bytes, profile data, or complete activity rows.
+
+Configure the server-owned TMDB API Read Access Token before starting the application:
+
+```bash
+DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN=your-read-access-token make run
+```
+
+The token is accepted only from `DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN`. It stays in the Go process and is never returned to the browser, placed in a URL, logged, reported, or persisted. Production requests use Bearer authentication against TMDB's fixed official HTTPS API origin. The browser capability payload reports only whether enrichment is configured.
+
+Enrichment uses fixed product-owned concurrency, pacing, retry, cancellation, matching, and 30-day private-cache contracts. Accepted matches must pass the deterministic quality gate:
+
+```bash
+make eval-netflix-matcher
+```
+
+The current matcher identity is `netflix-tmdb-matcher-v1`; the current client identity is `tmdb-v3-bearer-client-v1`; and the current freshness identity is `tmdb-cache-30d-v1`. Cache entries live only at `<data-root>/providers/netflix/tmdb-cache.db`. Foreign or stale cache schemas are rejected rather than read or repaired.
+
+The product Credits surface must use an approved TMDB logo, link to [TMDB](https://www.themoviedb.org), and display: “This product uses the TMDB API but is not endorsed or certified by TMDB.”

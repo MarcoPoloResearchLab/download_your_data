@@ -10,6 +10,7 @@ import (
 
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/inference"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/product"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix/tmdb"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/runtimeconfig"
 )
 
@@ -37,6 +38,15 @@ func TestLoadBuildsTheCanonicalLocalRuntime(testContext *testing.T) {
 	if config.ArchiveDatabase().RelativePath() != filepath.FromSlash(product.ArchiveDatabaseRelativePath) {
 		testContext.Fatalf("unexpected archive path %q", config.ArchiveDatabase().RelativePath())
 	}
+	if config.NetflixTMDBCache().RelativePath() != filepath.FromSlash(product.NetflixTMDBCacheRelativePath) {
+		testContext.Fatalf("unexpected Netflix cache path %q", config.NetflixTMDBCache().RelativePath())
+	}
+	if config.TMDBConfigured() {
+		testContext.Fatalf("TMDB must be not configured by default")
+	}
+	if _, configured := config.TMDBReadToken(); configured {
+		testContext.Fatalf("default runtime exposed a TMDB credential")
+	}
 	if config.InferenceBaseURL().String() != inference.DefaultBaseURL ||
 		config.InferenceBoundary() != runtimeconfig.InferenceBoundaryLoopback {
 		testContext.Fatalf(
@@ -49,6 +59,28 @@ func TestLoadBuildsTheCanonicalLocalRuntime(testContext *testing.T) {
 		testContext.Fatalf("CSRF token length = %d; want 64", len(config.CSRFToken()))
 	}
 	assertMode(testContext, config.DataRoot().Path(), 0o700)
+}
+
+func TestLoadKeepsTheTMDBReadTokenServerOnly(testContext *testing.T) {
+	environment := map[string]string{
+		runtimeconfig.DataDirectoryEnvironment: privateDataDirectory(testContext),
+		tmdb.ReadTokenEnvironment:              "private-test-read-token",
+	}
+	config, configError := runtimeconfig.Load(
+		func(key string) string { return environment[key] },
+		testContext.TempDir(),
+		bytes.NewReader(make([]byte, 32)),
+	)
+	if configError != nil {
+		testContext.Fatalf("load TMDB runtime config: %v", configError)
+	}
+	readToken, configured := config.TMDBReadToken()
+	if !configured || !config.TMDBConfigured() {
+		testContext.Fatalf("configured token was not represented as available")
+	}
+	if _, clientError := tmdb.NewClient(readToken); clientError != nil {
+		testContext.Fatalf("construct server-owned TMDB client: %v", clientError)
+	}
 }
 
 func TestLoadAcceptsOnlyExplicitlyAuthorizedRemoteInference(testContext *testing.T) {
@@ -150,6 +182,16 @@ func TestLoadRejectsInvalidStartupConfiguration(testContext *testing.T) {
 			home:         testContext.TempDir(),
 			expectedCode: runtimeconfig.ErrorInvalidInferenceURL,
 			expectedText: "credentials are not allowed",
+		},
+		{
+			name: "invalid TMDB token",
+			environment: map[string]string{
+				runtimeconfig.DataDirectoryEnvironment: privateDataDirectory(testContext),
+				tmdb.ReadTokenEnvironment:              " private-token ",
+			},
+			home:         testContext.TempDir(),
+			expectedCode: runtimeconfig.ErrorInvalidTMDBToken,
+			expectedText: "trimmed UTF-8",
 		},
 	}
 	for _, testCase := range testCases {

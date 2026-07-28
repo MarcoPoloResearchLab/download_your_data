@@ -41,6 +41,7 @@ type capabilitiesResponse struct {
 	DataRoot  dataRootCapability     `json:"data_root"`
 	Inference inferenceCapability    `json:"inference"`
 	Archive   archiveLimitCapability `json:"archive"`
+	Providers providerCapabilities   `json:"providers"`
 }
 
 type dataRootCapability struct {
@@ -64,6 +65,18 @@ type archiveLimitCapability struct {
 	MaxCompressionRatio  int   `json:"max_compression_ratio"`
 	MaxWorkingBytes      int64 `json:"max_working_bytes"`
 	InferenceBatchSize   int   `json:"inference_batch_size"`
+}
+
+type providerCapabilities struct {
+	Netflix netflixProviderCapability `json:"netflix"`
+}
+
+type netflixProviderCapability struct {
+	TMDB tmdbCapability `json:"tmdb"`
+}
+
+type tmdbCapability struct {
+	Configured bool `json:"configured"`
 }
 
 type requestErrorResponse struct {
@@ -126,6 +139,13 @@ func writeCapabilities(config runtimeconfig.Config, logger *slog.Logger) http.Ha
 				MaxCompressionRatio:  product.MaxArchiveCompressionRatio,
 				MaxWorkingBytes:      product.MaxArchiveWorkingBytes,
 				InferenceBatchSize:   product.DefaultInferenceBatchSize,
+			},
+			Providers: providerCapabilities{
+				Netflix: netflixProviderCapability{
+					TMDB: tmdbCapability{
+						Configured: config.TMDBConfigured(),
+					},
+				},
 			},
 		})
 	}

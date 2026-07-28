@@ -35,6 +35,22 @@ The importer validates file content rather than depending on a filename. The cur
 9. Ready analytics label Netflix rows as activity entries or plays, not completed views. Raw titles and local calendar dates are preserved exactly; derived title identity is versioned and auditable.
 10. The browser loads no third-party scripts, styles, fonts, or charts. TMDB attribution appears in the product Credits surface using approved assets and the notice required by the current [TMDB FAQ](https://developer.themoviedb.org/docs/faq).
 
+### Implemented TMDB boundary identities
+
+The current target-owned enrichment contracts are:
+
+| Boundary | Current identity |
+| --- | --- |
+| Derived Netflix title | `netflix-title-v1` |
+| TMDB client | `tmdb-v3-bearer-client-v1` |
+| Deterministic matcher | `netflix-tmdb-matcher-v1` |
+| Cache freshness | `tmdb-cache-30d-v1` |
+| Cache schema | `download_your_data/1`, `netflix-tmdb-enrichment-cache-v1` |
+
+Production uses TMDB's documented [API Read Access Token as a Bearer credential](https://developer.themoviedb.org/docs/authentication-application) and the fixed [multi-search operation](https://developer.themoviedb.org/reference/search-multi). One response is limited to 2 MiB, one cache result to 256 KiB, one search to 20 candidates, concurrent title work to four workers, request pacing to four requests per second, attempts to three, and `Retry-After` to 30 seconds. These values are product constants, not user settings.
+
+`make eval-netflix-matcher` is the named release gate. The initial 11-case synthetic corpus records five matched, three review, and three unmatched outcomes, with accepted-match precision `1.000` and expected-accept recall `1.000`. The gate requires precision `1.00` and recall `0.90`; popularity is retained only as source evidence and never participates in scoring.
+
 ## Source Capability Disposition
 
 | Standalone capability | Target disposition |

@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/inference"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix/tmdb"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/runtimeconfig"
 )
 
@@ -51,6 +52,13 @@ func TestExecutableRejectsInvalidRuntimeConfigurationBeforeServing(testContext *
 				inference.BaseURLEnvironment: "https://inference.example.com/v1",
 			},
 			expectedCode: runtimeconfig.ErrorInvalidInferenceBoundary,
+		},
+		{
+			name: "invalid TMDB token",
+			environment: map[string]string{
+				tmdb.ReadTokenEnvironment: " private-token ",
+			},
+			expectedCode: runtimeconfig.ErrorInvalidTMDBToken,
 		},
 	}
 
@@ -97,6 +105,7 @@ func replacementEnvironment(current []string, replacements map[string]string) []
 		runtimeconfig.DataDirectoryEnvironment:     {},
 		inference.BaseURLEnvironment:               {},
 		runtimeconfig.InferenceBoundaryEnvironment: {},
+		tmdb.ReadTokenEnvironment:                  {},
 	}
 	environment := make([]string, 0, len(current)+len(replacements))
 	for _, entry := range current {

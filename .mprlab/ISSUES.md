@@ -209,7 +209,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - `make test`
   - `make ci`
 
-- [ ] [I008] (P1) {I005,I007} Establish the TMDB enrichment and matching boundary
+- [x] [I008] (P1) {I005,I007} Establish the TMDB enrichment and matching boundary
   Goal:
   Enrich Netflix title identities through one privacy-explicit, server-owned TMDB client with measurable match quality.
 

@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix/tmdb"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/runtimeconfig"
 )
 
@@ -81,7 +82,8 @@ func TestApplicationHTTPContract(testContext *testing.T) {
 			payload.Inference.EmbeddingModel == "" ||
 			payload.Archive.MaxUploadBytes <= 0 ||
 			payload.Archive.InferenceBatchSize <= 0 ||
-			payload.Archive.BrowserUploadEnabled {
+			payload.Archive.BrowserUploadEnabled ||
+			payload.Providers.Netflix.TMDB.Configured {
 			testContext.Fatalf("unexpected capabilities response: %+v", payload)
 		}
 		if response.Header.Get("Access-Control-Allow-Origin") != "" {
@@ -123,6 +125,40 @@ func TestApplicationHTTPContract(testContext *testing.T) {
 			testContext.Fatalf("unknown route status = %d; want %d", response.StatusCode, http.StatusNotFound)
 		}
 	})
+}
+
+func TestCapabilitiesExposeOnlyTMDBConfiguredState(testContext *testing.T) {
+	const readToken = "private-test-read-token"
+	config := loadTestRuntimeConfig(testContext, map[string]string{
+		tmdb.ReadTokenEnvironment: readToken,
+	})
+	handler, handlerError := newApplicationHandler(
+		config,
+		slog.New(slog.NewTextHandler(io.Discard, nil)),
+	)
+	if handlerError != nil {
+		testContext.Fatalf("create application handler: %v", handlerError)
+	}
+	request := httptest.NewRequest(
+		http.MethodGet,
+		"http://127.0.0.1:8787"+capabilitiesPath,
+		nil,
+	)
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, request)
+	if response.Code != http.StatusOK {
+		testContext.Fatalf("capabilities status = %d; want %d", response.Code, http.StatusOK)
+	}
+	var payload capabilitiesResponse
+	if decodeError := json.Unmarshal(response.Body.Bytes(), &payload); decodeError != nil {
+		testContext.Fatalf("decode capabilities: %v", decodeError)
+	}
+	if !payload.Providers.Netflix.TMDB.Configured {
+		testContext.Fatalf("configured TMDB capability was not reported")
+	}
+	if strings.Contains(response.Body.String(), readToken) {
+		testContext.Fatalf("capabilities exposed the server-only TMDB token")
+	}
 }
 
 func TestLocalRequestBoundaryRejectsInvalidHostOriginAndCSRF(testContext *testing.T) {
@@ -256,9 +292,20 @@ func performBoundaryRequest(
 
 func testRuntimeConfig(testContext *testing.T) runtimeconfig.Config {
 	testContext.Helper()
+	return loadTestRuntimeConfig(testContext, nil)
+}
+
+func loadTestRuntimeConfig(
+	testContext *testing.T,
+	additionalEnvironment map[string]string,
+) runtimeconfig.Config {
+	testContext.Helper()
 	dataDirectory := filepath.Join(testContext.TempDir(), "data")
 	environment := map[string]string{
 		runtimeconfig.DataDirectoryEnvironment: dataDirectory,
+	}
+	for key, value := range additionalEnvironment {
+		environment[key] = value
 	}
 	config, configError := runtimeconfig.Load(
 		func(key string) string { return environment[key] },
