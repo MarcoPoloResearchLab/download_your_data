@@ -4,7 +4,7 @@ CGO_ENABLED ?= 1
 
 export CGO_ENABLED
 
-.PHONY: build build-archive ci eval-netflix-matcher fmt fmt-check lint run smoke-archive test test-browser
+.PHONY: build build-archive ci eval-netflix-matcher fmt fmt-check lint run smoke-archive test test-browser validate-instruction-screenshots
 
 build:
 	$(GO) build -o build/download-your-data .
@@ -37,7 +37,10 @@ eval-netflix-matcher:
 test-browser:
 	PLAYWRIGHT_CLI_VERSION=$(PLAYWRIGHT_CLI_VERSION) ./scripts/browser-smoke.sh
 
+validate-instruction-screenshots:
+	$(GO) test . -run '^TestInstructionScreenshotContract$$' -count=1
+
 smoke-archive: build-archive
 	./scripts/archive-smoke.sh ./build/download-your-data-archive
 
-ci: fmt-check lint eval-netflix-matcher test test-browser smoke-archive
+ci: fmt-check lint eval-netflix-matcher test validate-instruction-screenshots test-browser smoke-archive

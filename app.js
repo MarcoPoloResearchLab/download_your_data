@@ -8,6 +8,9 @@
         language: 'download-your-data.lang',
         theme: 'download-your-data.theme'
     };
+    var SCREENSHOT_PATH_PREFIX = 'images/instructions/';
+    var LOCALE_IDS = ['en', 'es', 'fr', 'ru'];
+    var PLATFORM_IDS = ['facebook', 'instagram', 'linkedin', 'tiktok', 'x', 'youtube', 'google'];
 
     var appState = {
         data: null,
@@ -55,6 +58,90 @@
     function getStringsForCurrentLanguage() {
         if (!appState.data || !appState.data.strings) return null;
         return appState.data.strings[appState.language] || null;
+    }
+
+    function validateAppData(data) {
+        if (!data || typeof data !== 'object' || Array.isArray(data)) {
+            throw new Error('validate data.json: root must be an object');
+        }
+        if (!data.instruction_screenshots || typeof data.instruction_screenshots !== 'object') {
+            throw new Error('validate data.json: instruction_screenshots is required');
+        }
+        if (!data.strings || typeof data.strings !== 'object') {
+            throw new Error('validate data.json: strings is required');
+        }
+
+        var screenshotIds = {};
+        PLATFORM_IDS.forEach(function (platformId) {
+            var sharedAssets = data.instruction_screenshots[platformId];
+            if (!Array.isArray(sharedAssets)) {
+                throw new Error('validate data.json: screenshot registry is missing ' + platformId);
+            }
+            var expectedAssetCount = platformId === 'tiktok' ? 0 : 2;
+            if (sharedAssets.length !== expectedAssetCount) {
+                throw new Error(
+                    'validate data.json: ' + platformId + ' must have ' + expectedAssetCount + ' shared screenshots'
+                );
+            }
+            sharedAssets.forEach(function (asset) {
+                if (!asset || typeof asset.id !== 'string' || !asset.id) {
+                    throw new Error('validate data.json: ' + platformId + ' screenshot id is required');
+                }
+                if (screenshotIds[asset.id]) {
+                    throw new Error('validate data.json: duplicate screenshot id ' + asset.id);
+                }
+                screenshotIds[asset.id] = true;
+                if (
+                    typeof asset.src !== 'string' ||
+                    !asset.src.startsWith(SCREENSHOT_PATH_PREFIX) ||
+                    !asset.src.endsWith('.png') ||
+                    asset.src.includes('..') ||
+                    asset.src.includes('://')
+                ) {
+                    throw new Error('validate data.json: invalid local screenshot path for ' + asset.id);
+                }
+            });
+        });
+
+        LOCALE_IDS.forEach(function (localeId) {
+            var localeStrings = data.strings[localeId];
+            if (!localeStrings || !Array.isArray(localeStrings.platforms)) {
+                throw new Error('validate data.json: locale ' + localeId + ' must define platforms');
+            }
+            if (localeStrings.platforms.length !== PLATFORM_IDS.length) {
+                throw new Error('validate data.json: locale ' + localeId + ' must define all platforms');
+            }
+            localeStrings.platforms.forEach(function (platform, platformIndex) {
+                var expectedPlatformId = PLATFORM_IDS[platformIndex];
+                if (!platform || platform.id !== expectedPlatformId) {
+                    throw new Error(
+                        'validate data.json: locale ' + localeId + ' platform ' + platformIndex +
+                        ' must be ' + expectedPlatformId
+                    );
+                }
+                var localizedImages = platform.images;
+                var sharedImages = data.instruction_screenshots[platform.id];
+                if (!Array.isArray(localizedImages) || localizedImages.length !== sharedImages.length) {
+                    throw new Error(
+                        'validate data.json: locale ' + localeId + ' image alternatives do not match ' + platform.id
+                    );
+                }
+                localizedImages.forEach(function (localizedImage) {
+                    if (!localizedImage || typeof localizedImage.alt !== 'string' || !localizedImage.alt.trim()) {
+                        throw new Error(
+                            'validate data.json: locale ' + localeId + ' has an empty alternative for ' + platform.id
+                        );
+                    }
+                    if (Object.prototype.hasOwnProperty.call(localizedImage, 'src')) {
+                        throw new Error(
+                            'validate data.json: locale ' + localeId + ' must not own screenshot paths'
+                        );
+                    }
+                });
+            });
+        });
+
+        return data;
     }
 
     /** -----------------------------------------------------------
@@ -168,26 +255,21 @@
             }
 
             // Images
-            var imageSpecs = platform.images || [];
-            if (imageSpecs.length) {
+            var imageAlternatives = platform.images || [];
+            var imageAssets = appState.data.instruction_screenshots[platform.id] || [];
+            if (imageAssets.length) {
                 var row = createElement('div', {class: 'row g-3'});
-                imageSpecs.forEach(function (imageSpec) {
+                imageAssets.forEach(function (imageAsset, imageIndex) {
+                    var imageAlternative = imageAlternatives[imageIndex];
                     var column = createElement('div', {class: 'col-md-6'});
-                    if (imageSpec.src) {
-                        column.appendChild(createElement('img', {
-                            class: 'img-fluid rounded border',
-                            src: imageSpec.src,
-                            alt: imageSpec.alt || ''
-                        }));
-                    } else {
-                        column.appendChild(createElement(
-                            'div',
-                            {
-                                class: 'ratio ratio-16x9 bg-body-secondary border rounded d-flex align-items-center justify-content-center text-muted'
-                            },
-                            imageSpec.alt || ''
-                        ));
-                    }
+                    column.appendChild(createElement('img', {
+                        class: 'img-fluid rounded border instruction-screenshot',
+                        src: imageAsset.src,
+                        alt: imageAlternative.alt,
+                        loading: 'lazy',
+                        decoding: 'async',
+                        'data-screenshot-id': imageAsset.id
+                    }));
                     row.appendChild(column);
                 });
                 cardBodyChildren.push(row);
@@ -285,7 +367,7 @@
         try {
             var response = await fetch('data.json', {cache: 'no-store'});
             if (!response.ok) throw new Error('data.json HTTP ' + response.status);
-            appState.data = await response.json();
+            appState.data = validateAppData(await response.json());
         } catch (error) {
             var contentHost = query('#content');
             var loadingAlert = query('#loading');

@@ -1,13 +1,76 @@
 {
+  "instruction_screenshots": {
+    "facebook": [
+      {
+        "id": "facebook-accounts-center-information",
+        "src": "images/instructions/facebook-accounts-center-information.png"
+      },
+      {
+        "id": "facebook-export-entry",
+        "src": "images/instructions/facebook-export-entry.png"
+      }
+    ],
+    "instagram": [
+      {
+        "id": "instagram-accounts-center-information",
+        "src": "images/instructions/instagram-accounts-center-information.png"
+      },
+      {
+        "id": "instagram-export-entry",
+        "src": "images/instructions/instagram-export-entry.png"
+      }
+    ],
+    "linkedin": [
+      {
+        "id": "linkedin-data-privacy-navigation",
+        "src": "images/instructions/linkedin-data-privacy-navigation.png"
+      },
+      {
+        "id": "linkedin-download-data-options",
+        "src": "images/instructions/linkedin-download-data-options.png"
+      }
+    ],
+    "tiktok": [],
+    "x": [
+      {
+        "id": "x-your-account-navigation",
+        "src": "images/instructions/x-your-account-navigation.png"
+      },
+      {
+        "id": "x-password-verification",
+        "src": "images/instructions/x-password-verification.png"
+      }
+    ],
+    "youtube": [
+      {
+        "id": "youtube-takeout-selection",
+        "src": "images/instructions/youtube-takeout-selection.png"
+      },
+      {
+        "id": "youtube-takeout-export-options",
+        "src": "images/instructions/youtube-takeout-export-options.png"
+      }
+    ],
+    "google": [
+      {
+        "id": "google-takeout-service-selection",
+        "src": "images/instructions/google-takeout-service-selection.png"
+      },
+      {
+        "id": "google-takeout-export-options",
+        "src": "images/instructions/google-takeout-export-options.png"
+      }
+    ]
+  },
   "strings": {
     "en": {
       "site_title": "Download Your Data",
       "hero_heading": "Get a copy of your data from social & search platforms",
-      "hero_sub": "Click a platform above to jump to its section. Replace placeholder tiles with screenshots later.",
+      "hero_sub": "Click a platform above to jump to its section.",
       "built_with": "Built with",
       "hosted_on": "Runs locally on your computer.",
       "footer_tagline": "a quick guide to export your information from major platforms.",
-      "official_help": "Official help:",
+      "official_help": "Official links:",
       "platforms": [
         {
           "id": "facebook",
@@ -16,27 +79,25 @@
           "intro": "Export posts, photos, messages, and more via Facebook’s Download Your Information tool.",
           "steps": [
             "Log in on desktop. Profile menu → Settings & privacy → Settings.",
-            "Left sidebar: Your Facebook Information → Download Your Information → View.",
-            "Choose data (all for a full archive) and Date range (All time).",
-            "Format: HTML (viewing) or JSON (analysis). Media quality: High.",
-            "Click Create file (or Request a download). It appears as Pending under Available files.",
-            "Wait for the email/notification. Return to Available files and click Download.",
-            "Re-enter your password if prompted. Save the ZIP. Link typically expires in ~4 days."
+            "Open Accounts Center → Your information and permissions → Export your information.",
+            "Click Create export, then select the Facebook profile to export.",
+            "Select Export to device.",
+            "Choose the information, date range, format, notification email, and media quality.",
+            "Click Start export. Facebook sends an email and notification when the export is ready.",
+            "Return to Available downloads within 4 days. Complete any password or identity verification yourself, then download the ZIP."
           ],
           "refs": [
             {
-              "label": "How do I download a copy of my Facebook information?",
-              "href": "https://www.facebook.com/help/1701730696756992"
+              "label": "Export a copy of your Facebook information",
+              "href": "https://www.facebook.com/help/212802592074644"
             }
           ],
           "images": [
             {
-              "src": "",
-              "alt": "Facebook Settings > Your Facebook Information"
+              "alt": "Facebook Accounts Center: Your information and permissions"
             },
             {
-              "src": "",
-              "alt": "Facebook Download Your Information tool"
+              "alt": "Facebook Export your information panel"
             }
           ]
         },
@@ -46,28 +107,26 @@
           "title": "Instagram",
           "intro": "Request your photos, comments, profile info, and more. Instagram emails a download link.",
           "steps": [
-            "Open the app. Profile → menu (≡) → Your Activity.",
-            "Tap Download your information (or Download or transfer information).",
-            "Choose Complete copy or select categories.",
-            "Delivery: To your device. Confirm the email address to receive the link.",
-            "Format: HTML or JSON; set media quality; Date range (All time for full history).",
-            "Tap Request download (or Create file) and confirm password.",
-            "You’ll receive an email when ready. The link is active for ~4 days."
+            "On Instagram desktop, click More in the bottom left, then Settings.",
+            "Open Accounts Center → Your information and permissions → Export your information.",
+            "Click Create export, select the Instagram profile, then click Next.",
+            "Select Export to device.",
+            "Choose the information, date range, format, notification email, and media quality.",
+            "Click Start export. Instagram sends an email and notification when the export is ready.",
+            "Return to Available downloads within 4 days. Complete any password or identity verification yourself, then download the ZIP."
           ],
           "refs": [
             {
-              "label": "Get a copy of your information",
-              "href": "https://help.instagram.com/181231772500920"
+              "label": "Review and export a copy of your Instagram information",
+              "href": "https://www.facebook.com/help/181231772500920"
             }
           ],
           "images": [
             {
-              "src": "",
-              "alt": "Instagram Your Activity screen"
+              "alt": "Instagram Accounts Center: Your information and permissions"
             },
             {
-              "src": "",
-              "alt": "Instagram Download Your Information request"
+              "alt": "Instagram Export your information panel"
             }
           ]
         },
@@ -78,27 +137,25 @@
           "intro": "Export a full archive or specific items (connections, messages, profile, etc.).",
           "steps": [
             "Desktop: Me → Settings & Privacy.",
-            "Open the Data privacy tab/section.",
-            "Under How LinkedIn uses your data → Get a copy of your data.",
-            "Choose Larger data archive (full) or specific files (Connections, Messages, etc.).",
-            "Click Request archive and confirm your password.",
-            "LinkedIn prepares the archive (~24 hours). You’ll receive an email.",
-            "Return to the same page and click Download archive (link expires after a few days)."
+            "Open Data Privacy in the left rail.",
+            "Under How LinkedIn uses your data, open Get a copy of your data.",
+            "On Download my data, choose specific categories or the larger data archive.",
+            "Click Request archive.",
+            "LinkedIn emails specific categories within minutes and the larger archive within 24 hours.",
+            "Use the email link to download the archive within 72 hours."
           ],
           "refs": [
             {
               "label": "Download your account data",
-              "href": "https://www.linkedin.com/help/linkedin/answer/a1339363"
+              "href": "https://www.linkedin.com/help/linkedin/answer/a1339364/downloading-your-account-data"
             }
           ],
           "images": [
             {
-              "src": "",
-              "alt": "LinkedIn Settings & Privacy"
+              "alt": "LinkedIn How LinkedIn uses your data settings"
             },
             {
-              "src": "",
-              "alt": "LinkedIn Get a copy of your data"
+              "alt": "LinkedIn Download my data options"
             }
           ]
         },
@@ -108,13 +165,12 @@
           "title": "TikTok",
           "intro": "Request a ZIP of your account data from the mobile app.",
           "steps": [
-            "TikTok app → Profile → menu (☰/⋯) → Settings and privacy.",
-            "Under Account, tap Download your data.",
-            "Select what to include (account data by default).",
-            "Choose export format (JSON recommended).",
-            "Tap Request data. The request shows as Pending.",
-            "You’ll be notified in-app. In Download your data, open the Download data tab.",
-            "Tap Download next to the file to save the ZIP. Available for ~4 days."
+            "In the TikTok app, tap Profile at the bottom.",
+            "Tap Menu (☰) at the top → Settings and privacy → Account → Download your data.",
+            "Choose which information to include and select a file format.",
+            "Tap Request data.",
+            "TikTok notifies you in the app when the file is ready; preparation may take a few days.",
+            "Return to Download your data → Download data, then tap Download. The file remains available for up to 4 days."
           ],
           "refs": [
             {
@@ -122,16 +178,7 @@
               "href": "https://support.tiktok.com/en/account-and-privacy/personalized-ads-and-data/requesting-your-data"
             }
           ],
-          "images": [
-            {
-              "src": "",
-              "alt": "TikTok Settings and privacy"
-            },
-            {
-              "src": "",
-              "alt": "TikTok Download your data"
-            }
-          ]
+          "images": []
         },
         {
           "id": "x",
@@ -141,11 +188,11 @@
           "steps": [
             "Web: More → Settings and privacy → Your account.",
             "Click Download an archive of your data.",
-            "Enter your password and verify by code (email/phone).",
-            "Click Request data (or Request archive).",
-            "Wait for the email/notification (hours to a few days).",
-            "Return and click Download archive (or use the email link while logged in).",
-            "Save the ZIP. Link is time-limited; archive contains an HTML viewer and JSON."
+            "Enter your password and click Confirm.",
+            "Click Send code, then enter the code sent to the email address or phone number on your account.",
+            "Click Request data.",
+            "Wait for the email or push notification; preparation may take a few days.",
+            "Return to Download an archive of your data and click Download data, then download the ZIP while signed in."
           ],
           "refs": [
             {
@@ -155,12 +202,10 @@
           ],
           "images": [
             {
-              "src": "",
-              "alt": "X Settings and privacy"
+              "alt": "X Your Account settings with Download an archive of your data"
             },
             {
-              "src": "",
-              "alt": "X Download archive"
+              "alt": "X empty Verify your password form"
             }
           ]
         },
@@ -170,16 +215,19 @@
           "title": "YouTube",
           "intro": "Export your YouTube and YouTube Music data via Google Takeout.",
           "steps": [
-            "Go to https://takeout.google.com and sign in.",
-            "Click Deselect all, then check YouTube and YouTube Music (expand to refine).",
+            "Open the Google Takeout page for YouTube data exports and sign in.",
+            "Confirm that YouTube and YouTube Music is the selected product; use its data-options control to refine the scope.",
             "Click Next step.",
-            "Delivery: Send download link via email (or choose cloud).",
-            "Frequency: Export once.",
-            "File type & size: ZIP; pick a size threshold (Google splits if needed).",
-            "Click Create export. Packaging can take minutes to hours.",
-            "Use the email page to download ZIP(s). Links expire after ~7 days."
+            "Choose the delivery method; Send download link via email keeps the archive out of a connected external destination.",
+            "Set Frequency to Export once.",
+            "Choose the file type and maximum file size; larger exports are split into multiple archives.",
+            "Click Create export. Google emails you when the archive is ready."
           ],
           "refs": [
+            {
+              "label": "Open YouTube data export in Google Takeout",
+              "href": "https://takeout.google.com/settings/takeout/custom/youtube"
+            },
             {
               "label": "Download your data (Google Takeout)",
               "href": "https://support.google.com/accounts/answer/3024190"
@@ -187,12 +235,10 @@
           ],
           "images": [
             {
-              "src": "",
-              "alt": "Google Takeout YouTube selection"
+              "alt": "Google Takeout YouTube and YouTube Music selection"
             },
             {
-              "src": "",
-              "alt": "Google Takeout export options"
+              "alt": "Google Takeout YouTube export destination, frequency, and file options"
             }
           ]
         },
@@ -202,16 +248,19 @@
           "title": "Google (All Account Data)",
           "intro": "Export Gmail, Drive, Photos, Maps, YouTube, and more via Google Takeout.",
           "steps": [
-            "Open https://takeout.google.com and sign in.",
-            "Leave all services selected for a full backup, or Deselect all and choose specific services.",
+            "Open Google Takeout and sign in.",
+            "Google products that you use and that hold your data are selected automatically; uncheck any product you do not want to include.",
             "Click Next step.",
-            "Delivery: email link (default) or send to cloud storage.",
-            "Frequency: Export once.",
-            "File type & size: ZIP and a suitable size (2/10/50 GB). Larger exports are split.",
-            "Click Create export. Google prepares the archive (minutes to days).",
-            "Download all parts within ~7 days. Unzip to access. Exports don’t delete originals."
+            "Choose the delivery method; Send download link via email keeps the archive out of a connected external destination.",
+            "Set Frequency to Export once.",
+            "Choose the file type and maximum file size; larger exports are split into multiple archives.",
+            "Click Create export. Google emails you when the archive is ready; creating an archive does not delete the original data."
           ],
           "refs": [
+            {
+              "label": "Open Google Takeout",
+              "href": "https://takeout.google.com"
+            },
             {
               "label": "Download your data (Google Takeout)",
               "href": "https://support.google.com/accounts/answer/3024190"
@@ -219,12 +268,10 @@
           ],
           "images": [
             {
-              "src": "",
-              "alt": "Google Takeout services list"
+              "alt": "Google Takeout Select data to include step"
             },
             {
-              "src": "",
-              "alt": "Google Takeout download page"
+              "alt": "Google Takeout export destination, frequency, and file options"
             }
           ],
           "note": "Security tip: Exports can contain sensitive information. Store your ZIPs in a secure, encrypted location."
@@ -234,11 +281,11 @@
     "es": {
       "site_title": "Descarga tus datos",
       "hero_heading": "Obtén una copia de tus datos de redes sociales y plataformas de búsqueda",
-      "hero_sub": "Haz clic en una plataforma para ir a su sección. Reemplaza las viñetas por capturas más tarde.",
+      "hero_sub": "Haz clic en una plataforma para ir a su sección.",
       "built_with": "Creado con",
       "hosted_on": "Se ejecuta localmente en tu equipo.",
       "footer_tagline": "una guía rápida para exportar tu información.",
-      "official_help": "Ayuda oficial:",
+      "official_help": "Enlaces oficiales:",
       "platforms": [
         {
           "id": "facebook",
@@ -246,28 +293,26 @@
           "title": "Facebook",
           "intro": "Exporta publicaciones, fotos, mensajes y más con «Descargar tu información».",
           "steps": [
-            "Escritorio: Menú de perfil → Configuración y privacidad → Configuración.",
-            "Barra lateral: Tu información de Facebook → Descargar tu información → Ver.",
-            "Elige los datos (todo para archivo completo) y Rango (Todo).",
-            "Formato: HTML o JSON. Calidad multimedia: Alta.",
-            "Clic en Crear archivo. Aparecerá como Pendiente en Archivos disponibles.",
-            "Espera el correo/aviso. Vuelve y pulsa Descargar.",
-            "Introduce la contraseña si se solicita. Enlace válido ~4 días."
+            "En el escritorio, inicia sesión. Menú de perfil → Configuración y privacidad → Configuración.",
+            "Abre el Centro de cuentas → Tu información y permisos → Exportar tu información.",
+            "Pulsa Crear exportación y selecciona el perfil de Facebook que quieras exportar.",
+            "Selecciona Exportar al dispositivo.",
+            "Elige la información, el intervalo de fechas, el formato, el correo de notificación y la calidad multimedia.",
+            "Pulsa Iniciar exportación. Facebook te enviará un correo y una notificación cuando esté lista.",
+            "Vuelve a Descargas disponibles en un plazo de 4 días. Completa personalmente cualquier verificación de contraseña o identidad y descarga el ZIP."
           ],
           "refs": [
             {
-              "label": "¿Cómo descargo una copia de mi información?",
-              "href": "https://www.facebook.com/help/1701730696756992"
+              "label": "Exportar una copia de tu información de Facebook",
+              "href": "https://www.facebook.com/help/212802592074644"
             }
           ],
           "images": [
             {
-              "src": "",
-              "alt": "Configuración > Tu información"
+              "alt": "Centro de cuentas de Facebook: Tu información y permisos"
             },
             {
-              "src": "",
-              "alt": "Herramienta Descargar tu información"
+              "alt": "Panel Exportar tu información de Facebook"
             }
           ]
         },
@@ -277,28 +322,26 @@
           "title": "Instagram",
           "intro": "Solicita fotos, comentarios y datos de perfil. Recibirás un enlace por correo.",
           "steps": [
-            "App: Perfil → menú (≡) → Tu actividad.",
-            "Toca Descargar tu información (o Descargar o transferir información).",
-            "Elige Copia completa o categorías.",
-            "Entrega: En tu dispositivo. Confirma el correo.",
-            "Formato: HTML o JSON; calidad y Rango (Todo).",
-            "Solicitar descarga y confirmar contraseña.",
-            "Enlace de descarga válido ~4 días."
+            "En Instagram para escritorio, pulsa Más en la parte inferior izquierda y luego Configuración.",
+            "Abre el Centro de cuentas → Tu información y permisos → Exportar tu información.",
+            "Pulsa Crear exportación, selecciona el perfil de Instagram y pulsa Siguiente.",
+            "Selecciona Exportar al dispositivo.",
+            "Elige la información, el intervalo de fechas, el formato, el correo de notificación y la calidad multimedia.",
+            "Pulsa Iniciar exportación. Instagram te enviará un correo y una notificación cuando esté lista.",
+            "Vuelve a Descargas disponibles en un plazo de 4 días. Completa personalmente cualquier verificación de contraseña o identidad y descarga el ZIP."
           ],
           "refs": [
             {
-              "label": "Obtener una copia de tu información",
-              "href": "https://help.instagram.com/181231772500920"
+              "label": "Revisar y exportar una copia de tu información de Instagram",
+              "href": "https://www.facebook.com/help/181231772500920"
             }
           ],
           "images": [
             {
-              "src": "",
-              "alt": "Tu actividad"
+              "alt": "Centro de cuentas de Instagram: Tu información y permisos"
             },
             {
-              "src": "",
-              "alt": "Solicitud de descarga"
+              "alt": "Panel Exportar tu información de Instagram"
             }
           ]
         },
@@ -309,26 +352,25 @@
           "intro": "Exporta archivo completo o elementos específicos.",
           "steps": [
             "Escritorio: Yo → Configuración y privacidad.",
-            "Privacidad de datos → Obtener una copia de tus datos.",
-            "Archivo grande (completo) o archivos específicos.",
-            "Solicitar archivo y confirmar contraseña.",
-            "Preparación ~24 h. Recibirás un correo.",
-            "Volver y Descargar archivo (enlace caduca en pocos días)."
+            "Abre Privacidad de datos en la barra lateral izquierda.",
+            "En Cómo utiliza LinkedIn tus datos, abre Obtener una copia de tus datos.",
+            "En Descargar mis datos, elige categorías concretas o el archivo de datos de mayor tamaño.",
+            "Pulsa Solicitar archivo.",
+            "LinkedIn envía por correo las categorías concretas en unos minutos y el archivo de mayor tamaño en un plazo de 24 horas.",
+            "Usa el enlace del correo para descargar el archivo en un plazo de 72 horas."
           ],
           "refs": [
             {
               "label": "Descargar tus datos",
-              "href": "https://www.linkedin.com/help/linkedin/answer/a1339363"
+              "href": "https://www.linkedin.com/help/linkedin/answer/a1339364/downloading-your-account-data"
             }
           ],
           "images": [
             {
-              "src": "",
-              "alt": "Configuración y privacidad"
+              "alt": "Sección Cómo usa LinkedIn tus datos"
             },
             {
-              "src": "",
-              "alt": "Obtener copia de datos"
+              "alt": "Opciones de Descargar mis datos de LinkedIn"
             }
           ]
         },
@@ -338,12 +380,12 @@
           "title": "TikTok",
           "intro": "Solicita un ZIP de tu cuenta desde la app.",
           "steps": [
-            "App → Perfil → menú (☰/⋯) → Configuración y privacidad.",
-            "Cuenta → Descargar tus datos.",
-            "Selecciona qué incluir.",
-            "Formato: JSON recomendado.",
-            "Solicitar datos (Pendiente).",
-            "Pestaña Descargar datos → Descargar cuando esté listo (~4 días)."
+            "En la aplicación de TikTok, pulsa Perfil en la parte inferior.",
+            "Pulsa Menú (☰) en la parte superior → Configuración y privacidad → Cuenta → Descargar tus datos.",
+            "Elige la información que quieras incluir y selecciona un formato de archivo.",
+            "Pulsa Solicitar datos.",
+            "TikTok te avisará en la aplicación cuando el archivo esté listo; la preparación puede tardar unos días.",
+            "Vuelve a Descargar tus datos → Descargar datos y pulsa Descargar. El archivo estará disponible hasta 4 días."
           ],
           "refs": [
             {
@@ -351,16 +393,7 @@
               "href": "https://support.tiktok.com/en/account-and-privacy/personalized-ads-and-data/requesting-your-data"
             }
           ],
-          "images": [
-            {
-              "src": "",
-              "alt": "Configuración y privacidad"
-            },
-            {
-              "src": "",
-              "alt": "Descargar tus datos"
-            }
-          ]
+          "images": []
         },
         {
           "id": "x",
@@ -370,10 +403,11 @@
           "steps": [
             "Web: Más → Configuración y privacidad → Tu cuenta.",
             "Descargar un archivo con tus datos.",
-            "Contraseña + verificación por código.",
-            "Solicitar datos / archivo.",
-            "Correo/aviso cuando esté listo (horas o días).",
-            "Volver y Descargar archivo (enlace con tiempo)."
+            "Introduce tu contraseña y pulsa Confirmar.",
+            "Pulsa Enviar código e introduce el código enviado al correo o teléfono asociado a tu cuenta.",
+            "Pulsa Solicitar datos.",
+            "Espera el correo o la notificación push; la preparación puede tardar unos días.",
+            "Vuelve a Descargar un archivo con tus datos, pulsa Descargar datos y descarga el ZIP mientras mantienes la sesión iniciada."
           ],
           "refs": [
             {
@@ -383,12 +417,10 @@
           ],
           "images": [
             {
-              "src": "",
-              "alt": "Configuración en X"
+              "alt": "Configuración de Tu cuenta en X con la opción para descargar un archivo"
             },
             {
-              "src": "",
-              "alt": "Descargar archivo en X"
+              "alt": "Formulario vacío Verifica tu contraseña de X"
             }
           ]
         },
@@ -398,14 +430,19 @@
           "title": "YouTube",
           "intro": "Exporta YouTube y YouTube Music con Google Takeout.",
           "steps": [
-            "https://takeout.google.com → iniciar sesión.",
-            "Deseleccionar todo → marcar YouTube y YouTube Music.",
-            "Siguiente paso → Entrega (correo o nube).",
-            "Frecuencia: Una vez; Tipo y tamaño: ZIP.",
-            "Crear exportación; puede tardar.",
-            "Descargar ZIP(s) en ~7 días."
+            "Abre la página de Google Takeout para exportar datos de YouTube e inicia sesión.",
+            "Confirma que YouTube y YouTube Music sea el producto seleccionado; usa su control de opciones para ajustar el contenido.",
+            "Pulsa Siguiente paso.",
+            "Elige el método de entrega; Enviar enlace de descarga por correo mantiene el archivo fuera de un destino externo conectado.",
+            "Configura Frecuencia como Exportar una vez.",
+            "Elige el tipo y el tamaño máximo del archivo; las exportaciones mayores se dividen en varios archivos.",
+            "Pulsa Crear exportación. Google te enviará un correo cuando esté lista."
           ],
           "refs": [
+            {
+              "label": "Abrir la exportación de datos de YouTube en Google Takeout",
+              "href": "https://takeout.google.com/settings/takeout/custom/youtube"
+            },
             {
               "label": "Descargar tus datos (Takeout)",
               "href": "https://support.google.com/accounts/answer/3024190"
@@ -413,12 +450,10 @@
           ],
           "images": [
             {
-              "src": "",
-              "alt": "Selección YouTube"
+              "alt": "Selección de YouTube y YouTube Music en Google Takeout"
             },
             {
-              "src": "",
-              "alt": "Opciones de exportación"
+              "alt": "Destino, frecuencia y opciones de archivo para YouTube en Google Takeout"
             }
           ]
         },
@@ -428,14 +463,19 @@
           "title": "Google (Todos los datos)",
           "intro": "Exporta Gmail, Drive, Fotos, Mapas, YouTube y más con Takeout.",
           "steps": [
-            "https://takeout.google.com → iniciar sesión.",
-            "Todos los servicios o seleccionar solo algunos.",
-            "Siguiente paso → Entrega y Frecuencia: Una vez.",
-            "ZIP y tamaño (2/10/50 GB).",
-            "Crear exportación (minutos a días).",
-            "Descargar todas las partes en ~7 días."
+            "Abre Google Takeout e inicia sesión.",
+            "Los productos de Google que utilizas y que contienen tus datos se seleccionan automáticamente; desmarca los que no quieras incluir.",
+            "Pulsa Siguiente paso.",
+            "Elige el método de entrega; Enviar enlace de descarga por correo mantiene el archivo fuera de un destino externo conectado.",
+            "Configura Frecuencia como Exportar una vez.",
+            "Elige el tipo y el tamaño máximo del archivo; las exportaciones mayores se dividen en varios archivos.",
+            "Pulsa Crear exportación. Google te enviará un correo cuando esté lista; crear un archivo no elimina los datos originales."
           ],
           "refs": [
+            {
+              "label": "Abrir Google Takeout",
+              "href": "https://takeout.google.com"
+            },
             {
               "label": "Descargar tus datos (Takeout)",
               "href": "https://support.google.com/accounts/answer/3024190"
@@ -443,12 +483,10 @@
           ],
           "images": [
             {
-              "src": "",
-              "alt": "Servicios Takeout"
+              "alt": "Paso Selecciona los datos que quieras incluir de Google Takeout"
             },
             {
-              "src": "",
-              "alt": "Descarga Takeout"
+              "alt": "Destino, frecuencia y opciones de archivo de Google Takeout"
             }
           ],
           "note": "Consejo: guarda los ZIP cifrados y en lugar seguro."
@@ -458,11 +496,11 @@
     "fr": {
       "site_title": "Téléchargez vos données",
       "hero_heading": "Obtenez une copie de vos données des réseaux sociaux et plateformes de recherche",
-      "hero_sub": "Cliquez sur une plateforme pour accéder à sa section. Remplacez les vignettes par des captures plus tard.",
+      "hero_sub": "Cliquez sur une plateforme pour accéder à sa section.",
       "built_with": "Créé avec",
       "hosted_on": "S’exécute localement sur votre ordinateur.",
       "footer_tagline": "un guide rapide pour exporter vos informations.",
-      "official_help": "Aide officielle :",
+      "official_help": "Liens officiels :",
       "platforms": [
         {
           "id": "facebook",
@@ -470,28 +508,26 @@
           "title": "Facebook",
           "intro": "Exportez publications, photos, messages via « Télécharger vos informations ».",
           "steps": [
-            "Ordinateur : menu Profil → Paramètres et confidentialité → Paramètres.",
-            "Colonne gauche : Vos informations Facebook → Télécharger vos informations → Afficher.",
-            "Choisir les données (Tout) et Période (Toute).",
-            "Format : HTML/JSON ; Qualité : Haute.",
-            "Créer un fichier (statut En attente).",
-            "E-mail/notification ; revenir et Télécharger.",
-            "Mot de passe si demandé ; lien ~4 jours."
+            "Sur ordinateur, connectez-vous. Menu du profil → Paramètres et confidentialité → Paramètres.",
+            "Ouvrez l’Espace Comptes → Vos informations et autorisations → Exporter vos informations.",
+            "Cliquez sur Créer une exportation, puis sélectionnez le profil Facebook à exporter.",
+            "Sélectionnez Exporter vers l’appareil.",
+            "Choisissez les informations, la période, le format, l’adresse e-mail de notification et la qualité des contenus multimédias.",
+            "Cliquez sur Démarrer l’exportation. Facebook vous envoie un e-mail et une notification lorsqu’elle est prête.",
+            "Revenez dans Téléchargements disponibles sous 4 jours. Effectuez vous-même toute vérification du mot de passe ou de l’identité, puis téléchargez le ZIP."
           ],
           "refs": [
             {
-              "label": "Télécharger vos informations",
-              "href": "https://www.facebook.com/help/1701730696756992"
+              "label": "Exporter une copie de vos informations Facebook",
+              "href": "https://www.facebook.com/help/212802592074644"
             }
           ],
           "images": [
             {
-              "src": "",
-              "alt": "Paramètres > Vos informations"
+              "alt": "Espace Comptes Facebook : Vos informations et autorisations"
             },
             {
-              "src": "",
-              "alt": "Outil Télécharger vos informations"
+              "alt": "Panneau Exporter vos informations de Facebook"
             }
           ]
         },
@@ -501,28 +537,26 @@
           "title": "Instagram",
           "intro": "Demandez photos, commentaires, infos de profil. Lien par e-mail.",
           "steps": [
-            "App : Profil → menu (≡) → Votre activité.",
-            "Télécharger vos informations.",
-            "Copie complète ou catégories.",
-            "Livraison : sur votre appareil (confirmez l’e-mail).",
-            "Format : HTML/JSON ; qualité ; Période (Toute).",
-            "Demander le téléchargement ; confirmer le mot de passe.",
-            "Lien valable ~4 jours."
+            "Sur Instagram pour ordinateur, cliquez sur Plus en bas à gauche, puis sur Paramètres.",
+            "Ouvrez l’Espace Comptes → Vos informations et autorisations → Exporter vos informations.",
+            "Cliquez sur Créer une exportation, sélectionnez le profil Instagram, puis cliquez sur Suivant.",
+            "Sélectionnez Exporter vers l’appareil.",
+            "Choisissez les informations, la période, le format, l’adresse e-mail de notification et la qualité des contenus multimédias.",
+            "Cliquez sur Démarrer l’exportation. Instagram vous envoie un e-mail et une notification lorsqu’elle est prête.",
+            "Revenez dans Téléchargements disponibles sous 4 jours. Effectuez vous-même toute vérification du mot de passe ou de l’identité, puis téléchargez le ZIP."
           ],
           "refs": [
             {
-              "label": "Obtenir une copie de vos infos",
-              "href": "https://help.instagram.com/181231772500920"
+              "label": "Consulter et exporter une copie de vos informations Instagram",
+              "href": "https://www.facebook.com/help/181231772500920"
             }
           ],
           "images": [
             {
-              "src": "",
-              "alt": "Votre activité"
+              "alt": "Espace Comptes Instagram : Vos informations et autorisations"
             },
             {
-              "src": "",
-              "alt": "Demande de téléchargement"
+              "alt": "Panneau Exporter vos informations d’Instagram"
             }
           ]
         },
@@ -533,26 +567,25 @@
           "intro": "Archive complète ou fichiers spécifiques.",
           "steps": [
             "Moi → Paramètres et confidentialité.",
-            "Confidentialité des données → Obtenir une copie.",
-            "Grande archive ou fichiers spécifiques.",
-            "Demander l’archive ; confirmer le mot de passe.",
-            "Préparation ~24 h ; e-mail reçu.",
-            "Revenir et Télécharger (lien limité)."
+            "Ouvrez Confidentialité des données dans la barre latérale gauche.",
+            "Sous Comment LinkedIn utilise vos données, ouvrez Obtenir une copie de vos données.",
+            "Dans Télécharger mes données, choisissez des catégories précises ou l’archive de données plus volumineuse.",
+            "Cliquez sur Demander une archive.",
+            "LinkedIn envoie les catégories précises par e-mail en quelques minutes et l’archive plus volumineuse sous 24 heures.",
+            "Utilisez le lien reçu par e-mail pour télécharger l’archive sous 72 heures."
           ],
           "refs": [
             {
               "label": "Télécharger vos données",
-              "href": "https://www.linkedin.com/help/linkedin/answer/a1339363"
+              "href": "https://www.linkedin.com/help/linkedin/answer/a1339364/downloading-your-account-data"
             }
           ],
           "images": [
             {
-              "src": "",
-              "alt": "Paramètres & confidentialité"
+              "alt": "Section Comment LinkedIn utilise vos données"
             },
             {
-              "src": "",
-              "alt": "Obtenir une copie"
+              "alt": "Options Télécharger mes données de LinkedIn"
             }
           ]
         },
@@ -562,12 +595,12 @@
           "title": "TikTok",
           "intro": "Demandez un ZIP via l’app.",
           "steps": [
-            "App → Profil → menu (☰/⋯) → Paramètres et confidentialité.",
-            "Compte → Télécharger vos données.",
-            "Sélection du contenu.",
-            "Format : JSON recommandé.",
-            "Demander des données (En attente).",
-            "Onglet Télécharger des données → Télécharger (~4 jours)."
+            "Dans l’application TikTok, appuyez sur Profil en bas de l’écran.",
+            "Appuyez sur Menu (☰) en haut → Paramètres et confidentialité → Compte → Télécharger vos données.",
+            "Choisissez les informations à inclure et sélectionnez un format de fichier.",
+            "Appuyez sur Demander des données.",
+            "TikTok vous avertit dans l’application lorsque le fichier est prêt ; sa préparation peut prendre quelques jours.",
+            "Revenez dans Télécharger vos données → Télécharger des données, puis appuyez sur Télécharger. Le fichier reste disponible jusqu’à 4 jours."
           ],
           "refs": [
             {
@@ -575,16 +608,7 @@
               "href": "https://support.tiktok.com/en/account-and-privacy/personalized-ads-and-data/requesting-your-data"
             }
           ],
-          "images": [
-            {
-              "src": "",
-              "alt": "Paramètres TikTok"
-            },
-            {
-              "src": "",
-              "alt": "Télécharger vos données"
-            }
-          ]
+          "images": []
         },
         {
           "id": "x",
@@ -594,10 +618,11 @@
           "steps": [
             "Web : Plus → Paramètres et confidentialité → Votre compte.",
             "Télécharger une archive de vos données.",
-            "Mot de passe + vérification code.",
-            "Demander des données.",
-            "E-mail/notification (heures à jours).",
-            "Revenir et Télécharger (lien limité)."
+            "Saisissez votre mot de passe, puis cliquez sur Confirmer.",
+            "Cliquez sur Envoyer le code, puis saisissez le code envoyé à l’adresse e-mail ou au numéro de téléphone associé au compte.",
+            "Cliquez sur Demander des données.",
+            "Attendez l’e-mail ou la notification push ; la préparation peut prendre quelques jours.",
+            "Revenez dans Télécharger une archive de vos données, cliquez sur Télécharger les données, puis téléchargez le ZIP en restant connecté."
           ],
           "refs": [
             {
@@ -607,12 +632,10 @@
           ],
           "images": [
             {
-              "src": "",
-              "alt": "Paramètres X"
+              "alt": "Paramètres Votre compte de X avec l’option de téléchargement d’archive"
             },
             {
-              "src": "",
-              "alt": "Télécharger l’archive X"
+              "alt": "Formulaire vide Vérifiez votre mot de passe de X"
             }
           ]
         },
@@ -622,14 +645,19 @@
           "title": "YouTube",
           "intro": "Exportez YouTube/YouTube Music via Google Takeout.",
           "steps": [
-            "https://takeout.google.com → connexion.",
-            "Désélectionner tout → cocher YouTube/YouTube Music.",
-            "Étape suivante → Livraison (e-mail ou cloud).",
-            "Fréquence : Une fois ; Type : ZIP ; Taille adaptée.",
-            "Créer l’exportation ; peut durer.",
-            "Télécharger les ZIP sous ~7 jours."
+            "Ouvrez la page Google Takeout d’exportation des données YouTube et connectez-vous.",
+            "Vérifiez que YouTube et YouTube Music est le produit sélectionné ; utilisez son contrôle d’options pour préciser le contenu.",
+            "Cliquez sur Étape suivante.",
+            "Choisissez le mode d’envoi ; Envoyer le lien de téléchargement par e-mail évite de placer l’archive dans une destination externe connectée.",
+            "Réglez Fréquence sur Exporter une fois.",
+            "Choisissez le type et la taille maximale du fichier ; les exportations plus volumineuses sont divisées en plusieurs archives.",
+            "Cliquez sur Créer une exportation. Google vous envoie un e-mail lorsqu’elle est prête."
           ],
           "refs": [
+            {
+              "label": "Ouvrir l’exportation des données YouTube dans Google Takeout",
+              "href": "https://takeout.google.com/settings/takeout/custom/youtube"
+            },
             {
               "label": "Télécharger vos données (Takeout)",
               "href": "https://support.google.com/accounts/answer/3024190"
@@ -637,12 +665,10 @@
           ],
           "images": [
             {
-              "src": "",
-              "alt": "Sélection YouTube"
+              "alt": "Sélection YouTube et YouTube Music dans Google Takeout"
             },
             {
-              "src": "",
-              "alt": "Options d’export"
+              "alt": "Destination, fréquence et options de fichier YouTube dans Google Takeout"
             }
           ]
         },
@@ -652,14 +678,19 @@
           "title": "Google (Toutes les données)",
           "intro": "Exportez Gmail, Drive, Photos, Maps, YouTube, etc.",
           "steps": [
-            "https://takeout.google.com → connexion.",
-            "Tout ou sélection de services.",
-            "Étape suivante → Livraison ; Fréquence : Une fois.",
-            "ZIP et taille (2/10/50 Go).",
-            "Créer l’exportation (minutes à jours).",
-            "Télécharger toutes les parties ~7 jours."
+            "Ouvrez Google Takeout et connectez-vous.",
+            "Les produits Google que vous utilisez et qui contiennent vos données sont sélectionnés automatiquement ; décochez ceux que vous ne souhaitez pas inclure.",
+            "Cliquez sur Étape suivante.",
+            "Choisissez le mode d’envoi ; Envoyer le lien de téléchargement par e-mail évite de placer l’archive dans une destination externe connectée.",
+            "Réglez Fréquence sur Exporter une fois.",
+            "Choisissez le type et la taille maximale du fichier ; les exportations plus volumineuses sont divisées en plusieurs archives.",
+            "Cliquez sur Créer une exportation. Google vous envoie un e-mail lorsqu’elle est prête ; la création d’une archive ne supprime pas les données d’origine."
           ],
           "refs": [
+            {
+              "label": "Ouvrir Google Takeout",
+              "href": "https://takeout.google.com"
+            },
             {
               "label": "Télécharger vos données (Takeout)",
               "href": "https://support.google.com/accounts/answer/3024190"
@@ -667,12 +698,10 @@
           ],
           "images": [
             {
-              "src": "",
-              "alt": "Services Takeout"
+              "alt": "Étape Sélectionner les données à inclure de Google Takeout"
             },
             {
-              "src": "",
-              "alt": "Téléchargement Takeout"
+              "alt": "Destination, fréquence et options de fichier de Google Takeout"
             }
           ],
           "note": "Conseil : stockez les ZIP chiffrés et en lieu sûr."
@@ -682,11 +711,11 @@
     "ru": {
       "site_title": "Скачать ваши данные",
       "hero_heading": "Получите копию данных из соцсетей и поисковых сервисов",
-      "hero_sub": "Нажмите на платформу, чтобы перейти к разделу. Плитки замените скриншотами позже.",
+      "hero_sub": "Нажмите на платформу, чтобы перейти к разделу.",
       "built_with": "Создано на",
       "hosted_on": "Работает локально на вашем компьютере.",
       "footer_tagline": "краткое руководство по экспорту данных.",
-      "official_help": "Официальная справка:",
+      "official_help": "Официальные ссылки:",
       "platforms": [
         {
           "id": "facebook",
@@ -694,28 +723,26 @@
           "title": "Facebook",
           "intro": "Экспорт публикаций, фото, сообщений через «Скачать вашу информацию».",
           "steps": [
-            "Десктоп: меню профиля → Настройки и конфиденциальность → Настройки.",
-            "Слева: Ваша информация в Facebook → Скачать вашу информацию → Показать.",
-            "Выберите данные (всё) и Период (За всё время).",
-            "Формат HTML/JSON; качество медиа: Высокое.",
-            "Нажмите «Создать файл». Статус «Ожидается».",
-            "Ждите письмо/уведомление. Вернитесь и нажмите «Скачать».",
-            "Пароль по запросу. Ссылка действует ~4 дня."
+            "На компьютере войдите в аккаунт. Меню профиля → «Настройки и конфиденциальность» → «Настройки».",
+            "Откройте «Центр аккаунтов» → «Ваша информация и разрешения» → «Экспорт вашей информации».",
+            "Нажмите «Создать экспорт», затем выберите профиль Facebook для экспорта.",
+            "Выберите «Экспорт на устройство».",
+            "Выберите данные, диапазон дат, формат, адрес электронной почты для уведомлений и качество медиафайлов.",
+            "Нажмите «Начать экспорт». Facebook пришлёт письмо и уведомление, когда экспорт будет готов.",
+            "Вернитесь в раздел «Доступные загрузки» в течение 4 дней. Самостоятельно пройдите проверку пароля или личности и скачайте ZIP."
           ],
           "refs": [
             {
-              "label": "Как скачать копию сведений",
-              "href": "https://www.facebook.com/help/1701730696756992"
+              "label": "Экспорт копии вашей информации Facebook",
+              "href": "https://www.facebook.com/help/212802592074644"
             }
           ],
           "images": [
             {
-              "src": "",
-              "alt": "Настройки > Ваша информация"
+              "alt": "Центр аккаунтов Facebook: раздел «Ваша информация и разрешения»"
             },
             {
-              "src": "",
-              "alt": "Инструмент скачивания"
+              "alt": "Панель Facebook «Экспорт вашей информации»"
             }
           ]
         },
@@ -725,28 +752,26 @@
           "title": "Instagram",
           "intro": "Запрос фото, комментариев, данных профиля. Ссылка придёт на e-mail.",
           "steps": [
-            "Приложение: Профиль → меню (≡) → Ваша активность.",
-            "«Скачать ваши сведения».",
-            "Полная копия или категории.",
-            "Доставка: на устройство. Подтвердите e-mail.",
-            "Формат: HTML/JSON; качество; Период.",
-            "«Запросить скачивание», подтвердите пароль.",
-            "Ссылка действует ~4 дня."
+            "В веб-версии Instagram нажмите «Ещё» в левом нижнем углу, затем выберите «Настройки».",
+            "Откройте «Центр аккаунтов» → «Ваша информация и разрешения» → «Экспорт вашей информации».",
+            "Нажмите «Создать экспорт», выберите профиль Instagram и нажмите «Далее».",
+            "Выберите «Экспорт на устройство».",
+            "Выберите данные, диапазон дат, формат, адрес электронной почты для уведомлений и качество медиафайлов.",
+            "Нажмите «Начать экспорт». Instagram пришлёт письмо и уведомление, когда экспорт будет готов.",
+            "Вернитесь в раздел «Доступные загрузки» в течение 4 дней. Самостоятельно пройдите проверку пароля или личности и скачайте ZIP."
           ],
           "refs": [
             {
-              "label": "Копия ваших сведений",
-              "href": "https://help.instagram.com/181231772500920"
+              "label": "Просмотр и экспорт копии вашей информации Instagram",
+              "href": "https://www.facebook.com/help/181231772500920"
             }
           ],
           "images": [
             {
-              "src": "",
-              "alt": "Ваша активность"
+              "alt": "Центр аккаунтов Instagram: раздел «Ваша информация и разрешения»"
             },
             {
-              "src": "",
-              "alt": "Запрос скачивания"
+              "alt": "Панель Instagram «Экспорт вашей информации»"
             }
           ]
         },
@@ -757,26 +782,25 @@
           "intro": "Полный архив или отдельные файлы.",
           "steps": [
             "«Я» → «Настройки и конфиденциальность».",
-            "«Конфиденциальность данных» → «Копия ваших данных».",
-            "«Расширенный архив» или выбор файлов.",
-            "«Запросить архив», подтвердить пароль.",
-            "Подготовка ~24 ч; письмо придёт.",
-            "Вернитесь и нажмите «Скачать архив» (срок ограничен)."
+            "Откройте раздел «Конфиденциальность данных» в левой панели.",
+            "В разделе «Как LinkedIn использует ваши данные» откройте «Получить копию своих данных».",
+            "На странице «Скачать мои данные» выберите отдельные категории или расширенный архив данных.",
+            "Нажмите «Запросить архив».",
+            "LinkedIn отправит отдельные категории по электронной почте через несколько минут, а расширенный архив — в течение 24 часов.",
+            "Перейдите по ссылке из письма и скачайте архив в течение 72 часов."
           ],
           "refs": [
             {
               "label": "Скачать данные аккаунта",
-              "href": "https://www.linkedin.com/help/linkedin/answer/a1339363"
+              "href": "https://www.linkedin.com/help/linkedin/answer/a1339364/downloading-your-account-data"
             }
           ],
           "images": [
             {
-              "src": "",
-              "alt": "Настройки и конфиденциальность"
+              "alt": "Раздел LinkedIn «Как LinkedIn использует ваши данные»"
             },
             {
-              "src": "",
-              "alt": "Копия данных"
+              "alt": "Параметры LinkedIn «Скачать мои данные»"
             }
           ]
         },
@@ -786,12 +810,12 @@
           "title": "TikTok",
           "intro": "Запрос ZIP-архива в приложении.",
           "steps": [
-            "Приложение → Профиль → меню (☰/⋯) → Настройки и конфиденциальность.",
-            "Аккаунт → «Скачать ваши данные».",
-            "Выбор содержимого.",
-            "Формат: JSON.",
-            "«Запросить данные» (Ожидается).",
-            "Вкладка «Загрузка данных» → «Скачать» (~4 дня)."
+            "В приложении TikTok нажмите «Профиль» внизу экрана.",
+            "Нажмите «Меню» (☰) вверху → «Настройки и конфиденциальность» → «Аккаунт» → «Скачать ваши данные».",
+            "Выберите данные, которые нужно включить, и формат файла.",
+            "Нажмите «Запросить данные».",
+            "TikTok уведомит вас в приложении, когда файл будет готов; подготовка может занять несколько дней.",
+            "Вернитесь в раздел «Скачать ваши данные» → «Загрузка данных» и нажмите «Скачать». Файл будет доступен до 4 дней."
           ],
           "refs": [
             {
@@ -799,16 +823,7 @@
               "href": "https://support.tiktok.com/en/account-and-privacy/personalized-ads-and-data/requesting-your-data"
             }
           ],
-          "images": [
-            {
-              "src": "",
-              "alt": "Настройки TikTok"
-            },
-            {
-              "src": "",
-              "alt": "Загрузка данных"
-            }
-          ]
+          "images": []
         },
         {
           "id": "x",
@@ -818,10 +833,11 @@
           "steps": [
             "Веб: «Ещё» → «Настройки и конфиденциальность» → «Ваша учётная запись».",
             "«Скачать архив ваших данных».",
-            "Пароль + код подтверждения.",
-            "«Запросить данные».",
-            "Письмо/уведомление (часы–дни).",
-            "«Скачать архив» (ссылка ограничена)."
+            "Введите пароль и нажмите «Подтвердить».",
+            "Нажмите «Отправить код» и введите код, отправленный на адрес электронной почты или номер телефона, указанный в аккаунте.",
+            "Нажмите «Запросить данные».",
+            "Дождитесь письма или push-уведомления; подготовка может занять несколько дней.",
+            "Вернитесь в раздел «Скачать архив ваших данных», нажмите «Скачать данные» и загрузите ZIP, не выходя из аккаунта."
           ],
           "refs": [
             {
@@ -831,12 +847,10 @@
           ],
           "images": [
             {
-              "src": "",
-              "alt": "Настройки X"
+              "alt": "Раздел X «Ваш аккаунт» с пунктом скачивания архива"
             },
             {
-              "src": "",
-              "alt": "Страница скачивания X"
+              "alt": "Пустая форма X «Подтвердите пароль»"
             }
           ]
         },
@@ -846,14 +860,19 @@
           "title": "YouTube",
           "intro": "Экспорт YouTube/YouTube Music через Google Takeout.",
           "steps": [
-            "https://takeout.google.com → вход.",
-            "«Снять выделение со всех» → «YouTube и YouTube Music».",
-            "«Следующий шаг» → Доставка (почта/облако).",
-            "Частота: один раз; ZIP; порог размера.",
-            "«Создать экспорт»; ожидание.",
-            "Скачать ZIP(ы) в течение ~7 дней."
+            "Откройте страницу Google Takeout для экспорта данных YouTube и войдите в аккаунт.",
+            "Убедитесь, что выбран продукт «YouTube и YouTube Music»; настройте состав данных с помощью его параметров.",
+            "Нажмите «Следующий шаг».",
+            "Выберите способ доставки; вариант «Отправить ссылку для скачивания по электронной почте» не передаёт архив во внешнее подключённое хранилище.",
+            "Установите для параметра «Частота» значение «Однократный экспорт».",
+            "Выберите тип и максимальный размер файла; более крупный экспорт будет разделён на несколько архивов.",
+            "Нажмите «Создать экспорт». Google отправит письмо, когда архив будет готов."
           ],
           "refs": [
+            {
+              "label": "Открыть экспорт данных YouTube в Google Takeout",
+              "href": "https://takeout.google.com/settings/takeout/custom/youtube"
+            },
             {
               "label": "Скачать данные (Takeout)",
               "href": "https://support.google.com/accounts/answer/3024190"
@@ -861,12 +880,10 @@
           ],
           "images": [
             {
-              "src": "",
-              "alt": "Выбор YouTube"
+              "alt": "Выбор YouTube и YouTube Music в Google Takeout"
             },
             {
-              "src": "",
-              "alt": "Опции экспорта"
+              "alt": "Способ доставки, частота и параметры файлов YouTube в Google Takeout"
             }
           ]
         },
@@ -876,14 +893,19 @@
           "title": "Google (Все данные)",
           "intro": "Экспорт Gmail, Drive, Photos, Maps, YouTube и др.",
           "steps": [
-            "https://takeout.google.com → вход.",
-            "Все сервисы или выборочно.",
-            "«Следующий шаг» → Доставка; Частота: один раз.",
-            "ZIP и размер (2/10/50 ГБ).",
-            "«Создать экспорт» (минуты–дни).",
-            "Скачать части в течение ~7 дней."
+            "Откройте Google Takeout и войдите в аккаунт.",
+            "Продукты Google, которыми вы пользуетесь и в которых хранятся ваши данные, выбираются автоматически; снимите отметку с продуктов, которые не нужно включать.",
+            "Нажмите «Следующий шаг».",
+            "Выберите способ доставки; вариант «Отправить ссылку для скачивания по электронной почте» не передаёт архив во внешнее подключённое хранилище.",
+            "Установите для параметра «Частота» значение «Однократный экспорт».",
+            "Выберите тип и максимальный размер файла; более крупный экспорт будет разделён на несколько архивов.",
+            "Нажмите «Создать экспорт». Google отправит письмо, когда архив будет готов; создание архива не удаляет исходные данные."
           ],
           "refs": [
+            {
+              "label": "Открыть Google Takeout",
+              "href": "https://takeout.google.com"
+            },
             {
               "label": "Скачать данные (Takeout)",
               "href": "https://support.google.com/accounts/answer/3024190"
@@ -891,12 +913,10 @@
           ],
           "images": [
             {
-              "src": "",
-              "alt": "Сервисы Takeout"
+              "alt": "Шаг Google Takeout «Выберите данные для включения»"
             },
             {
-              "src": "",
-              "alt": "Загрузка Takeout"
+              "alt": "Способ доставки, частота и параметры файлов Google Takeout"
             }
           ],
           "note": "Совет: храните ZIP-архивы зашифрованными."

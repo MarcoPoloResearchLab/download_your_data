@@ -258,6 +258,55 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Repository search finds no shipped `tmdbenrich` command or standalone Netflix runtime reference.
   - `make ci`
 
+- [x] [I010] (P1) {P004} Publish the authenticated web instruction screenshot set
+  Goal:
+  Capture and publish the current web export workflow so a user can follow each supported provider without the capture operator starting an export.
+
+  Requirements:
+  - Cover Facebook, Instagram, LinkedIn, X, YouTube, and Google with two canonical English desktop screenshots per provider.
+  - Use the operator's authenticated Chrome session and the current official provider routes.
+  - Navigate only through instructional setup screens and stop before every archive request, export creation, download, destination connection, password entry, verification-code request, or account mutation.
+  - Treat X's empty password-verification form as the second instructional boundary; do not enter credentials solely to reach a later screen.
+  - Capture the smallest useful panel at a consistent desktop viewport without browser chrome, credentials, names, handles, email addresses, avatars, organizations, account identifiers, notifications, or private counts.
+  - Keep one 12-entry shared manifest and reuse the assets across `en`, `es`, `fr`, and `ru`; do not duplicate screenshots by locale.
+  - Remove web placeholders when the complete 12-shot set is accepted. TikTok remains text-only until `I011` supplies its separate mobile set.
+
+  Deliverables:
+  - Twelve reviewed, metadata-free local assets beneath `images/instructions/`.
+  - Current provider instructions, official references, capture runbook, and shared screenshot manifest.
+  - Shared asset wiring with localized alternative text for all four locales.
+  - Repository-native screenshot validation and browser coverage.
+
+  Validation:
+  - The manifest contains exactly 12 unique web screenshot IDs and two local assets for each supported web provider.
+  - Every image is privacy-reviewed at full resolution and matches its recorded current live labels.
+  - All four locales render the shared images without placeholders at desktop and mobile application viewports.
+  - `make test-browser`
+  - `make ci`
+  - `git diff --check`
+  - `git status --short`
+
+- [ ] [I011] (P2) {P004} Publish the authenticated TikTok mobile instruction screenshots
+  Goal:
+  Add the app-owned TikTok export workflow as an independently scheduled mobile capture.
+
+  Requirements:
+  - Use an operator-connected authenticated TikTok mobile surface; do not substitute an unofficial web flow, mock, or stale screenshot.
+  - Capture Settings and privacy navigation and Download your data before Request data.
+  - Keep credentials, identity-verification material, personal identifiers, notifications, and private account content out of published assets.
+  - Do not request, cancel, or download an archive, change settings, switch accounts, or cross an identity-verification boundary.
+  - Record current official workflow and publication guidance at capture time.
+
+  Deliverables:
+  - Two reviewed, metadata-free portrait assets and their manifest entries.
+  - Shared localized asset wiring without locale-specific image duplication.
+  - Updated screenshot validation and browser coverage.
+
+  Validation:
+  - Both TikTok assets match the current authenticated app labels and contain no private content.
+  - `make test-browser`
+  - `make ci`
+
 ## Maintenance
 
 - [ ] [M400R] (P2) Backlog hygiene and archive
@@ -722,41 +771,19 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   Validation:
   - Confirm `I006` owns command consolidation and `F005` validates both browser and operator surfaces from the packaged artifact.
 
-- [ ] [P004] (P1) Produce the privacy-safe authenticated instruction screenshot set
+- [x] [P004] (P1) Confirm the privacy-safe instruction screenshot execution split
   Goal:
-  Establish and execute one operator-assisted capture contract that lets an agent prepare every missing platform screenshot from the current authenticated interfaces without receiving or persisting credentials, changing account state, or publishing personal information.
-
-  Requirements:
-  - Treat the current registry as the required inventory: Facebook, Instagram, LinkedIn, TikTok, X, YouTube, and Google; two screenshot purposes per platform; four site locales (`en`, `es`, `fr`, and `ru`).
-  - Produce 14 canonical screenshots shared by all locales, not 56 duplicated locale-specific files. Keep screenshot identity, path, provenance, and capture metadata in one shared manifest; keep localized alt text and captions in locale-owned content.
-  - Before capture, reconcile every instruction, screenshot purpose, direct route, and help link against the current official provider workflow. The verified starting references are Facebook export help (`https://www.facebook.com/help/212802592074644`), Instagram export help (`https://www.facebook.com/help/181231772500920`), LinkedIn data download help (`https://www.linkedin.com/help/linkedin/answer/a1339364/downloading-your-account-data`), TikTok data request help (`https://support.tiktok.com/en/account-and-privacy/personalized-ads-and-data/requesting-your-data`), X archive help (`https://help.x.com/en/managing-your-account/how-to-download-your-x-archive`), and Google Takeout help (`https://support.google.com/accounts/answer/3024190`). Replace stale instructions and links at their owning source instead of documenting old and new paths together.
-  - Use the user's existing authenticated Chrome session for the supported web flows: Meta Accounts Center for Facebook and Instagram, LinkedIn Settings & Privacy, X account settings, and Google Takeout for both YouTube-only and full-Google exports. Do not clone the default browser profile, export cookies or storage, save Playwright authentication state, or build a reusable credential-bearing automation profile.
-  - Use an operator-connected mobile surface for TikTok because its current official export workflow is app-owned. Prefer iPhone Mirroring on a compatible Mac and iPhone; if no supported authenticated mobile surface is available, record the exact TikTok capture blocker rather than substituting an unofficial web flow, mock, or stale screenshot.
-  - Require the operator to perform every sign-in, password, passcode, MFA, CAPTCHA, account/profile selection, and other identity-verification step. The agent may resume read-only navigation only after the operator states that the authenticated surface is ready.
-  - Limit agent actions to opening the allowlisted settings routes, navigating to the documented panels, normalizing the visual state, and capturing images. Do not start or cancel an export, request an archive, download personal data, connect an external destination, change a setting, accept a new permission, or cross any provider's final submission boundary solely to obtain a screenshot.
-  - Define the 14-shot manifest before opening authenticated pages. Each entry must name the platform, screenshot ID, instructional purpose, expected visible labels, official source, direct route, desktop or mobile surface, operator checkpoint, forbidden final action, output path, viewport, capture date, and review status.
-  - Capture web panels in English at a fixed desktop viewport, 100% zoom, light theme, and CSS-pixel scale. Capture TikTok in a consistent portrait mobile frame. Clip to the smallest panel that still preserves navigational context; hide animations, carets, transient notifications, browser chrome, and unrelated account content.
-  - Remove names, handles, email addresses, phone numbers, avatars, organizations, account identifiers, locations, notifications, private counts, and other user-specific content with opaque capture-time masks or cropping. Do not rely on blur, and do not commit raw authenticated screenshots.
-  - Write raw captures only to a private temporary directory outside the repository. Publish only reviewed, metadata-free local assets beneath `images/instructions/`, then remove the raw temporary captures after the sanitized derivatives are approved.
-  - Confirm that publishing each provider interface screenshot for instructional use is compatible with the provider's current brand, copyright, and terms guidance. Record provenance and any required attribution in the manifest; do not import screenshots from unofficial guides or search results.
-  - Remove all placeholder copy and empty screenshot sources once the complete set is accepted. The product must either have the current complete canonical set or fail validation; do not retain placeholder tiles, partial locale wiring, or fallback assets.
+  Separate current web capture from the operator-dependent mobile capture so each can be executed and validated independently.
 
   Deliverables:
-  - A checked-in capture runbook and 14-entry screenshot manifest containing the platform-specific routes, user handoffs, read-only stop boundaries, capture specification, provenance, and recapture date.
-  - Fourteen privacy-reviewed local screenshot assets covering the two declared purposes for all seven platform sections.
-  - One shared screenshot registry referenced by all four localized instruction sets, with localized alt text and captions and no duplicated image contract.
-  - Current provider instructions and official references that match the labels visible in the accepted screenshots.
-  - A repository-native screenshot validator and browser coverage that reject missing files, empty sources, duplicate locale-owned assets, remote image URLs, invalid dimensions, unexpected metadata, and placeholder rendering.
+  - `I010` owns the authenticated Chrome capture, publication, registry, and validation for Facebook, Instagram, LinkedIn, X, YouTube, and Google.
+  - `I011` owns the authenticated TikTok mobile capture and publication.
+  - Both issues stop before export submission, archive request, download, credential entry, identity verification, destination connection, or account mutation.
+  - The application uses only the current accepted asset contract; no partial-set fallback or legacy screenshot registry is introduced.
 
   Validation:
-  - Machine-check that the shared manifest contains exactly 14 unique screenshot IDs and local tracked assets, every locale maps all seven platforms to the same two canonical IDs, and no image source is empty or remote.
-  - Inspect every final image at full resolution and confirm that it contains no credentials, identity-verification material, personal identifiers, private account content, browser chrome, or embedded metadata.
-  - Compare every image and instruction path with the current live provider labels and its recorded official reference on the capture date; reject the set if any path is stale or any shot requires crossing its recorded submission boundary.
-  - Exercise `en`, `es`, `fr`, and `ru` at desktop and mobile application viewports and assert that all screenshots load, preserve aspect ratio, render useful localized alternatives, and do not show placeholder tiles.
-  - `make test-browser`
-  - `make ci`
-  - `git diff --check`
-  - `git status --short`
+  - Confirm the web task can close without an authenticated mobile surface.
+  - Confirm the mobile task can add TikTok assets without recapturing the web set.
 
 - [x] [P005] (P1) Confirm the Netflix provider incorporation contract
   Goal:
