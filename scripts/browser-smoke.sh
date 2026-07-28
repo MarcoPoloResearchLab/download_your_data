@@ -6,6 +6,7 @@ readonly base_url="http://${address}"
 readonly session_name="download-your-data-ci-$$"
 readonly playwright_version="${PLAYWRIGHT_CLI_VERSION:?PLAYWRIGHT_CLI_VERSION is required}"
 readonly server_log="$(mktemp -t download-your-data-server.XXXXXX.log)"
+readonly data_directory="$(mktemp -d -t download-your-data-data.XXXXXX)"
 
 server_pid=""
 
@@ -21,10 +22,13 @@ cleanup() {
     wait "${server_pid}" >/dev/null 2>&1 || true
   fi
   rm -f "${server_log}"
+  rm -rf "${data_directory}"
 }
 trap cleanup EXIT
 
-DOWNLOAD_YOUR_DATA_ADDRESS="${address}" go run . >"${server_log}" 2>&1 &
+DOWNLOAD_YOUR_DATA_ADDRESS="${address}" \
+DOWNLOAD_YOUR_DATA_DATA_DIR="${data_directory}" \
+go run . >"${server_log}" 2>&1 &
 server_pid=$!
 
 for _ in $(seq 1 100); do

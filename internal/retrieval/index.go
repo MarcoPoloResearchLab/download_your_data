@@ -12,6 +12,7 @@ import (
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/embedding"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/inference"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/normalize"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/product"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/store"
 )
 
@@ -20,7 +21,7 @@ type IndexOptions struct {
 	Provider         string
 	Model            string
 	Dimensions       int
-	BaseURL          string
+	BaseURL          inference.BaseURL
 	DocumentPrefix   string
 	QueryPrefix      string
 	BatchSize        int
@@ -71,9 +72,12 @@ func (service *IndexService) Run(contextValue context.Context, options IndexOpti
 		options.QueryPrefix = DefaultQueryPrefix
 	}
 	if options.BatchSize <= 0 {
-		options.BatchSize = 64
+		options.BatchSize = product.DefaultInferenceBatchSize
 	}
-	options.BaseURL = inference.NormalizeBaseURL(options.BaseURL)
+	baseURL := options.BaseURL.String()
+	if baseURL == "" {
+		return domain.SearchIndexConfig{}, 0, fmt.Errorf("search inference base URL is required")
+	}
 
 	documents, documentError := BuildDocuments(contextValue, service.Store)
 	if documentError != nil {
@@ -103,16 +107,12 @@ func (service *IndexService) Run(contextValue context.Context, options IndexOpti
 		)
 	}
 	if options.Rebuild {
-		oldVectorPath, deleted, deleteError := service.Store.DeleteSearchIndexByName(contextValue, options.Name)
+		oldVectorFile, deleted, deleteError := service.Store.DeleteSearchIndexByName(contextValue, options.Name)
 		if deleteError != nil {
 			return domain.SearchIndexConfig{}, 0, deleteError
 		}
 		if deleted {
-			resolvedOldVectorPath := oldVectorPath
-			if !filepath.IsAbs(resolvedOldVectorPath) {
-				resolvedOldVectorPath = filepath.Join(service.Store.DatabaseDirectory(), resolvedOldVectorPath)
-			}
-			if removeError := os.Remove(resolvedOldVectorPath); removeError != nil && !os.IsNotExist(removeError) {
+			if removeError := os.Remove(oldVectorFile.Path()); removeError != nil && !os.IsNotExist(removeError) {
 				return domain.SearchIndexConfig{}, 0, fmt.Errorf("remove rebuilt search vector file: %w", removeError)
 			}
 		}
@@ -123,7 +123,7 @@ func (service *IndexService) Run(contextValue context.Context, options IndexOpti
 		options.Provider,
 		options.Model,
 		fmt.Sprintf("%d", options.Dimensions),
-		options.BaseURL,
+		baseURL,
 		options.DocumentPrefix,
 		options.QueryPrefix,
 		DefaultBuilderVersion,
@@ -134,7 +134,7 @@ func (service *IndexService) Run(contextValue context.Context, options IndexOpti
 		Provider:       options.Provider,
 		Model:          options.Model,
 		Dimensions:     options.Dimensions,
-		BaseURL:        options.BaseURL,
+		BaseURL:        baseURL,
 		DocumentPrefix: options.DocumentPrefix,
 		QueryPrefix:    options.QueryPrefix,
 		VectorPath:     filepath.Join("search-vectors", identity[:20]+".f32"),
@@ -180,8 +180,12 @@ func (service *IndexService) Run(contextValue context.Context, options IndexOpti
 	if rowError != nil {
 		return config, 0, rowError
 	}
+	privateVectorFile, pathError := service.Store.ResolveSearchVectorFile(config)
+	if pathError != nil {
+		return config, 0, pathError
+	}
 	vectorFile, vectorError := embedding.OpenVectorFile(
-		service.Store.ResolveSearchVectorPath(config),
+		privateVectorFile,
 		config.Dimensions,
 		maximumVectorRow,
 	)

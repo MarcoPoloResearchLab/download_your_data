@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
 	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -15,22 +15,34 @@ import (
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/inference"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/ingest"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/intent"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/privatepath"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/product"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/report"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/retrieval"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/runtimeconfig"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/store"
 )
 
 const version = "0.2.0"
 
 func main() {
-	if runError := run(os.Args[1:]); runError != nil {
+	homeDirectory, homeError := os.UserHomeDir()
+	if homeError != nil {
+		fmt.Fprintln(os.Stderr, "error: resolve user home directory:", homeError)
+		os.Exit(1)
+	}
+	config, configError := runtimeconfig.Load(os.Getenv, homeDirectory, rand.Reader)
+	if configError != nil {
+		fmt.Fprintln(os.Stderr, "error:", configError)
+		os.Exit(1)
+	}
+	if runError := run(os.Args[1:], config); runError != nil {
 		fmt.Fprintln(os.Stderr, "error:", runError)
 		os.Exit(1)
 	}
 }
 
-func run(arguments []string) error {
+func run(arguments []string, config runtimeconfig.Config) error {
 	if len(arguments) == 0 {
 		printUsage()
 		return nil
@@ -41,17 +53,17 @@ func run(arguments []string) error {
 	case "inspect":
 		return runInspect(commandArguments)
 	case "import":
-		return runImport(commandArguments)
+		return runImport(config, commandArguments)
 	case "status":
-		return runStatus(commandArguments)
+		return runStatus(config, commandArguments)
 	case "embed":
-		return runEmbed(commandArguments)
+		return runEmbed(config, commandArguments)
 	case "index":
-		return runIndex(commandArguments)
+		return runIndex(config, commandArguments)
 	case "search":
-		return runSearch(commandArguments)
+		return runSearch(config, commandArguments)
 	case "definitions":
-		return runDefinitions(commandArguments)
+		return runDefinitions(config, commandArguments)
 	case "version":
 		fmt.Println(version)
 		return nil
@@ -108,22 +120,17 @@ func runInspect(arguments []string) error {
 	return nil
 }
 
-func runImport(arguments []string) error {
+func runImport(config runtimeconfig.Config, arguments []string) error {
 	flagSet := flag.NewFlagSet("import", flag.ContinueOnError)
-	databasePath := flagSet.String("db", product.DefaultArchiveDatabasePath, "SQLite database path")
 	forceImport := flagSet.Bool("force", false, "import even when the same export hash was already completed")
 	if parseError := flagSet.Parse(arguments); parseError != nil {
 		return parseError
 	}
 	if flagSet.NArg() != 1 {
-		return fmt.Errorf(
-			"usage: %s import [--db %s] <openai-export.zip>",
-			product.ArchiveCommandName,
-			product.DefaultArchiveDatabasePath,
-		)
+		return fmt.Errorf("usage: %s import <openai-export.zip>", product.ArchiveCommandName)
 	}
 
-	openedStore, openError := store.Open(*databasePath)
+	openedStore, openError := store.Open(config.ArchiveDatabase())
 	if openError != nil {
 		return openError
 	}
@@ -156,13 +163,15 @@ func runImport(arguments []string) error {
 	return nil
 }
 
-func runStatus(arguments []string) error {
+func runStatus(config runtimeconfig.Config, arguments []string) error {
 	flagSet := flag.NewFlagSet("status", flag.ContinueOnError)
-	databasePath := flagSet.String("db", product.DefaultArchiveDatabasePath, "SQLite database path")
 	if parseError := flagSet.Parse(arguments); parseError != nil {
 		return parseError
 	}
-	openedStore, openError := store.Open(*databasePath)
+	if flagSet.NArg() != 0 {
+		return fmt.Errorf("usage: %s status", product.ArchiveCommandName)
+	}
+	openedStore, openError := store.Open(config.ArchiveDatabase())
 	if openError != nil {
 		return openError
 	}
@@ -228,45 +237,41 @@ func runStatus(arguments []string) error {
 	return nil
 }
 
-func runEmbed(arguments []string) error {
+func runEmbed(runtimeConfig runtimeconfig.Config, arguments []string) error {
 	flagSet := flag.NewFlagSet("embed", flag.ContinueOnError)
-	configuredBaseURL := inference.ConfiguredBaseURL(os.Getenv(inference.BaseURLEnvironment))
-	databasePath := flagSet.String("db", product.DefaultArchiveDatabasePath, "SQLite database path")
 	provider := flagSet.String("provider", inference.DefaultEmbeddingProvider, "embedding provider label")
 	model := flagSet.String("model", inference.DefaultEmbeddingModel, "embedding model or local server alias")
 	dimensions := flagSet.Int("dimensions", inference.DefaultEmbeddingDimensions, "embedding dimensions")
-	baseURL := flagSet.String("base-url", configuredBaseURL, "OpenAI-compatible embedding API base URL")
 	inputPrefix := flagSet.String("input-prefix", inference.DefaultEmbeddingInputPrefix, "task prefix prepended to every embedding input")
 	apiKeyEnvironment := flagSet.String("api-key-env", "", "optional environment variable containing an API key")
-	allowRemote := flagSet.Bool("allow-remote", false, "allow text to be sent to a non-loopback inference endpoint")
-	batchSize := flagSet.Int("batch-size", 64, "messages per embedding request")
+	batchSize := flagSet.Int("batch-size", product.DefaultInferenceBatchSize, "messages per embedding request")
 	maximumMessages := flagSet.Int("max-messages", 0, "maximum messages to embed in this run; zero means all")
 	refreshStale := flagSet.Bool("refresh-stale", false, "re-embed messages whose prepared text changed")
 	if parseError := flagSet.Parse(arguments); parseError != nil {
 		return parseError
+	}
+	if flagSet.NArg() != 0 {
+		return fmt.Errorf("usage: %s embed [options]", product.ArchiveCommandName)
 	}
 
 	apiKey, apiKeyError := readOptionalAPIKey(*apiKeyEnvironment)
 	if apiKeyError != nil {
 		return apiKeyError
 	}
-	if boundaryError := validateInferenceBoundary("embedding", *baseURL, *allowRemote); boundaryError != nil {
-		return boundaryError
-	}
-	openedStore, openError := store.Open(*databasePath)
+	openedStore, openError := store.Open(runtimeConfig.ArchiveDatabase())
 	if openError != nil {
 		return openError
 	}
 	defer openedStore.Close()
 
 	fmt.Printf("Embedding provider: %s\n", *provider)
-	fmt.Printf("API base URL: %s\n", *baseURL)
-	printInferenceBoundary("Embedding", *baseURL)
+	fmt.Printf("API base URL: %s\n", runtimeConfig.InferenceBaseURL().String())
+	printInferenceBoundary("Embedding", runtimeConfig.InferenceBoundary())
 	fmt.Println("Text sent to inference: user-message text and limited neighboring context")
 	fmt.Println("Attachments sent to inference: no")
 
 	embedder := &embedding.HTTPEmbedder{
-		BaseURL:     *baseURL,
+		BaseURL:     runtimeConfig.InferenceBaseURL(),
 		APIKey:      apiKey,
 		Model:       *model,
 		Dimensions:  *dimensions,
@@ -279,11 +284,11 @@ func runEmbed(arguments []string) error {
 			fmt.Printf("Embedded this run: %d; total for configuration: %d\n", progress.EmbeddedThisRun, progress.TotalEmbedded)
 		},
 	}
-	config, embeddedCount, embeddingError := service.Run(context.Background(), embedding.ServiceOptions{
+	embeddingConfig, embeddedCount, embeddingError := service.Run(context.Background(), embedding.ServiceOptions{
 		Provider:        *provider,
 		Model:           *model,
 		Dimensions:      *dimensions,
-		BaseURL:         *baseURL,
+		BaseURL:         runtimeConfig.InferenceBaseURL(),
 		InputPrefix:     *inputPrefix,
 		BatchSize:       *batchSize,
 		MaximumMessages: *maximumMessages,
@@ -292,32 +297,35 @@ func runEmbed(arguments []string) error {
 	if embeddingError != nil {
 		return embeddingError
 	}
+	vectorFile, pathError := openedStore.ResolveVectorFile(embeddingConfig)
+	if pathError != nil {
+		return pathError
+	}
 	fmt.Printf("Embedding complete. New embeddings: %d\n", embeddedCount)
-	fmt.Printf("Configuration ID: %d; vector file: %s\n", config.ID, openedStore.ResolveVectorPath(config))
+	fmt.Printf("Configuration ID: %d; vector file: %s\n", embeddingConfig.ID, vectorFile.Path())
 	return nil
 }
 
-func runIndex(arguments []string) error {
+func runIndex(runtimeConfig runtimeconfig.Config, arguments []string) error {
 	if len(arguments) == 0 || arguments[0] != "build" {
 		return fmt.Errorf("usage: %s index build [options]", product.ArchiveCommandName)
 	}
 	flagSet := flag.NewFlagSet("index build", flag.ContinueOnError)
-	configuredBaseURL := inference.ConfiguredBaseURL(os.Getenv(inference.BaseURLEnvironment))
-	databasePath := flagSet.String("db", product.DefaultArchiveDatabasePath, "SQLite database path")
 	name := flagSet.String("name", retrieval.DefaultIndexName, "conversation search index name")
 	provider := flagSet.String("provider", inference.DefaultEmbeddingProvider, "embedding provider label")
 	model := flagSet.String("model", inference.DefaultEmbeddingModel, "embedding model or local server alias")
 	dimensions := flagSet.Int("dimensions", inference.DefaultEmbeddingDimensions, "embedding dimensions")
-	baseURL := flagSet.String("base-url", configuredBaseURL, "OpenAI-compatible embedding API base URL")
 	documentPrefix := flagSet.String("document-prefix", retrieval.DefaultDocumentPrefix, "task prefix for indexed conversation documents")
 	queryPrefix := flagSet.String("query-prefix", retrieval.DefaultQueryPrefix, "task prefix for search queries")
 	apiKeyEnvironment := flagSet.String("api-key-env", "", "optional environment variable containing an API key")
-	allowRemote := flagSet.Bool("allow-remote", false, "allow conversation text to be sent to a non-loopback inference endpoint")
-	batchSize := flagSet.Int("batch-size", 64, "conversation documents per embedding request")
+	batchSize := flagSet.Int("batch-size", product.DefaultInferenceBatchSize, "conversation documents per embedding request")
 	maximumDocuments := flagSet.Int("max-documents", 0, "maximum documents to embed in this run; zero means all")
 	rebuild := flagSet.Bool("rebuild", false, "replace the named search index and its vector file after model preflight succeeds")
 	if parseError := flagSet.Parse(arguments[1:]); parseError != nil {
 		return parseError
+	}
+	if flagSet.NArg() != 0 {
+		return fmt.Errorf("usage: %s index build [options]", product.ArchiveCommandName)
 	}
 	if *batchSize <= 0 {
 		return fmt.Errorf("--batch-size must be positive")
@@ -325,14 +333,11 @@ func runIndex(arguments []string) error {
 	if *maximumDocuments < 0 {
 		return fmt.Errorf("--max-documents must not be negative")
 	}
-	if boundaryError := validateInferenceBoundary("conversation indexing", *baseURL, *allowRemote); boundaryError != nil {
-		return boundaryError
-	}
 	apiKey, apiKeyError := readOptionalAPIKey(*apiKeyEnvironment)
 	if apiKeyError != nil {
 		return apiKeyError
 	}
-	openedStore, openError := store.Open(*databasePath)
+	openedStore, openError := store.Open(runtimeConfig.ArchiveDatabase())
 	if openError != nil {
 		return openError
 	}
@@ -340,13 +345,13 @@ func runIndex(arguments []string) error {
 
 	fmt.Printf("Conversation search index: %s\n", *name)
 	fmt.Printf("Embedding provider: %s\n", *provider)
-	fmt.Printf("API base URL: %s\n", *baseURL)
-	printInferenceBoundary("Conversation indexing", *baseURL)
+	fmt.Printf("API base URL: %s\n", runtimeConfig.InferenceBaseURL().String())
+	printInferenceBoundary("Conversation indexing", runtimeConfig.InferenceBoundary())
 	fmt.Println("Indexed roles: visible user and assistant text across every branch")
 	fmt.Println("Excluded content: thoughts, reasoning recaps, empty text, attachments, images, and audio")
 
 	documentEmbedder := &embedding.HTTPEmbedder{
-		BaseURL:     *baseURL,
+		BaseURL:     runtimeConfig.InferenceBaseURL(),
 		APIKey:      apiKey,
 		Model:       *model,
 		Dimensions:  *dimensions,
@@ -366,12 +371,12 @@ func runIndex(arguments []string) error {
 			)
 		},
 	}
-	config, embeddedCount, indexError := service.Run(context.Background(), retrieval.IndexOptions{
+	searchConfig, embeddedCount, indexError := service.Run(context.Background(), retrieval.IndexOptions{
 		Name:             *name,
 		Provider:         *provider,
 		Model:            *model,
 		Dimensions:       *dimensions,
-		BaseURL:          *baseURL,
+		BaseURL:          runtimeConfig.InferenceBaseURL(),
 		DocumentPrefix:   *documentPrefix,
 		QueryPrefix:      *queryPrefix,
 		BatchSize:        *batchSize,
@@ -389,16 +394,18 @@ func runIndex(arguments []string) error {
 		}
 		return indexError
 	}
+	vectorFile, pathError := openedStore.ResolveSearchVectorFile(searchConfig)
+	if pathError != nil {
+		return pathError
+	}
 	fmt.Printf("Index run complete. Embedded documents: %d\n", embeddedCount)
 	fmt.Printf("Eligible documents: %d; excluded messages: %d\n", service.EligibleDocuments, service.ExcludedMessages)
-	fmt.Printf("Search index ID: %d; status: %s; vector file: %s\n", config.ID, config.Status, openedStore.ResolveSearchVectorPath(config))
+	fmt.Printf("Search index ID: %d; status: %s; vector file: %s\n", searchConfig.ID, searchConfig.Status, vectorFile.Path())
 	return nil
 }
 
-func runSearch(arguments []string) error {
+func runSearch(runtimeConfig runtimeconfig.Config, arguments []string) error {
 	flagSet := flag.NewFlagSet("search", flag.ContinueOnError)
-	configuredBaseURLOverride := strings.TrimSpace(os.Getenv(inference.BaseURLEnvironment))
-	databasePath := flagSet.String("db", product.DefaultArchiveDatabasePath, "SQLite database path")
 	query := flagSet.String("query", "", "natural-language conversation search query")
 	mode := flagSet.String("mode", retrieval.SearchModeHybrid, "hybrid, semantic, or lexical")
 	limit := flagSet.Int("limit", 50, "maximum conversations; zero returns every qualifying conversation")
@@ -406,17 +413,18 @@ func runSearch(arguments []string) error {
 	excerpts := flagSet.Int("excerpts", 3, "supporting excerpts per conversation")
 	explain := flagSet.Bool("explain", false, "show component scores and retrieval methods for each excerpt")
 	indexID := flagSet.Int64("index-id", 0, "conversation search index ID; zero selects the latest ready index")
-	baseURLOverride := flagSet.String("base-url", configuredBaseURLOverride, "override the stored query embedding API base URL")
 	apiKeyEnvironment := flagSet.String("api-key-env", "", "optional environment variable containing the query embedding API key")
-	allowRemote := flagSet.Bool("allow-remote", false, "allow query text to be sent to a non-loopback inference endpoint")
 	sinceValue := flagSet.String("since", "", "optional start date or RFC3339 timestamp")
 	untilValue := flagSet.String("until", "", "optional inclusive end date or exclusive RFC3339 timestamp")
 	timezoneName := flagSet.String("timezone", "America/Los_Angeles", "IANA timezone for date-only values")
 	excludeArchived := flagSet.Bool("exclude-archived", false, "exclude archived conversations")
-	outputPath := flagSet.String("output", "", "optional CSV or JSON report path")
+	outputPath := flagSet.String("output", "", "optional report path relative to the private data root")
 	outputFormat := flagSet.String("format", "", "table, csv, or json; inferred from output extension when omitted")
 	if parseError := flagSet.Parse(arguments); parseError != nil {
 		return parseError
+	}
+	if flagSet.NArg() != 0 {
+		return fmt.Errorf("usage: %s search --query <topic> [options]", product.ArchiveCommandName)
 	}
 	if strings.TrimSpace(*query) == "" {
 		return fmt.Errorf("--query is required")
@@ -430,6 +438,20 @@ func runSearch(arguments []string) error {
 	if *minimumSemanticScore < -1 || *minimumSemanticScore > 1 {
 		return fmt.Errorf("--min-semantic-score must be between -1 and 1")
 	}
+	var outputFile privatepath.File
+	var auditFile privatepath.File
+	if strings.TrimSpace(*outputPath) != "" {
+		var outputFileError error
+		outputFile, outputFileError = runtimeConfig.DataRoot().File(*outputPath)
+		if outputFileError != nil {
+			return fmt.Errorf("validate --output: %w", outputFileError)
+		}
+		var auditFileError error
+		auditFile, auditFileError = report.RelatedFile(outputFile, "-audit", ".json")
+		if auditFileError != nil {
+			return auditFileError
+		}
+	}
 	location, locationError := time.LoadLocation(*timezoneName)
 	if locationError != nil {
 		return fmt.Errorf("load timezone %s: %w", *timezoneName, locationError)
@@ -438,7 +460,7 @@ func runSearch(arguments []string) error {
 	if rangeError != nil {
 		return rangeError
 	}
-	openedStore, openError := store.Open(*databasePath)
+	openedStore, openError := store.Open(runtimeConfig.ArchiveDatabase())
 	if openError != nil {
 		return openError
 	}
@@ -457,19 +479,23 @@ func runSearch(arguments []string) error {
 	var queryEmbedder embedding.Embedder
 	effectiveBaseURL := searchIndex.BaseURL
 	if *mode != retrieval.SearchModeLexical {
-		if strings.TrimSpace(*baseURLOverride) != "" {
-			effectiveBaseURL = inference.NormalizeBaseURL(*baseURLOverride)
-		}
-		if boundaryError := validateInferenceBoundary("conversation search query", effectiveBaseURL, *allowRemote); boundaryError != nil {
-			return boundaryError
+		configuredBaseURL := runtimeConfig.InferenceBaseURL()
+		effectiveBaseURL = configuredBaseURL.String()
+		if searchIndex.BaseURL != effectiveBaseURL {
+			return fmt.Errorf(
+				"search index %d uses inference URL %s; run %s index build --rebuild with the current runtime configuration",
+				searchIndex.ID,
+				searchIndex.BaseURL,
+				product.ArchiveCommandName,
+			)
 		}
 		apiKey, apiKeyError := readOptionalAPIKey(*apiKeyEnvironment)
 		if apiKeyError != nil {
 			return apiKeyError
 		}
-		printInferenceBoundary("Conversation search query", effectiveBaseURL)
+		printInferenceBoundary("Conversation search query", runtimeConfig.InferenceBoundary())
 		queryEmbedder = &embedding.HTTPEmbedder{
-			BaseURL:     effectiveBaseURL,
+			BaseURL:     configuredBaseURL,
 			APIKey:      apiKey,
 			Model:       searchIndex.Model,
 			Dimensions:  searchIndex.Dimensions,
@@ -520,11 +546,10 @@ func runSearch(arguments []string) error {
 	}
 	fmt.Printf("\nConversations: %d; elapsed: %s\n", len(results), elapsed.Round(time.Millisecond))
 	if strings.TrimSpace(*outputPath) != "" {
-		if reportError := report.WriteConversationSearchResults(*outputPath, *outputFormat, results); reportError != nil {
+		if reportError := report.WriteConversationSearchResults(outputFile, *outputFormat, results); reportError != nil {
 			return reportError
 		}
-		auditPath := strings.TrimSuffix(*outputPath, filepath.Ext(*outputPath)) + "-audit.json"
-		if auditError := report.WriteConversationSearchAudit(auditPath, report.SearchAuditMetadata{
+		if auditError := report.WriteConversationSearchAudit(auditFile, report.SearchAuditMetadata{
 			ApplicationVersion:   version,
 			Query:                *query,
 			Mode:                 *mode,
@@ -543,7 +568,7 @@ func runSearch(arguments []string) error {
 		}); auditError != nil {
 			return auditError
 		}
-		fmt.Printf("Report: %s\nAudit report: %s\n", *outputPath, auditPath)
+		fmt.Printf("Report: %s\nAudit report: %s\n", outputFile.Path(), auditFile.Path())
 	}
 	return nil
 }
@@ -590,11 +615,8 @@ func oneLineExcerpt(value string, maximumRunes int) string {
 	return string(runes[:maximumRunes]) + "…"
 }
 
-func runDefinitions(arguments []string) error {
+func runDefinitions(runtimeConfig runtimeconfig.Config, arguments []string) error {
 	flagSet := flag.NewFlagSet("definitions", flag.ContinueOnError)
-	configuredBaseURL := inference.ConfiguredBaseURL(os.Getenv(inference.BaseURLEnvironment))
-	configuredBaseURLOverride := strings.TrimSpace(os.Getenv(inference.BaseURLEnvironment))
-	databasePath := flagSet.String("db", product.DefaultArchiveDatabasePath, "SQLite database path")
 	months := flagSet.Int("months", 3, "lookback in calendar months when --since is omitted")
 	sinceValue := flagSet.String("since", "", "start date or RFC3339 timestamp")
 	untilValue := flagSet.String("until", "", "inclusive end date or exclusive RFC3339 timestamp")
@@ -603,22 +625,34 @@ func runDefinitions(arguments []string) error {
 	excludeArchived := flagSet.Bool("exclude-archived", false, "exclude archived conversations")
 	semanticEnabled := flagSet.Bool("semantic", true, "use embeddings and semantic prototypes")
 	intentConfigPath := flagSet.String("intent-config", "", "optional JSON definition-intent configuration")
-	outputPath := flagSet.String("output", "definitions.csv", "main report path")
+	outputPath := flagSet.String("output", "reports/definitions.csv", "report path relative to the private data root")
 	outputFormat := flagSet.String("format", "", "csv or json; inferred from output extension when omitted")
-	baseURLOverride := flagSet.String("base-url", configuredBaseURLOverride, "override the stored embedding API base URL")
 	apiKeyEnvironment := flagSet.String("api-key-env", "", "optional environment variable containing the embedding API key")
 	embeddingConfigID := flagSet.Int64("embedding-config-id", 0, "embedding configuration ID; zero selects the latest ready configuration")
 	allowBuildingConfig := flagSet.Bool("allow-building-config", false, "allow semantic analysis with an incomplete embedding configuration")
-	allowRemote := flagSet.Bool("allow-remote", false, "allow text to be sent to non-loopback inference endpoints")
 	verifyEnabled := flagSet.Bool("verify", false, "verify retrieved candidates with a structured-output model")
 	verifyModel := flagSet.String("verify-model", inference.DefaultVerifierModel, "verification model or local server alias")
-	verifyBaseURL := flagSet.String("verify-base-url", configuredBaseURL, "OpenAI-compatible verification API base URL")
 	verifyAPIKeyEnvironment := flagSet.String("verify-api-key-env", "", "optional environment variable containing the verification API key")
 	verifyBatchSize := flagSet.Int("verify-batch-size", 8, "candidates per local verification request")
 	verifyTimeout := flagSet.Duration("verify-timeout", 10*time.Minute, "timeout for each local verification request")
 	verifyMaxRetries := flagSet.Int("verify-max-retries", 2, "retries before splitting a failed verification batch")
 	if parseError := flagSet.Parse(arguments); parseError != nil {
 		return parseError
+	}
+	if flagSet.NArg() != 0 {
+		return fmt.Errorf("usage: %s definitions [options]", product.ArchiveCommandName)
+	}
+	outputFile, outputFileError := runtimeConfig.DataRoot().File(*outputPath)
+	if outputFileError != nil {
+		return fmt.Errorf("validate --output: %w", outputFileError)
+	}
+	reviewFile, reviewFileError := report.RelatedFile(outputFile, "-review", "")
+	if reviewFileError != nil {
+		return reviewFileError
+	}
+	auditFile, auditFileError := report.RelatedFile(outputFile, "-audit", ".json")
+	if auditFileError != nil {
+		return auditFileError
 	}
 
 	location, locationError := time.LoadLocation(*timezoneName)
@@ -633,7 +667,7 @@ func runDefinitions(arguments []string) error {
 	if configError != nil {
 		return configError
 	}
-	openedStore, openError := store.Open(*databasePath)
+	openedStore, openError := store.Open(runtimeConfig.ArchiveDatabase())
 	if openError != nil {
 		return openError
 	}
@@ -659,14 +693,16 @@ func runDefinitions(arguments []string) error {
 				embeddingConfig.Status,
 			)
 		}
-		semanticBaseURL := embeddingConfig.BaseURL
-		if strings.TrimSpace(*baseURLOverride) != "" {
-			semanticBaseURL = inference.NormalizeBaseURL(*baseURLOverride)
+		semanticBaseURL := runtimeConfig.InferenceBaseURL()
+		if embeddingConfig.BaseURL != semanticBaseURL.String() {
+			return fmt.Errorf(
+				"embedding configuration %d uses inference URL %s; run %s embed with the current runtime configuration",
+				embeddingConfig.ID,
+				embeddingConfig.BaseURL,
+				product.ArchiveCommandName,
+			)
 		}
-		if boundaryError := validateInferenceBoundary("semantic embedding", semanticBaseURL, *allowRemote); boundaryError != nil {
-			return boundaryError
-		}
-		effectiveEmbeddingBaseURL = semanticBaseURL
+		effectiveEmbeddingBaseURL = semanticBaseURL.String()
 		apiKey, apiKeyError := readOptionalAPIKey(*apiKeyEnvironment)
 		if apiKeyError != nil {
 			return apiKeyError
@@ -678,6 +714,7 @@ func runDefinitions(arguments []string) error {
 			Dimensions:  embeddingConfig.Dimensions,
 			InputPrefix: embeddingConfig.InputPrefix,
 		}
+		printInferenceBoundary("Semantic embedding", runtimeConfig.InferenceBoundary())
 	}
 
 	var verifier intent.Verifier
@@ -692,16 +729,13 @@ func runDefinitions(arguments []string) error {
 		if *verifyMaxRetries < 0 {
 			return fmt.Errorf("--verify-max-retries must not be negative")
 		}
-		if boundaryError := validateInferenceBoundary("verification", *verifyBaseURL, *allowRemote); boundaryError != nil {
-			return boundaryError
-		}
 		verificationAPIKey, apiKeyError := readOptionalAPIKey(*verifyAPIKeyEnvironment)
 		if apiKeyError != nil {
 			return apiKeyError
 		}
-		printInferenceBoundary("Verification", *verifyBaseURL)
+		printInferenceBoundary("Verification", runtimeConfig.InferenceBoundary())
 		httpVerifier := &intent.HTTPVerifier{
-			BaseURL:    *verifyBaseURL,
+			BaseURL:    runtimeConfig.InferenceBaseURL(),
 			APIKey:     verificationAPIKey,
 			Model:      *verifyModel,
 			BatchSize:  *verifyBatchSize,
@@ -731,21 +765,19 @@ func runDefinitions(arguments []string) error {
 		return analysisError
 	}
 
-	if reportError := report.WriteDefinitionResults(*outputPath, *outputFormat, analysisOutput.Results); reportError != nil {
+	if reportError := report.WriteDefinitionResults(outputFile, *outputFormat, analysisOutput.Results); reportError != nil {
 		return reportError
 	}
-	reviewPath := report.RelatedPath(*outputPath, "-review")
-	if reportError := report.WriteDefinitionResults(reviewPath, *outputFormat, analysisOutput.Review); reportError != nil {
+	if reportError := report.WriteDefinitionResults(reviewFile, *outputFormat, analysisOutput.Review); reportError != nil {
 		return reportError
 	}
-	auditPath := strings.TrimSuffix(*outputPath, filepath.Ext(*outputPath)) + "-audit.json"
 	verificationCacheHits := 0
 	verificationCacheMisses := 0
 	if cachedVerifier != nil {
 		verificationCacheHits = cachedVerifier.CacheHits
 		verificationCacheMisses = cachedVerifier.CacheMisses
 	}
-	if auditError := report.WriteAudit(auditPath, analysisOutput, report.AuditMetadata{
+	if auditError := report.WriteAudit(auditFile, analysisOutput, report.AuditMetadata{
 		ApplicationVersion:      version,
 		Since:                   sinceTime,
 		Until:                   untilTime,
@@ -758,7 +790,7 @@ func runDefinitions(arguments []string) error {
 		EffectiveEmbeddingURL:   effectiveEmbeddingBaseURL,
 		VerificationEnabled:     *verifyEnabled,
 		VerifierModel:           *verifyModel,
-		VerifierBaseURL:         inference.NormalizeBaseURL(*verifyBaseURL),
+		VerifierBaseURL:         runtimeConfig.InferenceBaseURL().String(),
 		VerifierBatchSize:       *verifyBatchSize,
 		VerifierTimeout:         *verifyTimeout,
 		VerifierMaxRetries:      *verifyMaxRetries,
@@ -774,9 +806,9 @@ func runDefinitions(arguments []string) error {
 	fmt.Printf("Retrieved candidates: %d\n", analysisOutput.Candidates)
 	fmt.Printf("Accepted definition requests: %d\n", len(analysisOutput.Results))
 	fmt.Printf("Review cases: %d\n", len(analysisOutput.Review))
-	fmt.Printf("Report: %s\n", *outputPath)
-	fmt.Printf("Review report: %s\n", reviewPath)
-	fmt.Printf("Audit report: %s\n", auditPath)
+	fmt.Printf("Report: %s\n", outputFile.Path())
+	fmt.Printf("Review report: %s\n", reviewFile.Path())
+	fmt.Printf("Audit report: %s\n", auditFile.Path())
 	return nil
 }
 
@@ -850,23 +882,12 @@ func readOptionalAPIKey(environmentName string) (string, error) {
 	return apiKey, nil
 }
 
-func printInferenceBoundary(operation string, baseURL string) {
-	if inference.IsLoopbackBaseURL(baseURL) {
+func printInferenceBoundary(operation string, boundary runtimeconfig.InferenceBoundary) {
+	if boundary == runtimeconfig.InferenceBoundaryLoopback {
 		fmt.Printf("%s inference boundary: local loopback\n", operation)
 		return
 	}
 	fmt.Printf("%s inference boundary: remote network endpoint explicitly configured\n", operation)
-}
-
-func validateInferenceBoundary(operation string, baseURL string, allowRemote bool) error {
-	if inference.IsLoopbackBaseURL(baseURL) || allowRemote {
-		return nil
-	}
-	return fmt.Errorf(
-		"%s endpoint %s is not loopback; pass --allow-remote to authorize sending text",
-		operation,
-		inference.NormalizeBaseURL(baseURL),
-	)
 }
 
 func printUsage() {
@@ -876,8 +897,8 @@ Local semantic indexing for ChatGPT data exports.
 
 Usage:
   %[1]s inspect <openai-export.zip>
-  %[1]s import [--db %[3]s] <openai-export.zip>
-  %[1]s status [--db %[3]s]
+  %[1]s import <openai-export.zip>
+  %[1]s status
   %[1]s embed [options]
   %[1]s index build [options]
   %[1]s search --query <topic> [options]
@@ -886,22 +907,28 @@ Usage:
 
 Typical conversation-search workflow:
   %[1]s inspect openai-export.zip
-  %[1]s import --db %[3]s openai-export.zip
-  lms load <embedding-model> --identifier %[4]s
+  %[1]s import openai-export.zip
+  lms load <embedding-model> --identifier %[3]s
   lms server start
-  %[1]s index build --db %[3]s
-  %[1]s search --db %[3]s --query anime
+  %[1]s index build
+  %[1]s search --query anime
 
 Optional definition-request workflow:
-  %[1]s embed --db %[3]s
-  lms load <instruction-model> --identifier %[5]s
-  %[1]s definitions --db %[3]s --months 3 --verify --output definitions.csv
+  %[1]s embed
+  lms load <instruction-model> --identifier %[4]s
+  %[1]s definitions --months 3 --verify --output reports/definitions.csv
 
+Runtime configuration:
+  DOWNLOAD_YOUR_DATA_ADDRESS
+  DOWNLOAD_YOUR_DATA_DATA_DIR
+  DOWNLOAD_YOUR_DATA_INFERENCE_BASE_URL
+  DOWNLOAD_YOUR_DATA_INFERENCE_BOUNDARY=loopback|authorized-remote
+
+Report --output values are relative to DOWNLOAD_YOUR_DATA_DATA_DIR.
 Run a command with -h for its flags.
 `,
 		product.ArchiveCommandName,
 		version,
-		product.DefaultArchiveDatabasePath,
 		inference.DefaultEmbeddingModel,
 		inference.DefaultVerifierModel,
 	)

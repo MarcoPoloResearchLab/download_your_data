@@ -10,10 +10,12 @@ import (
 )
 
 const (
-	currentSchemaOwner   = "download_your_data"
-	currentSchemaVersion = "1"
-	schemaOwnerKey       = "schema_owner"
-	schemaVersionKey     = "schema_version"
+	currentSchemaOwner    = "download_your_data"
+	currentSchemaVersion  = "1"
+	currentSchemaContract = "openai-conversation-archive-1"
+	schemaContractKey     = "schema_contract"
+	schemaOwnerKey        = "schema_owner"
+	schemaVersionKey      = "schema_version"
 )
 
 const connectionPragmasSQL = `
@@ -31,11 +33,11 @@ CREATE TABLE schema_metadata (
 
 INSERT INTO schema_metadata(key, value) VALUES
     ('schema_owner', 'download_your_data'),
-    ('schema_version', '1');
+    ('schema_version', '1'),
+    ('schema_contract', 'openai-conversation-archive-1');
 
 CREATE TABLE imports (
     import_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    source_path TEXT NOT NULL,
     source_sha256 TEXT NOT NULL,
     parser_version TEXT NOT NULL,
     started_at_ms INTEGER NOT NULL,
@@ -57,8 +59,6 @@ CREATE TABLE conversations (
     is_archived INTEGER,
     current_node_id TEXT,
     source_import_id INTEGER NOT NULL,
-    source_filename TEXT NOT NULL,
-    raw_metadata_json TEXT,
     FOREIGN KEY (source_import_id) REFERENCES imports(import_id)
 );
 
@@ -79,10 +79,8 @@ CREATE TABLE messages (
     original_text TEXT NOT NULL,
     normalized_text TEXT NOT NULL,
     content_hash TEXT NOT NULL,
-    source_filename TEXT NOT NULL,
     source_node_id TEXT NOT NULL,
     extraction_warning TEXT,
-    raw_metadata_json TEXT,
     FOREIGN KEY (conversation_id) REFERENCES conversations(conversation_id) ON DELETE CASCADE,
     UNIQUE (conversation_id, source_node_id)
 );
@@ -368,6 +366,19 @@ func (store *Store) validateSchemaIdentity(contextValue context.Context) error {
 			fmt.Sprintf("uses schema version %q; this application requires %q", schemaVersion, currentSchemaVersion),
 		)
 	}
+	schemaContract, contractError := store.readSchemaMetadata(contextValue, schemaContractKey)
+	if contractError != nil {
+		return contractError
+	}
+	if schemaContract != currentSchemaContract {
+		return store.incompatibleSchemaError(
+			fmt.Sprintf(
+				"declares schema contract %q; this application requires %q",
+				schemaContract,
+				currentSchemaContract,
+			),
+		)
+	}
 	return nil
 }
 
@@ -416,8 +427,8 @@ func (store *Store) validateSchemaObjects(contextValue context.Context) error {
 
 func (store *Store) incompatibleSchemaError(reason string) error {
 	return fmt.Errorf(
-		"database %q %s; archive this database and re-import its source export with `%s import --db <new-database> <openai-export.zip>`",
-		store.databasePath,
+		"database %q %s; archive it outside the configured data root, then re-import its source export with `%s import <openai-export.zip>`",
+		store.DatabasePath(),
 		reason,
 		product.ArchiveCommandName,
 	)

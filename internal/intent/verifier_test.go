@@ -5,12 +5,10 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"path/filepath"
 	"sync/atomic"
 	"testing"
 
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/inference"
-	"github.com/MarcoPoloResearchLab/download_your_data/internal/store"
 )
 
 type countingVerifier struct {
@@ -39,7 +37,11 @@ func (verifier *countingVerifier) Verify(_ context.Context, inputs []Verificatio
 
 func TestVerifierDefaultsToLocalInference(testContext *testing.T) {
 	expectedEndpoint := inference.DefaultBaseURL + "/chat/completions"
-	if received := chatCompletionsEndpoint(""); received != expectedEndpoint {
+	received, endpointError := mustIntentBaseURL(testContext, "").Endpoint("chat/completions")
+	if endpointError != nil {
+		testContext.Fatalf("build verifier endpoint: %v", endpointError)
+	}
+	if received != expectedEndpoint {
 		testContext.Fatalf("expected %q, received %q", expectedEndpoint, received)
 	}
 	if received := verifierModel(""); received != inference.DefaultVerifierModel {
@@ -75,7 +77,7 @@ func TestHTTPVerifierUsesStructuredLocalRequestWithoutAPIKey(testContext *testin
 	defer server.Close()
 
 	verifier := HTTPVerifier{
-		BaseURL: server.URL + "/v1",
+		BaseURL: mustIntentBaseURL(testContext, server.URL+"/v1"),
 		Model:   "download-your-data-verifier",
 	}
 	results, verifyError := verifier.Verify(context.Background(), []VerificationInput{{
@@ -91,10 +93,7 @@ func TestHTTPVerifierUsesStructuredLocalRequestWithoutAPIKey(testContext *testin
 }
 
 func TestCachedVerifierResumesFromStoredResults(testContext *testing.T) {
-	openedStore, openError := store.Open(filepath.Join(testContext.TempDir(), "archive.db"))
-	if openError != nil {
-		testContext.Fatalf("open store: %v", openError)
-	}
+	openedStore := openIntentTestStore(testContext)
 	defer openedStore.Close()
 
 	inner := &countingVerifier{}
@@ -164,7 +163,7 @@ func TestHTTPVerifierSplitsFailedBatch(testContext *testing.T) {
 	defer server.Close()
 
 	verifier := HTTPVerifier{
-		BaseURL:    server.URL + "/v1",
+		BaseURL:    mustIntentBaseURL(testContext, server.URL+"/v1"),
 		Model:      "download-your-data-verifier",
 		BatchSize:  2,
 		MaxRetries: 0,

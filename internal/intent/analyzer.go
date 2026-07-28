@@ -88,8 +88,12 @@ func (analyzer *Analyzer) Analyze(contextValue context.Context, options AnalyzeO
 		if rowError != nil {
 			return output, rowError
 		}
+		privateVectorFile, pathError := analyzer.Store.ResolveVectorFile(options.EmbeddingConfig)
+		if pathError != nil {
+			return output, pathError
+		}
 		openedVectorFile, vectorError := embedding.OpenVectorFile(
-			analyzer.Store.ResolveVectorPath(options.EmbeddingConfig),
+			privateVectorFile,
 			options.EmbeddingConfig.Dimensions,
 			maximumVectorRow,
 		)

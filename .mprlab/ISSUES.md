@@ -139,7 +139,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Eligible-document coverage is 100% before a generation can become ready.
   - `make eval-search`
 
-- [ ] [I005] (P1) {I003} Establish the secure local data and inference boundary
+- [x] [I005] (P1) {I003} Establish the secure local data and inference boundary
   Goal:
   Give every HTTP, storage, and inference operation one validated local runtime configuration.
 

@@ -25,6 +25,14 @@ DOWNLOAD_YOUR_DATA_ADDRESS=127.0.0.1:9000 make run
 
 Non-loopback bind addresses are rejected because the first canonical release is local-only.
 
+Application state defaults to `~/.download-your-data`. To use another location, provide one absolute owner-only directory:
+
+```bash
+DOWNLOAD_YOUR_DATA_DATA_DIR=/absolute/private/path make run
+```
+
+The process creates the data root and every application-owned subdirectory with mode `0700`; databases, vectors, reports, caches, and other files use mode `0600`. Relative paths, filesystem roots, the user home itself, permissive existing directories, symbolic-link escapes, and application output paths outside this root are rejected.
+
 ## Validate
 
 ```bash
@@ -40,10 +48,12 @@ The product-owned archive command remains available while its operator subcomman
 ```bash
 make build-archive
 ./build/download-your-data-archive inspect ~/Downloads/openai-export.zip
-./build/download-your-data-archive import --db ~/.download-your-data/archive.db ~/Downloads/openai-export.zip
-./build/download-your-data-archive index build --db ~/.download-your-data/archive.db
-./build/download-your-data-archive search --db ~/.download-your-data/archive.db --query "anime"
+./build/download-your-data-archive import ~/Downloads/openai-export.zip
+./build/download-your-data-archive index build
+./build/download-your-data-archive search --query "anime" --output reports/anime.json
 ```
+
+All operator commands use the same validated runtime configuration as the local server. The sole conversation database is `<data-root>/openai/archive.db`; `--output` values are paths relative to the private data root.
 
 Run its complete deterministic workflow with:
 
@@ -51,6 +61,14 @@ Run its complete deterministic workflow with:
 make smoke-archive
 ```
 
-The local inference endpoint defaults to LM Studio at `http://127.0.0.1:1234/v1`. Override it with `DOWNLOAD_YOUR_DATA_INFERENCE_BASE_URL`; non-loopback inference still requires explicit authorization at the operation boundary.
+The local inference endpoint defaults to LM Studio at `http://127.0.0.1:1234/v1`. `DOWNLOAD_YOUR_DATA_INFERENCE_BASE_URL` is the only endpoint override. It accepts a normalized HTTP or HTTPS server URL without credentials, query strings, or fragments. A remote endpoint also requires the explicit process-level authorization:
 
-Conversation databases use the sole first-release identity `download_your_data/1`. A brand-new empty database is initialized with that schema. Any nonempty database with a different identity, version, or incomplete object set is rejected with an archive-and-reimport instruction; the application does not read, migrate, or repair another persisted shape.
+```bash
+DOWNLOAD_YOUR_DATA_INFERENCE_BASE_URL=https://inference.example.com/v1 \
+DOWNLOAD_YOUR_DATA_INFERENCE_BOUNDARY=authorized-remote \
+./build/download-your-data-archive index build
+```
+
+The browser cannot override the configured inference URL. The local HTTP server accepts only loopback hosts and same-origin browser requests, requires its per-process CSRF token for mutation requests, and does not enable cross-origin access. `GET /api/capabilities` reports the current non-secret runtime boundary, model identity, readiness state, archive limits, and data-root readiness.
+
+Conversation databases use the sole first-release identity `download_your_data/1` and schema contract `openai-conversation-archive-1`. A brand-new empty database is initialized with that exact minimized schema. Any nonempty database with a different identity, version, contract, or incomplete object set is rejected with an archive-and-reimport instruction; the application does not read, migrate, or repair another persisted shape.

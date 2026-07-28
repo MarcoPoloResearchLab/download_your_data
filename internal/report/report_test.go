@@ -10,10 +10,11 @@ import (
 
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/domain"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/intent"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/privatepath"
 )
 
 func TestWriteAuditIncludesReproducibleInferenceMetadata(testContext *testing.T) {
-	outputPath := filepath.Join(testContext.TempDir(), "definition-audit.json")
+	outputFile := reportTestFile(testContext, "reports/definition-audit.json")
 	metadata := AuditMetadata{
 		ApplicationVersion: "test-version",
 		Since:              time.Date(2026, 4, 1, 0, 0, 0, 0, time.UTC),
@@ -47,11 +48,11 @@ func TestWriteAuditIncludesReproducibleInferenceMetadata(testContext *testing.T)
 		VerificationCacheHits:   3,
 		VerificationCacheMisses: 1,
 	}
-	if writeError := WriteAudit(outputPath, intent.AnalyzeOutput{}, metadata); writeError != nil {
+	if writeError := WriteAudit(outputFile, intent.AnalyzeOutput{}, metadata); writeError != nil {
 		testContext.Fatalf("write audit: %v", writeError)
 	}
 
-	encodedAudit, readError := os.ReadFile(outputPath)
+	encodedAudit, readError := os.ReadFile(outputFile.Path())
 	if readError != nil {
 		testContext.Fatalf("read audit: %v", readError)
 	}
@@ -71,7 +72,7 @@ func TestWriteAuditIncludesReproducibleInferenceMetadata(testContext *testing.T)
 }
 
 func TestWriteConversationSearchResultsAndAudit(testContext *testing.T) {
-	resultPath := filepath.Join(testContext.TempDir(), "anime-search.csv")
+	resultFile := reportTestFile(testContext, "reports/anime-search.csv")
 	results := []domain.ConversationSearchResult{{
 		ConversationID:    "conversation-1",
 		ConversationTitle: "Space westerns",
@@ -85,10 +86,10 @@ func TestWriteConversationSearchResultsAndAudit(testContext *testing.T) {
 			DetectionMethods: []string{"semantic"},
 		}},
 	}}
-	if writeError := WriteConversationSearchResults(resultPath, "csv", results); writeError != nil {
+	if writeError := WriteConversationSearchResults(resultFile, "csv", results); writeError != nil {
 		testContext.Fatalf("write conversation search CSV: %v", writeError)
 	}
-	encodedResults, readError := os.ReadFile(resultPath)
+	encodedResults, readError := os.ReadFile(resultFile.Path())
 	if readError != nil {
 		testContext.Fatalf("read conversation search CSV: %v", readError)
 	}
@@ -96,8 +97,11 @@ func TestWriteConversationSearchResultsAndAudit(testContext *testing.T) {
 		testContext.Fatalf("search CSV lacks result evidence: %s", encodedResults)
 	}
 
-	auditPath := filepath.Join(testContext.TempDir(), "anime-search-audit.json")
-	if writeError := WriteConversationSearchAudit(auditPath, SearchAuditMetadata{
+	auditFile, relatedError := RelatedFile(resultFile, "-audit", ".json")
+	if relatedError != nil {
+		testContext.Fatalf("derive conversation search audit path: %v", relatedError)
+	}
+	if writeError := WriteConversationSearchAudit(auditFile, SearchAuditMetadata{
 		ApplicationVersion: "test-version",
 		Query:              "anime",
 		Mode:               "hybrid",
@@ -115,7 +119,7 @@ func TestWriteConversationSearchResultsAndAudit(testContext *testing.T) {
 	}); writeError != nil {
 		testContext.Fatalf("write conversation search audit: %v", writeError)
 	}
-	encodedAudit, readError := os.ReadFile(auditPath)
+	encodedAudit, readError := os.ReadFile(auditFile.Path())
 	if readError != nil {
 		testContext.Fatalf("read conversation search audit: %v", readError)
 	}
@@ -123,4 +127,31 @@ func TestWriteConversationSearchResultsAndAudit(testContext *testing.T) {
 		!strings.Contains(string(encodedAudit), `"query": "anime"`) {
 		testContext.Fatalf("search audit lacks reproducibility metadata: %s", encodedAudit)
 	}
+}
+
+func TestRelatedFileStaysWithinThePrivateReportDirectory(testContext *testing.T) {
+	resultFile := reportTestFile(testContext, "reports/definitions.csv")
+	reviewFile, relatedError := RelatedFile(resultFile, "-review", "")
+	if relatedError != nil {
+		testContext.Fatalf("derive review file: %v", relatedError)
+	}
+	if reviewFile.RelativePath() != filepath.Join("reports", "definitions-review.csv") {
+		testContext.Fatalf("unexpected review file %q", reviewFile.RelativePath())
+	}
+	if _, relatedError := RelatedFile(resultFile, "-audit", "json"); relatedError == nil {
+		testContext.Fatalf("extension without a leading dot should be rejected")
+	}
+}
+
+func reportTestFile(testContext *testing.T, relativePath string) privatepath.File {
+	testContext.Helper()
+	root, rootError := privatepath.NewRoot(filepath.Join(testContext.TempDir(), "data"))
+	if rootError != nil {
+		testContext.Fatalf("create report test root: %v", rootError)
+	}
+	file, fileError := root.File(relativePath)
+	if fileError != nil {
+		testContext.Fatalf("resolve report test file: %v", fileError)
+	}
+	return file
 }

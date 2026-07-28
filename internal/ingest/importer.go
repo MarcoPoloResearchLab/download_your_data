@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"io"
 	"sort"
@@ -60,7 +59,7 @@ func (importer *Importer) Import(contextValue context.Context, sourcePath string
 		return result, nil
 	}
 
-	importID, beginError := importer.Store.BeginImport(contextValue, sourcePath, sourceHash, domain.ParserVersion)
+	importID, beginError := importer.Store.BeginImport(contextValue, sourceHash, domain.ParserVersion)
 	if beginError != nil {
 		return result, beginError
 	}
@@ -168,7 +167,6 @@ func convertConversation(rawConversation exportformat.RawConversation, sourceFil
 	if archiveValue == nil {
 		archiveValue = rawConversation.Archived
 	}
-	conversationMetadata := marshalMetadata(rawConversation.Metadata)
 	conversation := domain.Conversation{
 		ID:            conversationID,
 		Title:         strings.TrimSpace(rawConversation.Title),
@@ -176,8 +174,6 @@ func convertConversation(rawConversation exportformat.RawConversation, sourceFil
 		UpdatedAt:     rawConversation.UpdateTime.Pointer(),
 		IsArchived:    archiveValue,
 		CurrentNodeID: rawConversation.CurrentNode,
-		SourceFile:    sourceFile,
-		RawMetadata:   conversationMetadata,
 		Messages:      make([]domain.Message, 0, len(rawConversation.Mapping)),
 		Edges:         make([]domain.MessageEdge, 0),
 	}
@@ -247,7 +243,6 @@ func convertConversation(rawConversation exportformat.RawConversation, sourceFil
 		if createdAt == nil {
 			createdAt = rawConversation.CreateTime.Pointer()
 		}
-		messageMetadata := marshalMetadata(rawNode.Message.Metadata)
 		conversation.Messages = append(conversation.Messages, domain.Message{
 			ID:                messageID,
 			SourceMessageID:   sourceMessageID,
@@ -259,10 +254,8 @@ func convertConversation(rawConversation exportformat.RawConversation, sourceFil
 			OriginalText:      extractedContent.Text,
 			NormalizedText:    normalizedText,
 			ContentHash:       normalize.Hash(normalizedText),
-			SourceFile:        sourceFile,
 			SourceNodeID:      nodeID,
 			ExtractionWarning: warningText,
-			RawMetadata:       messageMetadata,
 		})
 	}
 	return conversation, warningsCount
@@ -270,15 +263,4 @@ func convertConversation(rawConversation exportformat.RawConversation, sourceFil
 
 func occurrenceMessageID(conversationID string, sourceNodeID string) string {
 	return "occ_" + normalize.Hash("message-occurrence-v1", conversationID, sourceNodeID)
-}
-
-func marshalMetadata(metadata map[string]json.RawMessage) string {
-	if len(metadata) == 0 {
-		return ""
-	}
-	encodedMetadata, marshalError := json.Marshal(metadata)
-	if marshalError != nil {
-		return ""
-	}
-	return string(encodedMetadata)
 }

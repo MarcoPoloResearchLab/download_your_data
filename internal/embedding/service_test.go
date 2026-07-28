@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/ingest"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/privatepath"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/store"
 )
 
@@ -23,11 +24,7 @@ func (embedder *recordingEmbedder) Embed(_ context.Context, inputs []string) ([]
 }
 
 func TestServiceMarksCompleteConfigurationReadyAndRefreshesOnlyStaleText(testContext *testing.T) {
-	databasePath := filepath.Join(testContext.TempDir(), "archive.db")
-	openedStore, openError := store.Open(databasePath)
-	if openError != nil {
-		testContext.Fatalf("open store: %v", openError)
-	}
+	openedStore := openEmbeddingTestStore(testContext)
 	defer openedStore.Close()
 
 	importer := ingest.Importer{Store: openedStore}
@@ -42,7 +39,7 @@ func TestServiceMarksCompleteConfigurationReadyAndRefreshesOnlyStaleText(testCon
 		Provider:    "lmstudio",
 		Model:       "download-your-data-embedding",
 		Dimensions:  3,
-		BaseURL:     "http://127.0.0.1:1234/v1",
+		BaseURL:     mustInferenceBaseURL(testContext, "http://127.0.0.1:1234/v1"),
 		InputPrefix: "classification: ",
 		BatchSize:   2,
 	}
@@ -91,11 +88,7 @@ func TestServiceMarksCompleteConfigurationReadyAndRefreshesOnlyStaleText(testCon
 }
 
 func TestServiceKeepsLimitedRunBuildingUntilResumeCompletes(testContext *testing.T) {
-	databasePath := filepath.Join(testContext.TempDir(), "archive.db")
-	openedStore, openError := store.Open(databasePath)
-	if openError != nil {
-		testContext.Fatalf("open store: %v", openError)
-	}
+	openedStore := openEmbeddingTestStore(testContext)
 	defer openedStore.Close()
 
 	importer := ingest.Importer{Store: openedStore}
@@ -110,7 +103,7 @@ func TestServiceKeepsLimitedRunBuildingUntilResumeCompletes(testContext *testing
 		Provider:        "lmstudio",
 		Model:           "download-your-data-embedding",
 		Dimensions:      3,
-		BaseURL:         "http://127.0.0.1:1234/v1",
+		BaseURL:         mustInferenceBaseURL(testContext, "http://127.0.0.1:1234/v1"),
 		InputPrefix:     "classification: ",
 		BatchSize:       2,
 		MaximumMessages: 2,
@@ -131,4 +124,21 @@ func TestServiceKeepsLimitedRunBuildingUntilResumeCompletes(testContext *testing
 	if embeddedCount != 3 || config.Status != "ready" {
 		testContext.Fatalf("resumed full pass should become ready: count=%d config=%+v", embeddedCount, config)
 	}
+}
+
+func openEmbeddingTestStore(testContext *testing.T) *store.Store {
+	testContext.Helper()
+	root, rootError := privatepath.NewRoot(filepath.Join(testContext.TempDir(), "data"))
+	if rootError != nil {
+		testContext.Fatalf("create private test root: %v", rootError)
+	}
+	databaseFile, fileError := root.File("archive.db")
+	if fileError != nil {
+		testContext.Fatalf("resolve private test database: %v", fileError)
+	}
+	openedStore, openError := store.Open(databaseFile)
+	if openError != nil {
+		testContext.Fatalf("open store: %v", openError)
+	}
+	return openedStore
 }

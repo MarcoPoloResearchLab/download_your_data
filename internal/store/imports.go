@@ -21,13 +21,12 @@ func (store *Store) CompletedImportExists(contextValue context.Context, sourceHa
 	return existingCount > 0, nil
 }
 
-func (store *Store) BeginImport(contextValue context.Context, sourcePath string, sourceHash string, parserVersion string) (int64, error) {
+func (store *Store) BeginImport(contextValue context.Context, sourceHash string, parserVersion string) (int64, error) {
 	startedAtMillis := time.Now().UTC().UnixMilli()
 	result, executeError := store.database.ExecContext(
 		contextValue,
-		`INSERT INTO imports(source_path, source_sha256, parser_version, started_at_ms, status)
-         VALUES (?, ?, ?, ?, 'running')`,
-		sourcePath,
+		`INSERT INTO imports(source_sha256, parser_version, started_at_ms, status)
+         VALUES (?, ?, ?, 'running')`,
 		sourceHash,
 		parserVersion,
 		startedAtMillis,

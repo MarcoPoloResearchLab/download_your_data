@@ -4,33 +4,30 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"os"
 	"path/filepath"
+	"strings"
 
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/privatepath"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/sqlite3"
 )
 
 type Store struct {
 	database     *sql.DB
-	databasePath string
+	databaseFile privatepath.File
 }
 
-func Open(databasePath string) (*Store, error) {
-	absolutePath, pathError := filepath.Abs(databasePath)
-	if pathError != nil {
-		return nil, fmt.Errorf("resolve database path: %w", pathError)
-	}
-	if directoryError := os.MkdirAll(filepath.Dir(absolutePath), 0o755); directoryError != nil {
-		return nil, fmt.Errorf("create database directory: %w", directoryError)
+func Open(databaseFile privatepath.File) (*Store, error) {
+	if prepareError := databaseFile.Prepare(); prepareError != nil {
+		return nil, fmt.Errorf("prepare private database: %w", prepareError)
 	}
 
-	database, openError := sql.Open(sqlite3.DriverName, absolutePath)
+	database, openError := sql.Open(sqlite3.DriverName, databaseFile.Path())
 	if openError != nil {
 		return nil, fmt.Errorf("open SQLite database: %w", openError)
 	}
 	database.SetMaxOpenConns(1)
 
-	store := &Store{database: database, databasePath: absolutePath}
+	store := &Store{database: database, databaseFile: databaseFile}
 	if schemaError := store.initializeOrValidateSchema(context.Background()); schemaError != nil {
 		database.Close()
 		return nil, schemaError
@@ -43,13 +40,24 @@ func (store *Store) Close() error {
 }
 
 func (store *Store) DatabasePath() string {
-	return store.databasePath
+	return store.databaseFile.Path()
 }
 
 func (store *Store) DatabaseDirectory() string {
-	return filepath.Dir(store.databasePath)
+	return filepath.Dir(store.databaseFile.Path())
 }
 
 func (store *Store) Database() *sql.DB {
 	return store.database
+}
+
+func (store *Store) resolveDatabaseRelativeFile(relativePath string) (privatepath.File, error) {
+	if strings.TrimSpace(relativePath) == "" {
+		return privatepath.File{}, fmt.Errorf("resolve stored private path: relative path is required")
+	}
+	file, fileError := store.databaseFile.Sibling(relativePath)
+	if fileError != nil {
+		return privatepath.File{}, fmt.Errorf("resolve stored private path %q: %w", relativePath, fileError)
+	}
+	return file, nil
 }

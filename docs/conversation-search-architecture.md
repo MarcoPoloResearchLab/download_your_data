@@ -84,17 +84,19 @@ Both inference operations use OpenAI-compatible HTTP shapes but default to the l
 - embeddings use `/v1/embeddings`, provider label `lmstudio`, model alias `download-your-data-embedding`, and 768 dimensions
 - optional verification uses `/v1/chat/completions`, model alias `download-your-data-verifier`, and strict JSON Schema output
 
-The aliases are resolved by the local inference server. API keys are optional and are read only from an explicitly named environment variable. A non-loopback endpoint must be supplied explicitly and is reported as a remote inference boundary before text is sent.
+The aliases are resolved by the configured inference server. API keys are optional and are read only from an explicitly named environment variable. A non-loopback endpoint must be supplied in process configuration, paired with the closed `authorized-remote` boundary, and reported as remote before text is sent.
 
-`DOWNLOAD_YOUR_DATA_INFERENCE_BASE_URL` changes the default LM Studio server for local inference. Command flags take precedence: `index build --base-url`, `search --base-url`, `embed --base-url`, `definitions --base-url` for semantic prototype generation, and `definitions --verify-base-url` for verification. Non-loopback endpoints require the additional `--allow-remote` authorization gate.
+`DOWNLOAD_YOUR_DATA_INFERENCE_BASE_URL` is the sole endpoint override shared by the server and every operator command. The value is smart-constructed at startup as a normalized HTTP or HTTPS base URL without credentials, query strings, fragments, encoded paths, or backslash paths. Loopback inference is the default. A non-loopback URL is rejected unless `DOWNLOAD_YOUR_DATA_INFERENCE_BOUNDARY=authorized-remote`; an HTTP request cannot supply or override either value.
 
 Conversation indexing uses `search_document: ` and query embedding uses `search_query: `. A synthetic, non-user readiness request validates the loaded model and dimensions before a search index row is created. Query vectors are cached by model, effective endpoint, query prefix, and normalized query.
 
 ## Persistence boundary
 
-The conversation database has one first-release schema identity: owner `download_your_data`, version `1`. Opening an empty database creates that complete schema in one transaction. Opening a nonempty database validates the owner, version, and every required table and index before any archive operation begins.
+The conversation database has one first-release schema identity: owner `download_your_data`, version `1`, contract `openai-conversation-archive-1`. It lives only at `<data-root>/openai/archive.db`. Opening an empty database creates the complete minimized schema in one transaction. Opening a nonempty database validates the owner, version, contract, and every required table and index before any archive operation begins.
 
 A database with another identity, version, or incomplete current shape is rejected with an instruction to archive it and re-import the original OpenAI export into a new database. There are no automatic migrations, compatibility reads, or schema-repair writes.
+
+The configured data root is an absolute, non-root, owner-only directory. All application-owned directories use mode `0700`, and databases, vectors, reports, caches, and generated files use mode `0600`. Stored paths are relative identities resolved through the private-root abstraction; absolute paths, traversal, symbolic links, and permissive existing paths are rejected. Operator report paths are likewise relative to the data root.
 
 ## Vector consistency
 

@@ -1,17 +1,25 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/runtimeconfig"
 )
 
 func TestApplicationHTTPContract(testContext *testing.T) {
-	handler, handlerError := newApplicationHandler(slog.New(slog.NewTextHandler(io.Discard, nil)))
+	config := testRuntimeConfig(testContext)
+	handler, handlerError := newApplicationHandler(
+		config,
+		slog.New(slog.NewTextHandler(io.Discard, nil)),
+	)
 	if handlerError != nil {
 		testContext.Fatalf("create application handler: %v", handlerError)
 	}
@@ -36,6 +44,51 @@ func TestApplicationHTTPContract(testContext *testing.T) {
 		}
 		if response.Header.Get("Cache-Control") != "no-store" {
 			testContext.Fatalf("health response must not be cached")
+		}
+	})
+
+	testContext.Run("reports non-secret runtime capabilities", func(testContext *testing.T) {
+		request, requestError := http.NewRequest(
+			http.MethodGet,
+			server.URL+capabilitiesPath+"?inference_base_url=https://attacker.example/v1",
+			nil,
+		)
+		if requestError != nil {
+			testContext.Fatalf("create capabilities request: %v", requestError)
+		}
+		request.Header.Set("X-Inference-Base-URL", "https://attacker.example/v1")
+		response, requestError := http.DefaultClient.Do(request)
+		if requestError != nil {
+			testContext.Fatalf("request capabilities endpoint: %v", requestError)
+		}
+		defer response.Body.Close()
+		if response.StatusCode != http.StatusOK {
+			testContext.Fatalf("capabilities status = %d; want %d", response.StatusCode, http.StatusOK)
+		}
+		encodedPayload, readError := io.ReadAll(response.Body)
+		if readError != nil {
+			testContext.Fatalf("read capabilities response: %v", readError)
+		}
+		var payload capabilitiesResponse
+		if decodeError := json.Unmarshal(encodedPayload, &payload); decodeError != nil {
+			testContext.Fatalf("decode capabilities response: %v", decodeError)
+		}
+		if !payload.LocalOnly ||
+			!payload.DataRoot.Ready ||
+			payload.CSRFToken != config.CSRFToken() ||
+			payload.Inference.Boundary != runtimeconfig.InferenceBoundaryLoopback ||
+			payload.Inference.Readiness != inferenceNotChecked ||
+			payload.Inference.EmbeddingModel == "" ||
+			payload.Archive.MaxUploadBytes <= 0 ||
+			payload.Archive.InferenceBatchSize <= 0 ||
+			payload.Archive.BrowserUploadEnabled {
+			testContext.Fatalf("unexpected capabilities response: %+v", payload)
+		}
+		if response.Header.Get("Access-Control-Allow-Origin") != "" {
+			testContext.Fatalf("capabilities response must not enable CORS")
+		}
+		if strings.Contains(string(encodedPayload), "attacker.example") {
+			testContext.Fatalf("HTTP input changed the configured inference boundary: %s", encodedPayload)
 		}
 	})
 
@@ -72,34 +125,148 @@ func TestApplicationHTTPContract(testContext *testing.T) {
 	})
 }
 
-func TestServerConfigRequiresLoopback(testContext *testing.T) {
+func TestLocalRequestBoundaryRejectsInvalidHostOriginAndCSRF(testContext *testing.T) {
+	config := testRuntimeConfig(testContext)
+	handler, handlerError := newApplicationHandler(
+		config,
+		slog.New(slog.NewTextHandler(io.Discard, nil)),
+	)
+	if handlerError != nil {
+		testContext.Fatalf("create application handler: %v", handlerError)
+	}
+
 	testCases := []struct {
-		name          string
-		address       string
-		wantAddress   string
-		wantErrorText string
+		name         string
+		method       string
+		host         string
+		origin       string
+		csrfToken    string
+		expectedCode string
 	}{
-		{name: "IPv4 loopback", address: "127.0.0.1:9000", wantAddress: "127.0.0.1:9000"},
-		{name: "IPv6 loopback", address: "[::1]:9000", wantAddress: "[::1]:9000"},
-		{name: "public bind", address: "0.0.0.0:9000", wantErrorText: "host must be a loopback IP address"},
-		{name: "invalid port", address: "127.0.0.1:70000", wantErrorText: "port must be between 1 and 65535"},
-		{name: "missing port", address: "127.0.0.1", wantErrorText: "missing port"},
+		{
+			name:         "non-loopback host",
+			method:       http.MethodGet,
+			host:         "attacker.example",
+			expectedCode: "invalid_host",
+		},
+		{
+			name:         "ambiguous empty host port",
+			method:       http.MethodGet,
+			host:         "localhost:",
+			expectedCode: "invalid_host",
+		},
+		{
+			name:         "cross-origin read",
+			method:       http.MethodGet,
+			host:         "127.0.0.1:8787",
+			origin:       "https://attacker.example",
+			expectedCode: "invalid_origin",
+		},
+		{
+			name:         "mutation without origin",
+			method:       http.MethodPost,
+			host:         "127.0.0.1:8787",
+			expectedCode: "invalid_origin",
+		},
+		{
+			name:         "mutation without CSRF token",
+			method:       http.MethodPost,
+			host:         "127.0.0.1:8787",
+			origin:       "http://127.0.0.1:8787",
+			expectedCode: "invalid_csrf_token",
+		},
+		{
+			name:         "mutation with wrong CSRF token",
+			method:       http.MethodDelete,
+			host:         "localhost:8787",
+			origin:       "http://localhost:8787",
+			csrfToken:    "wrong-token",
+			expectedCode: "invalid_csrf_token",
+		},
 	}
 	for _, testCase := range testCases {
 		testContext.Run(testCase.name, func(testContext *testing.T) {
-			config, configError := newServerConfig(testCase.address)
-			if testCase.wantErrorText != "" {
-				if configError == nil || !strings.Contains(configError.Error(), testCase.wantErrorText) {
-					testContext.Fatalf("config error = %v; want text %q", configError, testCase.wantErrorText)
-				}
-				return
+			response := performBoundaryRequest(
+				handler,
+				testCase.method,
+				testCase.host,
+				testCase.origin,
+				testCase.csrfToken,
+			)
+			if response.Code != http.StatusForbidden {
+				testContext.Fatalf("status = %d; want %d", response.Code, http.StatusForbidden)
 			}
-			if configError != nil {
-				testContext.Fatalf("create server config: %v", configError)
+			var payload requestErrorResponse
+			if decodeError := json.Unmarshal(response.Body.Bytes(), &payload); decodeError != nil {
+				testContext.Fatalf("decode request error: %v", decodeError)
 			}
-			if config.listenAddress != testCase.wantAddress {
-				testContext.Fatalf("listen address = %q; want %q", config.listenAddress, testCase.wantAddress)
+			if payload.Error.Code != testCase.expectedCode {
+				testContext.Fatalf("error code = %q; want %q", payload.Error.Code, testCase.expectedCode)
+			}
+			if response.Header().Get("Access-Control-Allow-Origin") != "" {
+				testContext.Fatalf("rejected request must not enable CORS")
 			}
 		})
 	}
+
+	acceptedResponse := performBoundaryRequest(
+		handler,
+		http.MethodPost,
+		"127.0.0.1:8787",
+		"http://127.0.0.1:8787",
+		config.CSRFToken(),
+	)
+	if acceptedResponse.Code == http.StatusForbidden {
+		testContext.Fatalf("valid same-origin mutation was rejected: %s", acceptedResponse.Body.String())
+	}
+	defaultPortResponse := performBoundaryRequest(
+		handler,
+		http.MethodPost,
+		"localhost:080",
+		"http://localhost",
+		config.CSRFToken(),
+	)
+	if defaultPortResponse.Code == http.StatusForbidden {
+		testContext.Fatalf(
+			"equivalent default-port origin was rejected: %s",
+			defaultPortResponse.Body.String(),
+		)
+	}
+}
+
+func performBoundaryRequest(
+	handler http.Handler,
+	method string,
+	host string,
+	origin string,
+	csrfToken string,
+) *httptest.ResponseRecorder {
+	request := httptest.NewRequest(method, "http://127.0.0.1:8787/api/providers/netflix", nil)
+	request.Host = host
+	if origin != "" {
+		request.Header.Set("Origin", origin)
+	}
+	if csrfToken != "" {
+		request.Header.Set(csrfHeaderName, csrfToken)
+	}
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, request)
+	return response
+}
+
+func testRuntimeConfig(testContext *testing.T) runtimeconfig.Config {
+	testContext.Helper()
+	dataDirectory := filepath.Join(testContext.TempDir(), "data")
+	environment := map[string]string{
+		runtimeconfig.DataDirectoryEnvironment: dataDirectory,
+	}
+	config, configError := runtimeconfig.Load(
+		func(key string) string { return environment[key] },
+		testContext.TempDir(),
+		bytes.NewReader(bytes.Repeat([]byte{0x5a}, 32)),
+	)
+	if configError != nil {
+		testContext.Fatalf("load test runtime config: %v", configError)
+	}
+	return config
 }

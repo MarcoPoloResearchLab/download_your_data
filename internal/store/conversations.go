@@ -25,17 +25,15 @@ func (store *Store) ImportConversation(contextValue context.Context, importID in
 		contextValue,
 		`INSERT INTO conversations(
             conversation_id, title, created_at_ms, updated_at_ms, is_archived,
-            current_node_id, source_import_id, source_filename, raw_metadata_json
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            current_node_id, source_import_id
+         ) VALUES (?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(conversation_id) DO UPDATE SET
             title = excluded.title,
             created_at_ms = COALESCE(excluded.created_at_ms, conversations.created_at_ms),
             updated_at_ms = COALESCE(excluded.updated_at_ms, conversations.updated_at_ms),
             is_archived = COALESCE(excluded.is_archived, conversations.is_archived),
             current_node_id = excluded.current_node_id,
-            source_import_id = excluded.source_import_id,
-            source_filename = excluded.source_filename,
-            raw_metadata_json = excluded.raw_metadata_json`,
+            source_import_id = excluded.source_import_id`,
 		conversation.ID,
 		conversation.Title,
 		timeToNullableMillis(conversation.CreatedAt),
@@ -43,8 +41,6 @@ func (store *Store) ImportConversation(contextValue context.Context, importID in
 		boolToNullableInteger(conversation.IsArchived),
 		conversation.CurrentNodeID,
 		importID,
-		conversation.SourceFile,
-		nullableString(conversation.RawMetadata),
 	)
 	if conversationError != nil {
 		return 0, 0, fmt.Errorf("upsert conversation %s: %w", conversation.ID, conversationError)
@@ -90,8 +86,8 @@ func upsertMessage(contextValue context.Context, transaction *sql.Tx, message do
 		`INSERT INTO messages(
             message_id, source_message_id, conversation_id, parent_node_id, role, created_at_ms,
             content_type, original_text, normalized_text, content_hash,
-            source_filename, source_node_id, extraction_warning, raw_metadata_json
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            source_node_id, extraction_warning
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(message_id) DO UPDATE SET
             source_message_id = excluded.source_message_id,
             conversation_id = excluded.conversation_id,
@@ -102,10 +98,8 @@ func upsertMessage(contextValue context.Context, transaction *sql.Tx, message do
             original_text = excluded.original_text,
             normalized_text = excluded.normalized_text,
             content_hash = excluded.content_hash,
-            source_filename = excluded.source_filename,
             source_node_id = excluded.source_node_id,
-            extraction_warning = excluded.extraction_warning,
-            raw_metadata_json = excluded.raw_metadata_json`,
+            extraction_warning = excluded.extraction_warning`,
 		message.ID,
 		nullableString(message.SourceMessageID),
 		message.ConversationID,
@@ -116,10 +110,8 @@ func upsertMessage(contextValue context.Context, transaction *sql.Tx, message do
 		message.OriginalText,
 		message.NormalizedText,
 		message.ContentHash,
-		message.SourceFile,
 		message.SourceNodeID,
 		nullableString(message.ExtractionWarning),
-		nullableString(message.RawMetadata),
 	)
 	if messageError != nil {
 		return fmt.Errorf("upsert message %s: %w", message.ID, messageError)

@@ -112,8 +112,12 @@ func (engine *Engine) Search(contextValue context.Context, options SearchOptions
 			}
 		}
 		semanticCandidates := make([]rankedDocument, 0, len(documents))
+		privateVectorFile, pathError := engine.Store.ResolveSearchVectorFile(config)
+		if pathError != nil {
+			return nil, pathError
+		}
 		scanError := embedding.ScanVectorFile(
-			engine.Store.ResolveSearchVectorPath(config),
+			privateVectorFile,
 			config.Dimensions,
 			func(row int64, vector []float32) error {
 				document, exists := documentByRow[row]
