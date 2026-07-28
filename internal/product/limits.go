@@ -25,6 +25,8 @@ const (
 	MaxNetflixFieldBytes = 16 * 1024
 	// MaxNetflixWorkingBytes bounds one generation's source and built artifacts.
 	MaxNetflixWorkingBytes int64 = 512 * 1024 * 1024
+	// MaxNetflixEnrichmentOutcomeBytes bounds one private title checkpoint.
+	MaxNetflixEnrichmentOutcomeBytes int64 = 320 * 1024
 	// MaxNetflixProgressEvents bounds the persisted event journal per generation.
 	MaxNetflixProgressEvents = 256
 	// MaxNetflixGenerationHistory bounds the persisted provider generation journal.

@@ -14,6 +14,7 @@ import (
 
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/privatepath"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/product"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix/enrichment"
 )
 
 func TestLocalGenerationLifecycleIsPrivateAtomicPagedAndRestartSafe(
@@ -91,6 +92,7 @@ func TestLocalGenerationLifecycleIsPrivateAtomicPagedAndRestartSafe(
 		firstGeneration.ID,
 		"",
 		2,
+		"",
 	)
 	if pageError != nil {
 		testContext.Fatalf("read first records page: %v", pageError)
@@ -103,6 +105,7 @@ func TestLocalGenerationLifecycleIsPrivateAtomicPagedAndRestartSafe(
 		firstGeneration.ID,
 		firstPage.NextCursor,
 		2,
+		"",
 	)
 	if pageError != nil {
 		testContext.Fatalf("read second records page: %v", pageError)
@@ -144,6 +147,7 @@ func TestLocalGenerationLifecycleIsPrivateAtomicPagedAndRestartSafe(
 		firstGeneration.ID,
 		"",
 		1,
+		"",
 	); oldPageError != nil || len(oldPage.Records) != 1 {
 		testContext.Fatalf("old ready generation was not preserved: %+v %v", oldPage, oldPageError)
 	}
@@ -301,7 +305,7 @@ func TestWorkspaceLeaseAndNonterminalCheckpointResume(
 		fixture.stateFile,
 		fixture.leaseFile,
 		fixture.cacheFile,
-		false,
+		nil,
 		workspaceOptions{
 			now:     fixture.clock,
 			entropy: testEntropy(0x42),
@@ -570,13 +574,21 @@ func (fixture workspaceFixture) open(
 	testContext *testing.T,
 	options workspaceOptions,
 ) *Workspace {
+	return fixture.openWithClient(testContext, nil, options)
+}
+
+func (fixture workspaceFixture) openWithClient(
+	testContext *testing.T,
+	metadataClient enrichment.MetadataClient,
+	options workspaceOptions,
+) *Workspace {
 	testContext.Helper()
 	workspace, openError := openWorkspace(
 		fixture.root,
 		fixture.stateFile,
 		fixture.leaseFile,
 		fixture.cacheFile,
-		false,
+		metadataClient,
 		options,
 	)
 	if openError != nil {

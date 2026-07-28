@@ -88,6 +88,8 @@ type Analytics struct {
 	UniqueTitleCount      int      `json:"unique_title_count"`
 	MetadataActivityCount int      `json:"metadata_activity_count"`
 	MetadataTitleCount    int      `json:"metadata_title_count"`
+	MatchStatusActivities []Count  `json:"match_status_activities"`
+	MatchStatusTitles     []Count  `json:"match_status_titles"`
 	StartDate             string   `json:"start_date"`
 	EndDate               string   `json:"end_date"`
 	MediaTypes            []Count  `json:"media_types"`
@@ -134,6 +136,8 @@ func Aggregate(
 	analytics := emptyAnalytics()
 	uniqueTitles := make(map[string]struct{})
 	metadataTitles := make(map[string]struct{})
+	matchStatusByTitle := make(map[string]MatchStatus)
+	matchActivityCounts := make(map[string]int)
 	mediaTypeCounts := make(map[string]int)
 	genreCounts := make(map[string]int)
 	genreYearCounts := make(map[int]map[string]int)
@@ -167,6 +171,16 @@ func Aggregate(
 		identity := activity.TitleIdentity()
 		uniqueTitles[identity.Key()] = struct{}{}
 		titleCounts[identity.SearchTitle()]++
+		if match, hasMatch := record.Match(); hasMatch {
+			if priorStatus, exists := matchStatusByTitle[identity.Key()]; exists &&
+				priorStatus != match.Status() {
+				return Analytics{}, fmt.Errorf(
+					"aggregate Netflix activities: title identity has inconsistent match outcomes",
+				)
+			}
+			matchStatusByTitle[identity.Key()] = match.Status()
+			matchActivityCounts[string(match.Status())]++
+		}
 
 		mediaType := unknownDimensionLabel
 		language := unknownDimensionLabel
@@ -212,6 +226,12 @@ func Aggregate(
 
 	analytics.UniqueTitleCount = len(uniqueTitles)
 	analytics.MetadataTitleCount = len(metadataTitles)
+	matchTitleCounts := make(map[string]int)
+	for _, status := range matchStatusByTitle {
+		matchTitleCounts[string(status)]++
+	}
+	analytics.MatchStatusActivities = orderedMatchCounts(matchActivityCounts)
+	analytics.MatchStatusTitles = orderedMatchCounts(matchTitleCounts)
 	if analytics.ActivityCount == 0 {
 		return analytics, nil
 	}
@@ -267,13 +287,29 @@ func Aggregate(
 	return analytics, nil
 }
 
+func orderedMatchCounts(counts map[string]int) []Count {
+	ordered := make([]Count, 0, 3)
+	for _, status := range []MatchStatus{
+		MatchStatusMatched,
+		MatchStatusReview,
+		MatchStatusUnmatched,
+	} {
+		if value := counts[string(status)]; value > 0 {
+			ordered = append(ordered, Count{Label: string(status), Value: value})
+		}
+	}
+	return ordered
+}
+
 func emptyAnalytics() Analytics {
 	return Analytics{
-		MediaTypes:          []Count{},
-		Genres:              []Count{},
-		ViewingYears:        []int{},
-		GenresByViewingYear: []Series{},
-		MonthLabels:         []string{},
+		MatchStatusActivities: []Count{},
+		MatchStatusTitles:     []Count{},
+		MediaTypes:            []Count{},
+		Genres:                []Count{},
+		ViewingYears:          []int{},
+		GenresByViewingYear:   []Series{},
+		MonthLabels:           []string{},
 		MonthlyMedia: []Series{
 			{Label: movieDimensionLabel, Values: []int{}},
 			{Label: seriesDimensionLabel, Values: []int{}},

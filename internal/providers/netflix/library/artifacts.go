@@ -24,7 +24,8 @@ const (
 	recordsFileName              = "records.jsonl"
 	analyticsFileName            = "analytics.json"
 	maxAnalyticsArtifactBytes    = 8 * 1024 * 1024
-	maxRecordLineBytes           = product.MaxNetflixTitleBytes*3 + 32*1024
+	maxRecordLineBytes           = int(product.MaxNetflixEnrichmentOutcomeBytes) +
+		product.MaxNetflixTitleBytes*3
 )
 
 type generationFiles struct {
@@ -309,6 +310,61 @@ func writeGenerationArtifacts(
 			errors.New("source checkpoint size is invalid"),
 		)
 	}
+	return writeAnalyzedGenerationArtifacts(
+		ctx,
+		root,
+		generationID,
+		AnalysisLevelLocal,
+		records,
+		analytics,
+		sourceBytes,
+	)
+}
+
+func writeEnrichedGenerationArtifacts(
+	ctx context.Context,
+	root privatepath.Root,
+	generationID string,
+	records []netflix.ActivityRecord,
+	analytics netflix.Analytics,
+	checkpointBytes int64,
+) (artifactCheckpoint, error) {
+	if ctx == nil || len(records) == 0 {
+		return artifactCheckpoint{}, newLibraryError(
+			ErrorIncomplete,
+			generationID,
+			0,
+			errors.New("complete enriched records are required"),
+		)
+	}
+	if checkpointBytes < 0 || checkpointBytes >= product.MaxNetflixWorkingBytes {
+		return artifactCheckpoint{}, newLibraryError(
+			ErrorLimitExceeded,
+			generationID,
+			0,
+			errors.New("enrichment checkpoint size is outside the working-data bound"),
+		)
+	}
+	return writeAnalyzedGenerationArtifacts(
+		ctx,
+		root,
+		generationID,
+		AnalysisLevelTMDB,
+		records,
+		analytics,
+		checkpointBytes,
+	)
+}
+
+func writeAnalyzedGenerationArtifacts(
+	ctx context.Context,
+	root privatepath.Root,
+	generationID string,
+	analysisLevel AnalysisLevel,
+	records []netflix.ActivityRecord,
+	analytics netflix.Analytics,
+	reservedBytes int64,
+) (artifactCheckpoint, error) {
 	files, filesError := resolveGenerationFiles(root, generationID)
 	if filesError != nil {
 		return artifactCheckpoint{}, filesError
@@ -317,8 +373,9 @@ func writeGenerationArtifacts(
 		ctx,
 		files.records,
 		generationID,
+		analysisLevel,
 		records,
-		product.MaxNetflixWorkingBytes-sourceBytes-maxAnalyticsArtifactBytes,
+		product.MaxNetflixWorkingBytes-reservedBytes-maxAnalyticsArtifactBytes,
 	)
 	if recordsError != nil {
 		return artifactCheckpoint{}, recordsError
@@ -339,7 +396,7 @@ func writeGenerationArtifacts(
 	}
 	encodedAnalytics = append(encodedAnalytics, '\n')
 	if len(encodedAnalytics) > maxAnalyticsArtifactBytes ||
-		sourceBytes+recordsBytes+int64(len(encodedAnalytics)) >
+		reservedBytes+recordsBytes+int64(len(encodedAnalytics)) >
 			product.MaxNetflixWorkingBytes {
 		return artifactCheckpoint{}, newLibraryError(
 			ErrorLimitExceeded,
@@ -367,6 +424,7 @@ func writeRecordsAtomic(
 	ctx context.Context,
 	file privatepath.File,
 	generationID string,
+	analysisLevel AnalysisLevel,
 	records []netflix.ActivityRecord,
 	maximumBytes int64,
 ) (string, int64, error) {
@@ -420,13 +478,16 @@ func writeRecordsAtomic(
 			)
 		}
 		activity := record.Activity()
-		if _, hasMetadata := record.Metadata(); hasMetadata {
+		match, hasMatch := record.Match()
+		metadata, hasMetadata := record.Metadata()
+		if (analysisLevel == AnalysisLevelLocal && (hasMatch || hasMetadata)) ||
+			(analysisLevel == AnalysisLevelTMDB && !hasMatch) {
 			_ = fileHandle.Close()
 			return "", 0, newLibraryError(
 				ErrorIncomplete,
 				generationID,
 				0,
-				errors.New("local generation record contains metadata"),
+				errors.New("generation record does not match its analysis level"),
 			)
 		}
 		identity := activity.TitleIdentity()
@@ -439,6 +500,14 @@ func writeRecordsAtomic(
 			DerivedTitle:         identity.SearchTitle(),
 			TitleIdentity:        identity.Key(),
 			TitleIdentityVersion: identity.Version(),
+		}
+		if hasMatch {
+			matchValue := matchSnapshot(match)
+			payload.Match = &matchValue
+		}
+		if hasMetadata {
+			metadataValue := metadataSnapshot(metadata)
+			payload.Metadata = &metadataValue
 		}
 		if encodeError := encoder.Encode(payload); encodeError != nil {
 			_ = fileHandle.Close()
@@ -542,6 +611,20 @@ func validateGenerationArtifacts(
 	if recordsError != nil {
 		return nil, netflix.Analytics{}, recordsError
 	}
+	for _, record := range records {
+		_, hasMatch := record.Match()
+		_, hasMetadata := record.Metadata()
+		if (generation.AnalysisLevel == AnalysisLevelLocal &&
+			(hasMatch || hasMetadata)) ||
+			(generation.AnalysisLevel == AnalysisLevelTMDB && !hasMatch) {
+			return nil, netflix.Analytics{}, newLibraryError(
+				ErrorIncomplete,
+				generation.ID,
+				0,
+				errors.New("persisted records do not match the generation analysis level"),
+			)
+		}
+	}
 	recalculated, aggregateError := netflix.Aggregate(
 		ctx,
 		records,
@@ -635,11 +718,16 @@ func readActivityPage(
 	generationID string,
 	afterIndex int64,
 	limit int,
+	matchStatus netflix.MatchStatus,
 ) ([]Activity, int64, error) {
 	if ctx == nil ||
 		afterIndex < 0 ||
 		limit <= 0 ||
-		limit > product.MaxNetflixRecordPageSize {
+		limit > product.MaxNetflixRecordPageSize ||
+		(matchStatus != "" &&
+			matchStatus != netflix.MatchStatusMatched &&
+			matchStatus != netflix.MatchStatusReview &&
+			matchStatus != netflix.MatchStatusUnmatched) {
 		return nil, 0, newLibraryError(
 			ErrorInvalidRequest,
 			generationID,
@@ -690,8 +778,26 @@ func readActivityPage(
 		if recordError != nil {
 			return nil, 0, recordError
 		}
+		if matchStatus != "" {
+			match, hasMatch := record.Match()
+			if !hasMatch || match.Status() != matchStatus {
+				continue
+			}
+		}
 		activity := record.Activity()
 		identity := activity.TitleIdentity()
+		match, hasMatch := record.Match()
+		metadata, hasMetadata := record.Metadata()
+		var matchValue *Match
+		if hasMatch {
+			snapshot := matchSnapshot(match)
+			matchValue = &snapshot
+		}
+		var metadataValue *Metadata
+		if hasMetadata {
+			snapshot := metadataSnapshot(metadata)
+			metadataValue = &snapshot
+		}
 		activities = append(activities, Activity{
 			Index:                payload.Index,
 			RawTitle:             activity.RawTitle(),
@@ -700,6 +806,8 @@ func readActivityPage(
 			DerivedTitle:         identity.SearchTitle(),
 			TitleIdentity:        identity.Key(),
 			TitleIdentityVersion: identity.Version(),
+			Match:                matchValue,
+			Metadata:             metadataValue,
 		})
 		if len(activities) == limit+1 {
 			break
@@ -755,10 +863,56 @@ func decodePersistedRecord(
 			ErrorInvalidPersistence,
 			generationID,
 			0,
-			errors.New("persisted local record does not match the current contract"),
+			errors.New("persisted record does not match the current contract"),
 		)
 	}
-	record, recordError := netflix.NewLocalActivityRecord(activity)
+	if payload.Match == nil {
+		if payload.Metadata != nil {
+			return netflix.ActivityRecord{}, newLibraryError(
+				ErrorInvalidPersistence,
+				generationID,
+				0,
+				errors.New("persisted local record contains metadata"),
+			)
+		}
+		record, recordError := netflix.NewLocalActivityRecord(activity)
+		if recordError != nil {
+			return netflix.ActivityRecord{}, newLibraryError(
+				ErrorInvalidPersistence,
+				generationID,
+				0,
+				recordError,
+			)
+		}
+		return record, nil
+	}
+	match, matchError := payload.Match.domain()
+	if matchError != nil {
+		return netflix.ActivityRecord{}, newLibraryError(
+			ErrorInvalidPersistence,
+			generationID,
+			0,
+			matchError,
+		)
+	}
+	var metadata *netflix.TitleMetadata
+	if payload.Metadata != nil {
+		metadataValue, metadataError := payload.Metadata.domain()
+		if metadataError != nil {
+			return netflix.ActivityRecord{}, newLibraryError(
+				ErrorInvalidPersistence,
+				generationID,
+				0,
+				metadataError,
+			)
+		}
+		metadata = &metadataValue
+	}
+	record, recordError := netflix.NewEnrichedActivityRecord(
+		activity,
+		match,
+		metadata,
+	)
 	if recordError != nil {
 		return netflix.ActivityRecord{}, newLibraryError(
 			ErrorInvalidPersistence,

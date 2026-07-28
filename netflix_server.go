@@ -11,13 +11,17 @@ import (
 	"strings"
 
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/product"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix/enrichment"
 	netflixlibrary "github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix/library"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix/tmdb"
 )
 
 const (
 	netflixProviderPath       = "/api/providers/netflix"
 	netflixGenerationsPath    = "/api/providers/netflix/generations"
 	netflixDeleteConfirmation = "delete-netflix-provider"
+	netflixTMDBQueryConsent   = "authorize-tmdb-title-queries"
 )
 
 type generationResponse struct {
@@ -25,7 +29,10 @@ type generationResponse struct {
 }
 
 type createNetflixGenerationRequest struct {
-	AnalysisLevel netflixlibrary.AnalysisLevel `json:"analysis_level"`
+	AnalysisLevel         netflixlibrary.AnalysisLevel `json:"analysis_level"`
+	SourceGenerationID    string                       `json:"source_generation_id,omitempty"`
+	Locale                string                       `json:"locale,omitempty"`
+	TMDBTitleQueryConsent string                       `json:"tmdb_title_query_consent,omitempty"`
 }
 
 type deleteNetflixProviderRequest struct {
@@ -62,6 +69,10 @@ func registerNetflixRoutes(
 		getNetflixGenerationRecords(workspace, logger),
 	)
 	routes.HandleFunc(
+		"GET "+netflixGenerationsPath+"/{generationID}/export",
+		exportNetflixGeneration(workspace, logger),
+	)
+	routes.HandleFunc(
 		"DELETE "+netflixGenerationsPath+"/{generationID}",
 		deleteNetflixGeneration(workspace, logger),
 	)
@@ -94,7 +105,46 @@ func createNetflixGeneration(
 			writeJSONRequestError(responseWriter, decodeError)
 			return
 		}
-		if payload.AnalysisLevel != netflixlibrary.AnalysisLevelLocal {
+		var generation netflixlibrary.Generation
+		var createError error
+		switch payload.AnalysisLevel {
+		case netflixlibrary.AnalysisLevelLocal:
+			if payload.SourceGenerationID != "" ||
+				payload.Locale != "" ||
+				payload.TMDBTitleQueryConsent != "" {
+				writeRequestError(
+					responseWriter,
+					http.StatusUnprocessableEntity,
+					"invalid_generation_request",
+				)
+				return
+			}
+			generation, createError = workspace.CreateLocalGeneration()
+		case netflixlibrary.AnalysisLevelTMDB:
+			if payload.TMDBTitleQueryConsent != netflixTMDBQueryConsent {
+				writeRequestError(
+					responseWriter,
+					http.StatusUnprocessableEntity,
+					string(netflixlibrary.ErrorConsentRequired),
+				)
+				return
+			}
+			locale, localeError := tmdb.NewLocale(payload.Locale)
+			if localeError != nil {
+				writeRequestError(
+					responseWriter,
+					http.StatusUnprocessableEntity,
+					"invalid_locale",
+				)
+				return
+			}
+			generation, createError = workspace.CreateTMDBGeneration(
+				request.Context(),
+				payload.SourceGenerationID,
+				locale,
+				enrichment.AuthorizeTMDBTitleQueries(),
+			)
+		default:
 			writeRequestError(
 				responseWriter,
 				http.StatusUnprocessableEntity,
@@ -102,7 +152,6 @@ func createNetflixGeneration(
 			)
 			return
 		}
-		generation, createError := workspace.CreateLocalGeneration()
 		if createError != nil {
 			writeNetflixLibraryError(responseWriter, logger, createError)
 			return
@@ -110,6 +159,46 @@ func createNetflixGeneration(
 		writeJSON(responseWriter, logger, http.StatusCreated, generationResponse{
 			Generation: generation,
 		})
+	}
+}
+
+func exportNetflixGeneration(
+	workspace *netflixlibrary.Workspace,
+	logger *slog.Logger,
+) http.HandlerFunc {
+	return func(responseWriter http.ResponseWriter, request *http.Request) {
+		if queryError := requireQueryKeys(request, nil); queryError != nil {
+			writeRequestError(responseWriter, http.StatusBadRequest, "invalid_query")
+			return
+		}
+		generationID := request.PathValue("generationID")
+		records, exportError := workspace.ExportRecords(
+			request.Context(),
+			generationID,
+		)
+		if exportError != nil {
+			writeNetflixLibraryError(responseWriter, logger, exportError)
+			return
+		}
+		responseWriter.Header().Set("Cache-Control", "no-store")
+		responseWriter.Header().Set(
+			"Content-Disposition",
+			`attachment; filename="netflix-enriched-`+generationID+`.csv"`,
+		)
+		responseWriter.Header().Set("Content-Type", "text/csv; charset=utf-8")
+		if writeError := netflix.WriteEnrichedActivity(
+			request.Context(),
+			responseWriter,
+			records,
+		); writeError != nil {
+			logger.Error(
+				"Netflix export stream failed",
+				"error_type",
+				"export_write_failed",
+				"generation_id",
+				generationID,
+			)
+		}
 	}
 }
 
@@ -216,7 +305,7 @@ func getNetflixGenerationRecords(
 	return func(responseWriter http.ResponseWriter, request *http.Request) {
 		if queryError := requireQueryKeys(
 			request,
-			[]string{"cursor", "limit"},
+			[]string{"cursor", "limit", "match_status"},
 		); queryError != nil {
 			writeRequestError(responseWriter, http.StatusBadRequest, "invalid_query")
 			return
@@ -239,6 +328,7 @@ func getNetflixGenerationRecords(
 			request.PathValue("generationID"),
 			request.URL.Query().Get("cursor"),
 			limit,
+			netflix.MatchStatus(request.URL.Query().Get("match_status")),
 		)
 		if recordsError != nil {
 			writeNetflixLibraryError(responseWriter, logger, recordsError)
@@ -313,6 +403,17 @@ func writeNetflixLibraryError(
 		statusCode = http.StatusNotFound
 	case netflixlibrary.ErrorConflict, netflixlibrary.ErrorInvalidState:
 		statusCode = http.StatusConflict
+	case netflixlibrary.ErrorNotConfigured,
+		netflixlibrary.ErrorStaleSource:
+		statusCode = http.StatusConflict
+	case netflixlibrary.ErrorConsentRequired:
+		statusCode = http.StatusUnprocessableEntity
+	case netflixlibrary.ErrorRateLimited:
+		statusCode = http.StatusTooManyRequests
+	case netflixlibrary.ErrorUnavailable:
+		statusCode = http.StatusServiceUnavailable
+	case netflixlibrary.ErrorInvalidResponse:
+		statusCode = http.StatusBadGateway
 	case netflixlibrary.ErrorUploadTooLarge:
 		statusCode = http.StatusRequestEntityTooLarge
 	case netflixlibrary.ErrorInvalidCSV,

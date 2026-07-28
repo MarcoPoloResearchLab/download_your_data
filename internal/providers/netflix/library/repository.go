@@ -351,8 +351,12 @@ func validateRepositoryState(state repositoryState) error {
 			continue
 		}
 		sourceGeneration, sourceExists := generationByID[generation.SourceGenerationID]
-		if !sourceExists || sourceGeneration.State != GenerationStateReady {
-			return invalidStatePersistence("TMDB generation source is missing or not ready")
+		if !sourceExists ||
+			sourceGeneration.State != GenerationStateReady ||
+			sourceGeneration.AnalysisLevel != AnalysisLevelLocal ||
+			sourceGeneration.RecordsSHA256 != generation.SourceRecordsSHA256 ||
+			sourceGeneration.AnalyticsSHA256 != generation.SourceAnalyticsSHA256 {
+			return invalidStatePersistence("TMDB generation source is missing, stale, or not local")
 		}
 	}
 	if state.ActiveID != "" {
@@ -430,6 +434,9 @@ func validateGenerationState(generation generationState) error {
 		generation.UniqueTitleCount > product.MaxNetflixUniqueTitles {
 		return invalidStatePersistence("generation counts or timestamps are invalid")
 	}
+	if enrichmentError := validateGenerationEnrichmentFields(generation); enrichmentError != nil {
+		return enrichmentError
+	}
 	if len(generation.Events) == 0 ||
 		len(generation.Events) > product.MaxNetflixProgressEvents {
 		return invalidStatePersistence("generation event journal is invalid")
@@ -442,6 +449,12 @@ func validateGenerationState(generation generationState) error {
 			event.UniqueTitleCount < 0 ||
 			event.UniqueTitleCount > event.ActivityCount {
 			return invalidStatePersistence("generation event is invalid")
+		}
+		if progressError := validateEventEnrichmentFields(
+			generation,
+			event,
+		); progressError != nil {
+			return progressError
 		}
 		if event.Failure != nil {
 			if event.State != GenerationStateFailed ||
@@ -473,7 +486,12 @@ func validateGenerationState(generation generationState) error {
 	lastEvent := generation.Events[len(generation.Events)-1]
 	if lastEvent.State != generation.State ||
 		lastEvent.ActivityCount != generation.ActivityCount ||
-		lastEvent.UniqueTitleCount != generation.UniqueTitleCount {
+		lastEvent.UniqueTitleCount != generation.UniqueTitleCount ||
+		lastEvent.CompletedTitleCount != generation.CompletedTitleCount ||
+		lastEvent.MatchedTitleCount != generation.MatchedTitleCount ||
+		lastEvent.ReviewTitleCount != generation.ReviewTitleCount ||
+		lastEvent.UnmatchedTitleCount != generation.UnmatchedTitleCount ||
+		lastEvent.CacheHitTitleCount != generation.CacheHitTitleCount {
 		return invalidStatePersistence("latest event does not match generation state")
 	}
 
@@ -495,7 +513,7 @@ func validateGenerationState(generation generationState) error {
 			generation.Failure != nil {
 			return invalidStatePersistence("pre-import generation contains terminal data")
 		}
-	case GenerationStateImporting, GenerationStateEnriching:
+	case GenerationStateImporting:
 		if generation.CompletedAtMS != 0 || generation.Failure != nil {
 			return invalidStatePersistence("building generation contains terminal data")
 		}
@@ -513,6 +531,15 @@ func validateGenerationState(generation generationState) error {
 			(generation.RecordsSHA256 != "" && !hasHashes) {
 			return invalidStatePersistence("building checkpoint is incomplete")
 		}
+	case GenerationStateEnriching:
+		if generation.CompletedAtMS != 0 ||
+			generation.Failure != nil ||
+			!hasSummary ||
+			((generation.RecordsSHA256 == "") !=
+				(generation.AnalyticsSHA256 == "")) ||
+			(generation.RecordsSHA256 != "" && !hasHashes) {
+			return invalidStatePersistence("enrichment checkpoint is incomplete")
+		}
 	case GenerationStateReady:
 		if !hasSummary ||
 			!hasHashes ||
@@ -525,7 +552,8 @@ func validateGenerationState(generation generationState) error {
 			generation.Failure == nil ||
 			!validFailure(*generation.Failure) ||
 			generation.RecordsSHA256 != "" ||
-			generation.AnalyticsSHA256 != "" {
+			generation.AnalyticsSHA256 != "" ||
+			generation.EnrichmentCheckpointBytes != 0 {
 			return invalidStatePersistence("failed generation is inconsistent")
 		}
 	}
@@ -543,8 +571,12 @@ func validLifecycleTransition(
 	case GenerationStateValidating:
 		return next == GenerationStateImporting ||
 			next == GenerationStateFailed
-	case GenerationStateImporting, GenerationStateEnriching:
+	case GenerationStateImporting:
 		return next == GenerationStateReady ||
+			next == GenerationStateFailed
+	case GenerationStateEnriching:
+		return next == GenerationStateEnriching ||
+			next == GenerationStateReady ||
 			next == GenerationStateFailed
 	default:
 		return false
@@ -573,6 +605,12 @@ func validErrorCode(code ErrorCode) bool {
 		ErrorLimitExceeded,
 		ErrorCanceled,
 		ErrorIncomplete,
+		ErrorNotConfigured,
+		ErrorConsentRequired,
+		ErrorRateLimited,
+		ErrorUnavailable,
+		ErrorInvalidResponse,
+		ErrorStaleSource,
 		ErrorLeaseUnavailable,
 		ErrorPersistenceFailed,
 		ErrorInvalidPersistence:

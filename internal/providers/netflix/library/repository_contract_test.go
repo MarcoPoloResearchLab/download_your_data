@@ -92,7 +92,7 @@ func TestRepositoryRejectsForeignStaleAndStructurallyInvalidState(
 				fixture.stateFile,
 				fixture.leaseFile,
 				fixture.cacheFile,
-				false,
+				nil,
 				workspaceOptions{
 					now:     fixture.clock,
 					entropy: testEntropy(0x62),
@@ -176,7 +176,7 @@ func TestRepositoryRejectsPermissiveStateFileInsteadOfRepairingIt(
 		fixture.stateFile,
 		fixture.leaseFile,
 		fixture.cacheFile,
-		false,
+		nil,
 		workspaceOptions{
 			now:     fixture.clock,
 			entropy: testEntropy(0x82),

@@ -27,6 +27,18 @@ var (
 		"DerivedTitle",
 		"TitleIdentity",
 		"TitleIdentityVersion",
+		"MatchStatus",
+		"MatcherIdentity",
+		"MatchMediaType",
+		"MatchTMDBID",
+		"MatchNormalizedQuery",
+		"MatchBestCandidateTitle",
+		"MatchBestScore",
+		"MatchRunnerUpScore",
+		"MatchMargin",
+		"MatchExactCandidateCount",
+		"MatchCandidatesConsidered",
+		"MatchReason",
 		"MediaType",
 		"Genres",
 		"ReleaseDate",
@@ -274,7 +286,7 @@ func WriteEnrichedActivity(
 		)
 	}
 	for recordIndex, record := range records {
-		if !record.valid() {
+		if _, hasMatch := record.Match(); !record.valid() || !hasMatch {
 			return newCSVError(
 				CSVErrorInvalidRow,
 				recordIndex+2,
@@ -458,12 +470,26 @@ func validateViewingHeader(header []string) (map[string]int, error) {
 func enrichedRow(record ActivityRecord) []string {
 	activity := record.Activity()
 	identity := activity.TitleIdentity()
+	match, _ := record.Match()
+	evidence := match.Evidence()
 	row := []string{
 		activity.RawTitle(),
 		activity.RawDate(),
 		identity.SearchTitle(),
 		identity.Key(),
 		identity.Version(),
+		string(match.Status()),
+		match.MatcherIdentity(),
+		string(match.MediaType()),
+		formatOptionalInt64(match.TMDBID()),
+		evidence.NormalizedQuery,
+		evidence.BestCandidateTitle,
+		strconv.FormatFloat(evidence.BestScore, 'f', -1, 64),
+		strconv.FormatFloat(evidence.RunnerUpScore, 'f', -1, 64),
+		strconv.FormatFloat(evidence.Margin, 'f', -1, 64),
+		strconv.Itoa(evidence.ExactCandidateCount),
+		strconv.Itoa(evidence.CandidatesConsidered),
+		evidence.Reason,
 		"",
 		"",
 		"",
@@ -482,19 +508,19 @@ func enrichedRow(record ActivityRecord) []string {
 	if !hasMetadata {
 		return row
 	}
-	row[5] = string(metadata.MediaType())
-	row[6] = strings.Join(metadata.Genres(), ";")
-	row[7] = metadata.ReleaseDate()
-	row[8] = formatOptionalInt(metadata.RuntimeMinutes())
-	row[9] = metadata.OriginalLanguage()
-	row[10] = formatOptionalFloat(metadata.VoteAverage())
-	row[11] = formatOptionalInt(metadata.VoteCount())
-	row[12] = strings.Join(metadata.OriginCountries(), ";")
-	row[13] = formatOptionalInt(metadata.Seasons())
-	row[14] = formatOptionalInt(metadata.Episodes())
-	row[15] = strconv.FormatInt(metadata.TMDBID(), 10)
-	row[16] = metadata.MatchedTitle()
-	row[17] = metadata.Description()
+	row[17] = string(metadata.MediaType())
+	row[18] = strings.Join(metadata.Genres(), ";")
+	row[19] = metadata.ReleaseDate()
+	row[20] = formatOptionalInt(metadata.RuntimeMinutes())
+	row[21] = metadata.OriginalLanguage()
+	row[22] = formatOptionalFloat(metadata.VoteAverage())
+	row[23] = formatOptionalInt(metadata.VoteCount())
+	row[24] = strings.Join(metadata.OriginCountries(), ";")
+	row[25] = formatOptionalInt(metadata.Seasons())
+	row[26] = formatOptionalInt(metadata.Episodes())
+	row[27] = strconv.FormatInt(metadata.TMDBID(), 10)
+	row[28] = metadata.MatchedTitle()
+	row[29] = metadata.Description()
 	return row
 }
 
@@ -511,40 +537,95 @@ func parseEnrichedRow(row []string) (ActivityRecord, error) {
 			"derived title identity does not match the current contract",
 		)
 	}
-	if allEmpty(row[5:]) {
-		return NewLocalActivityRecord(activity)
+	matchTMDBID, matchIdentifierError := parseOptionalInt64(
+		row[8],
+		"match TMDB ID",
+	)
+	if matchIdentifierError != nil {
+		return ActivityRecord{}, matchIdentifierError
+	}
+	bestScore, bestScoreError := parseRequiredFloat(row[11], "match best score")
+	if bestScoreError != nil {
+		return ActivityRecord{}, bestScoreError
+	}
+	runnerUpScore, runnerUpError := parseRequiredFloat(
+		row[12],
+		"match runner-up score",
+	)
+	if runnerUpError != nil {
+		return ActivityRecord{}, runnerUpError
+	}
+	margin, marginError := parseRequiredFloat(row[13], "match margin")
+	if marginError != nil {
+		return ActivityRecord{}, marginError
+	}
+	exactCandidateCount, exactCountError := parseRequiredInt(
+		row[14],
+		"match exact candidate count",
+	)
+	if exactCountError != nil {
+		return ActivityRecord{}, exactCountError
+	}
+	candidatesConsidered, candidateCountError := parseRequiredInt(
+		row[15],
+		"match candidates considered",
+	)
+	if candidateCountError != nil {
+		return ActivityRecord{}, candidateCountError
+	}
+	match, matchError := NewTMDBMatch(TMDBMatchInput{
+		Status:          MatchStatus(row[5]),
+		MatcherIdentity: row[6],
+		MediaType:       MediaType(row[7]),
+		TMDBID:          matchTMDBID,
+		Evidence: MatchEvidence{
+			NormalizedQuery:      row[9],
+			BestCandidateTitle:   row[10],
+			BestScore:            bestScore,
+			RunnerUpScore:        runnerUpScore,
+			Margin:               margin,
+			ExactCandidateCount:  exactCandidateCount,
+			CandidatesConsidered: candidatesConsidered,
+			Reason:               row[16],
+		},
+	})
+	if matchError != nil {
+		return ActivityRecord{}, matchError
+	}
+	if allEmpty(row[17:]) {
+		return NewEnrichedActivityRecord(activity, match, nil)
 	}
 
-	mediaType := MediaType(row[5])
-	genres, genreError := parseLabels(row[6])
+	mediaType := MediaType(row[17])
+	genres, genreError := parseLabels(row[18])
 	if genreError != nil {
 		return ActivityRecord{}, genreError
 	}
-	runtimeMinutes, runtimeError := parseOptionalInt(row[8], "runtime minutes")
+	runtimeMinutes, runtimeError := parseOptionalInt(row[20], "runtime minutes")
 	if runtimeError != nil {
 		return ActivityRecord{}, runtimeError
 	}
-	voteAverage, averageError := parseOptionalFloat(row[10], "vote average")
+	voteAverage, averageError := parseOptionalFloat(row[22], "vote average")
 	if averageError != nil {
 		return ActivityRecord{}, averageError
 	}
-	voteCount, voteCountError := parseOptionalInt(row[11], "vote count")
+	voteCount, voteCountError := parseOptionalInt(row[23], "vote count")
 	if voteCountError != nil {
 		return ActivityRecord{}, voteCountError
 	}
-	originCountries, countryError := parseLabels(row[12])
+	originCountries, countryError := parseLabels(row[24])
 	if countryError != nil {
 		return ActivityRecord{}, countryError
 	}
-	seasons, seasonError := parseOptionalInt(row[13], "seasons")
+	seasons, seasonError := parseOptionalInt(row[25], "seasons")
 	if seasonError != nil {
 		return ActivityRecord{}, seasonError
 	}
-	episodes, episodeError := parseOptionalInt(row[14], "episodes")
+	episodes, episodeError := parseOptionalInt(row[26], "episodes")
 	if episodeError != nil {
 		return ActivityRecord{}, episodeError
 	}
-	tmdbID, identifierError := strconv.ParseInt(row[15], 10, 64)
+	tmdbID, identifierError := strconv.ParseInt(row[27], 10, 64)
 	if identifierError != nil {
 		return ActivityRecord{}, fmt.Errorf("parse TMDB ID: %w", identifierError)
 	}
@@ -552,22 +633,22 @@ func parseEnrichedRow(row []string) (ActivityRecord, error) {
 	metadata, metadataError := NewTitleMetadata(TitleMetadataInput{
 		MediaType:        mediaType,
 		Genres:           genres,
-		ReleaseDate:      row[7],
+		ReleaseDate:      row[19],
 		RuntimeMinutes:   runtimeMinutes,
-		OriginalLanguage: row[9],
+		OriginalLanguage: row[21],
 		VoteAverage:      voteAverage,
 		VoteCount:        voteCount,
 		OriginCountries:  originCountries,
 		Seasons:          seasons,
 		Episodes:         episodes,
 		TMDBID:           tmdbID,
-		MatchedTitle:     row[16],
-		Description:      row[17],
+		MatchedTitle:     row[28],
+		Description:      row[29],
 	})
 	if metadataError != nil {
 		return ActivityRecord{}, metadataError
 	}
-	return NewEnrichedActivityRecord(activity, metadata)
+	return NewEnrichedActivityRecord(activity, match, &metadata)
 }
 
 func parseLabels(rawValue string) ([]string, error) {
@@ -605,11 +686,51 @@ func parseOptionalFloat(rawValue string, fieldName string) (*float64, error) {
 	return &parsedValue, nil
 }
 
+func parseOptionalInt64(rawValue string, fieldName string) (int64, error) {
+	if rawValue == "" {
+		return 0, nil
+	}
+	parsedValue, parseError := strconv.ParseInt(rawValue, 10, 64)
+	if parseError != nil {
+		return 0, fmt.Errorf("parse %s: %w", fieldName, parseError)
+	}
+	return parsedValue, nil
+}
+
+func parseRequiredInt(rawValue string, fieldName string) (int, error) {
+	if rawValue == "" {
+		return 0, fmt.Errorf("%s is required", fieldName)
+	}
+	parsedValue, parseError := strconv.Atoi(rawValue)
+	if parseError != nil {
+		return 0, fmt.Errorf("parse %s: %w", fieldName, parseError)
+	}
+	return parsedValue, nil
+}
+
+func parseRequiredFloat(rawValue string, fieldName string) (float64, error) {
+	if rawValue == "" {
+		return 0, fmt.Errorf("%s is required", fieldName)
+	}
+	parsedValue, parseError := strconv.ParseFloat(rawValue, 64)
+	if parseError != nil {
+		return 0, fmt.Errorf("parse %s: %w", fieldName, parseError)
+	}
+	return parsedValue, nil
+}
+
 func formatOptionalInt(value int, present bool) string {
 	if !present {
 		return ""
 	}
 	return strconv.Itoa(value)
+}
+
+func formatOptionalInt64(value int64) string {
+	if value == 0 {
+		return ""
+	}
+	return strconv.FormatInt(value, 10)
 }
 
 func formatOptionalFloat(value float64, present bool) string {

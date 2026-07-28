@@ -232,23 +232,38 @@ func TestEnrichedActivityCSVRoundTrip(testContext *testing.T) {
 	if metadataError != nil {
 		testContext.Fatalf("construct synthetic metadata: %v", metadataError)
 	}
+	matchedOutcome := mustTMDBMatch(
+		testContext,
+		enrichedActivity,
+		[]netflix.MatchCandidate{{
+			TMDBID:    4242,
+			MediaType: netflix.MediaTypeMovie,
+			Title:     "The Clockmaker",
+		}},
+	)
 	enrichedRecord, enrichedRecordError := netflix.NewEnrichedActivityRecord(
 		enrichedActivity,
-		metadata,
+		matchedOutcome,
+		&metadata,
 	)
 	if enrichedRecordError != nil {
 		testContext.Fatalf("construct enriched activity: %v", enrichedRecordError)
 	}
-	localRecord, localRecordError := netflix.NewLocalActivityRecord(localActivity)
-	if localRecordError != nil {
-		testContext.Fatalf("construct local activity: %v", localRecordError)
+	unmatchedOutcome := mustTMDBMatch(testContext, localActivity, nil)
+	unmatchedRecord, unmatchedRecordError := netflix.NewEnrichedActivityRecord(
+		localActivity,
+		unmatchedOutcome,
+		nil,
+	)
+	if unmatchedRecordError != nil {
+		testContext.Fatalf("construct unmatched activity: %v", unmatchedRecordError)
 	}
 
 	var destination bytes.Buffer
 	writeError := netflix.WriteEnrichedActivity(
 		context.Background(),
 		&destination,
-		[]netflix.ActivityRecord{enrichedRecord, localRecord},
+		[]netflix.ActivityRecord{enrichedRecord, unmatchedRecord},
 	)
 	if writeError != nil {
 		testContext.Fatalf("write enriched CSV: %v", writeError)
@@ -280,24 +295,56 @@ func TestEnrichedActivityCSVRoundTrip(testContext *testing.T) {
 			roundTrippedMetadata.MatchedTitle(),
 		)
 	}
+	roundTrippedMatch, hasMatch := roundTripped[0].Match()
+	if !hasMatch ||
+		roundTrippedMatch.Status() != netflix.MatchStatusMatched ||
+		roundTrippedMatch.MatcherIdentity() != netflix.TMDBMatcherIdentity {
+		testContext.Fatalf("first round-trip record lost its match: %+v", roundTrippedMatch)
+	}
 	if _, hasMetadata := roundTripped[1].Metadata(); hasMetadata {
-		testContext.Fatalf("local round-trip record unexpectedly acquired metadata")
+		testContext.Fatalf("unmatched round-trip record unexpectedly acquired metadata")
+	}
+	unmatchedMatch, hasMatch := roundTripped[1].Match()
+	if !hasMatch || unmatchedMatch.Status() != netflix.MatchStatusUnmatched {
+		testContext.Fatalf("unmatched round-trip status = %+v", unmatchedMatch)
 	}
 	if roundTripped[1].Activity().RawTitle() != "Unmatched Title" {
-		testContext.Fatalf("local round-trip record lost its raw title")
+		testContext.Fatalf("unmatched round-trip record lost its raw title")
 	}
 }
 
 func TestEnrichedActivityCSVRejectsStaleIdentity(testContext *testing.T) {
 	limits := mustCSVLimits(testContext, 10, 512, 4096)
-	header := "Title,Date,DerivedTitle,TitleIdentity,TitleIdentityVersion,MediaType,Genres,ReleaseDate,RuntimeMinutes,OriginalLanguage,VoteAverage,VoteCount,OriginCountries,Seasons,Episodes,TMDBID,MatchedTitle,Description\n"
-	row := "Example,1/2/26,Example,stale,netflix-title-v0,,,,,,,,,,,,,\n"
+	header := "Title,Date,DerivedTitle,TitleIdentity,TitleIdentityVersion,MatchStatus,MatcherIdentity,MatchMediaType,MatchTMDBID,MatchNormalizedQuery,MatchBestCandidateTitle,MatchBestScore,MatchRunnerUpScore,MatchMargin,MatchExactCandidateCount,MatchCandidatesConsidered,MatchReason,MediaType,Genres,ReleaseDate,RuntimeMinutes,OriginalLanguage,VoteAverage,VoteCount,OriginCountries,Seasons,Episodes,TMDBID,MatchedTitle,Description\n"
+	row := "Example,1/2/26,Example,stale,netflix-title-v0,unmatched,netflix-tmdb-matcher-v1,,,example,,0,0,0,0,0,no_candidates,,,,,,,,,,,,,\n"
 	_, readError := netflix.ReadEnrichedActivity(
 		context.Background(),
 		strings.NewReader(header+row),
 		limits,
 	)
 	requireCSVError(testContext, readError, netflix.CSVErrorInvalidMetadata, 2)
+}
+
+func TestEnrichedActivityCSVRejectsLocalRecordsWithoutMatchOutcomes(
+	testContext *testing.T,
+) {
+	activity := mustViewingActivity(testContext, "Local Only", "1/2/26")
+	record, recordError := netflix.NewLocalActivityRecord(activity)
+	if recordError != nil {
+		testContext.Fatalf("construct local record: %v", recordError)
+	}
+	var destination bytes.Buffer
+	writeError := netflix.WriteEnrichedActivity(
+		context.Background(),
+		&destination,
+		[]netflix.ActivityRecord{record},
+	)
+	requireCSVError(
+		testContext,
+		writeError,
+		netflix.CSVErrorInvalidRow,
+		2,
+	)
 }
 
 func TestCSVLimitsRequireExplicitValidBounds(testContext *testing.T) {
@@ -354,6 +401,22 @@ func mustViewingActivity(
 		testContext.Fatalf("construct viewing activity: %v", activityError)
 	}
 	return activity
+}
+
+func mustTMDBMatch(
+	testContext *testing.T,
+	activity netflix.ViewingActivity,
+	candidates []netflix.MatchCandidate,
+) netflix.TMDBMatch {
+	testContext.Helper()
+	match, matchError := netflix.MatchTMDBTitle(
+		activity.TitleIdentity(),
+		candidates,
+	)
+	if matchError != nil {
+		testContext.Fatalf("construct TMDB match: %v", matchError)
+	}
+	return match
 }
 
 func requireCSVError(

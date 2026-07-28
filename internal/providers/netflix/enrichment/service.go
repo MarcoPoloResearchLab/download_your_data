@@ -67,6 +67,12 @@ func AuthorizeTMDBTitleQueries() Authorization {
 	return Authorization{explicit: true}
 }
 
+// Explicit reports whether the caller deliberately authorized derived title
+// queries for the current operation.
+func (authorization Authorization) Explicit() bool {
+	return authorization.explicit
+}
+
 // MetadataClient is the narrow server-owned TMDB client surface.
 type MetadataClient interface {
 	Identity() string

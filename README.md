@@ -81,13 +81,14 @@ The Netflix provider accepts only the current per-profile Viewing activity CSV w
 - `POST /api/providers/netflix/generations` with `{"analysis_level":"local"}` to create one receiving generation.
 - `PUT /api/providers/netflix/generations/{generationID}/viewing-activity` with `Content-Type: text/csv` to stage the CSV.
 - `GET /api/providers/netflix/generations/{generationID}/events` for ordered resumable progress.
-- `GET /api/providers/netflix/generations/{generationID}/analytics` and `/records` for ready local results.
+- `GET /api/providers/netflix/generations/{generationID}/analytics` and `/records` for declared ready results. Enriched records may be filtered with `match_status=matched`, `review`, or `unmatched`.
+- `GET /api/providers/netflix/generations/{generationID}/export` to stream the canonical enriched CSV from a declared ready TMDB generation.
 - `DELETE /api/providers/netflix/generations/{generationID}` to cancel and remove a non-active generation.
 - `DELETE /api/providers/netflix` with `{"confirmation":"delete-netflix-provider"}` to remove the complete provider library and TMDB cache.
 
 The server accepts at most one building generation, keeps the existing ready generation active while a replacement builds, and swaps the active pointer only after it revalidates every record, title identity, date, count, analytics result, and artifact hash. Upload bytes are removed after import success or failure; only a complete staged upload needed to resume a nonterminal generation survives an orderly process restart.
 
-Provider state uses the sole current `netflix-generation-library-v1` contract at `<data-root>/providers/netflix/library.json`. Immutable ready records and analytics live below `<data-root>/providers/netflix/generations/{generationID}`. The provider holds an operating-system lease for its entire lifetime, and every directory and file remains owner-only.
+Provider state uses the sole current `netflix-generation-library-v1` contract at `<data-root>/providers/netflix/library.json`. Immutable ready records and analytics use `netflix-generation-records-v1` and `netflix-generation-analytics-v1` below `<data-root>/providers/netflix/generations/{generationID}`; record cursors use `netflix-record-cursor-v2`. The provider holds an operating-system lease for its entire lifetime, and every directory and file remains owner-only.
 
 ## Optional Netflix metadata
 
@@ -100,6 +101,19 @@ DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN=your-read-access-token make run
 ```
 
 The token is accepted only from `DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN`. It stays in the Go process and is never returned to the browser, placed in a URL, logged, reported, or persisted. Production requests use Bearer authentication against TMDB's fixed official HTTPS API origin. The browser capability payload reports only whether enrichment is configured.
+
+Enrichment is created only from the active ready-local generation with this exact request shape:
+
+```json
+{
+  "analysis_level": "tmdb",
+  "source_generation_id": "ng_<opaque-id>",
+  "locale": "en-US",
+  "tmdb_title_query_consent": "authorize-tmdb-title-queries"
+}
+```
+
+This creates a separate `enriching` generation. The raw source remains active and readable until every unique derived title has a persisted `matched`, `review`, or `unmatched` outcome and every accepted match has complete metadata. Transport, protocol, cache, metadata, stale-source, and cancellation failures leave the active generation unchanged. Ordered progress and per-title owner-only checkpoints survive an orderly restart; activation removes those checkpoints atomically after final artifacts revalidate.
 
 Enrichment uses fixed product-owned concurrency, pacing, retry, cancellation, matching, and 30-day private-cache contracts. Accepted matches must pass the deterministic quality gate:
 

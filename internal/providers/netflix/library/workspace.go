@@ -19,14 +19,17 @@ import (
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/privatepath"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/product"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix/enrichment"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix/tmdb"
 )
 
-const recordCursorIdentity = "netflix-record-cursor-v1"
+const recordCursorIdentity = "netflix-record-cursor-v2"
 
 type workspaceOptions struct {
-	now                 func() time.Time
-	entropy             io.Reader
-	beforeArtifactWrite func(context.Context) error
+	now                       func() time.Time
+	entropy                   io.Reader
+	beforeArtifactWrite       func(context.Context) error
+	afterEnrichmentCheckpoint func(context.Context, string, int) error
 }
 
 type runningJob struct {
@@ -37,36 +40,38 @@ type runningJob struct {
 
 // Workspace owns one leased, restart-safe Netflix provider library.
 type Workspace struct {
-	mutex               sync.Mutex
-	root                privatepath.Root
-	repository          *repository
-	lease               *providerLease
-	cacheFile           privatepath.File
-	tmdbConfigured      bool
-	now                 func() time.Time
-	entropy             io.Reader
-	beforeArtifactWrite func(context.Context) error
-	context             context.Context
-	cancel              context.CancelFunc
-	jobs                map[string]*runningJob
-	uploads             map[string]*runningJob
-	closing             bool
+	mutex                     sync.Mutex
+	root                      privatepath.Root
+	repository                *repository
+	lease                     *providerLease
+	cacheFile                 privatepath.File
+	metadataClient            enrichment.MetadataClient
+	tmdbConfigured            bool
+	now                       func() time.Time
+	entropy                   io.Reader
+	beforeArtifactWrite       func(context.Context) error
+	afterEnrichmentCheckpoint func(context.Context, string, int) error
+	context                   context.Context
+	cancel                    context.CancelFunc
+	jobs                      map[string]*runningJob
+	uploads                   map[string]*runningJob
+	closing                   bool
 }
 
-// Open acquires the provider lease and resumes current local checkpoints.
+// Open acquires the provider lease and resumes the current generation checkpoint.
 func Open(
 	root privatepath.Root,
 	stateFile privatepath.File,
 	leaseFile privatepath.File,
 	cacheFile privatepath.File,
-	tmdbConfigured bool,
+	metadataClient enrichment.MetadataClient,
 ) (*Workspace, error) {
 	return openWorkspace(
 		root,
 		stateFile,
 		leaseFile,
 		cacheFile,
-		tmdbConfigured,
+		metadataClient,
 		workspaceOptions{now: time.Now, entropy: rand.Reader},
 	)
 }
@@ -76,7 +81,7 @@ func openWorkspace(
 	stateFile privatepath.File,
 	leaseFile privatepath.File,
 	cacheFile privatepath.File,
-	tmdbConfigured bool,
+	metadataClient enrichment.MetadataClient,
 	options workspaceOptions,
 ) (*Workspace, error) {
 	if root.Path() == "" || options.now == nil || options.entropy == nil {
@@ -95,6 +100,14 @@ func openWorkspace(
 			errors.New("netflix cache path does not match the current contract"),
 		)
 	}
+	if metadataClient != nil && metadataClient.Identity() != tmdb.ClientIdentity {
+		return nil, newLibraryError(
+			ErrorInvalidRequest,
+			"",
+			0,
+			errors.New("netflix metadata client identity is invalid"),
+		)
+	}
 	lease, leaseError := acquireProviderLease(leaseFile)
 	if leaseError != nil {
 		return nil, leaseError
@@ -106,18 +119,20 @@ func openWorkspace(
 	}
 	workspaceContext, cancelWorkspace := context.WithCancel(context.Background())
 	workspace := &Workspace{
-		root:                root,
-		repository:          repositoryValue,
-		lease:               lease,
-		cacheFile:           cacheFile,
-		tmdbConfigured:      tmdbConfigured,
-		now:                 options.now,
-		entropy:             options.entropy,
-		beforeArtifactWrite: options.beforeArtifactWrite,
-		context:             workspaceContext,
-		cancel:              cancelWorkspace,
-		jobs:                make(map[string]*runningJob),
-		uploads:             make(map[string]*runningJob),
+		root:                      root,
+		repository:                repositoryValue,
+		lease:                     lease,
+		cacheFile:                 cacheFile,
+		metadataClient:            metadataClient,
+		tmdbConfigured:            metadataClient != nil,
+		now:                       options.now,
+		entropy:                   options.entropy,
+		beforeArtifactWrite:       options.beforeArtifactWrite,
+		afterEnrichmentCheckpoint: options.afterEnrichmentCheckpoint,
+		context:                   workspaceContext,
+		cancel:                    cancelWorkspace,
+		jobs:                      make(map[string]*runningJob),
+		uploads:                   make(map[string]*runningJob),
 	}
 	if recoveryError := workspace.recoverDeletionCheckpoints(); recoveryError != nil {
 		cancelWorkspace()
@@ -272,6 +287,161 @@ func (workspace *Workspace) CreateLocalGeneration() (Generation, error) {
 	}); mutationError != nil {
 		return Generation{}, mutationError
 	}
+	return generation.snapshot(), nil
+}
+
+// CreateTMDBGeneration starts one explicitly authorized enriched replacement
+// from the active ready-local generation.
+func (workspace *Workspace) CreateTMDBGeneration(
+	ctx context.Context,
+	sourceGenerationID string,
+	locale tmdb.Locale,
+	authorization enrichment.Authorization,
+) (Generation, error) {
+	if ctx == nil || !validGenerationID(sourceGenerationID) {
+		return Generation{}, newLibraryError(
+			ErrorInvalidRequest,
+			sourceGenerationID,
+			0,
+			errors.New("current context and source generation are required"),
+		)
+	}
+	if !authorization.Explicit() {
+		return Generation{}, newLibraryError(
+			ErrorConsentRequired,
+			sourceGenerationID,
+			0,
+			errors.New("explicit TMDB title-query consent is required"),
+		)
+	}
+	if _, localeError := tmdb.NewLocale(locale.String()); localeError != nil {
+		return Generation{}, newLibraryError(
+			ErrorInvalidRequest,
+			sourceGenerationID,
+			0,
+			localeError,
+		)
+	}
+
+	workspace.mutex.Lock()
+	if workspace.closing ||
+		workspace.repository.state.Deleting ||
+		workspace.repository.state.BuildingID != "" ||
+		len(workspace.uploads) != 0 {
+		workspace.mutex.Unlock()
+		return Generation{}, newLibraryError(
+			ErrorConflict,
+			sourceGenerationID,
+			0,
+			errors.New("netflix provider is not accepting an enriched generation"),
+		)
+	}
+	if workspace.metadataClient == nil {
+		workspace.mutex.Unlock()
+		return Generation{}, newLibraryError(
+			ErrorNotConfigured,
+			sourceGenerationID,
+			0,
+			errors.New("TMDB enrichment is not configured"),
+		)
+	}
+	sourceGeneration, sourceExists := findGeneration(
+		workspace.repository.state,
+		sourceGenerationID,
+	)
+	if !sourceExists ||
+		workspace.repository.state.ActiveID != sourceGenerationID ||
+		sourceGeneration.State != GenerationStateReady ||
+		sourceGeneration.AnalysisLevel != AnalysisLevelLocal {
+		workspace.mutex.Unlock()
+		return Generation{}, newLibraryError(
+			ErrorStaleSource,
+			sourceGenerationID,
+			0,
+			errors.New("source generation is not the active ready-local generation"),
+		)
+	}
+	workspace.mutex.Unlock()
+
+	if _, _, validationError := validateGenerationArtifacts(
+		ctx,
+		workspace.root,
+		sourceGeneration,
+	); validationError != nil {
+		return Generation{}, newLibraryError(
+			ErrorStaleSource,
+			sourceGenerationID,
+			0,
+			validationError,
+		)
+	}
+
+	workspace.mutex.Lock()
+	defer workspace.mutex.Unlock()
+	currentSource, sourceExists := findGeneration(
+		workspace.repository.state,
+		sourceGenerationID,
+	)
+	if workspace.closing ||
+		workspace.repository.state.Deleting ||
+		workspace.repository.state.BuildingID != "" ||
+		len(workspace.uploads) != 0 ||
+		!sourceExists ||
+		workspace.repository.state.ActiveID != sourceGenerationID ||
+		currentSource.State != sourceGeneration.State ||
+		currentSource.AnalysisLevel != sourceGeneration.AnalysisLevel ||
+		currentSource.RecordsSHA256 != sourceGeneration.RecordsSHA256 ||
+		currentSource.AnalyticsSHA256 != sourceGeneration.AnalyticsSHA256 ||
+		currentSource.ActivityCount != sourceGeneration.ActivityCount ||
+		currentSource.UniqueTitleCount != sourceGeneration.UniqueTitleCount {
+		return Generation{}, newLibraryError(
+			ErrorStaleSource,
+			sourceGenerationID,
+			0,
+			errors.New("source generation changed during validation"),
+		)
+	}
+	generationID, identifierError := workspace.newGenerationIDLocked()
+	if identifierError != nil {
+		return Generation{}, identifierError
+	}
+	nowMilliseconds := workspace.now().UTC().UnixMilli()
+	generation := generationState{
+		ID:                        generationID,
+		SourceGenerationID:        sourceGenerationID,
+		AnalysisLevel:             AnalysisLevelTMDB,
+		State:                     GenerationStateEnriching,
+		ActivityCount:             sourceGeneration.ActivityCount,
+		UniqueTitleCount:          sourceGeneration.UniqueTitleCount,
+		StartDate:                 sourceGeneration.StartDate,
+		EndDate:                   sourceGeneration.EndDate,
+		CreatedAtMS:               nowMilliseconds,
+		UpdatedAtMS:               nowMilliseconds,
+		Locale:                    locale.String(),
+		TMDBAuthorizationIdentity: tmdbAuthorizationContract,
+		TMDBClientIdentity:        workspace.metadataClient.Identity(),
+		TMDBMatcherIdentity:       netflix.TMDBMatcherIdentity,
+		TMDBCacheIdentity:         enrichment.CacheFreshnessIdentity,
+		SourceRecordsSHA256:       sourceGeneration.RecordsSHA256,
+		SourceAnalyticsSHA256:     sourceGeneration.AnalyticsSHA256,
+	}
+	generation.Events = []eventState{{
+		Sequence:         1,
+		State:            GenerationStateEnriching,
+		ActivityCount:    generation.ActivityCount,
+		UniqueTitleCount: generation.UniqueTitleCount,
+		OccurredAtMS:     nowMilliseconds,
+		TotalTitleCount:  generation.UniqueTitleCount,
+	}}
+	if mutationError := workspace.repository.mutate(func(state *repositoryState) error {
+		state.BuildingID = generationID
+		state.Generations = append(state.Generations, generation)
+		sortGenerations(state.Generations)
+		return nil
+	}); mutationError != nil {
+		return Generation{}, mutationError
+	}
+	workspace.dispatchTMDBEnrichmentLocked(generationID)
 	return generation.snapshot(), nil
 }
 
@@ -508,12 +678,13 @@ func (workspace *Workspace) Analytics(
 	}, nil
 }
 
-// Records returns one deterministic cursor-paged local activity slice.
+// Records returns one deterministic cursor-paged activity slice.
 func (workspace *Workspace) Records(
 	ctx context.Context,
 	generationID string,
 	cursor string,
 	limit int,
+	matchStatus netflix.MatchStatus,
 ) (ActivityPage, error) {
 	if ctx == nil || !validGenerationID(generationID) {
 		return ActivityPage{}, newLibraryError(
@@ -534,10 +705,24 @@ func (workspace *Workspace) Records(
 			errors.New("records limit is outside the current bound"),
 		)
 	}
+	if matchStatus != "" &&
+		matchStatus != netflix.MatchStatusMatched &&
+		matchStatus != netflix.MatchStatusReview &&
+		matchStatus != netflix.MatchStatusUnmatched {
+		return ActivityPage{}, newLibraryError(
+			ErrorInvalidRequest,
+			generationID,
+			0,
+			errors.New("records match-status filter is invalid"),
+		)
+	}
 	afterIndex := int64(0)
 	if cursor != "" {
-		decodedGenerationID, decodedIndex, cursorError := decodeRecordCursor(cursor)
-		if cursorError != nil || decodedGenerationID != generationID {
+		decodedGenerationID, decodedIndex, decodedStatus, cursorError :=
+			decodeRecordCursor(cursor)
+		if cursorError != nil ||
+			decodedGenerationID != generationID ||
+			decodedStatus != matchStatus {
 			return ActivityPage{}, newLibraryError(
 				ErrorInvalidRequest,
 				generationID,
@@ -556,6 +741,7 @@ func (workspace *Workspace) Records(
 		generationID,
 		afterIndex,
 		limit,
+		matchStatus,
 	)
 	if recordsError != nil {
 		return ActivityPage{}, recordsError
@@ -565,9 +751,50 @@ func (workspace *Workspace) Records(
 		Records:      records,
 	}
 	if nextAfter > 0 {
-		result.NextCursor = encodeRecordCursor(generationID, nextAfter)
+		result.NextCursor = encodeRecordCursor(
+			generationID,
+			nextAfter,
+			matchStatus,
+		)
 	}
 	return result, nil
+}
+
+// ExportRecords returns one fully revalidated enriched generation for direct
+// CSV streaming without a temporary export file.
+func (workspace *Workspace) ExportRecords(
+	ctx context.Context,
+	generationID string,
+) ([]netflix.ActivityRecord, error) {
+	if ctx == nil || !validGenerationID(generationID) {
+		return nil, newLibraryError(
+			ErrorInvalidRequest,
+			generationID,
+			0,
+			errors.New("export context and generation are required"),
+		)
+	}
+	generation, generationError := workspace.readyGeneration(generationID)
+	if generationError != nil {
+		return nil, generationError
+	}
+	if generation.AnalysisLevel != AnalysisLevelTMDB {
+		return nil, newLibraryError(
+			ErrorInvalidState,
+			generationID,
+			0,
+			errors.New("only a ready TMDB generation has the enriched export contract"),
+		)
+	}
+	records, _, validationError := validateGenerationArtifacts(
+		ctx,
+		workspace.root,
+		generation,
+	)
+	if validationError != nil {
+		return nil, validationError
+	}
+	return records, nil
 }
 
 // DeleteGeneration cancels and removes one non-active generation.
@@ -602,10 +829,23 @@ func (workspace *Workspace) DeleteGeneration(
 			errors.New("active generation can be removed only by complete provider deletion"),
 		)
 	}
-	if _, exists := findGeneration(workspace.repository.state, generationID); !exists {
+	for _, candidate := range workspace.repository.state.Generations {
+		if candidate.SourceGenerationID == generationID {
+			workspace.mutex.Unlock()
+			return newLibraryError(
+				ErrorConflict,
+				generationID,
+				0,
+				errors.New("generation is retained by a derived TMDB generation"),
+			)
+		}
+	}
+	generation, exists := findGeneration(workspace.repository.state, generationID)
+	if !exists {
 		workspace.mutex.Unlock()
 		return newLibraryError(ErrorNotFound, generationID, 0, nil)
 	}
+	wasBuilding := isBuildingState(generation.State)
 	if _, uploading := workspace.uploads[generationID]; uploading {
 		workspace.mutex.Unlock()
 		return newLibraryError(
@@ -626,6 +866,41 @@ func (workspace *Workspace) DeleteGeneration(
 			return newLibraryError(ErrorCanceled, generationID, 0, ctx.Err())
 		case <-job.done:
 		}
+	}
+	if wasBuilding {
+		workspace.mutex.Lock()
+		currentGeneration, stillExists := findGeneration(
+			workspace.repository.state,
+			generationID,
+		)
+		if !stillExists {
+			workspace.mutex.Unlock()
+			return nil
+		}
+		if currentGeneration.State == GenerationStateReady ||
+			workspace.repository.state.ActiveID == generationID {
+			workspace.mutex.Unlock()
+			return newLibraryError(
+				ErrorConflict,
+				generationID,
+				0,
+				errors.New("generation became active before cancellation"),
+			)
+		}
+		if currentGeneration.State == GenerationStateFailed {
+			workspace.mutex.Unlock()
+			return nil
+		}
+		workspace.mutex.Unlock()
+		return workspace.failGeneration(
+			generationID,
+			newLibraryError(
+				ErrorCanceled,
+				generationID,
+				0,
+				context.Canceled,
+			),
+		)
 	}
 
 	workspace.mutex.Lock()
@@ -947,7 +1222,8 @@ func (workspace *Workspace) recordCheckpoint(
 		generationIndex, found := findGenerationIndex(*state, generationID)
 		if !found ||
 			state.BuildingID != generationID ||
-			state.Generations[generationIndex].State != GenerationStateImporting {
+			(state.Generations[generationIndex].State != GenerationStateImporting &&
+				state.Generations[generationIndex].State != GenerationStateEnriching) {
 			return newLibraryError(ErrorInvalidState, generationID, 0, nil)
 		}
 		generation := &state.Generations[generationIndex]
@@ -976,7 +1252,8 @@ func (workspace *Workspace) activateGeneration(generationID string) error {
 		generationIndex, found := findGenerationIndex(*state, generationID)
 		if !found ||
 			state.BuildingID != generationID ||
-			state.Generations[generationIndex].State != GenerationStateImporting {
+			(state.Generations[generationIndex].State != GenerationStateImporting &&
+				state.Generations[generationIndex].State != GenerationStateEnriching) {
 			return newLibraryError(ErrorInvalidState, generationID, 0, nil)
 		}
 		generation := &state.Generations[generationIndex]
@@ -1027,6 +1304,7 @@ func (workspace *Workspace) failGeneration(
 		}
 		generation.RecordsSHA256 = ""
 		generation.AnalyticsSHA256 = ""
+		generation.EnrichmentCheckpointBytes = 0
 		transitionGeneration(
 			generation,
 			GenerationStateFailed,
@@ -1115,6 +1393,15 @@ func (workspace *Workspace) recoverBuildingGeneration() error {
 	generation, exists := findGeneration(workspace.repository.state, buildingID)
 	if !exists {
 		return newLibraryError(ErrorInvalidPersistence, buildingID, 0, nil)
+	}
+	if generation.AnalysisLevel == AnalysisLevelTMDB {
+		if generation.State != GenerationStateEnriching {
+			return newLibraryError(ErrorInvalidPersistence, buildingID, 0, nil)
+		}
+		workspace.mutex.Lock()
+		workspace.dispatchTMDBEnrichmentLocked(buildingID)
+		workspace.mutex.Unlock()
+		return nil
 	}
 	if generation.State == GenerationStateReceiving {
 		if cleanupError := removeStaleSourcePart(workspace.root, buildingID); cleanupError != nil {
@@ -1227,13 +1514,27 @@ func transitionGeneration(
 	generation.State = nextState
 	generation.UpdatedAtMS = nowMilliseconds
 	generation.Failure = cloneFailure(failure)
+	totalTitleCount := 0
+	if generation.AnalysisLevel == AnalysisLevelTMDB {
+		totalTitleCount = generation.UniqueTitleCount
+	}
 	generation.Events = append(generation.Events, eventState{
-		Sequence:         int64(len(generation.Events) + 1),
-		State:            nextState,
-		ActivityCount:    generation.ActivityCount,
-		UniqueTitleCount: generation.UniqueTitleCount,
-		OccurredAtMS:     nowMilliseconds,
-		Failure:          cloneFailure(failure),
+		Sequence:            int64(len(generation.Events) + 1),
+		State:               nextState,
+		ActivityCount:       generation.ActivityCount,
+		UniqueTitleCount:    generation.UniqueTitleCount,
+		OccurredAtMS:        nowMilliseconds,
+		Failure:             cloneFailure(failure),
+		CompletedTitleCount: generation.CompletedTitleCount,
+		TotalTitleCount:     totalTitleCount,
+		MatchedTitleCount:   generation.MatchedTitleCount,
+		ReviewTitleCount:    generation.ReviewTitleCount,
+		UnmatchedTitleCount: generation.UnmatchedTitleCount,
+		CacheHitTitleCount:  generation.CacheHitTitleCount,
+		ProgressPercent: progressPercent(
+			generation.CompletedTitleCount,
+			totalTitleCount,
+		),
 	})
 }
 
@@ -1308,31 +1609,49 @@ func removeString(values []string, target string) []string {
 	return result
 }
 
-func encodeRecordCursor(generationID string, afterIndex int64) string {
+func encodeRecordCursor(
+	generationID string,
+	afterIndex int64,
+	matchStatus netflix.MatchStatus,
+) string {
 	payload := strings.Join(
-		[]string{recordCursorIdentity, generationID, strconv.FormatInt(afterIndex, 10)},
+		[]string{
+			recordCursorIdentity,
+			generationID,
+			strconv.FormatInt(afterIndex, 10),
+			string(matchStatus),
+		},
 		"\x00",
 	)
 	return base64.RawURLEncoding.EncodeToString([]byte(payload))
 }
 
-func decodeRecordCursor(cursor string) (string, int64, error) {
+func decodeRecordCursor(
+	cursor string,
+) (string, int64, netflix.MatchStatus, error) {
 	if len(cursor) == 0 || len(cursor) > 256 {
-		return "", 0, errors.New("record cursor length is invalid")
+		return "", 0, "", errors.New("record cursor length is invalid")
 	}
 	decoded, decodeError := base64.RawURLEncoding.DecodeString(cursor)
 	if decodeError != nil {
-		return "", 0, decodeError
+		return "", 0, "", decodeError
 	}
 	parts := strings.Split(string(decoded), "\x00")
-	if len(parts) != 3 ||
+	if len(parts) != 4 ||
 		parts[0] != recordCursorIdentity ||
 		!validGenerationID(parts[1]) {
-		return "", 0, errors.New("record cursor identity is invalid")
+		return "", 0, "", errors.New("record cursor identity is invalid")
 	}
 	afterIndex, parseError := strconv.ParseInt(parts[2], 10, 64)
 	if parseError != nil || afterIndex <= 0 || afterIndex > product.MaxNetflixViewingRows {
-		return "", 0, errors.New("record cursor position is invalid")
+		return "", 0, "", errors.New("record cursor position is invalid")
 	}
-	return parts[1], afterIndex, nil
+	matchStatus := netflix.MatchStatus(parts[3])
+	if matchStatus != "" &&
+		matchStatus != netflix.MatchStatusMatched &&
+		matchStatus != netflix.MatchStatusReview &&
+		matchStatus != netflix.MatchStatusUnmatched {
+		return "", 0, "", errors.New("record cursor match status is invalid")
+	}
+	return parts[1], afterIndex, matchStatus, nil
 }

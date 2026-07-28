@@ -46,6 +46,8 @@ The current target-owned enrichment contracts are:
 | Deterministic matcher | `netflix-tmdb-matcher-v1` |
 | Cache freshness | `tmdb-cache-30d-v1` |
 | Cache schema | `download_your_data/1`, `netflix-tmdb-enrichment-cache-v1` |
+| Explicit title-query authorization | `tmdb-derived-title-queries-v1` |
+| Per-title restart checkpoint | `netflix-enrichment-outcome-v1` |
 
 Production uses TMDB's documented [API Read Access Token as a Bearer credential](https://developer.themoviedb.org/docs/authentication-application) and the fixed [multi-search operation](https://developer.themoviedb.org/reference/search-multi). One response is limited to 2 MiB, one cache result to 256 KiB, one search to 20 candidates, concurrent title work to four workers, request pacing to four requests per second, attempts to three, and `Retry-After` to 30 seconds. These values are product constants, not user settings.
 
@@ -58,9 +60,9 @@ The target now owns the current local lifecycle through these persisted identiti
 | Boundary | Current identity |
 | --- | --- |
 | Provider repository | `netflix-generation-library-v1` |
-| Local records | `netflix-local-records-v1` |
-| Local analytics | `netflix-local-analytics-v1` |
-| Record cursor | `netflix-record-cursor-v1` |
+| Generation records | `netflix-generation-records-v1` |
+| Generation analytics | `netflix-generation-analytics-v1` |
+| Record cursor | `netflix-record-cursor-v2` |
 
 The sole state and lease paths are `providers/netflix/library.json` and `providers/netflix/library.lock` beneath the private data root. Immutable ready artifacts live under `providers/netflix/generations/{generationID}`. The state document and every artifact are validated against the exact current contract on open and read; foreign, permissive, incomplete, or stale persisted shapes are rejected.
 
@@ -101,9 +103,9 @@ Private persistence owns viewing rows, title identities, match outcomes, metadat
 The generation lifecycle is closed:
 
 ```text
-receiving -> validating -> importing --------------------> ready
-                                  \-> enriching ---------> ready
-                 any nonterminal state ------------------> failed
+local generation: receiving -> validating -> importing -> ready
+ready local source -> new TMDB generation: enriching ----> ready
+any nonterminal generation -----------------------------> failed
 ```
 
 `analysis_level=local` skips `enriching`. `analysis_level=tmdb` is created from an existing ready local generation and activates only after every title has a terminal `matched`, `review`, or `unmatched` outcome and every accepted match has complete metadata.
@@ -113,11 +115,11 @@ Canonical HTTP surface:
 | Method and path | Contract |
 | --- | --- |
 | `GET /api/providers/netflix` | Active/building generation snapshot, capabilities, counts, and typed last failure. |
-| `POST /api/providers/netflix/generations` | Create either an upload generation or a TMDB replacement from a declared source generation. |
+| `POST /api/providers/netflix/generations` | Create either `{"analysis_level":"local"}` or a TMDB replacement with the active local `source_generation_id`, an exact locale, and `tmdb_title_query_consent:"authorize-tmdb-title-queries"`. |
 | `PUT /api/providers/netflix/generations/{generationID}/viewing-activity` | Stream one bounded CSV into a receiving generation. |
 | `GET /api/providers/netflix/generations/{generationID}/events` | Ordered resumable progress events owned by the backend. |
 | `GET /api/providers/netflix/generations/{generationID}/analytics` | Validated date-filtered analytics for one ready generation. |
-| `GET /api/providers/netflix/generations/{generationID}/records` | Deterministic, cursor-paged activity and match rows. |
+| `GET /api/providers/netflix/generations/{generationID}/records` | Deterministic, cursor-paged activity and match rows; `match_status` accepts only `matched`, `review`, or `unmatched`. |
 | `GET /api/providers/netflix/generations/{generationID}/export` | Stream the canonical enriched CSV without a temporary path cookie. |
 | `DELETE /api/providers/netflix/generations/{generationID}` | Cancel and remove one non-active generation. |
 | `DELETE /api/providers/netflix` | Delete the complete provider library after typed explicit confirmation. |

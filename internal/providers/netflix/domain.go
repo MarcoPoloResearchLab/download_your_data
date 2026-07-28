@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math"
 	"regexp"
 	"slices"
 	"strings"
@@ -325,7 +326,11 @@ func NewTitleMetadata(input TitleMetadataInput) (TitleMetadata, error) {
 			ErrInvalidTitleMetadata,
 		)
 	}
-	if input.VoteAverage != nil && (*input.VoteAverage < 0 || *input.VoteAverage > 10) {
+	if input.VoteAverage != nil &&
+		(math.IsNaN(*input.VoteAverage) ||
+			math.IsInf(*input.VoteAverage, 0) ||
+			*input.VoteAverage < 0 ||
+			*input.VoteAverage > 10) {
 		return TitleMetadata{}, fmt.Errorf(
 			"%w: vote average must be between 0 and 10",
 			ErrInvalidTitleMetadata,
@@ -461,10 +466,11 @@ func (metadata TitleMetadata) valid() bool {
 		metadata.matchedTitle != ""
 }
 
-// ActivityRecord combines one viewing row with an optional accepted metadata
-// snapshot.
+// ActivityRecord combines one viewing row with an optional complete TMDB
+// outcome and accepted metadata snapshot.
 type ActivityRecord struct {
 	activity ViewingActivity
+	match    *TMDBMatch
 	metadata *TitleMetadata
 }
 
@@ -476,24 +482,55 @@ func NewLocalActivityRecord(activity ViewingActivity) (ActivityRecord, error) {
 	return ActivityRecord{activity: activity}, nil
 }
 
-// NewEnrichedActivityRecord constructs a record with accepted metadata.
+// NewEnrichedActivityRecord constructs a record with one terminal TMDB match
+// outcome. Only matched outcomes contain accepted metadata.
 func NewEnrichedActivityRecord(
 	activity ViewingActivity,
-	metadata TitleMetadata,
+	match TMDBMatch,
+	metadata *TitleMetadata,
 ) (ActivityRecord, error) {
-	if !activity.valid() || !metadata.valid() {
+	if !activity.valid() ||
+		(match.status != MatchStatusMatched &&
+			match.status != MatchStatusReview &&
+			match.status != MatchStatusUnmatched) {
 		return ActivityRecord{}, ErrInvalidActivityRecord
 	}
-	metadataCopy := metadata
+	if match.status == MatchStatusMatched {
+		if metadata == nil ||
+			!metadata.valid() ||
+			metadata.tmdbID != match.tmdbID ||
+			metadata.mediaType != match.mediaType {
+			return ActivityRecord{}, ErrInvalidActivityRecord
+		}
+	} else if metadata != nil {
+		return ActivityRecord{}, ErrInvalidActivityRecord
+	}
+	matchCopy := match
+	var metadataCopy *TitleMetadata
+	if metadata != nil {
+		copyValue := *metadata
+		copyValue.genres = slices.Clone(metadata.genres)
+		copyValue.originCountries = slices.Clone(metadata.originCountries)
+		metadataCopy = &copyValue
+	}
 	return ActivityRecord{
 		activity: activity,
-		metadata: &metadataCopy,
+		match:    &matchCopy,
+		metadata: metadataCopy,
 	}, nil
 }
 
 // Activity returns the validated viewing row.
 func (record ActivityRecord) Activity() ViewingActivity {
 	return record.activity
+}
+
+// Match returns the terminal TMDB outcome when this is an enriched record.
+func (record ActivityRecord) Match() (TMDBMatch, bool) {
+	if record.match == nil {
+		return TMDBMatch{}, false
+	}
+	return *record.match, true
 }
 
 // Metadata returns the accepted metadata when present.
@@ -505,7 +542,24 @@ func (record ActivityRecord) Metadata() (TitleMetadata, bool) {
 }
 
 func (record ActivityRecord) valid() bool {
-	return record.activity.valid() && (record.metadata == nil || record.metadata.valid())
+	if !record.activity.valid() {
+		return false
+	}
+	if record.match == nil {
+		return record.metadata == nil
+	}
+	if record.match.status != MatchStatusMatched &&
+		record.match.status != MatchStatusReview &&
+		record.match.status != MatchStatusUnmatched {
+		return false
+	}
+	if record.match.status == MatchStatusMatched {
+		return record.metadata != nil &&
+			record.metadata.valid() &&
+			record.metadata.tmdbID == record.match.tmdbID &&
+			record.metadata.mediaType == record.match.mediaType
+	}
+	return record.metadata == nil
 }
 
 func validateSingleLine(value string, fieldName string, allowLineBreaks bool) error {

@@ -3,6 +3,7 @@ package netflix_test
 import (
 	"context"
 	"errors"
+	"math"
 	"reflect"
 	"testing"
 
@@ -38,6 +39,24 @@ func TestNetflixAnalyticsContract(testContext *testing.T) {
 			analytics.MetadataTitleCount,
 		)
 	}
+	requireCounts(
+		testContext,
+		"match status activities",
+		analytics.MatchStatusActivities,
+		[]netflix.Count{
+			{Label: "matched", Value: 4},
+			{Label: "unmatched", Value: 1},
+		},
+	)
+	requireCounts(
+		testContext,
+		"match status titles",
+		analytics.MatchStatusTitles,
+		[]netflix.Count{
+			{Label: "matched", Value: 3},
+			{Label: "unmatched", Value: 1},
+		},
+	)
 	if analytics.StartDate != "2026-01-01" || analytics.EndDate != "2026-02-02" {
 		testContext.Errorf(
 			"date range = %s through %s; want 2026-01-01 through 2026-02-02",
@@ -187,6 +206,7 @@ func TestNetflixAnalyticsHonorsCancellation(testContext *testing.T) {
 func TestNetflixMetadataRejectsInconsistentStates(testContext *testing.T) {
 	one := 1
 	voteAverage := 7.0
+	notANumber := math.NaN()
 	testCases := []struct {
 		name  string
 		input netflix.TitleMetadataInput
@@ -216,6 +236,16 @@ func TestNetflixMetadataRejectsInconsistentStates(testContext *testing.T) {
 				Genres:       []string{"Drama", "drama"},
 				TMDBID:       3,
 				MatchedTitle: "Duplicate Genre",
+			},
+		},
+		{
+			name: "non-finite vote average",
+			input: netflix.TitleMetadataInput{
+				MediaType:    netflix.MediaTypeMovie,
+				VoteAverage:  &notANumber,
+				VoteCount:    &one,
+				TMDBID:       4,
+				MatchedTitle: "Invalid Rating",
 			},
 		},
 		{
@@ -282,15 +312,31 @@ func syntheticAnalyticsRecords(testContext *testing.T) []netflix.ActivityRecord 
 	records := make([]netflix.ActivityRecord, 0, len(recordInputs))
 	for _, input := range recordInputs {
 		activity := mustViewingActivity(testContext, input.rawTitle, input.rawDate)
+		var match netflix.TMDBMatch
+		var matchError error
 		if input.metadata == nil {
-			record, recordError := netflix.NewLocalActivityRecord(activity)
-			if recordError != nil {
-				testContext.Fatalf("construct local record: %v", recordError)
-			}
-			records = append(records, record)
-			continue
+			match, matchError = netflix.MatchTMDBTitle(
+				activity.TitleIdentity(),
+				nil,
+			)
+		} else {
+			match, matchError = netflix.MatchTMDBTitle(
+				activity.TitleIdentity(),
+				[]netflix.MatchCandidate{{
+					TMDBID:    input.metadata.TMDBID(),
+					MediaType: input.metadata.MediaType(),
+					Title:     input.metadata.MatchedTitle(),
+				}},
+			)
 		}
-		record, recordError := netflix.NewEnrichedActivityRecord(activity, *input.metadata)
+		if matchError != nil {
+			testContext.Fatalf("construct analytics match: %v", matchError)
+		}
+		record, recordError := netflix.NewEnrichedActivityRecord(
+			activity,
+			match,
+			input.metadata,
+		)
 		if recordError != nil {
 			testContext.Fatalf("construct enriched record: %v", recordError)
 		}

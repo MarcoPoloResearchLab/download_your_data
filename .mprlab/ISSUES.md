@@ -620,7 +620,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Filesystem tests prove path confinement, owner-only permissions, replacement isolation, and complete deletion.
   - `make ci`
 
-- [ ] [F007] (P1) {F006,I008} Add the TMDB replacement, matching, and export lifecycle
+- [x] [F007] (P1) {F006,I008} Add the TMDB replacement, matching, and export lifecycle
   Goal:
   Build a complete enriched replacement from the active raw Netflix generation without sacrificing local availability or privacy.
 

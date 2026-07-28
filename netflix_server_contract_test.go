@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -11,11 +12,14 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/product"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix"
 	netflixlibrary "github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix/library"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix/tmdb"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/runtimeconfig"
 )
 
@@ -346,6 +350,259 @@ func TestNetflixHTTPInvalidCSVFailsTypedWithoutSourceOrActiveData(
 	}
 }
 
+func TestNetflixHTTPEnrichesFiltersAndStreamsCanonicalCSV(
+	testContext *testing.T,
+) {
+	config := testRuntimeConfig(testContext)
+	var logOutput bytes.Buffer
+	logger := slog.New(slog.NewTextHandler(&logOutput, nil))
+	metadataClient := newHTTPMetadataClient()
+	handler, handlerError := newApplicationHandlerWithNetflixMetadata(
+		config,
+		logger,
+		metadataClient,
+	)
+	if handlerError != nil {
+		testContext.Fatalf("create Netflix enrichment handler: %v", handlerError)
+	}
+	defer handler.Close()
+	server := httptest.NewServer(handler)
+	defer server.Close()
+
+	initial := requestNetflixSnapshot(testContext, server.URL)
+	if !initial.Capabilities.TMDBConfigured ||
+		initial.Capabilities.TMDBAttribution != tmdb.CreditsAttribution() {
+		testContext.Fatalf("unexpected TMDB HTTP capabilities: %+v", initial.Capabilities)
+	}
+	createLocal := mutateNetflix(
+		testContext,
+		config,
+		server.URL+netflixGenerationsPath,
+		http.MethodPost,
+		"application/json",
+		`{"analysis_level":"local"}`,
+	)
+	if createLocal.StatusCode != http.StatusCreated {
+		testContext.Fatalf(
+			"create local generation status = %d; body=%s",
+			createLocal.StatusCode,
+			readBody(testContext, createLocal),
+		)
+	}
+	var local generationResponse
+	decodeResponse(testContext, createLocal, &local)
+	uploadResponse := mutateNetflix(
+		testContext,
+		config,
+		server.URL+netflixGenerationsPath+"/"+local.Generation.ID+
+			"/viewing-activity",
+		http.MethodPut,
+		"text/csv",
+		httpSyntheticViewingCSV,
+	)
+	if uploadResponse.StatusCode != http.StatusAccepted {
+		testContext.Fatalf(
+			"upload local generation status = %d; body=%s",
+			uploadResponse.StatusCode,
+			readBody(testContext, uploadResponse),
+		)
+	}
+	uploadResponse.Body.Close()
+	waitForHTTPSnapshot(
+		testContext,
+		server.URL,
+		func(snapshot netflixlibrary.Snapshot) bool {
+			return snapshot.Active != nil &&
+				snapshot.Active.ID == local.Generation.ID
+		},
+	)
+
+	localExport := getResponse(
+		testContext,
+		server.URL+netflixGenerationsPath+"/"+local.Generation.ID+"/export",
+	)
+	assertRequestError(
+		testContext,
+		localExport,
+		http.StatusConflict,
+		string(netflixlibrary.ErrorInvalidState),
+	)
+	missingConsent := mutateNetflix(
+		testContext,
+		config,
+		server.URL+netflixGenerationsPath,
+		http.MethodPost,
+		"application/json",
+		`{"analysis_level":"tmdb","source_generation_id":"`+
+			local.Generation.ID+`","locale":"en-US"}`,
+	)
+	assertRequestError(
+		testContext,
+		missingConsent,
+		http.StatusUnprocessableEntity,
+		string(netflixlibrary.ErrorConsentRequired),
+	)
+	if calls := metadataClient.searchCallSnapshot(); len(calls) != 0 {
+		testContext.Fatalf("missing consent reached TMDB: %#v", calls)
+	}
+
+	createTMDB := mutateNetflix(
+		testContext,
+		config,
+		server.URL+netflixGenerationsPath,
+		http.MethodPost,
+		"application/json",
+		`{"analysis_level":"tmdb","source_generation_id":"`+
+			local.Generation.ID+
+			`","locale":"en-US","tmdb_title_query_consent":"`+
+			netflixTMDBQueryConsent+`"}`,
+	)
+	if createTMDB.StatusCode != http.StatusCreated {
+		testContext.Fatalf(
+			"create TMDB generation status = %d; body=%s",
+			createTMDB.StatusCode,
+			readBody(testContext, createTMDB),
+		)
+	}
+	var enriched generationResponse
+	decodeResponse(testContext, createTMDB, &enriched)
+	ready := waitForHTTPSnapshot(
+		testContext,
+		server.URL,
+		func(snapshot netflixlibrary.Snapshot) bool {
+			return snapshot.Active != nil &&
+				snapshot.Active.ID == enriched.Generation.ID &&
+				snapshot.Active.AnalysisLevel == netflixlibrary.AnalysisLevelTMDB
+		},
+	)
+	if ready.Active.SourceGenerationID != local.Generation.ID ||
+		ready.Active.CompletedTitleCount != 3 ||
+		ready.Active.MatchedTitleCount != 1 ||
+		ready.Active.ReviewTitleCount != 1 ||
+		ready.Active.UnmatchedTitleCount != 1 ||
+		ready.Active.ProgressPercent != 100 {
+		testContext.Fatalf("unexpected enriched HTTP generation: %+v", ready.Active)
+	}
+
+	reviewResponse := getResponse(
+		testContext,
+		server.URL+netflixGenerationsPath+"/"+enriched.Generation.ID+
+			"/records?match_status=review&limit=10",
+	)
+	if reviewResponse.StatusCode != http.StatusOK {
+		testContext.Fatalf(
+			"review records status = %d; body=%s",
+			reviewResponse.StatusCode,
+			readBody(testContext, reviewResponse),
+		)
+	}
+	var reviewPage netflixlibrary.ActivityPage
+	decodeResponse(testContext, reviewResponse, &reviewPage)
+	if len(reviewPage.Records) != 2 {
+		testContext.Fatalf("review records = %+v", reviewPage)
+	}
+	for _, record := range reviewPage.Records {
+		if record.Match == nil ||
+			record.Match.Status != netflix.MatchStatusReview ||
+			record.Metadata != nil {
+			testContext.Fatalf("invalid HTTP review record: %+v", record)
+		}
+	}
+
+	analyticsResponse := getResponse(
+		testContext,
+		server.URL+netflixGenerationsPath+"/"+enriched.Generation.ID+"/analytics",
+	)
+	if analyticsResponse.StatusCode != http.StatusOK {
+		testContext.Fatalf(
+			"enriched analytics status = %d; body=%s",
+			analyticsResponse.StatusCode,
+			readBody(testContext, analyticsResponse),
+		)
+	}
+	var analytics netflixlibrary.Analytics
+	decodeResponse(testContext, analyticsResponse, &analytics)
+	if len(analytics.Data.MatchStatusTitles) != 3 ||
+		len(analytics.Data.MatchStatusActivities) != 3 {
+		testContext.Fatalf("incomplete HTTP match analytics: %+v", analytics.Data)
+	}
+
+	exportResponse := getResponse(
+		testContext,
+		server.URL+netflixGenerationsPath+"/"+enriched.Generation.ID+"/export",
+	)
+	if exportResponse.StatusCode != http.StatusOK {
+		testContext.Fatalf(
+			"enriched export status = %d; body=%s",
+			exportResponse.StatusCode,
+			readBody(testContext, exportResponse),
+		)
+	}
+	if exportResponse.Header.Get("Cache-Control") != "no-store" ||
+		exportResponse.Header.Get("Content-Type") != "text/csv; charset=utf-8" ||
+		!strings.Contains(
+			exportResponse.Header.Get("Content-Disposition"),
+			enriched.Generation.ID,
+		) {
+		testContext.Fatalf("unexpected enriched export headers: %v", exportResponse.Header)
+	}
+	exportBytes, readError := io.ReadAll(exportResponse.Body)
+	exportResponse.Body.Close()
+	if readError != nil {
+		testContext.Fatalf("read enriched export: %v", readError)
+	}
+	csvLimits, limitsError := netflix.NewCSVLimits(
+		product.MaxNetflixViewingRows,
+		product.MaxNetflixTitleBytes,
+		int(product.MaxNetflixEnrichmentOutcomeBytes),
+	)
+	if limitsError != nil {
+		testContext.Fatalf("construct enriched export limits: %v", limitsError)
+	}
+	records, parseError := netflix.ReadEnrichedActivity(
+		context.Background(),
+		bytes.NewReader(exportBytes),
+		csvLimits,
+	)
+	if parseError != nil || len(records) != 4 {
+		testContext.Fatalf(
+			"parse enriched HTTP export rows=%d error=%v",
+			len(records),
+			parseError,
+		)
+	}
+	if calls := metadataClient.searchCallSnapshot(); len(calls) != 3 ||
+		calls["Synthetic Film"] != 1 ||
+		calls["Synthetic Series"] != 1 ||
+		calls["Another Film"] != 1 {
+		testContext.Fatalf("unexpected HTTP title queries: %#v", calls)
+	}
+	if strings.Contains(logOutput.String(), "Synthetic Film") ||
+		strings.Contains(logOutput.String(), httpSyntheticViewingCSV) {
+		testContext.Fatalf("HTTP enrichment logs exposed private data: %s", logOutput.String())
+	}
+	var temporaryExports []string
+	if walkError := filepath.WalkDir(
+		config.DataRoot().Path(),
+		func(path string, entry os.DirEntry, walkError error) error {
+			if walkError != nil {
+				return walkError
+			}
+			if !entry.IsDir() &&
+				(strings.Contains(entry.Name(), "netflix-enriched") ||
+					strings.HasSuffix(entry.Name(), ".csv")) {
+				temporaryExports = append(temporaryExports, path)
+			}
+			return nil
+		},
+	); walkError != nil {
+		testContext.Fatalf("audit private export files: %v", walkError)
+	}
+	if len(temporaryExports) != 0 {
+		testContext.Fatalf("streamed export left files: %#v", temporaryExports)
+	}
+}
+
 func mutateNetflix(
 	testContext *testing.T,
 	config runtimeconfig.Config,
@@ -462,3 +719,92 @@ Synthetic Series: Season 1: First,1/2/26
 Synthetic Series: Season 1: Second,2/2/26
 Another Film,2/3/26
 `
+
+type httpMetadataClient struct {
+	mutex       sync.Mutex
+	searchCalls map[string]int
+}
+
+func newHTTPMetadataClient() *httpMetadataClient {
+	return &httpMetadataClient{searchCalls: make(map[string]int)}
+}
+
+func (client *httpMetadataClient) Identity() string {
+	return tmdb.ClientIdentity
+}
+
+func (client *httpMetadataClient) Search(
+	_ context.Context,
+	query string,
+	locale tmdb.Locale,
+) ([]tmdb.Candidate, error) {
+	if locale.String() != "en-US" {
+		return nil, errors.New("unexpected HTTP enrichment locale")
+	}
+	client.mutex.Lock()
+	client.searchCalls[query]++
+	client.mutex.Unlock()
+	switch query {
+	case "Synthetic Film":
+		return []tmdb.Candidate{{
+			TMDBID:        2001,
+			MediaType:     netflix.MediaTypeMovie,
+			Title:         "Synthetic Film",
+			OriginalTitle: "Synthetic Film",
+			Popularity:    10,
+		}}, nil
+	case "Synthetic Series":
+		return []tmdb.Candidate{
+			{
+				TMDBID:        2002,
+				MediaType:     netflix.MediaTypeSeries,
+				Title:         "Synthetic Series",
+				OriginalTitle: "Synthetic Series",
+				Popularity:    10,
+			},
+			{
+				TMDBID:        2003,
+				MediaType:     netflix.MediaTypeSeries,
+				Title:         "Synthetic Series",
+				OriginalTitle: "Synthetic Series",
+				Popularity:    5,
+			},
+		}, nil
+	case "Another Film":
+		return []tmdb.Candidate{}, nil
+	default:
+		return nil, errors.New("unexpected HTTP derived title query")
+	}
+}
+
+func (client *httpMetadataClient) Details(
+	_ context.Context,
+	candidate tmdb.Candidate,
+	locale tmdb.Locale,
+) (tmdb.Details, error) {
+	if candidate.TMDBID != 2001 || locale.String() != "en-US" {
+		return tmdb.Details{}, errors.New("unexpected HTTP details request")
+	}
+	runtimeMinutes := 98
+	return tmdb.Details{
+		TMDBID:           candidate.TMDBID,
+		MediaType:        candidate.MediaType,
+		Genres:           []string{"Documentary"},
+		ReleaseDate:      "2025-01-02",
+		RuntimeMinutes:   &runtimeMinutes,
+		OriginalLanguage: "en",
+		OriginCountries:  []string{"US"},
+		MatchedTitle:     candidate.Title,
+		Description:      "Synthetic HTTP metadata.",
+	}, nil
+}
+
+func (client *httpMetadataClient) searchCallSnapshot() map[string]int {
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
+	result := make(map[string]int, len(client.searchCalls))
+	for query, count := range client.searchCalls {
+		result[query] = count
+	}
+	return result
+}
