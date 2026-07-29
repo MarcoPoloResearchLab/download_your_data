@@ -368,7 +368,7 @@ function handleDragLeave(event) {
 
 async function handleDrop(event) {
   const dropZone = event.target.closest('.drop-zone');
-  if (!dropZone) {
+  if (!dropZone || state.actionBusy) {
     return;
   }
   event.preventDefault();
