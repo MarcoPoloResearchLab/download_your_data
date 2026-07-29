@@ -148,7 +148,11 @@ func searchOpenAIProvider(
 		defer openedStore.Close()
 
 		searchSummary, searchSummaryExists, summaryError :=
-			latestCompleteReadyOpenAISearchIndex(request.Context(), openedStore)
+			latestCompleteReadyOpenAISearchIndex(
+				request.Context(),
+				openedStore,
+				config.InferenceBaseURL().String(),
+			)
 		if summaryError != nil {
 			logger.Error("OpenAI search failed", "error_type", "openai_index_unavailable")
 			writeRequestError(responseWriter, http.StatusInternalServerError, "openai_unavailable")
@@ -163,15 +167,6 @@ func searchOpenAIProvider(
 		var queryEmbedder embedding.Embedder
 		effectiveBaseURL := searchIndex.BaseURL
 		if payload.Mode != retrieval.SearchModeLexical {
-			effectiveBaseURL = config.InferenceBaseURL().String()
-			if searchIndex.BaseURL != effectiveBaseURL {
-				writeRequestError(
-					responseWriter,
-					http.StatusConflict,
-					"openai_index_identity_mismatch",
-				)
-				return
-			}
 			queryEmbedder = &embedding.HTTPEmbedder{
 				BaseURL:     config.InferenceBaseURL(),
 				Model:       searchIndex.Model,
@@ -255,7 +250,11 @@ func loadOpenAIProviderSnapshot(
 	}
 	snapshot.State = openAIStateIndexNeeded
 	summary, summaryExists, summaryError :=
-		latestCompleteReadyOpenAISearchIndex(contextValue, openedStore)
+		latestCompleteReadyOpenAISearchIndex(
+			contextValue,
+			openedStore,
+			config.InferenceBaseURL().String(),
+		)
 	if summaryError != nil {
 		return openAIProviderSnapshot{}, summaryError
 	}
@@ -278,6 +277,7 @@ func loadOpenAIProviderSnapshot(
 func latestCompleteReadyOpenAISearchIndex(
 	contextValue context.Context,
 	openedStore *store.Store,
+	expectedBaseURL string,
 ) (domain.SearchIndexSummary, bool, error) {
 	indexSummaries, summariesError := openedStore.ListSearchIndexSummaries(contextValue)
 	if summariesError != nil {
@@ -285,7 +285,8 @@ func latestCompleteReadyOpenAISearchIndex(
 	}
 	for summaryIndex := len(indexSummaries) - 1; summaryIndex >= 0; summaryIndex-- {
 		summary := indexSummaries[summaryIndex]
-		if isCompleteReadySearchIndex(summary) {
+		if isCompleteReadySearchIndex(summary) &&
+			summary.Config.BaseURL == expectedBaseURL {
 			return summary, true, nil
 		}
 	}
