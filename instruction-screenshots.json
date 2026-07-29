@@ -303,6 +303,74 @@
       }
     },
     {
+      "platform": "facebook",
+      "id": "facebook-help-export-device",
+      "purpose": "Show the official Facebook Help Center sequence from creating an export through starting a device export.",
+      "expected_visible_labels": [
+        "Create export",
+        "Export to device",
+        "Start export"
+      ],
+      "official_source": "https://www.facebook.com/help/212802592074644",
+      "direct_route": "https://www.facebook.com/help/212802592074644",
+      "surface": "first_party_help_web",
+      "operator_checkpoint": "The public Facebook Help Center device-export instructions are visible.",
+      "forbidden_final_action": "Do not select a profile, start an export, enter a password, or open an identity-verification flow.",
+      "output_path": "images/instructions/facebook-help-export-device.png",
+      "viewport": {
+        "width": 1280,
+        "height": 720,
+        "device_scale_factor": 1
+      },
+      "pixel_dimensions": {
+        "width": 736,
+        "height": 370
+      },
+      "capture_date": "2026-07-29",
+      "review_status": "approved",
+      "provenance": {
+        "capture_source": "Official public Facebook Help Center",
+        "interface_owner": "Meta Platforms, Inc.",
+        "rights_source": "https://www.meta.com/brand/resources/facebook/logo/",
+        "publication_compatibility": "first_party_help_excerpt_for_instructional_reference",
+        "attribution": "Facebook and the Facebook Help Center are trademarks and content of Meta Platforms, Inc.; shown accurately for independent instructional reference without affiliation, sponsorship, or endorsement."
+      }
+    },
+    {
+      "platform": "facebook",
+      "id": "facebook-help-available-downloads",
+      "purpose": "Show the official Facebook Help Center availability notice, four-day download window, and protected-download boundary.",
+      "expected_visible_labels": [
+        "Available downloads",
+        "4 days",
+        "password-protected"
+      ],
+      "official_source": "https://www.facebook.com/help/212802592074644",
+      "direct_route": "https://www.facebook.com/help/212802592074644",
+      "surface": "first_party_help_web",
+      "operator_checkpoint": "The public Facebook Help Center availability instructions are visible.",
+      "forbidden_final_action": "Do not open a private export, download an archive, enter a password, or open an identity-verification flow.",
+      "output_path": "images/instructions/facebook-help-available-downloads.png",
+      "viewport": {
+        "width": 1280,
+        "height": 720,
+        "device_scale_factor": 1
+      },
+      "pixel_dimensions": {
+        "width": 730,
+        "height": 228
+      },
+      "capture_date": "2026-07-29",
+      "review_status": "approved",
+      "provenance": {
+        "capture_source": "Official public Facebook Help Center",
+        "interface_owner": "Meta Platforms, Inc.",
+        "rights_source": "https://www.meta.com/brand/resources/facebook/logo/",
+        "publication_compatibility": "first_party_help_excerpt_for_instructional_reference",
+        "attribution": "Facebook and the Facebook Help Center are trademarks and content of Meta Platforms, Inc.; shown accurately for independent instructional reference without affiliation, sponsorship, or endorsement."
+      }
+    },
+    {
       "platform": "instagram",
       "id": "instagram-export-entry",
       "purpose": "Show the Instagram Export your information landing panel before profile selection or export creation.",
@@ -333,6 +401,109 @@
         "rights_source": "https://www.meta.com/brand/resources/instagram/instagram-brand/",
         "publication_compatibility": "reviewed_for_accurate_non_broadcast_non_large_print_instructional_reference",
         "attribution": "Instagram and the Instagram interface are trademarks and interface content of Meta Platforms, Inc.; shown accurately for independent instructional reference without affiliation, sponsorship, or endorsement."
+      }
+    },
+    {
+      "platform": "instagram",
+      "id": "instagram-help-export-device",
+      "purpose": "Show the official Instagram Help Center sequence from creating an export through starting a device export.",
+      "expected_visible_labels": [
+        "Create export",
+        "Export to device",
+        "Start export"
+      ],
+      "official_source": "https://www.facebook.com/help/181231772500920",
+      "direct_route": "https://www.facebook.com/help/181231772500920",
+      "surface": "first_party_help_web",
+      "operator_checkpoint": "The public Instagram Help Center device-export instructions are visible.",
+      "forbidden_final_action": "Do not select a profile, start an export, enter a password, or open an identity-verification flow.",
+      "output_path": "images/instructions/instagram-help-export-device.png",
+      "viewport": {
+        "width": 1280,
+        "height": 720,
+        "device_scale_factor": 1
+      },
+      "pixel_dimensions": {
+        "width": 736,
+        "height": 335
+      },
+      "capture_date": "2026-07-29",
+      "review_status": "approved",
+      "provenance": {
+        "capture_source": "Official public Instagram Help Center",
+        "interface_owner": "Meta Platforms, Inc.",
+        "rights_source": "https://www.meta.com/brand/resources/instagram/instagram-brand/",
+        "publication_compatibility": "first_party_help_excerpt_for_instructional_reference",
+        "attribution": "Instagram and the Instagram Help Center are trademarks and content of Meta Platforms, Inc.; shown accurately for independent instructional reference without affiliation, sponsorship, or endorsement."
+      }
+    },
+    {
+      "platform": "instagram",
+      "id": "instagram-help-available-downloads",
+      "purpose": "Show the official Instagram Help Center availability notice, four-day download window, and protected-download boundary.",
+      "expected_visible_labels": [
+        "Available downloads",
+        "4 days",
+        "password-protected"
+      ],
+      "official_source": "https://www.facebook.com/help/181231772500920",
+      "direct_route": "https://www.facebook.com/help/181231772500920",
+      "surface": "first_party_help_web",
+      "operator_checkpoint": "The public Instagram Help Center availability instructions are visible.",
+      "forbidden_final_action": "Do not open a private export, download an archive, enter a password, or open an identity-verification flow.",
+      "output_path": "images/instructions/instagram-help-available-downloads.png",
+      "viewport": {
+        "width": 1280,
+        "height": 720,
+        "device_scale_factor": 1
+      },
+      "pixel_dimensions": {
+        "width": 730,
+        "height": 224
+      },
+      "capture_date": "2026-07-29",
+      "review_status": "approved",
+      "provenance": {
+        "capture_source": "Official public Instagram Help Center",
+        "interface_owner": "Meta Platforms, Inc.",
+        "rights_source": "https://www.meta.com/brand/resources/instagram/instagram-brand/",
+        "publication_compatibility": "first_party_help_excerpt_for_instructional_reference",
+        "attribution": "Instagram and the Instagram Help Center are trademarks and content of Meta Platforms, Inc.; shown accurately for independent instructional reference without affiliation, sponsorship, or endorsement."
+      }
+    },
+    {
+      "platform": "threads",
+      "id": "threads-help-export-device",
+      "purpose": "Show the official Threads mobile export sequence through Instagram Accounts Center.",
+      "expected_visible_labels": [
+        "Accounts Center",
+        "Export your information",
+        "Export to device",
+        "Start export"
+      ],
+      "official_source": "https://www.facebook.com/help/instagram/259803026523198",
+      "direct_route": "https://www.facebook.com/help/instagram/259803026523198?cms_platform=android-app",
+      "surface": "first_party_help_web",
+      "operator_checkpoint": "The public Instagram Help Center Android instructions for exporting Threads information are expanded.",
+      "forbidden_final_action": "Do not open Instagram, select a profile, start an export, enter a password, or open an identity-verification flow.",
+      "output_path": "images/instructions/threads-help-export-device.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1200,
+        "device_scale_factor": 1
+      },
+      "pixel_dimensions": {
+        "width": 720,
+        "height": 269
+      },
+      "capture_date": "2026-07-29",
+      "review_status": "approved",
+      "provenance": {
+        "capture_source": "Official public Instagram Help Center",
+        "interface_owner": "Meta Platforms, Inc.",
+        "rights_source": "https://about.meta.com/brand/resources/threads/threads-brand/",
+        "publication_compatibility": "first_party_help_excerpt_for_instructional_reference",
+        "attribution": "Threads and the Instagram Help Center are trademarks and content of Meta Platforms, Inc.; shown accurately for independent instructional reference without affiliation, sponsorship, or endorsement."
       }
     },
     {
