@@ -1,0 +1,112 @@
+[
+  {
+    "name": "exact film",
+    "category": "exact_film",
+    "raw_title": "The Matrix",
+    "candidates": [
+      {"tmdb_id": 603, "media_type": "movie", "title": "The Matrix", "original_title": "The Matrix", "popularity": 80.1}
+    ],
+    "expected_status": "matched",
+    "expected_tmdb_id": 603
+  },
+  {
+    "name": "episodic title derives series identity",
+    "category": "episodic_series",
+    "raw_title": "Stranger Things: Season 1: Chapter One: The Vanishing of Will Byers",
+    "candidates": [
+      {"tmdb_id": 66732, "media_type": "series", "title": "Stranger Things", "original_title": "Stranger Things", "popularity": 120.0}
+    ],
+    "expected_status": "matched",
+    "expected_tmdb_id": 66732
+  },
+  {
+    "name": "punctuation normalization",
+    "category": "punctuation",
+    "raw_title": "Spider-Man",
+    "candidates": [
+      {"tmdb_id": 557, "media_type": "movie", "title": "Spider Man", "original_title": "Spider-Man", "popularity": 55.0}
+    ],
+    "expected_status": "matched",
+    "expected_tmdb_id": 557
+  },
+  {
+    "name": "localized exact title",
+    "category": "localized",
+    "raw_title": "Ночной дозор",
+    "candidates": [
+      {"tmdb_id": 3040, "media_type": "movie", "title": "Ночной дозор", "original_title": "Ночной дозор", "popularity": 14.0}
+    ],
+    "expected_status": "matched",
+    "expected_tmdb_id": 3040
+  },
+  {
+    "name": "original title provides exact evidence",
+    "category": "localized_original_title",
+    "raw_title": "Le fabuleux destin d'Amélie Poulain",
+    "candidates": [
+      {"tmdb_id": 194, "media_type": "movie", "title": "Amélie", "original_title": "Le Fabuleux Destin d'Amélie Poulain", "popularity": 42.0}
+    ],
+    "expected_status": "matched",
+    "expected_tmdb_id": 194
+  },
+  {
+    "name": "remake collision remains review",
+    "category": "remake",
+    "raw_title": "Dune",
+    "candidates": [
+      {"tmdb_id": 841, "media_type": "movie", "title": "Dune", "original_title": "Dune", "popularity": 30.0},
+      {"tmdb_id": 438631, "media_type": "movie", "title": "Dune", "original_title": "Dune", "popularity": 200.0}
+    ],
+    "expected_status": "review",
+    "expected_tmdb_id": 0
+  },
+  {
+    "name": "cross-media collision remains review",
+    "category": "ambiguous_media_type",
+    "raw_title": "The Office",
+    "candidates": [
+      {"tmdb_id": 2316, "media_type": "series", "title": "The Office", "original_title": "The Office", "popularity": 150.0},
+      {"tmdb_id": 336, "media_type": "movie", "title": "The Office", "original_title": "The Office", "popularity": 4.0}
+    ],
+    "expected_status": "review",
+    "expected_tmdb_id": 0
+  },
+  {
+    "name": "similar sequel requires review",
+    "category": "similar_title",
+    "raw_title": "Blade Runner",
+    "candidates": [
+      {"tmdb_id": 335984, "media_type": "movie", "title": "Blade Runner 2049", "original_title": "Blade Runner 2049", "popularity": 88.0}
+    ],
+    "expected_status": "review",
+    "expected_tmdb_id": 0
+  },
+  {
+    "name": "popularity cannot rescue unrelated title",
+    "category": "popularity_negative",
+    "raw_title": "Arrival",
+    "candidates": [
+      {"tmdb_id": 999001, "media_type": "movie", "title": "Global Blockbuster Spectacular", "original_title": "Global Blockbuster Spectacular", "popularity": 999999.0}
+    ],
+    "expected_status": "unmatched",
+    "expected_tmdb_id": 0
+  },
+  {
+    "name": "unrelated negative",
+    "category": "unrelated_negative",
+    "raw_title": "Cowboy Bebop",
+    "candidates": [
+      {"tmdb_id": 1396, "media_type": "series", "title": "Breaking Bad", "original_title": "Breaking Bad", "popularity": 400.0}
+    ],
+    "expected_status": "unmatched",
+    "expected_tmdb_id": 0
+  },
+  {
+    "name": "no results is terminal unmatched",
+    "category": "no_results",
+    "raw_title": "Synthetic Missing Film",
+    "candidates": [],
+    "expected_status": "unmatched",
+    "expected_tmdb_id": 0
+  }
+]
