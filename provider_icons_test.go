@@ -37,7 +37,7 @@ var providerIconExpectations = []providerIconExpectation{
 	{ID: "linkedin", OfficialSiteHost: "www.linkedin.com", SourceHost: "www.linkedin.com"},
 	{ID: "tiktok", OfficialSiteHost: "www.tiktok.com", SourceHost: "www.tiktok.com"},
 	{ID: "x", OfficialSiteHost: "x.com", SourceHost: "x.com"},
-	{ID: "youtube", OfficialSiteHost: "www.youtube.com", SourceHost: "www.youtube.com"},
+	{ID: "youtube", OfficialSiteHost: "www.youtube.com", SourceHost: "www.gstatic.com"},
 	{ID: "google", OfficialSiteHost: "www.google.com", SourceHost: "www.google.com"},
 }
 
