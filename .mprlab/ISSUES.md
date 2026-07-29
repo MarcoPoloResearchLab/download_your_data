@@ -526,7 +526,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - `go list -m all` and repository search find no dependency on `github.com/tyemirov/netflix` or the old checkout.
   - `git status --short`
 
-- [-] [M410] (P1) {F005,M404R} Add the canonical release, publication, and deployment lifecycle
+- [x] [M410] (P1) {F005,M404R} Add the canonical release, publication, and deployment lifecycle
   Goal:
   Give the local-only product the same fixed repository-owned lifecycle as other MPR applications without introducing a hosted personal-data service.
 
@@ -550,6 +550,8 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Gateway resource discovery and plan validation against an isolated canonical checkout.
   - `git diff --check`
   - `git status --short`
+
+  Resolved 2026-07-29: the repository now owns fixed `make up`, `make release`, `make publish`, and user-owned `make deploy` entrypoints. Release builds and packages the macOS arm64 application twice with an isolated Go build cache, seals its checksum and first-run guidance, and creates only the local release commit and tag; publish uploads that exact sealed release without rebuilding; deploy verifies the published manifest and tag, replaces `gh-pages`, configures branch publishing with the sealed `dyd.mprlab.com` CNAME, waits for the GitHub Pages certificate, enforces HTTPS, and verifies the source marker. Read-only production inspection confirmed `dyd.mprlab.com` points directly to `marcopoloresearchlab.github.io` and the repository is in the expected pre-first-deploy Pages API 404 state. `make deploy-dry-run`, `make ci`, Bash 3.2 syntax checks, deterministic application and Pages artifact checks, extracted command and browser smoke, local publication/deployment/idempotency fixtures, `git diff --check`, and isolated gateway discovery and workflow validation passed; the gateway admitted `download_your_data` as `READY`. No production release, publication, Pages configuration, or deployment command was run.
 
 ## Features
 
