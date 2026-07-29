@@ -32,13 +32,13 @@ Format: `- [ ] [B042] (P1) {I007} Title`
 
 - [ ] [B002] (P1) {I002,I003} Fail fast when definition-analysis inference is unavailable
   Goal:
-  Report missing or incompatible local inference before scanning an archive or starting report generation.
+  Report missing or incompatible configured inference before scanning an archive or starting report generation.
 
   Requirements:
   - Preflight semantic prototype embeddings before querying historical messages when semantic analysis is enabled.
   - Preflight the verifier model before querying historical messages when verification is enabled.
   - Return typed, actionable errors for an unavailable server, no loaded model, model mismatch, and dimension mismatch.
-  - Include the configured endpoint boundary and the required `lms load` action without exposing conversation content.
+  - Include the configured endpoint boundary and an operator-owned remediation code without exposing conversation content or server credentials.
   - Propagate cancellation through readiness checks, archive queries, classification, and report writing.
   - Do not create partial report files when readiness fails.
 
@@ -622,6 +622,31 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - `make test-browser`
   - `make ci`
 
+- [ ] [I012] (P1) {F010} Make Pages the canonical anonymous guide frontend
+  Goal:
+  Publish the provider catalog and every provider guide as the canonical static browser surface while keeping all data-analysis routes behind the shared authenticated application boundary.
+
+  Requirements:
+  - Replace the Pages download landing page and embedded-frontend ownership split with one repository-owned static frontend artifact.
+  - Keep `#catalog`, `#guide/{provider}`, Credits, and privacy content fully usable without a Download Your Data session.
+  - Replace `#provider/{provider}` with `#app/{provider}` as the sole current data-analysis route; do not retain an alias or redirect.
+  - Render the public catalog and guides from one strict provider registry with the current localized copy, exact first-party action links, local icons, and one reviewed screenshot per instruction step.
+  - Keep provider application code in the public artifact but make zero protected API requests until the shared `mpr-ui` lifecycle reports authenticated.
+  - Add the tracked `/config-ui.yaml`, `mpr-ui-config.js`, literal `mpr-ui@latest` bundle marker, shared user control, startup reconciliation, and auth transition contract without app-owned authentication code.
+  - Render and seal the Pages artifact locally; do not use GitHub Actions as the publishing mechanism.
+
+  Deliverables:
+  - Canonical anonymous Pages catalog and guide routes plus authenticated application routes.
+  - Validated static artifact, public runtime profile, CSP, responsive MPR styling, and real-browser coverage.
+  - Removed embedded-product and download-landing frontend paths in the same forward change.
+
+  Validation:
+  - Fresh signed-out browser coverage proves every guide is readable and makes zero protected application API requests.
+  - Static scans reject secrets, deployment-only values, MPRLab version pins, direct `tauth.js`, manual `tauth-*` wiring, and obsolete provider application routes.
+  - Wide and narrow browser coverage proves public and authenticated layouts remain compact, keyboard-operable, and free of overflow.
+  - `make test-browser`
+  - `make ci`
+
 ## Maintenance
 
 - [ ] [M400R] (P2) Backlog hygiene and archive
@@ -803,7 +828,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   Remove the obsolete local project boundary after the first target-owned release proves complete parity.
 
   Requirements:
-  - Confirm the target release owns every maintained engine, command, fixture, report, and validation capability without a filesystem or module dependency on the standalone checkout.
+  - Confirm the target release owns every maintained engine, browser workflow, fixture, report, and validation capability required by the current authenticated web contract without a filesystem or module dependency on the standalone checkout.
   - Search active local documentation and automation for references to the old directory or a nonexistent remote repository and remove them at their owning source.
   - Identify databases, vectors, exports, and reports under the standalone directory for explicit operator disposition; do not silently delete or copy personal data.
   - Remove `/Users/tyemirov/Development/chatIndex` only after explicit operator approval for that destructive step.
@@ -819,12 +844,12 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Search confirms the target has no runtime, build, test, or documentation dependency on the old path or repository.
   - `git status --short`
 
-- [ ] [M409] (P1) {F008,I009} Retire the abandoned standalone Netflix checkout
+- [ ] [M409] (P1) {F005,F011} Retire the abandoned standalone Netflix checkout
   Goal:
-  Remove the obsolete Netflix project boundary after a target-owned release proves browser and operator parity.
+  Remove the obsolete Netflix project boundary after the authenticated target release proves complete browser parity.
 
   Requirements:
-  - Confirm the target owns viewing-history validation, import, analytics, TMDB enrichment, matching outcomes, cache, dashboard, CSV export, operator commands, fixtures, and validation without the standalone checkout.
+  - Confirm the target owns viewing-history validation, import, analytics, TMDB enrichment, matching outcomes, cache, dashboard, CSV export, fixtures, and validation without the standalone checkout.
   - Prove the released target artifact runs without a module, subprocess, HTTP, build, test, documentation, or filesystem dependency on the source repository.
   - Inspect `/Users/tyemirov/Development/netflix` for untracked or private runtime data and record explicit operator disposition without printing or copying personal content.
   - Do not import or preserve `netflix_cache.sqlite` as a target artifact.
@@ -844,6 +869,9 @@ Format: `- [ ] [B042] (P1) {I007} Title`
 - [x] [M410] (P1) {F005,M404R} Add the canonical release, publication, and deployment lifecycle
   Goal:
   Give the local-only product the same fixed repository-owned lifecycle as other MPR applications without introducing a hosted personal-data service.
+
+  Superseded contract:
+  P006 and the current F005 replace this completed first-release lifecycle with the forward authenticated web release. This entry remains historical evidence of the prior release boundary.
 
   Requirements:
   - Make `make up` the sole local development entrypoint and remove the obsolete `make run` target and documentation.
@@ -870,85 +898,90 @@ Format: `- [ ] [B042] (P1) {I007} Title`
 
 ## Features
 
-- [ ] [F001] (P1) {I001,I002,I005} Add the OpenAI archive generation lifecycle
+- [ ] [F001] (P1) {I001,I002,F010} Add the user-owned OpenAI archive generation lifecycle
   Goal:
-  Accept an OpenAI data-export ZIP and atomically build one active local conversation-search generation.
+  Accept an OpenAI data-export ZIP and atomically build one active conversation-search generation for the authenticated user.
 
   Requirements:
   - Integrate the repository-owned conversation archive engine directly instead of invoking its CLI.
   - Define `POST /api/providers/openai/generations`, `PUT /api/providers/openai/generations/{generationID}/archive`, `GET /api/providers/openai`, and `GET /api/providers/openai/generations/{generationID}/events` as the canonical create, upload, snapshot, and progress contract.
+  - Protect every route with the shared TAuth session and resolve all provider state beneath the authenticated user's OpenAI workspace.
   - Validate request, upload, ZIP, and OpenAI-export boundaries once and return typed payloads and errors.
   - Use a closed persisted state machine: `receiving`, `validating`, `importing`, `indexing`, `ready`, or `failed`.
-  - Allow one building generation at a time and reject conflicting creation or upload requests.
+  - Allow one building generation per user and reject conflicting creation or upload requests within that user workspace.
   - Enforce centralized limits for compressed bytes, the recognized conversation entry, entry count, compression ratio, inference batch size, and working-disk use.
   - Reject malformed, encrypted, ambiguous, or duplicate conversation payloads and never extract arbitrary ZIP paths.
-  - Preflight local inference before expensive import or indexing work.
-  - Store SQLite and vector artifacts under a private generation-owned staging directory.
+  - Preflight the configured server-owned inference boundary before expensive import or indexing work.
+  - Store SQLite and vector artifacts under a private user- and generation-owned staging directory.
   - Activate a generation only after import, index-identity, and eligible-document completeness checks pass.
   - Remove the source ZIP and transient extraction data after the reader closes on success or failure.
 
   Deliverables:
   - Typed provider, generation, progress-event, capabilities, and error payloads.
-  - Persisted job repository and bounded background worker.
-  - Atomic active-generation pointer and private staging layout.
+  - User-scoped persisted job repository and bounded background worker.
+  - User-scoped atomic active-generation pointer and private staging layout.
 
   Validation:
   - Black-box HTTP test with a synthetic OpenAI export and deterministic embedding server.
   - Failure test proving an incomplete generation never becomes active.
   - Security tests for oversized, malformed, encrypted, ambiguous, and traversal-shaped archives.
   - Cancellation and client-disconnect tests proving work and temporary files are bounded.
+  - Two-user tests prove generations, events, files, active pointers, and failures cannot cross user boundaries.
 
-- [ ] [F002] (P1) {F001} Add the OpenAI upload and indexing experience
+- [ ] [F002] (P1) {F001,I012} Add the authenticated OpenAI upload and indexing experience
   Goal:
-  Add OpenAI to the provider registry and provide ZIP upload, progress, failure, and replacement states.
+  Open the existing public OpenAI guide and a distinct authenticated OpenAI application with ZIP upload, progress, failure, and replacement states.
 
   Requirements:
-  - Add OpenAI to every supported locale in the provider registry with current export instructions.
-  - Migrate the browser application to checked ES modules and validated API payloads.
-  - Keep application styles, scripts, fonts, icons, screenshots, and charts self-owned; the only browser-side asset dependency is the exact shared `mpr-ui@latest` stylesheet and script.
+  - Keep OpenAI in every locale's anonymous guide registry and expose `#app/openai` as its sole data-analysis route.
+  - Wait for the shared `mpr-ui:auth:authenticated` lifecycle before making the first OpenAI API request.
+  - Use checked ES modules, validated API payloads, `credentials: include`, and the exact production API origin from the selected profile.
+  - Keep application styles, scripts, fonts, icons, screenshots, and charts in the sealed Pages artifact; load every MPRLab library through the literal `@latest` contract.
   - Render one authoritative workflow state and emit intent-specific events.
-  - Display backend-owned upload bytes, generation progress, readiness, and actionable LM Studio errors without simulated timers.
+  - Display backend-owned upload bytes, generation progress, readiness, and actionable inference errors without simulated timers.
   - Run an inference readiness check before asking the user to upload a large archive.
   - Explain exactly which message text reaches the configured inference endpoint and that attachments do not.
   - Support keyboard operation, accessible status announcements, retry, and explicit replacement confirmation.
-  - Clean up object URLs, event streams, and pending requests.
+  - Clean up object URLs, event streams, pending requests, and all app-owned OpenAI state on shared-shell sign-out.
+  - Never add an OpenAI-specific Download Your Data login, tenant, session, cookie, or auth-state check.
 
   Validation:
-  - Playwright coverage of upload, progress, failure, and ready states through the real server.
+  - Playwright coverage of shared authentication, upload, progress, failure, and ready states through the real stack.
   - Playwright coverage of keyboard flow, accessible announcements, replacement confirmation, reconnect, and retry.
-  - Browser-network assertion proving the shipped page requests only the two exact shared-shell assets.
+  - Browser-network coverage proves the public OpenAI guide makes no protected request and the application waits for authenticated lifecycle evidence.
+  - One authenticated browser opens Netflix and OpenAI without a second login action.
 
-  Progress 2026-07-29: OpenAI now appears directly in the provider catalog as a guide-only surface in every supported locale. The guide follows OpenAI's current signed-in export flow, links to the official help article, explains how the downloaded ZIP connects to the existing local product commands, and has real-browser contract coverage. F002 remains open for the backend-owned browser upload, indexing, progress, failure, and replacement experience.
+  Progress 2026-07-29: OpenAI now appears directly in the provider catalog as a guide-only surface in every supported locale. The guide follows OpenAI's current signed-in export flow, links to the official help article, and has real-browser contract coverage. F002 remains open for the shared-authenticated upload, indexing, progress, failure, and replacement experience.
 
 - [ ] [F003] (P1) {F001,F002,I004} Add hybrid semantic conversation search
   Goal:
   Search the active OpenAI archive by meaning and exact terms with conversation-level results.
 
   Requirements:
-  - Define `POST /api/providers/openai/search` as a validated, cancellable query contract against exactly one active ready generation.
-  - Default to hybrid retrieval over the active ready generation.
+  - Define `POST /api/providers/openai/search` as a protected, validated, cancellable query contract against exactly one active ready generation owned by the authenticated user.
+  - Default to hybrid retrieval over that user's active ready generation.
   - Support bounded query text, date, archive, result-limit, and excerpt-count filters through typed requests.
   - Return stable conversation IDs, titles, timestamps, archive state, scores, match reason, and supporting excerpts.
   - Use deterministic ordering and a stable continuation cursor when the result cap is reached.
   - Return typed `not_ready`, `inference_unavailable`, `model_mismatch`, `invalid_query`, and `canceled` failures.
   - Keep advanced ranking details hidden unless requested.
-  - Never write query text or returned excerpts to logs or browser persistence.
+  - Never write query text or returned excerpts to logs, browser persistence, or another user's cache.
 
   Validation:
   - Black-box search test with known lexical and semantic results.
   - Playwright coverage of query, filters, results, empty state, and failure state.
   - Contract tests for query limits, cancellation, deterministic ordering, pagination, and inference-identity mismatch.
 
-- [ ] [F004] (P1) {F001,F002,F003} Complete replacement, restart, and deletion contracts
+- [ ] [F004] (P1) {F001,F002,F003} Complete user-owned replacement, restart, and deletion contracts
   Goal:
-  Make the local archive lifecycle safe across replacement, interruption, restart, and deletion.
+  Make each user's OpenAI archive lifecycle safe across replacement, interruption, restart, and deletion.
 
   Requirements:
-  - Keep the active generation searchable while a replacement generation builds.
+  - Keep the authenticated user's active generation searchable while that user's replacement generation builds.
   - Persist progress checkpoints and resume an interrupted build without dual reads or duplicate vector rows.
-  - Reconcile receiving, building, failed, and orphaned staging directories at startup.
+  - Reconcile receiving, building, failed, and orphaned staging directories within each user workspace at startup.
   - Commit generation readiness and the active pointer in one transaction, then delete the obsolete generation after successful activation.
-  - Keep one process-owned generation lease so concurrent servers or jobs cannot mutate the same library.
+  - Keep one user/provider generation lease so concurrent servers or jobs cannot mutate the same library.
   - Replay ordered server-sent events after reconnect without duplicating state transitions.
   - Expose explicit cancellation for a building generation and explicit confirmation for full provider deletion.
   - Treat a changed model, endpoint boundary, dimensions, prefix, builder version, or corpus policy as a new generation identity that requires reindexing.
@@ -958,30 +991,33 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   Validation:
   - Black-box restart, failed replacement, successful replacement, and complete deletion scenarios.
   - Crash-point tests around checkpoint, readiness, active-pointer commit, and obsolete-generation cleanup.
-  - Concurrency test proving a second server or builder cannot mutate the active library.
+  - Concurrency test proving a second server or builder cannot mutate the same user's active library while independent users can progress safely.
   - Filesystem audit proving canceled, failed, replaced, and deleted generations leave no private payload behind.
+  - Cross-user tests prove deletion and restart reconciliation never traverse another user's workspace.
 
-- [ ] [F005] (P1) {B001,B002,F004,I006} Package the first canonical local release
+- [ ] [F005] (P1) {B001,B002,F004,F011,I012} Publish the first canonical authenticated web release
   Goal:
-  Deliver an Apple Silicon application artifact that owns the server, application assets, archive engine, and operator workflows while consuming the current shared MPR shell.
+  Deliver the anonymous static guide frontend and shared-authenticated provider applications as one repository-owned web release.
 
   Requirements:
-  - Build one `download-your-data` executable for macOS arm64 with embedded application assets and no dependency on the source checkout.
-  - Declare network access to the exact shared `mpr-ui@latest` stylesheet and script as the shell's only browser-side asset dependency.
-  - Keep LM Studio as an explicit local runtime dependency and provide first-run readiness guidance for the required model and alias.
-  - Start on loopback, use the canonical private data root, and open the local application without introducing hosted mode.
-  - Include version, schema, model-identity, data-location, backup, replacement, and deletion guidance.
-  - Keep `make release`, any future publication step, and any future deployment step as separate contracts.
-  - Do not package personal archives, databases, vectors, reports, caches, or local environment files.
+  - Seal one GitHub Pages artifact containing the anonymous catalog, provider guides, authenticated application bundle, and public browser configuration.
+  - Build and publish one Go API container containing the provider services and current server-owned inference boundary.
+  - Declare one Download Your Data TAuth tenant, exact session and refresh cookies, gateway route, persistent storage mount, health check, and runtime assets beneath `.mprlab/deploy/`.
+  - Use the literal `mpr-ui@latest` contract and the production profile's exact frontend, API, TAuth, OAuth, cookie, CORS, proxy, and storage values.
+  - Keep `make release`, `make publish`, user-owned `make deploy`, and non-mutating `make deploy-dry-run` as separate contracts.
+  - Remove the macOS application archive, end-user operator commands, embedded browser application, loopback-only production contract, and Pages download landing page in the same forward change.
+  - Do not publish personal archives, databases, vectors, reports, caches, runtime secrets, or private deployment inventory.
 
   Deliverables:
-  - Reproducible `make release` artifact and checksum.
-  - First-run and troubleshooting documentation for LM Studio, archive upload, search, backup, and deletion.
-  - Release validation that runs from the extracted artifact with a temporary home and deterministic local inference server.
+  - Reproducible Pages and container artifacts tied to one source revision and manifest.
+  - Complete app-owned deployment bundle and exact non-secret production profile.
+  - User documentation for public guides, shared sign-in, provider upload, privacy, export, replacement, and workspace deletion.
+  - Real local TAuth/provider stack and non-mutating release and deployment validation.
 
   Validation:
-  - Black-box artifact smoke covers first start, health, capabilities, upload, ready state, hybrid search, definitions, restart, replacement, and deletion.
-  - Browser test proves the packaged application requests only the two exact shared-shell assets.
+  - Black-box release smoke covers public guides, shared authentication, health, capabilities, Netflix, OpenAI, restart, replacement, cross-user isolation, and deletion.
+  - Browser tests prove anonymous guide access, one login across provider applications, session restoration, and shared-shell sign-out.
+  - `make deploy-dry-run`
   - `make ci`
   - `make release`
 
@@ -1097,11 +1133,66 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - `make test-browser`
   - `make ci`
 
+- [ ] [F010] (P1) {P006} Introduce the shared TAuth user and workspace boundary
+  Goal:
+  Give every data-analysis provider one authenticated Download Your Data user without creating provider-specific login or session systems.
+
+  Requirements:
+  - Use one app-owned `/config-ui.yaml`, one Download Your Data TAuth tenant, and the documented `mpr-ui:auth:*` lifecycle for every provider application.
+  - Construct one current published TAuth session validator at backend startup from the exact deployment profile.
+  - Convert validated tenant and user IDs into one immutable `AuthenticatedUser` domain value at the HTTP boundary.
+  - Protect provider capabilities, snapshots, uploads, events, analytics, records, searches, exports, replacement, cancellation, and deletion with the TAuth session.
+  - Require every protected service and repository operation to receive the authenticated user explicitly.
+  - Scope storage, active pointers, generation IDs, caches, leases, events, exports, and deletion to `(user, provider)`.
+  - Return `401` for an absent or invalid session and the canonical not-found response for an authenticated cross-user resource lookup.
+  - Keep app code out of login, restoration, refresh, logout, credential exchange, cookie, storage, token, claim, and auth-status ownership.
+  - Add one authenticated full-workspace deletion operation without attempting to delete the TAuth account.
+
+  Deliverables:
+  - Typed authenticated-user boundary, authorization middleware, user-scoped repositories, and complete workspace deletion.
+  - Real local TAuth stack and two-user black-box authorization fixture.
+  - Production profile schema containing every required origin, cookie, OAuth, CORS, proxy, port, storage, user-limit, inference, and secret-reference literal.
+
+  Validation:
+  - Unauthenticated protected routes return `401`.
+  - A real TAuth session unlocks every provider through the same user identity.
+  - Two test users cannot read, mutate, stream, export, or delete one another's resources.
+  - Browser coverage proves no protected request occurs before `mpr-ui:auth:authenticated`, reload restores the workspace, and shared-shell sign-out clears app-owned state.
+  - `make test`
+  - `make test-browser`
+  - `make ci`
+
+- [ ] [F011] (P1) {F010,I012,F006,F007,F008} Move Netflix analysis into the authenticated user workspace
+  Goal:
+  Preserve the complete Netflix application while making every artifact and operation belong to the authenticated Download Your Data user.
+
+  Requirements:
+  - Replace the process-global Netflix workspace with a bounded user-scoped workspace registry and explicit user/provider repositories.
+  - Keep current CSV validation, generation states, analytics, TMDB consent, matching, progress, export, replacement, cancellation, and deletion semantics.
+  - Resolve every generation beneath the authenticated user's Netflix root; an opaque generation ID must never cross a user boundary.
+  - Scope TMDB cache entries, checkpoints, leases, active pointers, and streamed exports to the user.
+  - Keep raw exports and viewing data out of browser persistence, logs, routes, cross-user caches, and static artifacts.
+  - Open Netflix from `#app/netflix` after the shared lifecycle authenticates, and return to its public guide without signing out.
+  - Keep Netflix on the shared provider-application shell so later provider routes reuse the same TAuth session without another authentication implementation.
+
+  Deliverables:
+  - Authenticated Netflix application with user-scoped persistence and complete per-user deletion.
+  - Updated API, browser, restart, concurrency, filesystem, and privacy coverage.
+
+  Validation:
+  - Two-user black-box scenarios prove independent imports, active generations, analytics, TMDB enrichment, exports, replacement, and deletion.
+  - Browser coverage proves shared authentication, Netflix hydration, reload restoration, anonymous guide navigation, and shared-shell sign-out.
+  - `make test-browser`
+  - `make ci`
+
 ## Planning
 
 - [x] [P001] (P1) Confirm the first canonical deployment and inference contract
   Goal:
   Select one deployment contract before backend implementation begins.
+
+  Superseded contract:
+  P006 replaces the first-release local-only deployment decision with anonymous static guides and shared-authenticated hosted provider applications.
 
   Deliverables:
   - The first release is local-only.
@@ -1127,6 +1218,9 @@ Format: `- [ ] [B042] (P1) {I007} Title`
 - [x] [P003] (P1) {I002} Confirm first-release coverage for incorporated analysis tools
   Goal:
   Define how every incorporated engine capability remains reachable after the standalone project is retired.
+
+  Superseded contract:
+  P006 and F001 through F005 move these capabilities into the authenticated web application and retire the current end-user product executable rather than preserving a second local workflow.
 
   Deliverables:
   - The browser first release owns OpenAI upload, status, replacement, hybrid search, and deletion workflows.
@@ -1156,6 +1250,9 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   Goal:
   Select one ownership, privacy, lifecycle, UI, and retirement contract before Netflix implementation begins.
 
+  Superseded user and deployment boundary:
+  P006 and F011 replace the process-global local Netflix workspace with an authenticated user-scoped workspace. The accepted CSV, analytics, TMDB, lifecycle, and retirement semantics remain current.
+
   Deliverables:
   - `download_your_data` is the sole maintained owner; no module, path, subprocess, HTTP sidecar, copied database, CLI alias, or compatibility boundary survives.
   - The first accepted input is the per-profile Netflix Viewing activity CSV, not the separate full-account personal-information archive.
@@ -1170,3 +1267,21 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   Validation:
   - Confirm `I007`, `I008`, `I009`, `F006`, `F007`, `F008`, and `M409` cover incorporation through retirement without a legacy bridge.
   - Confirm downstream API, UI, privacy, validation, and release requirements cite the same canonical plan.
+
+- [x] [P006] (P1) Confirm anonymous guides and one shared authenticated user contract
+  Goal:
+  Separate public provider guidance from user-owned data analysis and select one authentication, storage, frontend, and deployment contract for every provider application.
+
+  Deliverables:
+  - `docs/user-authentication-plan.md` is the canonical cross-provider plan.
+  - The provider catalog and `#guide/{provider}` routes are static and require no Download Your Data session.
+  - `#app/{provider}` is the sole authenticated application route shape.
+  - One Download Your Data TAuth tenant, one TAuth session, one `mpr-ui` lifecycle, and one validated TAuth user identity cover Netflix, OpenAI, and future provider applications.
+  - Every provider artifact and operation is scoped to `(user, provider)`.
+  - GitHub Pages owns the static frontend and an app-owned gateway container owns the protected API and persistent user workspaces.
+  - The local-only packaged application, end-user operator commands, embedded frontend, unscoped data root, and Pages download landing page are superseded without a compatibility mode.
+  - `I012`, `F010`, and `F011` own the public frontend, shared user boundary, and Netflix migration; `F001` through `F005` must implement OpenAI and release work against the same contract.
+
+  Validation:
+  - Confirm the plan names the public and protected routes, authentication owner, user identity, storage owner, profile requirements, rollout order, and local and production acceptance ladders.
+  - Confirm no provider-specific authentication, anonymous analysis, hosted-profile guess, local/hosted dual mode, or production deployment action remains in scope.
