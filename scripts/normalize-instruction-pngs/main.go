@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"image"
+	"image/draw"
 	_ "image/jpeg"
 	"image/png"
 	"os"
@@ -35,6 +36,14 @@ func normalizePNG(path string) error {
 	if closeErr != nil {
 		return closeErr
 	}
+	normalized := image.NewNRGBA(decoded.Bounds())
+	draw.Draw(
+		normalized,
+		normalized.Bounds(),
+		decoded,
+		decoded.Bounds().Min,
+		draw.Src,
+	)
 
 	info, err := os.Stat(path)
 	if err != nil {
@@ -53,7 +62,7 @@ func normalizePNG(path string) error {
 	}()
 
 	encoder := png.Encoder{CompressionLevel: png.BestCompression}
-	if err := encoder.Encode(output, decoded); err != nil {
+	if err := encoder.Encode(output, normalized); err != nil {
 		_ = output.Close()
 		return err
 	}

@@ -440,6 +440,24 @@ async page => {
       (await page.locator('.workspace h1').textContent()).trim() === 'Netflix',
       `${locale} Netflix workspace identity changed`
     );
+    const netflixWorkspaceIcon = page.locator(
+      '.workspace-header img.provider-icon[data-provider-icon="netflix"]'
+    );
+    assert(
+      await netflixWorkspaceIcon.count() === 1,
+      `${locale} Netflix workspace provider icon is missing`
+    );
+    await netflixWorkspaceIcon.evaluate((element) => element.decode());
+    assert(
+      await netflixWorkspaceIcon.evaluate(
+        (element) =>
+          element.complete &&
+          element.naturalWidth >= 32 &&
+          element.naturalHeight >= 32 &&
+          new URL(element.src).pathname === '/images/providers/netflix.png'
+      ),
+      `${locale} Netflix workspace provider icon failed to load`
+    );
     assert(
       await page.locator(
         '.workspace-header [data-route="guide"][data-provider="netflix"]'
@@ -474,17 +492,17 @@ async page => {
     google: 7
   };
   const instructionLinkHosts = {
-    netflix: 'help.netflix.com',
-    openai: 'chatgpt.com',
-    facebook: 'accountscenter.facebook.com',
-    instagram: 'accountscenter.instagram.com',
-    whatsapp: 'faq.whatsapp.com',
-    threads: 'accountscenter.instagram.com',
-    linkedin: 'www.linkedin.com',
-    tiktok: 'support.tiktok.com',
-    x: 'x.com',
-    youtube: 'takeout.google.com',
-    google: 'takeout.google.com'
+    netflix: ['help.netflix.com'],
+    openai: ['chatgpt.com'],
+    facebook: ['accountscenter.facebook.com', 'www.facebook.com'],
+    instagram: ['accountscenter.instagram.com', 'www.facebook.com'],
+    whatsapp: ['faq.whatsapp.com'],
+    threads: ['www.facebook.com'],
+    linkedin: ['www.linkedin.com'],
+    tiktok: ['support.tiktok.com'],
+    x: ['x.com'],
+    youtube: ['takeout.google.com'],
+    google: ['takeout.google.com']
   };
   const screenshotIDs = [];
   const instructionHrefs = [];
@@ -513,7 +531,7 @@ async page => {
       }));
       assert(
         linkRecord.protocol === 'https:' &&
-          linkRecord.hostname === instructionLinkHosts[provider] &&
+          instructionLinkHosts[provider].includes(linkRecord.hostname) &&
           linkRecord.target === '_blank' &&
           linkRecord.rel.split(/\s+/).includes('noopener') &&
           linkRecord.rel.split(/\s+/).includes('noreferrer') &&
@@ -554,7 +572,7 @@ async page => {
   }
   assert(screenshotIDs.length === 75, 'every instruction step must render one screenshot');
   assert(instructionHrefs.length === 75, 'every instruction step must render one action link');
-  assert(new Set(screenshotIDs).size === 21, 'approved screenshot set must contain 21 assets');
+  assert(new Set(screenshotIDs).size === 26, 'approved screenshot set must contain 26 assets');
   assert(
     await page.locator('.screenshot-grid, .instruction-list, .ratio').count() === 0,
     'obsolete gallery, text-only, or placeholder instruction UI remains'
@@ -889,6 +907,108 @@ async page => {
       mobileOpenAIWorkspace.commandRight <= mobileOpenAIWorkspace.workspaceRight,
     'mobile OpenAI analysis workspace must contain its current import and index workflow'
   );
+
+  const openAIProviderURL = `${baseURL}/api/providers/openai`;
+  const openAISearchURL = `${baseURL}/api/providers/openai/search`;
+  await page.route(openAIProviderURL, async (requestRoute) => {
+    await requestRoute.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        provider: 'openai',
+        state: 'ready',
+        statistics: {
+          imports: 1,
+          conversations: 1,
+          messages: 1
+        },
+        capabilities: {
+          browser_upload: false,
+          search_modes: ['hybrid', 'semantic', 'lexical'],
+          max_query_bytes: 4096,
+          max_results: 100,
+          max_excerpts: 10,
+          inference_boundary: 'loopback'
+        },
+        search_index: {
+          id: 1,
+          name: 'browser-contract',
+          model: 'browser-contract-embedding',
+          dimensions: 3,
+          document_count: 1,
+          eligible_document_count: 1,
+          conversation_count: 1,
+          eligible_conversation_count: 1
+        }
+      })
+    });
+  });
+  await page.route(openAISearchURL, async (requestRoute) => {
+    await requestRoute.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        results: [
+          {
+            conversation_id: 'long-content-contract',
+            conversation_title: `Unbroken-title-${'x'.repeat(4096)}`,
+            archived: false,
+            score: 0.9,
+            semantic_score: 0.9,
+            lexical_score: 0.4,
+            excerpts: [
+              {
+                message_id: 'long-excerpt-contract',
+                role: 'assistant',
+                text: `https://example.invalid/${'y'.repeat(8192)}`,
+                semantic_score: 0.9,
+                lexical_score: 0.4,
+                detection_methods: ['semantic']
+              }
+            ]
+          }
+        ],
+        query_embedding_cached: false
+      })
+    });
+  });
+  await page.reload({waitUntil: 'networkidle'});
+  await page.locator('#openai-search-form').waitFor();
+  await page.locator('#openai-search-form input[name="query"]').fill('overflow contract');
+  await page.locator('#openai-search-form button[type="submit"]').click();
+  await page.locator('.openai-result').waitFor();
+  const mobileOpenAIResult = await page.evaluate(() => {
+    const workspace = document.querySelector('.openai-workspace').getBoundingClientRect();
+    const result = document.querySelector('.openai-result').getBoundingClientRect();
+    const title = document.querySelector('.openai-result-header h4');
+    const excerpt = document.querySelector('.openai-excerpt p');
+    return {
+      documentWidth: document.documentElement.scrollWidth,
+      excerptClientWidth: excerpt.clientWidth,
+      excerptOverflowWrap: getComputedStyle(excerpt).overflowWrap,
+      excerptScrollWidth: excerpt.scrollWidth,
+      resultLeft: result.left,
+      resultRight: result.right,
+      titleClientWidth: title.clientWidth,
+      titleOverflowWrap: getComputedStyle(title).overflowWrap,
+      titleScrollWidth: title.scrollWidth,
+      viewportWidth: window.innerWidth,
+      workspaceLeft: workspace.left,
+      workspaceRight: workspace.right
+    };
+  });
+  assert(
+    mobileOpenAIResult.documentWidth <= mobileOpenAIResult.viewportWidth &&
+      mobileOpenAIResult.resultLeft >= mobileOpenAIResult.workspaceLeft &&
+      mobileOpenAIResult.resultRight <= mobileOpenAIResult.workspaceRight &&
+      mobileOpenAIResult.titleOverflowWrap === 'anywhere' &&
+      mobileOpenAIResult.titleScrollWidth <= mobileOpenAIResult.titleClientWidth &&
+      mobileOpenAIResult.excerptOverflowWrap === 'anywhere' &&
+      mobileOpenAIResult.excerptScrollWidth <= mobileOpenAIResult.excerptClientWidth,
+    'mobile OpenAI search results must contain unbroken imported titles and excerpts'
+  );
+  await page.unroute(openAIProviderURL);
+  await page.unroute(openAISearchURL);
 
   await route('#guide/netflix', '#netflix');
   const mobileGuideLayout = await page.evaluate(() => {
