@@ -16,8 +16,10 @@ cleanup() {
 }
 trap cleanup EXIT
 
-"${binary_path}" help | grep -q "netflix inspect"
-"${binary_path}" netflix inspect | grep -q "state=empty"
+help_output="$("${binary_path}" help)"
+grep -q "netflix inspect" <<<"${help_output}"
+netflix_status="$("${binary_path}" netflix inspect)"
+grep -q "state=empty" <<<"${netflix_status}"
 
 "${binary_path}" inspect "${repository_root}/testdata/synthetic-openai-export.zip"
 "${binary_path}" import \
@@ -77,7 +79,7 @@ for _ in {1..50}; do
   fi
   sleep 0.1
 done
-curl --silent --fail "http://127.0.0.1:${application_port}/api/health" |
-  grep -q '"status":"ready"'
+application_health="$(curl --silent --fail "http://127.0.0.1:${application_port}/api/health")"
+grep -q '"status":"ready"' <<<"${application_health}"
 
 echo "Product command smoke test passed."
