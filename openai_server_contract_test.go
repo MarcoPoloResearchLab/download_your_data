@@ -216,6 +216,90 @@ func TestOpenAIProviderReportsIndexRequired(testContext *testing.T) {
 	}
 }
 
+func TestOpenAIProviderRejectsAnIndexFromAnotherInferenceIdentity(
+	testContext *testing.T,
+) {
+	dataDirectory := filepath.Join(testContext.TempDir(), "data")
+	originalInferenceServer := newOpenAITestInferenceServer(testContext)
+	originalConfig := loadTestRuntimeConfig(testContext, map[string]string{
+		runtimeconfig.DataDirectoryEnvironment: dataDirectory,
+		inference.BaseURLEnvironment:           originalInferenceServer.URL + "/v1",
+	})
+	seedOpenAISearchArchive(testContext, originalConfig)
+
+	currentInferenceServer := newOpenAITestInferenceServer(testContext)
+	currentConfig := loadTestRuntimeConfig(testContext, map[string]string{
+		runtimeconfig.DataDirectoryEnvironment: dataDirectory,
+		inference.BaseURLEnvironment:           currentInferenceServer.URL + "/v1",
+	})
+	handler, handlerError := newApplicationHandler(
+		currentConfig,
+		slog.New(slog.NewTextHandler(io.Discard, nil)),
+	)
+	if handlerError != nil {
+		testContext.Fatalf("create application handler: %v", handlerError)
+	}
+	defer handler.Close()
+	server := httptest.NewServer(handler)
+	defer server.Close()
+
+	response, requestError := http.Get(server.URL + openAIProviderPath)
+	if requestError != nil {
+		testContext.Fatalf("request OpenAI provider: %v", requestError)
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		testContext.Fatalf(
+			"OpenAI provider status = %d; want %d",
+			response.StatusCode,
+			http.StatusOK,
+		)
+	}
+	var snapshot openAIProviderSnapshot
+	if decodeError := json.NewDecoder(response.Body).Decode(&snapshot); decodeError != nil {
+		testContext.Fatalf("decode OpenAI provider: %v", decodeError)
+	}
+	if snapshot.State != openAIStateIndexNeeded || snapshot.SearchIndex != nil {
+		testContext.Fatalf(
+			"OpenAI provider exposed an incompatible ready index: %+v",
+			snapshot,
+		)
+	}
+
+	searchResponse := performOpenAISearchRequest(
+		testContext,
+		server.URL,
+		currentConfig,
+		openAISearchRequest{
+			Query:           "synthetic conversation",
+			Mode:            retrieval.SearchModeLexical,
+			Limit:           10,
+			Excerpts:        2,
+			IncludeArchived: true,
+		},
+	)
+	defer searchResponse.Body.Close()
+	if searchResponse.StatusCode != http.StatusConflict {
+		body, _ := io.ReadAll(searchResponse.Body)
+		testContext.Fatalf(
+			"OpenAI search status = %d; want %d: %s",
+			searchResponse.StatusCode,
+			http.StatusConflict,
+			body,
+		)
+	}
+	var errorPayload requestErrorResponse
+	if decodeError := json.NewDecoder(searchResponse.Body).Decode(&errorPayload); decodeError != nil {
+		testContext.Fatalf("decode incompatible-index search response: %v", decodeError)
+	}
+	if errorPayload.Error.Code != "openai_index_required" {
+		testContext.Fatalf(
+			"incompatible-index search error = %q; want openai_index_required",
+			errorPayload.Error.Code,
+		)
+	}
+}
+
 func seedOpenAISearchArchive(
 	testContext *testing.T,
 	config runtimeconfig.Config,
