@@ -2,6 +2,10 @@ async page => {
   const baseURL = '__BASE_URL__';
   const validCSV = '__VALID_CSV__';
   const invalidCSV = '__INVALID_CSV__';
+  const sharedShellURLs = new Set([
+    'https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.css',
+    'https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.js'
+  ]);
   const browserErrors = [];
   const requestURLs = [];
   page.on('console', (message) => {
@@ -56,6 +60,51 @@ async page => {
 
   await page.setViewportSize({width: 1440, height: 1000});
   await page.goto(baseURL, {waitUntil: 'networkidle'});
+  await page.waitForFunction(
+    () => customElements.get('mpr-header') && customElements.get('mpr-footer')
+  );
+  await page.locator('mpr-header header[role="banner"]').waitFor();
+  await page.locator('mpr-footer footer[role="contentinfo"]').waitFor();
+  assert(
+    await page.locator('mpr-header header[role="banner"]').count() === 1 &&
+      await page.locator('mpr-footer footer[role="contentinfo"]').count() === 1,
+    'mpr-ui must own exactly one rendered header and footer'
+  );
+  assert(
+    await page.locator('.app-bar, footer.app-footer').count() === 0,
+    'the retired app-owned header or footer is still rendered'
+  );
+  assert(
+    await page.locator('#brand[slot="brand"]').isVisible() &&
+      await page.locator('#header-context[slot="nav-left"]').isVisible() &&
+      await page.locator('#language-switcher').isVisible() &&
+      await page.locator('#theme-toggle').isVisible(),
+    'mpr-header did not preserve the application controls in supported slots'
+  );
+  assert(
+    await page.locator('mpr-header [data-mpr-header="google-signin"]:visible').count() === 0,
+    'the local-only shell must not fabricate an authentication control'
+  );
+  assert(
+    await page.locator('mpr-footer a[href="https://mprlab.com/"]').count() === 1 &&
+      await page.locator(
+        'mpr-footer a[href="https://github.com/MarcoPoloResearchLab/download_your_data"]'
+      ).count() === 1 &&
+      await page.locator('#footer-local[slot="legal"], [slot="legal"] #footer-local').count() === 1,
+    'mpr-footer is missing its shared links or local-data disclosure'
+  );
+  await page.locator('#theme-toggle').click();
+  await page.waitForFunction(
+    () =>
+      document.documentElement.dataset.theme === 'light' &&
+      document.documentElement.dataset.mprTheme === 'light'
+  );
+  await page.locator('#theme-toggle').click();
+  await page.waitForFunction(
+    () =>
+      document.documentElement.dataset.theme === 'dark' &&
+      document.documentElement.dataset.mprTheme === 'dark'
+  );
   await page.locator('[data-provider-id="netflix"]').waitFor();
   assert(
     await page.locator('.provider-row[data-provider-id]').count() === 11,
@@ -752,11 +801,18 @@ async page => {
     (rawURL) =>
       !rawURL.startsWith('about:') &&
       rawURL !== baseURL &&
-      !rawURL.startsWith(`${baseURL}/`)
+      !rawURL.startsWith(`${baseURL}/`) &&
+      !sharedShellURLs.has(rawURL)
   );
   assert(
     externalRequests.length === 0,
     `browser made external requests: ${externalRequests.join(', ')}`
+  );
+  assert(
+    [...sharedShellURLs].every((url) => requestURLs.includes(url)),
+    `browser did not load the complete mpr-ui shell: ${[...sharedShellURLs]
+      .filter((url) => !requestURLs.includes(url))
+      .join(', ')}`
   );
   assert(browserErrors.length === 0, `browser errors: ${browserErrors.join(' | ')}`);
 }

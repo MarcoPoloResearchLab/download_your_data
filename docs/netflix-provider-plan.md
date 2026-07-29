@@ -80,8 +80,8 @@ Creation persists `receiving`; a complete staged upload advances through `valida
 | Concurrent enrichment | Keep bounded concurrency, but replace user-controlled workers, uncancelable token waits, unconditional sleeps, and partial-success ambiguity. |
 | TMDB cache | Persist under the private configured data root with an explicit cache identity and deletion contract. Do not copy or ship `netflix_cache.sqlite`. |
 | Dashboard aggregation | Preserve all maintained measures while correcting date validation, labels, deterministic ordering, match coverage, empty outcomes, and accessibility summaries. |
-| Standalone web server | Delete at the target boundary. Routes, temp-file cookies, templates, CDN assets, and the second listen address are not incorporated. |
-| Standalone Bootstrap/Chart.js dashboard | Recompose as checked ES modules inside the shared application shell with self-owned assets and the MPR operator visual language. |
+| Standalone web server | Delete at the target boundary. Its routes, temp-file cookies, templates, CDN dependencies, and second listen address are not incorporated. |
+| Standalone Bootstrap/Chart.js dashboard | Recompose as checked ES modules with self-owned application assets inside the shared `mpr-ui@latest` header and footer. |
 | `tmdbenrich` CLI | Preserve useful inspection, enrichment, and export operations as provider-scoped commands in the single `download-your-data` executable. Do not ship a second binary. |
 | Tracked SQLite cache | Do not import it. The source database is empty, is a generated runtime shape, and is not a product artifact. |
 
@@ -199,7 +199,7 @@ If TMDB is not configured, the UI gives the concrete server configuration name a
 2. **I008 — TMDB boundary and matching quality:** server-only config, injected client, rate/retry/cancellation, cache, match evaluation, attribution contract, and deterministic fake-server tests.
 3. **F006 — Local Netflix generation lifecycle:** private persistence, upload API, raw analytics, progress, atomic activation, replacement-safe storage, cancellation, and deletion.
 4. **F007 — TMDB generation and export lifecycle:** explicit consent, enriched replacement, completeness, cache provenance, enriched CSV, restart, and failure behavior.
-5. **F008 — Netflix provider workspace:** catalog entry in all locales, import flow, progress, dashboard, match-quality view, controls, Credits, accessibility, responsive behavior, and no-external-browser-network proof.
+5. **F008 — Netflix provider workspace:** catalog entry in all locales, import flow, progress, dashboard, match-quality view, controls, Credits, accessibility, responsive behavior, and exact shared-shell browser-network proof.
 6. **I009 — Single-executable operator parity:** provider-scoped Netflix inspect, enrich, and export commands backed by the same packages and configuration.
 7. **M409 — Standalone checkout retirement:** prove independent target parity and release, resolve any untracked/private data, then request explicit approval before removing `/Users/tyemirov/Development/netflix`.
 
@@ -212,7 +212,7 @@ Netflix incorporation is complete only when:
 - a synthetic viewing-history CSV passes import, raw analytics, fake-TMDB enrichment, restart, replacement, export, cancellation, and deletion through public entry points;
 - matching evaluation meets its recorded precision and review-coverage thresholds;
 - browser tests cover empty, validating, importing, ready-local, not-configured, enriching, ready-enriched, review, failure, replace, export, and delete states;
-- browser network assertions show no third-party frontend request;
+- browser network assertions permit only the two exact `mpr-ui@latest` shell requests;
 - `make ci` passes with no real TMDB call or secret;
 - a released target artifact passes without the standalone checkout;
 - the operator separately approves any destructive removal of the standalone directory.

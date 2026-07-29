@@ -9,6 +9,7 @@ The repository owns its complete conversation archive engine: OpenAI export insp
 - Go 1.26.1 or later
 - Node.js with `npx` for browser validation
 - Git, Python 3, and the GitHub CLI for release publication and Pages deployment
+- Network access to `cdn.jsdelivr.net` for the shared MPR header and footer
 
 ## Run locally
 
@@ -36,6 +37,13 @@ DOWNLOAD_YOUR_DATA_ADDRESS=127.0.0.1:9000 make up
 ```
 
 Non-loopback bind addresses are rejected because the first canonical release is local-only.
+
+The page loads `mpr-ui@latest` from jsDelivr to render the shared MPR Lab header
+and footer. Those asset requests carry ordinary browser request metadata but no
+imported files, provider records, search queries, screenshots, charts, or other
+personal data. The application has no authentication surface, so it uses
+`mpr-ui` only as declarative shell chrome and does not fabricate TAuth
+configuration or a sign-in control.
 
 Application state defaults to `~/.download-your-data`. To use another location, provide one absolute owner-only directory:
 

@@ -226,14 +226,29 @@ func TestFrontendProviderWorkspaceContract(testContext *testing.T) {
 	}
 }
 
-func TestFrontendAssetsAreSelfOwnedModules(testContext *testing.T) {
+func TestFrontendAssetsUseCurrentMPRShell(testContext *testing.T) {
 	index := readFrontendAsset(testContext, "index.html")
+	const sharedStylesheet = "https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.css"
+	const sharedScript = "https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.js"
 	if !strings.Contains(index, `<script type="module" src="app.js"></script>`) ||
 		!strings.Contains(index, `<link rel="stylesheet" href="styles.css">`) ||
+		!strings.Contains(index, `href="`+sharedStylesheet+`"`) ||
+		!strings.Contains(index, `src="`+sharedScript+`"`) ||
+		!strings.Contains(index, `<mpr-header`) ||
+		!strings.Contains(index, `<mpr-footer`) ||
+		!strings.Contains(index, `slot="brand"`) ||
+		!strings.Contains(index, `slot="nav-left"`) ||
+		!strings.Contains(index, `slot="aux"`) ||
+		!strings.Contains(index, `slot="legal"`) ||
+		strings.Count(index, "mpr-ui@latest") != 2 ||
+		strings.Contains(index, "mpr-ui@v") ||
+		strings.Contains(index, "mpr-ui-config.js") ||
+		strings.Contains(index, "config-ui.yaml") ||
+		strings.Contains(index, `<header class="app-bar"`) ||
+		strings.Contains(index, `<footer class="app-footer"`) ||
 		strings.Contains(index, "http://") ||
-		strings.Contains(index, "https://") ||
 		strings.Contains(strings.ToLower(index), "bootstrap") {
-		testContext.Fatalf("index.html is not the canonical self-owned module shell")
+		testContext.Fatalf("index.html is not the canonical shell-only mpr-ui integration")
 	}
 	appScript := readFrontendAsset(testContext, "app.js")
 	apiScript := readFrontendAsset(testContext, "api.js")
@@ -249,7 +264,7 @@ func TestFrontendAssetsAreSelfOwnedModules(testContext *testing.T) {
 			strings.Contains(content, "https://") ||
 			strings.Contains(content, "innerHTML") ||
 			strings.Contains(content, "style=") {
-			testContext.Fatalf("%s contains a forbidden external or unchecked frontend boundary", path)
+			testContext.Fatalf("%s contains a forbidden external or unchecked application boundary", path)
 		}
 		if strings.HasSuffix(path, ".js") &&
 			!strings.HasPrefix(content, "// @ts-check\n") {
@@ -262,11 +277,10 @@ func TestFrontendAssetsAreSelfOwnedModules(testContext *testing.T) {
 		strings.Contains(styles, "@import") {
 		testContext.Fatalf("frontend module or MPR style contract is incomplete")
 	}
-	if strings.Contains(contentSecurityPolicy, "unsafe-inline") ||
-		strings.Contains(contentSecurityPolicy, "https:") ||
-		!strings.Contains(contentSecurityPolicy, "script-src 'self'") ||
-		!strings.Contains(contentSecurityPolicy, "style-src 'self'") {
-		testContext.Fatalf("content security policy is not self-owned: %s", contentSecurityPolicy)
+	const expectedContentSecurityPolicy = "default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self'; form-action 'self'; frame-ancestors 'none'; img-src 'self' data:; object-src 'none'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'"
+	if contentSecurityPolicy != expectedContentSecurityPolicy ||
+		strings.Contains(contentSecurityPolicy, "unsafe-eval") {
+		testContext.Fatalf("content security policy does not isolate the shared shell: %s", contentSecurityPolicy)
 	}
 }
 

@@ -225,6 +225,27 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - `make test-browser`
   - `make ci`
 
+- [x] [B012] (P1) {F008,F009} Replace app-owned chrome with the shared MPR UI shell
+  Goal:
+  Use the current MPR Lab header and footer contract without changing this application's local-only, unauthenticated product boundary.
+
+  Requirements:
+  - Render the shell through declarative `mpr-header` and `mpr-footer` custom elements.
+  - Load both shared assets from the literal `mpr-ui@latest` jsDelivr contract.
+  - Preserve the brand, route context, Credits action, language selector, theme action, network links, and local-data disclosure through supported attributes, slots, and custom properties.
+  - Do not fabricate TAuth tenant data, `/config-ui.yaml`, a config loader, or a sign-in control for a product that has no authentication surface.
+  - Keep provider icons, guide screenshots, charts, API traffic, and personal-data requests local; permit only the two exact shared-shell asset requests.
+  - Narrow the CSP to jsDelivr for scripts and styles. Permit inline styles only because the current shared custom elements inject their component style sheets.
+
+  Deliverables:
+  - Shared header and footer integration with the retired local chrome removed.
+  - Localized Credits disclosure, documentation, CSP contract, and real-browser network coverage.
+
+  Validation:
+  - `make check-frontend`
+  - `make test-browser`
+  - `make ci`
+
 ## Improvements
 
 - [x] [I001] (P1) Establish the canonical local server and validation foundation
@@ -767,7 +788,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   Requirements:
   - Add OpenAI to every supported locale in the provider registry with current export instructions.
   - Migrate the browser application to checked ES modules and validated API payloads.
-  - Vendor required styles and scripts and tighten the CSP to self-owned assets; the local application must not require a CDN, font host, or other browser-side network dependency.
+  - Keep application styles, scripts, fonts, icons, screenshots, and charts self-owned; the only browser-side asset dependency is the exact shared `mpr-ui@latest` stylesheet and script.
   - Render one authoritative workflow state and emit intent-specific events.
   - Display backend-owned upload bytes, generation progress, readiness, and actionable LM Studio errors without simulated timers.
   - Run an inference readiness check before asking the user to upload a large archive.
@@ -778,7 +799,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   Validation:
   - Playwright coverage of upload, progress, failure, and ready states through the real server.
   - Playwright coverage of keyboard flow, accessible announcements, replacement confirmation, reconnect, and retry.
-  - Browser-network assertion proving the shipped page requests no external asset.
+  - Browser-network assertion proving the shipped page requests only the two exact shared-shell assets.
 
   Progress 2026-07-29: OpenAI now appears directly in the provider catalog as a guide-only surface in every supported locale. The guide follows OpenAI's current signed-in export flow, links to the official help article, explains how the downloaded ZIP connects to the existing local product commands, and has real-browser contract coverage. F002 remains open for the backend-owned browser upload, indexing, progress, failure, and replacement experience.
 
@@ -825,10 +846,11 @@ Format: `- [ ] [B042] (P1) {I007} Title`
 
 - [ ] [F005] (P1) {B001,B002,F004,I006} Package the first canonical local release
   Goal:
-  Deliver a self-contained Apple Silicon application artifact that owns the server, browser assets, archive engine, and operator workflows.
+  Deliver an Apple Silicon application artifact that owns the server, application assets, archive engine, and operator workflows while consuming the current shared MPR shell.
 
   Requirements:
-  - Build one `download-your-data` executable for macOS arm64 with embedded browser assets and no dependency on the source checkout.
+  - Build one `download-your-data` executable for macOS arm64 with embedded application assets and no dependency on the source checkout.
+  - Declare network access to the exact shared `mpr-ui@latest` stylesheet and script as the shell's only browser-side asset dependency.
   - Keep LM Studio as an explicit local runtime dependency and provide first-run readiness guidance for the required model and alias.
   - Start on loopback, use the canonical private data root, and open the local application without introducing hosted mode.
   - Include version, schema, model-identity, data-location, backup, replacement, and deletion guidance.
@@ -842,7 +864,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
 
   Validation:
   - Black-box artifact smoke covers first start, health, capabilities, upload, ready state, hybrid search, definitions, restart, replacement, and deletion.
-  - Browser test proves the packaged application has no external frontend requests.
+  - Browser test proves the packaged application requests only the two exact shared-shell assets.
   - `make ci`
   - `make release`
 
@@ -918,7 +940,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Keep import, TMDB enrichment, retry, cancel, replace, CSV export, and full delete as independent intent-specific controls.
   - Explain the local-only raw path and the exact TMDB title-query boundary before enrichment.
   - Display approved TMDB attribution and the current non-endorsement notice in Credits.
-  - Use checked ES modules and self-owned styles, scripts, fonts, icons, and chart assets with no browser-side third-party request.
+  - Use checked ES modules and self-owned application styles, scripts, fonts, icons, screenshots, and chart assets; load only the shared `mpr-ui@latest` header and footer assets from jsDelivr.
   - Provide keyboard operation, focus visibility, accessible progress announcements, chart summaries and tables, responsive rail collapse, and reduced-motion behavior.
   - Clean up event streams, pending requests, object URLs, chart instances, and subscriptions.
 
@@ -931,7 +953,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Playwright covers every declared state and user action through the real local server and deterministic fake TMDB.
   - Accessibility coverage asserts keyboard flow, names, focus, live announcements, status semantics, chart alternatives, contrast, and reduced motion.
   - Wide and narrow viewport coverage proves the main/rail composition, dense filters, tables, charts, and destructive confirmations remain usable.
-  - Browser network assertion proves no external frontend asset request and no TMDB call before explicit enrichment.
+  - Browser network assertion permits only the two exact shared-shell asset requests and proves no TMDB call occurs before explicit enrichment.
   - All four locales resolve the same `netflix` provider identity and backend state without missing copy or placeholder assets.
   - `make test-browser`
   - `make ci`

@@ -179,7 +179,7 @@ const REQUIRED_UI_KEYS = Object.freeze([
   'credits_intro',
   'tmdb_credit',
   'official_website',
-  'no_external_assets',
+  'shared_shell_dependency',
   'guide_title',
   'guide_steps_title',
   'official_help',
@@ -1294,7 +1294,7 @@ function renderCredits() {
   const local = element('section', {class: 'panel'});
   local.append(
     element('h2', {text: ui().local_only}),
-    element('p', {class: 'panel-copy', text: ui().no_external_assets})
+    element('p', {class: 'panel-copy', text: ui().shared_shell_dependency})
   );
   root.append(heading, panel, local);
   replaceApp(root);
@@ -1728,6 +1728,8 @@ function updateChrome() {
   const strings = localized();
   document.title = strings.site_title;
   document.documentElement.lang = state.locale;
+  const brand = document.querySelector('#brand');
+  brand.setAttribute('aria-label', strings.site_title);
   document.querySelector('#brand-label').textContent = strings.site_title;
   document.querySelector('#credits-button').textContent = ui().credits;
   document.querySelector('#footer-local').textContent = ui().local_only;
@@ -1778,6 +1780,7 @@ function initializeTheme() {
 function setTheme(theme) {
   state.theme = theme;
   document.documentElement.dataset.theme = theme;
+  document.documentElement.dataset.mprTheme = theme;
   localStorage.setItem(STORAGE_KEYS.theme, theme);
   if (state.data) {
     updateChrome();
