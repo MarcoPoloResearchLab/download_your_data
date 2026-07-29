@@ -34,6 +34,19 @@ const GUIDE_ONLY_PROVIDER_IDS = Object.freeze([
   'youtube',
   'google'
 ]);
+const INSTRUCTION_LINK_HOSTS = Object.freeze({
+  netflix: Object.freeze(['help.netflix.com']),
+  openai: Object.freeze(['chatgpt.com']),
+  facebook: Object.freeze(['accountscenter.facebook.com']),
+  instagram: Object.freeze(['accountscenter.instagram.com']),
+  whatsapp: Object.freeze(['faq.whatsapp.com']),
+  threads: Object.freeze(['accountscenter.instagram.com']),
+  linkedin: Object.freeze(['www.linkedin.com']),
+  tiktok: Object.freeze(['support.tiktok.com']),
+  x: Object.freeze(['x.com']),
+  youtube: Object.freeze(['takeout.google.com']),
+  google: Object.freeze(['takeout.google.com'])
+});
 const VIEWS = Object.freeze(['overview', 'catalog', 'match_quality']);
 const MATCH_STATUSES = Object.freeze(['matched', 'review', 'unmatched']);
 const LOCALE_TO_TMDB = Object.freeze({
@@ -542,6 +555,7 @@ function renderInstructionSteps(provider) {
   const list = element('ol', {class: 'instruction-steps'});
   provider.steps.forEach((step, index) => {
     const asset = assets.get(step.screenshot_id);
+    const target = instructionLinkURL(provider.id, asset.href);
     const visual = element(
       'figure',
       {class: 'instruction-visual'},
@@ -566,7 +580,18 @@ function renderInstructionSteps(provider) {
           text: String(index + 1),
           'aria-hidden': 'true'
         }),
-        element('p', {class: 'instruction-step-copy', text: step.text}),
+        element(
+          'div',
+          {class: 'instruction-step-content'},
+          element('p', {class: 'instruction-step-copy', text: step.text}),
+          element('a', {
+            class: 'instruction-step-link',
+            href: target.href,
+            target: '_blank',
+            rel: 'noopener noreferrer',
+            text: `${ui().open} ${target.hostname.replace(/^www\./, '')} ↗`
+          })
+        ),
         visual
       )
     );
@@ -1771,6 +1796,27 @@ function localizedProvider(providerID) {
   return localized().platforms.find((provider) => provider.id === providerID);
 }
 
+function instructionLinkURL(providerID, href) {
+  assertString(href, `${providerID} instruction link`);
+  let target;
+  try {
+    target = new URL(href);
+  } catch {
+    throw new Error(`${providerID} instruction link must be an absolute URL`);
+  }
+  const allowedHosts = INSTRUCTION_LINK_HOSTS[providerID];
+  if (
+    target.protocol !== 'https:' ||
+    target.username ||
+    target.password ||
+    !allowedHosts ||
+    !allowedHosts.includes(target.hostname)
+  ) {
+    throw new Error(`${providerID} instruction link must use an approved first-party HTTPS host`);
+  }
+  return target;
+}
+
 function validateAppData(data) {
   assertObject(data, 'data.json');
   assertArray(data.provider_registry, 'provider_registry');
@@ -1812,6 +1858,7 @@ function validateAppData(data) {
       assertObject(asset, `${providerID} screenshots[]`);
       assertString(asset.id, `${providerID} screenshot id`);
       assertString(asset.src, `${providerID} screenshot src`);
+      instructionLinkURL(providerID, asset.href);
       if (screenshotIDs.has(asset.id)) {
         throw new Error(`${providerID} has duplicate screenshot ${asset.id}`);
       }

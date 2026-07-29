@@ -1113,6 +1113,21 @@ tbody tr:hover {
   line-height: 1.55;
 }
 
+.instruction-step-content {
+  min-width: 0;
+}
+
+.instruction-step-link {
+  display: inline-block;
+  margin-top: 10px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 720;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  text-underline-offset: 3px;
+}
+
 .instruction-visual {
   min-width: 0;
   margin: 0;

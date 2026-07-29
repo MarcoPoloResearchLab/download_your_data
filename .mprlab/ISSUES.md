@@ -170,6 +170,41 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - `make test-local-lifecycle`
   - `make ci`
 
+- [x] [B009] (P1) {B004} Make every provider instruction directly actionable
+  Goal:
+  Give every numbered instruction its exact first-party destination instead of asking the user to locate a provider surface themselves.
+
+  Requirements:
+  - Bind each approved screenshot asset to the manifest's exact first-party direct route.
+  - Render one visible external link inside every numbered instruction step in every locale.
+  - Reject missing, non-HTTPS, credential-bearing, non-first-party, or manifest-mismatched routes.
+  - Preserve one screenshot and one instruction action per step at wide and narrow web viewport widths.
+
+  Deliverables:
+  - Canonical screenshot, action-link, and direct-route registry contract.
+  - Runtime validation, contract tests, capture documentation, and real-browser coverage.
+
+  Validation:
+  - `make validate-instruction-screenshots`
+  - `make test-browser`
+  - `make ci`
+
+- [x] [B010] (P1) {B008} Isolate browser validation from unrelated local servers
+  Goal:
+  Keep the browser gate deterministic without terminating or colliding with another repository's loopback listener.
+
+  Requirements:
+  - Allocate an available loopback port for the default browser-smoke server.
+  - Preserve the explicit browser-test address as the sole caller-controlled override.
+  - Never stop or reuse an unrelated process that happens to own the former fixed test port.
+
+  Deliverables:
+  - Collision-safe browser-smoke server startup.
+
+  Validation:
+  - `make test-browser`
+  - `make ci`
+
 ## Improvements
 
 - [x] [I001] (P1) Establish the canonical local server and validation foundation

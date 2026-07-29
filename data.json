@@ -49,115 +49,138 @@
     "netflix": [
       {
         "id": "netflix-viewing-activity-help",
-        "src": "images/instructions/netflix-viewing-activity-help.png"
+        "src": "images/instructions/netflix-viewing-activity-help.png",
+        "href": "https://help.netflix.com/en/node/101917"
       }
     ],
     "openai": [
       {
         "id": "openai-signed-in",
-        "src": "images/instructions/openai-signed-in.png"
+        "src": "images/instructions/openai-signed-in.png",
+        "href": "https://chatgpt.com/"
       },
       {
         "id": "openai-settings",
-        "src": "images/instructions/openai-settings.png"
+        "src": "images/instructions/openai-settings.png",
+        "href": "https://chatgpt.com/"
       },
       {
         "id": "openai-data-controls",
-        "src": "images/instructions/openai-data-controls.png"
+        "src": "images/instructions/openai-data-controls.png",
+        "href": "https://chatgpt.com/"
       },
       {
         "id": "openai-export-confirmation",
-        "src": "images/instructions/openai-export-confirmation.png"
+        "src": "images/instructions/openai-export-confirmation.png",
+        "href": "https://chatgpt.com/"
       }
     ],
     "facebook": [
       {
         "id": "facebook-accounts-center-information",
-        "src": "images/instructions/facebook-accounts-center-information.png"
+        "src": "images/instructions/facebook-accounts-center-information.png",
+        "href": "https://accountscenter.facebook.com/info_and_permissions/"
       },
       {
         "id": "facebook-export-entry",
-        "src": "images/instructions/facebook-export-entry.png"
+        "src": "images/instructions/facebook-export-entry.png",
+        "href": "https://accountscenter.facebook.com/info_and_permissions/dyi/"
       }
     ],
     "instagram": [
       {
         "id": "instagram-accounts-center-information",
-        "src": "images/instructions/instagram-accounts-center-information.png"
+        "src": "images/instructions/instagram-accounts-center-information.png",
+        "href": "https://accountscenter.instagram.com/info_and_permissions/"
       },
       {
         "id": "instagram-export-entry",
-        "src": "images/instructions/instagram-export-entry.png"
+        "src": "images/instructions/instagram-export-entry.png",
+        "href": "https://accountscenter.instagram.com/info_and_permissions/dyi/"
       }
     ],
     "whatsapp": [
       {
         "id": "whatsapp-account-info-help",
-        "src": "images/instructions/whatsapp-account-info-help.png"
+        "src": "images/instructions/whatsapp-account-info-help.png",
+        "href": "https://faq.whatsapp.com/526463418847093/"
       },
       {
         "id": "whatsapp-chat-export-help",
-        "src": "images/instructions/whatsapp-chat-export-help.png"
+        "src": "images/instructions/whatsapp-chat-export-help.png",
+        "href": "https://faq.whatsapp.com/1180414079177245/"
       }
     ],
     "threads": [
       {
         "id": "instagram-accounts-center-information",
-        "src": "images/instructions/instagram-accounts-center-information.png"
+        "src": "images/instructions/instagram-accounts-center-information.png",
+        "href": "https://accountscenter.instagram.com/info_and_permissions/"
       },
       {
         "id": "instagram-export-entry",
-        "src": "images/instructions/instagram-export-entry.png"
+        "src": "images/instructions/instagram-export-entry.png",
+        "href": "https://accountscenter.instagram.com/info_and_permissions/dyi/"
       }
     ],
     "linkedin": [
       {
         "id": "linkedin-data-privacy-navigation",
-        "src": "images/instructions/linkedin-data-privacy-navigation.png"
+        "src": "images/instructions/linkedin-data-privacy-navigation.png",
+        "href": "https://www.linkedin.com/mypreferences/d/categories/privacy"
       },
       {
         "id": "linkedin-download-data-options",
-        "src": "images/instructions/linkedin-download-data-options.png"
+        "src": "images/instructions/linkedin-download-data-options.png",
+        "href": "https://www.linkedin.com/mypreferences/d/download-my-data"
       }
     ],
     "tiktok": [
       {
         "id": "tiktok-request-data-help",
-        "src": "images/instructions/tiktok-request-data-help.png"
+        "src": "images/instructions/tiktok-request-data-help.png",
+        "href": "https://support.tiktok.com/en/account-and-privacy/personalized-ads-and-data/requesting-your-data"
       },
       {
         "id": "tiktok-download-data-help",
-        "src": "images/instructions/tiktok-download-data-help.png"
+        "src": "images/instructions/tiktok-download-data-help.png",
+        "href": "https://support.tiktok.com/en/account-and-privacy/personalized-ads-and-data/requesting-your-data"
       }
     ],
     "x": [
       {
         "id": "x-your-account-navigation",
-        "src": "images/instructions/x-your-account-navigation.png"
+        "src": "images/instructions/x-your-account-navigation.png",
+        "href": "https://x.com/settings/account"
       },
       {
         "id": "x-password-verification",
-        "src": "images/instructions/x-password-verification.png"
+        "src": "images/instructions/x-password-verification.png",
+        "href": "https://x.com/settings/download_your_data"
       }
     ],
     "youtube": [
       {
         "id": "youtube-takeout-selection",
-        "src": "images/instructions/youtube-takeout-selection.png"
+        "src": "images/instructions/youtube-takeout-selection.png",
+        "href": "https://takeout.google.com/settings/takeout/custom/youtube?hl=en"
       },
       {
         "id": "youtube-takeout-export-options",
-        "src": "images/instructions/youtube-takeout-export-options.png"
+        "src": "images/instructions/youtube-takeout-export-options.png",
+        "href": "https://takeout.google.com/settings/takeout/custom/youtube?hl=en"
       }
     ],
     "google": [
       {
         "id": "google-takeout-service-selection",
-        "src": "images/instructions/google-takeout-service-selection.png"
+        "src": "images/instructions/google-takeout-service-selection.png",
+        "href": "https://takeout.google.com/?hl=en"
       },
       {
         "id": "google-takeout-export-options",
-        "src": "images/instructions/google-takeout-export-options.png"
+        "src": "images/instructions/google-takeout-export-options.png",
+        "href": "https://takeout.google.com/?hl=en"
       }
     ]
   },

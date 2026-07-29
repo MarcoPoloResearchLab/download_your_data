@@ -109,6 +109,12 @@ async page => {
     fr: 'Comment télécharger vos données',
     ru: 'Как скачать ваши данные'
   };
+  const localeOpenAction = {
+    en: 'Open',
+    es: 'Abrir',
+    fr: 'Ouvrir',
+    ru: 'Открыть'
+  };
   for (const [locale, expectedAlt] of Object.entries(localeFacebookAlt)) {
     await selectLanguage(locale);
     assert(
@@ -127,7 +133,7 @@ async page => {
     );
     assert(
       await page.locator(
-        '#netflix a[href="https://help.netflix.com/en/node/101917"]'
+        '#netflix .guide-refs a[href="https://help.netflix.com/en/node/101917"]'
       ).count() === 1,
       `${locale} Netflix guide official help route is missing`
     );
@@ -170,10 +176,10 @@ async page => {
     );
     assert(
       await page.locator(
-        '#whatsapp a[href="https://faq.whatsapp.com/526463418847093/"]'
+        '#whatsapp .guide-refs a[href="https://faq.whatsapp.com/526463418847093/"]'
       ).count() === 1 &&
         await page.locator(
-          '#whatsapp a[href="https://faq.whatsapp.com/1180414079177245/"]'
+          '#whatsapp .guide-refs a[href="https://faq.whatsapp.com/1180414079177245/"]'
         ).count() === 1,
       `${locale} WhatsApp official export routes are missing`
     );
@@ -199,6 +205,16 @@ async page => {
       ).count() === 1,
       `${locale} Facebook screenshot alternative is missing`
     );
+    await route('#guide/google', '#google');
+    const googleFirstStepLink = page.locator(
+      '#google .instruction-step[data-step-index="1"] .instruction-step-link'
+    );
+    assert(
+      await googleFirstStepLink.getAttribute('href') === 'https://takeout.google.com/?hl=en' &&
+        (await googleFirstStepLink.textContent()).trim() ===
+          `${localeOpenAction[locale]} takeout.google.com ↗`,
+      `${locale} Google Takeout instruction is not directly actionable`
+    );
     await route('#provider/netflix', '.workspace');
     assert(
       (await page.locator('.workspace h1').textContent()).trim() === 'Netflix',
@@ -216,7 +232,7 @@ async page => {
     );
     assert(
       await page.locator(
-        '.import-panel a[href="https://help.netflix.com/en/node/101917"]'
+        '.import-panel .guide-refs a[href="https://help.netflix.com/en/node/101917"]'
       ).count() === 1,
       `${locale} Netflix official help route is missing`
     );
@@ -237,7 +253,21 @@ async page => {
     youtube: 7,
     google: 7
   };
+  const instructionLinkHosts = {
+    netflix: 'help.netflix.com',
+    openai: 'chatgpt.com',
+    facebook: 'accountscenter.facebook.com',
+    instagram: 'accountscenter.instagram.com',
+    whatsapp: 'faq.whatsapp.com',
+    threads: 'accountscenter.instagram.com',
+    linkedin: 'www.linkedin.com',
+    tiktok: 'support.tiktok.com',
+    x: 'x.com',
+    youtube: 'takeout.google.com',
+    google: 'takeout.google.com'
+  };
   const screenshotIDs = [];
+  const instructionHrefs = [];
   for (const [provider, expectedStepCount] of Object.entries(stepCounts)) {
     await route(`#guide/${provider}`, `#${provider}`);
     const providerRoot = `#${provider}`;
@@ -251,6 +281,26 @@ async page => {
         await step.locator('.instruction-step-copy').count() === 1,
         `${provider} step requires one instruction`
       );
+      const link = step.locator('a.instruction-step-link');
+      assert(await link.count() === 1, `${provider} step requires exactly one action link`);
+      const linkRecord = await link.evaluate((element) => ({
+        href: element.href,
+        hostname: new URL(element.href).hostname,
+        protocol: new URL(element.href).protocol,
+        rel: element.rel,
+        target: element.target,
+        text: element.textContent.trim()
+      }));
+      assert(
+        linkRecord.protocol === 'https:' &&
+          linkRecord.hostname === instructionLinkHosts[provider] &&
+          linkRecord.target === '_blank' &&
+          linkRecord.rel.split(/\s+/).includes('noopener') &&
+          linkRecord.rel.split(/\s+/).includes('noreferrer') &&
+          linkRecord.text === `Open ${linkRecord.hostname.replace(/^www\./, '')} ↗`,
+        `${provider} step action link is not the approved first-party target`
+      );
+      instructionHrefs.push(linkRecord.href);
       const stepNumber = await step.getAttribute('data-step-index');
       assert(
         await step.locator('.instruction-step-number').textContent() === stepNumber,
@@ -283,6 +333,7 @@ async page => {
     }
   }
   assert(screenshotIDs.length === 75, 'every instruction step must render one screenshot');
+  assert(instructionHrefs.length === 75, 'every instruction step must render one action link');
   assert(new Set(screenshotIDs).size === 21, 'approved screenshot set must contain 21 assets');
   assert(
     await page.locator('.screenshot-grid, .instruction-list, .ratio').count() === 0,
@@ -296,10 +347,22 @@ async page => {
     ).count() === 1,
     'YouTube direct export route is missing'
   );
+  assert(
+    await page.locator(
+      '#youtube .instruction-step-link[href="https://takeout.google.com/settings/takeout/custom/youtube?hl=en"]'
+    ).count() === 7,
+    'every YouTube instruction must open its approved Google Takeout route'
+  );
   await route('#guide/google', '#google');
   assert(
     await page.locator('#google a[href="https://takeout.google.com"]').count() === 1,
     'Google direct export route is missing'
+  );
+  assert(
+    await page.locator(
+      '#google .instruction-step-link[href="https://takeout.google.com/?hl=en"]'
+    ).count() === 7,
+    'every Google instruction must open Google Takeout'
   );
 
   await route('#credits', '.credits');
@@ -515,14 +578,17 @@ async page => {
   await route('#guide/netflix', '#netflix');
   const mobileGuideLayout = await page.evaluate(() => {
     const step = document.querySelector('#netflix .instruction-step');
-    const copy = step.querySelector('.instruction-step-copy').getBoundingClientRect();
+    const content = step.querySelector('.instruction-step-content').getBoundingClientRect();
+    const link = step.querySelector('.instruction-step-link').getBoundingClientRect();
     const image = step.querySelector('.instruction-screenshot').getBoundingClientRect();
     const stepBox = step.getBoundingClientRect();
     return {
       documentWidth: document.documentElement.scrollWidth,
       viewportWidth: window.innerWidth,
       gridColumns: getComputedStyle(step).gridTemplateColumns,
-      copyBottom: copy.bottom,
+      contentBottom: content.bottom,
+      linkLeft: link.left,
+      linkRight: link.right,
       imageTop: image.top,
       imageLeft: image.left,
       imageRight: image.right,
@@ -541,10 +607,12 @@ async page => {
     'mobile visual step must collapse to number and instruction columns'
   );
   assert(
-    mobileGuideLayout.imageTop >= mobileGuideLayout.copyBottom &&
+    mobileGuideLayout.imageTop >= mobileGuideLayout.contentBottom &&
+      mobileGuideLayout.linkLeft >= mobileGuideLayout.stepLeft &&
+      mobileGuideLayout.linkRight <= mobileGuideLayout.stepRight &&
       mobileGuideLayout.imageLeft >= mobileGuideLayout.stepLeft &&
       mobileGuideLayout.imageRight <= mobileGuideLayout.stepRight,
-    'mobile screenshot must stack beneath its instruction inside the numbered step'
+    'mobile action link and screenshot must remain inside the numbered step'
   );
   assert(
     await page.locator('#netflix .instruction-step img.instruction-screenshot').count() === 6,

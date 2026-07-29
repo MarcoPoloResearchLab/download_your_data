@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"image/png"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -44,6 +45,7 @@ type instructionScreenshotEntry struct {
 	Platform              string                    `json:"platform"`
 	ID                    string                    `json:"id"`
 	ExpectedVisibleLabels []string                  `json:"expected_visible_labels"`
+	DirectRoute           string                    `json:"direct_route"`
 	Surface               string                    `json:"surface"`
 	OutputPath            string                    `json:"output_path"`
 	PixelDimensions       instructionScreenshotSize `json:"pixel_dimensions"`
@@ -62,8 +64,9 @@ type instructionScreenshotData struct {
 }
 
 type instructionScreenshotAsset struct {
-	ID  string `json:"id"`
-	Src string `json:"src"`
+	ID   string `json:"id"`
+	Src  string `json:"src"`
+	Href string `json:"href"`
 }
 
 type instructionScreenshotLocale struct {
@@ -337,6 +340,27 @@ func validateInstructionScreenshotRegistry(
 					asset.ID,
 					asset.Src,
 					manifestScreenshot.OutputPath,
+				)
+			}
+			if asset.Href != manifestScreenshot.DirectRoute {
+				testContext.Fatalf(
+					"screenshot registry %s entry %q link = %q; manifest direct route = %q",
+					platformID,
+					asset.ID,
+					asset.Href,
+					manifestScreenshot.DirectRoute,
+				)
+			}
+			target, parseError := url.Parse(asset.Href)
+			if parseError != nil ||
+				target.Scheme != "https" ||
+				target.Hostname() == "" ||
+				target.User != nil {
+				testContext.Fatalf(
+					"screenshot registry %s entry %q has invalid action link %q",
+					platformID,
+					asset.ID,
+					asset.Href,
 				)
 			}
 			referencedManifestIDs[asset.ID] = struct{}{}

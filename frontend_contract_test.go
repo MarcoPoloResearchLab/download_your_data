@@ -137,6 +137,14 @@ func TestFrontendProviderWorkspaceContract(testContext *testing.T) {
 			}
 			assetIDs := make(map[string]struct{}, len(assets))
 			for _, asset := range assets {
+				if strings.TrimSpace(asset.Href) == "" {
+					testContext.Fatalf(
+						"locale %q provider %q screenshot %q has no action link",
+						localeID,
+						provider.ID,
+						asset.ID,
+					)
+				}
 				assetIDs[asset.ID] = struct{}{}
 			}
 			usedAssetIDs := make(map[string]struct{}, len(assets))

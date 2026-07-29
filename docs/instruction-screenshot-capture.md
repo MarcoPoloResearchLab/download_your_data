@@ -1,6 +1,6 @@
 # Per-step instruction screenshot capture
 
-This runbook is the canonical capture contract for every provider visual listed in `instruction-screenshots.json`. Every localized instruction step must reference one approved, self-owned screenshot. The application does not support text-only steps, provider-level screenshot galleries, placeholders, mocks, unofficial tutorials, or third-party search-result images.
+This runbook is the canonical capture contract for every provider visual listed in `instruction-screenshots.json`. Every localized instruction step must reference one approved, self-owned screenshot whose registry asset carries the manifest’s exact first-party direct route. The application does not support text-only or linkless steps, provider-level screenshot galleries, placeholders, mocks, unofficial tutorials, or third-party search-result images.
 
 The same approved image may support multiple adjacent steps when it accurately shows the shared panel or first-party instructions. English, Spanish, French, and Russian reuse the same image files with localized alternative text.
 
@@ -60,11 +60,12 @@ Provider-specific constraints:
 The set is accepted only when:
 
 - every provider has at least one approved screenshot;
-- every instruction step in every locale contains non-empty text, one valid screenshot ID, and localized alternative text;
+- every instruction step in every locale contains non-empty text, one valid screenshot ID, localized alternative text, and a visible link to that screenshot asset’s approved first-party direct route;
+- every registry action link is an absolute first-party HTTPS URL exactly matching the screenshot manifest’s `direct_route`;
 - every provider screenshot is used by at least one step and every manifest screenshot is referenced;
 - no provider-level screenshot gallery, text-only exception, placeholder, mock, or locale-specific duplicate survives;
 - every metadata-free PNG exists beneath `images/instructions/`;
-- wide and narrow browser coverage proves each step renders its visual beside the instruction without overflow;
+- wide and narrow browser coverage proves each step renders its visual and actionable link beside the instruction without overflow;
 - `make validate-instruction-screenshots`, `make test-browser`, and `make ci` pass.
 
 Provider names, trademarks, help content, and interfaces remain the property of their respective owners. Publication is an independent instructional reference and does not imply affiliation or endorsement.
