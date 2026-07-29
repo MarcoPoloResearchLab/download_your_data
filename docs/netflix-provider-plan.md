@@ -138,7 +138,7 @@ Replace the wrapping platform-link masthead and marketing hero with a compact pr
 - one main work surface plus a `210px` state/action rail at wide viewport widths;
 - the rail becomes an inline status panel on small screens.
 
-Every compact provider card opens its permanent visual download guide. A separate Data analysis action appears only for a provider with a current browser workspace and remains isolated from the card link. Netflix is the current workspace-capable provider with backend-owned state chips such as `NO DATA`, `READY LOCAL`, `ENRICHING`, `READY + TMDB`, and `ACTION NEEDED`. The registry surface is ready for OpenAI to become workspace-capable only when its separate lifecycle and browser issues deliver that backend contract; the existing operator commands do not constitute a browser route.
+Every compact provider card opens its permanent visual download guide. A separate Data analysis action occupies the card's top-right metadata position only for a provider with a current browser workspace and remains isolated from the card link. The catalog does not duplicate transient provider state; the Netflix workspace itself owns backend states such as `NO DATA`, `READY LOCAL`, `ENRICHING`, `READY + TMDB`, and `ACTION NEEDED`. The registry surface is ready for OpenAI to become workspace-capable only when its separate lifecycle and browser issues deliver that backend contract; the existing operator commands do not constitute a browser route.
 
 ### Empty state and import
 

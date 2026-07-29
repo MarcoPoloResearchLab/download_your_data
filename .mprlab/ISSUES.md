@@ -258,7 +258,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Render three columns at the wide application width, two columns at intermediate widths, and one column on a narrow web viewport.
   - Display every reviewed local provider logo as a prominent, legible product identity.
   - Keep the localized provider name, surface type, full summary, and actionable controls visible in every card.
-  - Preserve one canonical guide destination per provider and separate state and workspace controls for Netflix.
+  - Preserve one canonical guide destination per provider and the separate workspace control for Netflix.
   - Keep cards compact, flat, bordered, responsive, keyboard-operable, and free of horizontal overflow.
 
   Deliverables:
@@ -282,11 +282,31 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Render one localized Data analysis button only for providers that declare a current browser workspace route.
   - Keep the Data analysis control above the card link so it opens the provider application while every other card location opens the guide.
   - Treat Netflix as the current browser-workspace provider. Do not fabricate an OpenAI browser route while F001 and F002 remain incomplete; the existing OpenAI operator analysis commands are not a browser application.
-  - Preserve provider summaries, Netflix state, focus visibility, wide and narrow containment, and the shared MPR shell.
+  - Preserve provider summaries, focus visibility, wide and narrow containment, and the shared MPR shell.
 
   Deliverables:
   - Compact guide-linked provider cards with unframed logos and one distinct Netflix Data analysis action.
   - Localized action copy and real-browser assertions for card geometry, pointer and keyboard routing, application-action isolation, and responsive containment.
+
+  Validation:
+  - `make check-frontend`
+  - `make test-browser`
+  - `make ci`
+
+- [x] [B015] (P1) {B014,F008} Replace the catalog state pill with the analysis action
+  Goal:
+  Put the useful Netflix application action in the card's highest-priority secondary position instead of repeating transient workspace state.
+
+  Requirements:
+  - Place the localized Data analysis button at the top right of the Netflix card beside the Guide metadata.
+  - Remove the Netflix state pill and every other provider-state chip from the catalog.
+  - Keep backend-owned Netflix state inside the workspace where it has operational context.
+  - Preserve the full-card guide link beneath the higher stacking analysis control.
+  - Prove top-right alignment, application routing, guide routing, localization, focus operation, and narrow containment in a real browser.
+
+  Deliverables:
+  - One top-right Netflix Data analysis action with no catalog state pill.
+  - Updated responsive and browser contracts.
 
   Validation:
   - `make check-frontend`

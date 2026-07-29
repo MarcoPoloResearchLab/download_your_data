@@ -204,15 +204,11 @@ async page => {
   assert(
     await page.locator('.provider-card-guide[data-route="guide"]').count() === 11 &&
       await page.locator('.provider-card [data-route="guide"] button').count() === 0 &&
-      await page.locator('.provider-card:not([data-provider-id="netflix"]) .provider-actions')
-        .count() === 0 &&
+      await page.locator('.provider-card .state-chip').count() === 0 &&
       await page.locator(
-        '.provider-card:not([data-provider-id="netflix"]) .state-chip'
-      ).count() === 0 &&
-      await page.locator(
-        '.provider-card[data-provider-id="netflix"] .provider-card-meta .state-chip'
-      ).count() === 1,
-    'every catalog card must link directly to its guide without a View guide button'
+        '.provider-card:not([data-provider-id="netflix"]) .provider-analysis-action'
+      ).count() === 0,
+    'every catalog card must link directly to its guide without a guide button or state pill'
   );
   assert(
     await page.locator('[data-provider-id="netflix"]').count() === 1,
@@ -223,16 +219,40 @@ async page => {
       '[data-provider-id="netflix"] .provider-card-guide[data-provider="netflix"]'
     ).count() === 1 &&
       await page.locator(
-        '[data-provider-id="netflix"] .provider-actions [data-route="netflix"]'
+        '[data-provider-id="netflix"] .provider-card-meta .provider-analysis-action[data-route="netflix"]'
       ).count() === 1 &&
       (await page.locator(
-        '[data-provider-id="netflix"] .provider-actions [data-route="netflix"]'
+        '[data-provider-id="netflix"] .provider-analysis-action[data-route="netflix"]'
       ).textContent()).trim() === 'Data analysis',
-    'Netflix catalog entry must link to its guide and expose one Data analysis application action'
+    'Netflix catalog entry must expose Data analysis in its top metadata row'
+  );
+  const netflixAnalysisGeometry = await page
+    .locator('[data-provider-id="netflix"]')
+    .evaluate((card) => {
+      const copyBox = card.querySelector('.provider-card-copy').getBoundingClientRect();
+      const metadataBox = card.querySelector('.provider-card-meta').getBoundingClientRect();
+      const actionBox = card.querySelector('.provider-analysis-action').getBoundingClientRect();
+      const nameBox = card.querySelector('.provider-name').getBoundingClientRect();
+      return {
+        actionBottom: actionBox.bottom,
+        actionRight: actionBox.right,
+        actionTop: actionBox.top,
+        copyRight: copyBox.right,
+        metadataBottom: metadataBox.bottom,
+        metadataTop: metadataBox.top,
+        nameTop: nameBox.top
+      };
+    });
+  assert(
+    Math.abs(netflixAnalysisGeometry.actionRight - netflixAnalysisGeometry.copyRight) <= 1 &&
+      netflixAnalysisGeometry.actionTop >= netflixAnalysisGeometry.metadataTop &&
+      netflixAnalysisGeometry.actionBottom <= netflixAnalysisGeometry.metadataBottom + 1 &&
+      netflixAnalysisGeometry.actionBottom <= netflixAnalysisGeometry.nameTop,
+    'Netflix Data analysis must occupy the card top-right position above its name'
   );
   assert(
     await page.locator('[data-provider-id="openai"]').count() === 1 &&
-      await page.locator('[data-provider-id="openai"] .provider-actions').count() === 0,
+      await page.locator('[data-provider-id="openai"] .provider-analysis-action').count() === 0,
     'OpenAI must remain guide-linked until its browser workspace contract exists'
   );
   assert(
@@ -291,7 +311,7 @@ async page => {
     );
     assert(
       (await page.locator(
-        '[data-provider-id="netflix"] .provider-actions [data-route="netflix"]'
+        '[data-provider-id="netflix"] .provider-analysis-action[data-route="netflix"]'
       ).textContent()).trim() === localeDataAnalysis[locale],
       `${locale} Netflix Data analysis action is not localized`
     );
@@ -711,26 +731,34 @@ async page => {
   const mobileNetflixCatalog = await page.evaluate(() => {
     const grid = document.querySelector('.catalog-grid');
     const card = document.querySelector('[data-provider-id="netflix"]');
-    const actions = card.querySelector('.provider-actions');
+    const analysisAction = card.querySelector('.provider-analysis-action');
     const guideOnlyCards = [
       ...document.querySelectorAll(
         '.provider-card:not([data-provider-id="netflix"])'
       )
     ];
     const cardBox = card.getBoundingClientRect();
-    const actionsBox = actions.getBoundingClientRect();
+    const actionBox = analysisAction.getBoundingClientRect();
+    const copyBox = card.querySelector('.provider-card-copy').getBoundingClientRect();
+    const metadataBox = card.querySelector('.provider-card-meta').getBoundingClientRect();
+    const nameBox = card.querySelector('.provider-name').getBoundingClientRect();
     const providerIcons = [...document.querySelectorAll('.provider-icon')];
     const providerCards = [...document.querySelectorAll('.provider-card')];
     return {
       documentWidth: document.documentElement.scrollWidth,
       viewportWidth: window.innerWidth,
       gridColumns: getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length,
-      actionCount: actions.querySelectorAll('button').length,
-      analysisLabel: actions.textContent.trim(),
-      actionsLeft: actionsBox.left,
-      actionsRight: actionsBox.right,
+      actionCount: card.querySelectorAll('.provider-analysis-action').length,
+      actionBottom: actionBox.bottom,
+      actionRight: actionBox.right,
+      actionTop: actionBox.top,
+      analysisLabel: analysisAction.textContent.trim(),
       cardLeft: cardBox.left,
       cardRight: cardBox.right,
+      copyRight: copyBox.right,
+      metadataBottom: metadataBox.bottom,
+      metadataTop: metadataBox.top,
+      nameTop: nameBox.top,
       cardsCompactAndHorizontal: providerCards.every((providerCard) => {
         const providerCardBox = providerCard.getBoundingClientRect();
         const mark = providerCard.querySelector('.provider-mark').getBoundingClientRect();
@@ -767,11 +795,12 @@ async page => {
       ),
       guideOnlyCardsHaveNoAppAction: guideOnlyCards.every((guideOnlyCard) => {
         return (
-          guideOnlyCard.querySelector('.provider-actions') === null &&
+          guideOnlyCard.querySelector('.provider-analysis-action') === null &&
           guideOnlyCard.querySelectorAll('.provider-card-guide[data-route="guide"]').length === 1 &&
           guideOnlyCard.querySelector('.state-chip') === null
         );
-      })
+      }),
+      stateChipCount: document.querySelectorAll('.provider-card .state-chip').length
     };
   });
   assert(
@@ -779,9 +808,13 @@ async page => {
       mobileNetflixCatalog.gridColumns === 1 &&
       mobileNetflixCatalog.actionCount === 1 &&
       mobileNetflixCatalog.analysisLabel === 'Data analysis' &&
-      mobileNetflixCatalog.actionsLeft >= mobileNetflixCatalog.cardLeft &&
-      mobileNetflixCatalog.actionsRight <= mobileNetflixCatalog.cardRight,
-    'mobile Netflix provider card must contain its distinct Data analysis action without overflow'
+      Math.abs(mobileNetflixCatalog.actionRight - mobileNetflixCatalog.copyRight) <= 1 &&
+      mobileNetflixCatalog.actionTop >= mobileNetflixCatalog.metadataTop &&
+      mobileNetflixCatalog.actionBottom <= mobileNetflixCatalog.metadataBottom + 1 &&
+      mobileNetflixCatalog.actionBottom <= mobileNetflixCatalog.nameTop &&
+      mobileNetflixCatalog.actionRight <= mobileNetflixCatalog.cardRight &&
+      mobileNetflixCatalog.stateChipCount === 0,
+    'mobile Netflix Data analysis must replace the state pill at the card top right'
   );
   assert(
     mobileNetflixCatalog.guideOnlyCardsHaveNoAppAction &&

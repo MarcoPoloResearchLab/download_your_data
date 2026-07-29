@@ -450,9 +450,13 @@ function renderCatalog() {
         text: ui().guide
       })
     );
-    if (providerDefinition.id === 'netflix') {
-      const presentation = netflixStatePresentation();
-      metadata.append(stateChip(presentation.label, presentation.tone));
+    if (providerDefinition.surface === 'workspace') {
+      metadata.append(
+        actionButton(ui().data_analysis, {
+          'data-route': providerDefinition.id,
+          class: 'button button-primary provider-analysis-action'
+        })
+      );
     }
     const cardCopy = element(
       'div',
@@ -461,16 +465,6 @@ function renderCatalog() {
       element('h2', {class: 'provider-name', text: localized.title}),
       element('p', {class: 'provider-summary', text: localized.intro})
     );
-    if (providerDefinition.surface === 'workspace') {
-      const actions = element('div', {class: 'provider-actions'});
-      actions.append(
-        actionButton(ui().data_analysis, {
-          'data-route': providerDefinition.id,
-          class: 'button button-primary'
-        })
-      );
-      cardCopy.append(actions);
-    }
     card.append(
       guideLink,
       providerMark(providerDefinition.id, localized.title, providerDefinition.icon_src),

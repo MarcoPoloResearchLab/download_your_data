@@ -435,21 +435,14 @@ mpr-footer {
   line-height: 1.45;
 }
 
-.provider-actions {
+.provider-analysis-action {
   position: relative;
   z-index: 2;
-  display: flex;
-  margin-top: 9px;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.provider-actions .button {
-  min-height: 28px;
-  padding: 4px 9px;
-  flex: 0 1 auto;
-  font-size: 11px;
+  min-height: 24px;
+  margin-left: auto;
+  padding: 3px 7px;
+  font-size: 10px;
+  white-space: nowrap;
 }
 
 .state-chip {
