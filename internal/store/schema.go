@@ -430,6 +430,6 @@ func (store *Store) incompatibleSchemaError(reason string) error {
 		"database %q %s; archive it outside the configured data root, then re-import its source export with `%s import <openai-export.zip>`",
 		store.DatabasePath(),
 		reason,
-		product.ArchiveCommandName,
+		product.CommandName,
 	)
 }

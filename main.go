@@ -37,13 +37,24 @@ func main() {
 		logger.Error("application configuration failed", "error_type", runtimeconfig.Code(configError))
 		os.Exit(1)
 	}
-	if runError := run(applicationContext, config, logger); runError != nil {
-		logger.Error("application stopped", "error_type", "application_runtime_failed")
+	if runError := runCommand(
+		applicationContext,
+		os.Args[1:],
+		config,
+		logger,
+	); runError != nil {
+		logger.Error(
+			"application command failed",
+			"error_type",
+			"command_failed",
+			"error",
+			runError,
+		)
 		os.Exit(1)
 	}
 }
 
-func run(
+func runServer(
 	applicationContext context.Context,
 	config runtimeconfig.Config,
 	logger *slog.Logger,

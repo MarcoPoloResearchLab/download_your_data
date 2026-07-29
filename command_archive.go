@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
-	"crypto/rand"
 	"flag"
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 	"time"
@@ -25,24 +25,15 @@ import (
 
 const version = "0.2.0"
 
-func main() {
-	homeDirectory, homeError := os.UserHomeDir()
-	if homeError != nil {
-		fmt.Fprintln(os.Stderr, "error: resolve user home directory:", homeError)
-		os.Exit(1)
+func runCommand(
+	applicationContext context.Context,
+	arguments []string,
+	config runtimeconfig.Config,
+	logger *slog.Logger,
+) error {
+	if applicationContext == nil || logger == nil {
+		return fmt.Errorf("run %s command: context and logger are required", product.CommandName)
 	}
-	config, configError := runtimeconfig.Load(os.Getenv, homeDirectory, rand.Reader)
-	if configError != nil {
-		fmt.Fprintln(os.Stderr, "error:", configError)
-		os.Exit(1)
-	}
-	if runError := run(os.Args[1:], config); runError != nil {
-		fmt.Fprintln(os.Stderr, "error:", runError)
-		os.Exit(1)
-	}
-}
-
-func run(arguments []string, config runtimeconfig.Config) error {
 	if len(arguments) == 0 {
 		printUsage()
 		return nil
@@ -50,20 +41,25 @@ func run(arguments []string, config runtimeconfig.Config) error {
 	command := arguments[0]
 	commandArguments := arguments[1:]
 	switch command {
+	case "serve":
+		if len(commandArguments) != 0 {
+			return fmt.Errorf("usage: %s serve", product.CommandName)
+		}
+		return runServer(applicationContext, config, logger)
 	case "inspect":
 		return runInspect(commandArguments)
 	case "import":
-		return runImport(config, commandArguments)
+		return runImport(applicationContext, config, commandArguments)
 	case "status":
-		return runStatus(config, commandArguments)
+		return runStatus(applicationContext, config, commandArguments)
 	case "embed":
-		return runEmbed(config, commandArguments)
+		return runEmbed(applicationContext, config, commandArguments)
 	case "index":
-		return runIndex(config, commandArguments)
+		return runIndex(applicationContext, config, commandArguments)
 	case "search":
-		return runSearch(config, commandArguments)
+		return runSearch(applicationContext, config, commandArguments)
 	case "definitions":
-		return runDefinitions(config, commandArguments)
+		return runDefinitions(applicationContext, config, commandArguments)
 	case "version":
 		fmt.Println(version)
 		return nil
@@ -83,7 +79,7 @@ func runInspect(arguments []string) error {
 	if flagSet.NArg() != 1 {
 		return fmt.Errorf(
 			"usage: %s inspect <openai-export.zip|conversations.json|directory>",
-			product.ArchiveCommandName,
+			product.CommandName,
 		)
 	}
 	collection, discoverError := exportformat.DiscoverSources(flagSet.Arg(0))
@@ -120,14 +116,18 @@ func runInspect(arguments []string) error {
 	return nil
 }
 
-func runImport(config runtimeconfig.Config, arguments []string) error {
+func runImport(
+	applicationContext context.Context,
+	config runtimeconfig.Config,
+	arguments []string,
+) error {
 	flagSet := flag.NewFlagSet("import", flag.ContinueOnError)
 	forceImport := flagSet.Bool("force", false, "import even when the same export hash was already completed")
 	if parseError := flagSet.Parse(arguments); parseError != nil {
 		return parseError
 	}
 	if flagSet.NArg() != 1 {
-		return fmt.Errorf("usage: %s import <openai-export.zip>", product.ArchiveCommandName)
+		return fmt.Errorf("usage: %s import <openai-export.zip>", product.CommandName)
 	}
 
 	openedStore, openError := store.Open(config.ArchiveDatabase())
@@ -150,7 +150,7 @@ func runImport(config runtimeconfig.Config, arguments []string) error {
 			}
 		},
 	}
-	result, importError := importer.Import(context.Background(), flagSet.Arg(0), *forceImport)
+	result, importError := importer.Import(applicationContext, flagSet.Arg(0), *forceImport)
 	if importError != nil {
 		return importError
 	}
@@ -163,20 +163,24 @@ func runImport(config runtimeconfig.Config, arguments []string) error {
 	return nil
 }
 
-func runStatus(config runtimeconfig.Config, arguments []string) error {
+func runStatus(
+	applicationContext context.Context,
+	config runtimeconfig.Config,
+	arguments []string,
+) error {
 	flagSet := flag.NewFlagSet("status", flag.ContinueOnError)
 	if parseError := flagSet.Parse(arguments); parseError != nil {
 		return parseError
 	}
 	if flagSet.NArg() != 0 {
-		return fmt.Errorf("usage: %s status", product.ArchiveCommandName)
+		return fmt.Errorf("usage: %s status", product.CommandName)
 	}
 	openedStore, openError := store.Open(config.ArchiveDatabase())
 	if openError != nil {
 		return openError
 	}
 	defer openedStore.Close()
-	statistics, statsError := openedStore.Stats(context.Background())
+	statistics, statsError := openedStore.Stats(applicationContext)
 	if statsError != nil {
 		return statsError
 	}
@@ -194,7 +198,9 @@ func runStatus(config runtimeconfig.Config, arguments []string) error {
 	fmt.Printf("Messages without OpenAI source message ID: %d\n", statistics.MessagesWithoutSourceID)
 	fmt.Printf("Embedding configurations: %d\n", statistics.EmbeddingConfigurations)
 	fmt.Printf("Embeddings: %d\n", statistics.Embeddings)
-	configurationSummaries, summaryError := openedStore.ListEmbeddingConfigSummaries(context.Background())
+	configurationSummaries, summaryError := openedStore.ListEmbeddingConfigSummaries(
+		applicationContext,
+	)
 	if summaryError != nil {
 		return summaryError
 	}
@@ -212,7 +218,9 @@ func runStatus(config runtimeconfig.Config, arguments []string) error {
 			summary.Config.BaseURL,
 		)
 	}
-	searchIndexSummaries, searchSummaryError := openedStore.ListSearchIndexSummaries(context.Background())
+	searchIndexSummaries, searchSummaryError := openedStore.ListSearchIndexSummaries(
+		applicationContext,
+	)
 	if searchSummaryError != nil {
 		return searchSummaryError
 	}
@@ -237,7 +245,11 @@ func runStatus(config runtimeconfig.Config, arguments []string) error {
 	return nil
 }
 
-func runEmbed(runtimeConfig runtimeconfig.Config, arguments []string) error {
+func runEmbed(
+	applicationContext context.Context,
+	runtimeConfig runtimeconfig.Config,
+	arguments []string,
+) error {
 	flagSet := flag.NewFlagSet("embed", flag.ContinueOnError)
 	provider := flagSet.String("provider", inference.DefaultEmbeddingProvider, "embedding provider label")
 	model := flagSet.String("model", inference.DefaultEmbeddingModel, "embedding model or local server alias")
@@ -251,7 +263,7 @@ func runEmbed(runtimeConfig runtimeconfig.Config, arguments []string) error {
 		return parseError
 	}
 	if flagSet.NArg() != 0 {
-		return fmt.Errorf("usage: %s embed [options]", product.ArchiveCommandName)
+		return fmt.Errorf("usage: %s embed [options]", product.CommandName)
 	}
 
 	apiKey, apiKeyError := readOptionalAPIKey(*apiKeyEnvironment)
@@ -284,7 +296,7 @@ func runEmbed(runtimeConfig runtimeconfig.Config, arguments []string) error {
 			fmt.Printf("Embedded this run: %d; total for configuration: %d\n", progress.EmbeddedThisRun, progress.TotalEmbedded)
 		},
 	}
-	embeddingConfig, embeddedCount, embeddingError := service.Run(context.Background(), embedding.ServiceOptions{
+	embeddingConfig, embeddedCount, embeddingError := service.Run(applicationContext, embedding.ServiceOptions{
 		Provider:        *provider,
 		Model:           *model,
 		Dimensions:      *dimensions,
@@ -306,9 +318,13 @@ func runEmbed(runtimeConfig runtimeconfig.Config, arguments []string) error {
 	return nil
 }
 
-func runIndex(runtimeConfig runtimeconfig.Config, arguments []string) error {
+func runIndex(
+	applicationContext context.Context,
+	runtimeConfig runtimeconfig.Config,
+	arguments []string,
+) error {
 	if len(arguments) == 0 || arguments[0] != "build" {
-		return fmt.Errorf("usage: %s index build [options]", product.ArchiveCommandName)
+		return fmt.Errorf("usage: %s index build [options]", product.CommandName)
 	}
 	flagSet := flag.NewFlagSet("index build", flag.ContinueOnError)
 	name := flagSet.String("name", retrieval.DefaultIndexName, "conversation search index name")
@@ -325,7 +341,7 @@ func runIndex(runtimeConfig runtimeconfig.Config, arguments []string) error {
 		return parseError
 	}
 	if flagSet.NArg() != 0 {
-		return fmt.Errorf("usage: %s index build [options]", product.ArchiveCommandName)
+		return fmt.Errorf("usage: %s index build [options]", product.CommandName)
 	}
 	if *batchSize <= 0 {
 		return fmt.Errorf("--batch-size must be positive")
@@ -371,7 +387,7 @@ func runIndex(runtimeConfig runtimeconfig.Config, arguments []string) error {
 			)
 		},
 	}
-	searchConfig, embeddedCount, indexError := service.Run(context.Background(), retrieval.IndexOptions{
+	searchConfig, embeddedCount, indexError := service.Run(applicationContext, retrieval.IndexOptions{
 		Name:             *name,
 		Provider:         *provider,
 		Model:            *model,
@@ -404,7 +420,11 @@ func runIndex(runtimeConfig runtimeconfig.Config, arguments []string) error {
 	return nil
 }
 
-func runSearch(runtimeConfig runtimeconfig.Config, arguments []string) error {
+func runSearch(
+	applicationContext context.Context,
+	runtimeConfig runtimeconfig.Config,
+	arguments []string,
+) error {
 	flagSet := flag.NewFlagSet("search", flag.ContinueOnError)
 	query := flagSet.String("query", "", "natural-language conversation search query")
 	mode := flagSet.String("mode", retrieval.SearchModeHybrid, "hybrid, semantic, or lexical")
@@ -424,7 +444,7 @@ func runSearch(runtimeConfig runtimeconfig.Config, arguments []string) error {
 		return parseError
 	}
 	if flagSet.NArg() != 0 {
-		return fmt.Errorf("usage: %s search --query <topic> [options]", product.ArchiveCommandName)
+		return fmt.Errorf("usage: %s search --query <topic> [options]", product.CommandName)
 	}
 	if strings.TrimSpace(*query) == "" {
 		return fmt.Errorf("--query is required")
@@ -469,9 +489,9 @@ func runSearch(runtimeConfig runtimeconfig.Config, arguments []string) error {
 	var searchIndex domain.SearchIndexConfig
 	var indexError error
 	if *indexID > 0 {
-		searchIndex, indexError = openedStore.SearchIndexByID(context.Background(), *indexID)
+		searchIndex, indexError = openedStore.SearchIndexByID(applicationContext, *indexID)
 	} else {
-		searchIndex, indexError = openedStore.LatestReadySearchIndex(context.Background())
+		searchIndex, indexError = openedStore.LatestReadySearchIndex(applicationContext)
 	}
 	if indexError != nil {
 		return indexError
@@ -486,7 +506,7 @@ func runSearch(runtimeConfig runtimeconfig.Config, arguments []string) error {
 				"search index %d uses inference URL %s; run %s index build --rebuild with the current runtime configuration",
 				searchIndex.ID,
 				searchIndex.BaseURL,
-				product.ArchiveCommandName,
+				product.CommandName,
 			)
 		}
 		apiKey, apiKeyError := readOptionalAPIKey(*apiKeyEnvironment)
@@ -506,7 +526,7 @@ func runSearch(runtimeConfig runtimeconfig.Config, arguments []string) error {
 	untilMillis := optionalTimeMillis(untilTime)
 	engine := retrieval.Engine{Store: openedStore, QueryEmbedder: queryEmbedder, QueryBaseURL: effectiveBaseURL}
 	startedAt := time.Now()
-	results, searchError := engine.Search(context.Background(), retrieval.SearchOptions{
+	results, searchError := engine.Search(applicationContext, retrieval.SearchOptions{
 		IndexID:          searchIndex.ID,
 		Query:            *query,
 		Mode:             *mode,
@@ -615,7 +635,11 @@ func oneLineExcerpt(value string, maximumRunes int) string {
 	return string(runes[:maximumRunes]) + "…"
 }
 
-func runDefinitions(runtimeConfig runtimeconfig.Config, arguments []string) error {
+func runDefinitions(
+	applicationContext context.Context,
+	runtimeConfig runtimeconfig.Config,
+	arguments []string,
+) error {
 	flagSet := flag.NewFlagSet("definitions", flag.ContinueOnError)
 	months := flagSet.Int("months", 3, "lookback in calendar months when --since is omitted")
 	sinceValue := flagSet.String("since", "", "start date or RFC3339 timestamp")
@@ -640,7 +664,7 @@ func runDefinitions(runtimeConfig runtimeconfig.Config, arguments []string) erro
 		return parseError
 	}
 	if flagSet.NArg() != 0 {
-		return fmt.Errorf("usage: %s definitions [options]", product.ArchiveCommandName)
+		return fmt.Errorf("usage: %s definitions [options]", product.CommandName)
 	}
 	outputFile, outputFileError := runtimeConfig.DataRoot().File(*outputPath)
 	if outputFileError != nil {
@@ -679,9 +703,14 @@ func runDefinitions(runtimeConfig runtimeconfig.Config, arguments []string) erro
 	if *semanticEnabled {
 		var embeddingConfigError error
 		if *embeddingConfigID > 0 {
-			embeddingConfig, embeddingConfigError = openedStore.EmbeddingConfigByID(context.Background(), *embeddingConfigID)
+			embeddingConfig, embeddingConfigError = openedStore.EmbeddingConfigByID(
+				applicationContext,
+				*embeddingConfigID,
+			)
 		} else {
-			embeddingConfig, embeddingConfigError = openedStore.LatestReadyEmbeddingConfig(context.Background())
+			embeddingConfig, embeddingConfigError = openedStore.LatestReadyEmbeddingConfig(
+				applicationContext,
+			)
 		}
 		if embeddingConfigError != nil {
 			return embeddingConfigError
@@ -699,7 +728,7 @@ func runDefinitions(runtimeConfig runtimeconfig.Config, arguments []string) erro
 				"embedding configuration %d uses inference URL %s; run %s embed with the current runtime configuration",
 				embeddingConfig.ID,
 				embeddingConfig.BaseURL,
-				product.ArchiveCommandName,
+				product.CommandName,
 			)
 		}
 		effectiveEmbeddingBaseURL = semanticBaseURL.String()
@@ -751,7 +780,7 @@ func runDefinitions(runtimeConfig runtimeconfig.Config, arguments []string) erro
 	}
 
 	analyzer := intent.Analyzer{Store: openedStore}
-	analysisOutput, analysisError := analyzer.Analyze(context.Background(), intent.AnalyzeOptions{
+	analysisOutput, analysisError := analyzer.Analyze(applicationContext, intent.AnalyzeOptions{
 		Config:          definitionConfig,
 		Since:           sinceTime,
 		Until:           untilTime,
@@ -893,9 +922,10 @@ func printInferenceBoundary(operation string, boundary runtimeconfig.InferenceBo
 func printUsage() {
 	fmt.Printf(`%[1]s %[2]s
 
-Local semantic indexing for ChatGPT data exports.
+Local workspaces and operator tools for personal data exports.
 
 Usage:
+  %[1]s serve
   %[1]s inspect <openai-export.zip>
   %[1]s import <openai-export.zip>
   %[1]s status
@@ -927,7 +957,7 @@ Runtime configuration:
 Report --output values are relative to DOWNLOAD_YOUR_DATA_DATA_DIR.
 Run a command with -h for its flags.
 `,
-		product.ArchiveCommandName,
+		product.CommandName,
 		version,
 		inference.DefaultEmbeddingModel,
 		inference.DefaultVerifierModel,

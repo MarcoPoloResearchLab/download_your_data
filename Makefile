@@ -5,17 +5,14 @@ CGO_ENABLED ?= 1
 
 export CGO_ENABLED
 
-.PHONY: build build-archive check-frontend ci eval-netflix-matcher fmt fmt-check lint run smoke-archive test test-browser validate-instruction-screenshots
+.PHONY: build check-frontend ci eval-netflix-matcher fmt fmt-check lint run smoke-command test test-browser validate-instruction-screenshots
 
 build:
+	mkdir -p build
 	$(GO) build -o build/download-your-data .
 
-build-archive:
-	mkdir -p build
-	$(GO) build -trimpath -o build/download-your-data-archive ./cmd/archive
-
 run:
-	$(GO) run .
+	$(GO) run . serve
 
 fmt:
 	gofmt -w $$(find . -name '*.go' -not -path './build/*')
@@ -51,7 +48,7 @@ test-browser:
 validate-instruction-screenshots:
 	$(GO) test . -run '^TestInstructionScreenshotContract$$' -count=1
 
-smoke-archive: build-archive
-	./scripts/archive-smoke.sh ./build/download-your-data-archive
+smoke-command: build
+	./scripts/command-smoke.sh ./build/download-your-data
 
-ci: fmt-check lint check-frontend eval-netflix-matcher test validate-instruction-screenshots test-browser smoke-archive
+ci: fmt-check lint check-frontend eval-netflix-matcher test validate-instruction-screenshots test-browser smoke-command

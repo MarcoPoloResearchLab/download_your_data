@@ -163,7 +163,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Filesystem tests prove path confinement and owner-only permissions.
   - `make test`
 
-- [ ] [I006] (P1) {I003,P003} Consolidate operator workflows into the product command
+- [x] [I006] (P1) {I003,P003} Consolidate operator workflows into the product command
   Goal:
   Ship one product-owned executable without retaining a transitional archive binary or alias.
 

@@ -2,7 +2,10 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"io"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -52,11 +55,11 @@ func TestScenarioCLIIndexesVisibleConversationTextAndProducesLexicalSearchReport
 	defer server.Close()
 
 	config := testArchiveRuntimeConfig(testContext, server.URL+"/v1")
-	sourcePath := filepath.Join("..", "..", "testdata", "synthetic-openai-export.zip")
-	if importError := run([]string{"import", sourcePath}, config); importError != nil {
+	sourcePath := filepath.Join("testdata", "synthetic-openai-export.zip")
+	if importError := runTestCommand(testContext, []string{"import", sourcePath}, config); importError != nil {
 		testContext.Fatalf("import CLI fixture: %v", importError)
 	}
-	if indexError := run([]string{
+	if indexError := runTestCommand(testContext, []string{
 		"index", "build",
 		"--provider", "fixture",
 		"--model", "fixture-model",
@@ -68,7 +71,7 @@ func TestScenarioCLIIndexesVisibleConversationTextAndProducesLexicalSearchReport
 
 	outputRelativePath := filepath.Join("reports", "berth-search.json")
 	outputPath := filepath.Join(config.DataRoot().Path(), outputRelativePath)
-	if searchError := run([]string{
+	if searchError := runTestCommand(testContext, []string{
 		"search",
 		"--query", "berth",
 		"--mode", "lexical",
@@ -91,7 +94,7 @@ func TestScenarioCLIIndexesVisibleConversationTextAndProducesLexicalSearchReport
 
 func TestSearchRejectsAnOutputPathOutsideThePrivateDataRoot(testContext *testing.T) {
 	config := testArchiveRuntimeConfig(testContext, inference.DefaultBaseURL)
-	searchError := run([]string{
+	searchError := runTestCommand(testContext, []string{
 		"search",
 		"--query", "berth",
 		"--mode", "lexical",
@@ -111,17 +114,31 @@ func TestScenarioCLIReportsExactModelLoadCommandWhenLMStudioHasNoModel(testConte
 	defer server.Close()
 
 	config := testArchiveRuntimeConfig(testContext, server.URL+"/v1")
-	sourcePath := filepath.Join("..", "..", "testdata", "synthetic-openai-export.zip")
-	if importError := run([]string{"import", sourcePath}, config); importError != nil {
+	sourcePath := filepath.Join("testdata", "synthetic-openai-export.zip")
+	if importError := runTestCommand(testContext, []string{"import", sourcePath}, config); importError != nil {
 		testContext.Fatalf("import CLI fixture: %v", importError)
 	}
-	indexError := run([]string{
+	indexError := runTestCommand(testContext, []string{
 		"index", "build",
 		"--dimensions", "3",
 	}, config)
 	if indexError == nil || !strings.Contains(indexError.Error(), "lms load text-embedding-nomic-embed-text-v1.5") {
 		testContext.Fatalf("missing actionable model load instruction: %v", indexError)
 	}
+}
+
+func runTestCommand(
+	testContext *testing.T,
+	arguments []string,
+	config runtimeconfig.Config,
+) error {
+	testContext.Helper()
+	return runCommand(
+		context.Background(),
+		arguments,
+		config,
+		slog.New(slog.NewTextHandler(io.Discard, nil)),
+	)
 }
 
 func testArchiveRuntimeConfig(testContext *testing.T, baseURL string) runtimeconfig.Config {

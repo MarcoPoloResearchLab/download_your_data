@@ -218,7 +218,7 @@ func (store *Store) LatestReadySearchIndex(contextValue context.Context) (domain
 		nil,
 		fmt.Sprintf(
 			"no ready conversation search index exists; run %s index build first",
-			product.ArchiveCommandName,
+			product.CommandName,
 		),
 	)
 }

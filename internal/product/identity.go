@@ -2,8 +2,8 @@
 package product
 
 const (
-	// ArchiveCommandName is the current product-owned conversation archive executable.
-	ArchiveCommandName = "download-your-data-archive"
+	// CommandName is the sole product executable.
+	CommandName = "download-your-data"
 	// ArchiveDatabaseRelativePath is the sole conversation database location beneath the private data root.
 	ArchiveDatabaseRelativePath = "openai/archive.db"
 	// NetflixLibraryStateRelativePath is the sole provider lifecycle repository.

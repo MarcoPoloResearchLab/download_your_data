@@ -323,7 +323,7 @@ func assertRejectedDatabase(testContext *testing.T, databaseFile privatepath.Fil
 	}
 	if !strings.Contains(storeError.Error(), expectedReason) ||
 		!strings.Contains(storeError.Error(), "archive it outside the configured data root") ||
-		!strings.Contains(storeError.Error(), "download-your-data-archive import") {
+		!strings.Contains(storeError.Error(), "download-your-data import") {
 		testContext.Fatalf("unexpected schema error: %v", storeError)
 	}
 }

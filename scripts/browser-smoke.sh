@@ -32,7 +32,7 @@ trap cleanup EXIT
 
 DOWNLOAD_YOUR_DATA_ADDRESS="${address}" \
 DOWNLOAD_YOUR_DATA_DATA_DIR="${data_directory}" \
-go run . >"${server_log}" 2>&1 &
+go run . serve >"${server_log}" 2>&1 &
 server_pid=$!
 
 for _ in $(seq 1 100); do

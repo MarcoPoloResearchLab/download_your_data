@@ -41,16 +41,17 @@ make ci
 
 The full gate checks formatting, Go static analysis, public HTTP behavior, and the application through a real browser.
 
-## Conversation archive operator CLI
+## Product operator commands
 
-The product-owned archive command remains available while its operator subcommands are consolidated into the main executable:
+The same product executable owns the browser server and conversation archive operations:
 
 ```bash
-make build-archive
-./build/download-your-data-archive inspect ~/Downloads/openai-export.zip
-./build/download-your-data-archive import ~/Downloads/openai-export.zip
-./build/download-your-data-archive index build
-./build/download-your-data-archive search --query "anime" --output reports/anime.json
+make build
+./build/download-your-data serve
+./build/download-your-data inspect ~/Downloads/openai-export.zip
+./build/download-your-data import ~/Downloads/openai-export.zip
+./build/download-your-data index build
+./build/download-your-data search --query "anime" --output reports/anime.json
 ```
 
 All operator commands use the same validated runtime configuration as the local server. The sole conversation database is `<data-root>/openai/archive.db`; `--output` values are paths relative to the private data root.
@@ -58,7 +59,7 @@ All operator commands use the same validated runtime configuration as the local 
 Run its complete deterministic workflow with:
 
 ```bash
-make smoke-archive
+make smoke-command
 ```
 
 The local inference endpoint defaults to LM Studio at `http://127.0.0.1:1234/v1`. `DOWNLOAD_YOUR_DATA_INFERENCE_BASE_URL` is the only endpoint override. It accepts a normalized HTTP or HTTPS server URL without credentials, query strings, or fragments. A remote endpoint also requires the explicit process-level authorization:
@@ -66,7 +67,7 @@ The local inference endpoint defaults to LM Studio at `http://127.0.0.1:1234/v1`
 ```bash
 DOWNLOAD_YOUR_DATA_INFERENCE_BASE_URL=https://inference.example.com/v1 \
 DOWNLOAD_YOUR_DATA_INFERENCE_BOUNDARY=authorized-remote \
-./build/download-your-data-archive index build
+./build/download-your-data index build
 ```
 
 The browser cannot override the configured inference URL. The local HTTP server accepts only loopback hosts and same-origin browser requests, requires its per-process CSRF token for mutation requests, and does not enable cross-origin access. `GET /api/capabilities` reports the current non-secret runtime boundary, model identity, readiness state, archive limits, and data-root readiness.
