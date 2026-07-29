@@ -83,7 +83,7 @@ Creation persists `receiving`; a complete staged upload advances through `valida
 | Standalone web server | Delete at the target boundary. Routes, temp-file cookies, templates, CDN assets, and the second listen address are not incorporated. |
 | Standalone Bootstrap/Chart.js dashboard | Recompose as checked ES modules inside the shared application shell with self-owned assets and the MPR operator visual language. |
 | `tmdbenrich` CLI | Preserve useful inspection, enrichment, and export operations as provider-scoped commands in the single `download-your-data` executable. Do not ship a second binary. |
-| Tracked SQLite cache | Do not import it. The source database is empty, is a generated runtime shape, and is not a product artifact. |
+| Tracked SQLite cache | Do not import it. At source revision `e4079718730533aa15141b567fa378def66b1265`, the generated runtime database is nonempty despite being tracked; its row contents were not inspected or copied. The target owns a different current cache contract, and the old file requires explicit operator disposition before checkout retirement. |
 
 ## Provider Domain
 
@@ -202,6 +202,14 @@ If TMDB is not configured, the UI gives the concrete server configuration name a
 5. **F008 — Netflix provider workspace:** catalog entry in all locales, import flow, progress, dashboard, match-quality view, controls, Credits, accessibility, responsive behavior, and no-external-browser-network proof.
 6. **I009 — Single-executable operator parity:** provider-scoped Netflix inspect, enrich, and export commands backed by the same packages and configuration.
 7. **M409 — Standalone checkout retirement:** prove independent target parity and release, resolve any untracked/private data, then request explicit approval before removing `/Users/tyemirov/Development/netflix`.
+
+## Standalone Retirement Audit
+
+The 2026-07-28 audit is tied to source revision `e4079718730533aa15141b567fa378def66b1265`. The standalone `master` checkout was clean and matched `origin/master`, with no untracked or ignored files. Its tracked `netflix_cache.sqlite` was 258,048 bytes and contained 466 cached rows. No cached title, metadata, or other row content was printed, read for migration, or copied into this repository.
+
+The target's complete `make ci` gate passed. `go list -m all`, target dependency enumeration, active-runtime source search, and the built executable contain no source module or checkout reference. The built-product smoke and deterministic fake-TMDB operator smoke also passed inside a macOS sandbox that denied all reads and writes beneath the standalone checkout. A second sandboxed full `make ci` reached the browser phase after all Go, matcher, frontend type, screenshot, and operator checks passed; the Playwright browser launcher itself cannot start inside that outer macOS sandbox, so this is not recorded as a second complete CI pass.
+
+Retirement remains blocked on the first target-owned release, explicit disposition of the tracked nonempty cache, and explicit approval for destructive checkout removal. The cache is not a migration source and must not be imported into the target.
 
 ## Completion Gate
 
