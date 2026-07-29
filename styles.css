@@ -347,11 +347,14 @@ mpr-footer {
 }
 
 .provider-card {
-  display: flex;
+  position: relative;
+  display: grid;
   min-width: 0;
-  min-height: 266px;
-  padding: 16px;
-  flex-direction: column;
+  min-height: 0;
+  padding: 12px;
+  grid-template-columns: 56px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
@@ -365,22 +368,42 @@ mpr-footer {
   background: var(--surface-raised);
 }
 
+.provider-card-guide {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.provider-card-guide:focus-visible {
+  outline-offset: 2px;
+}
+
 .provider-card .provider-mark {
-  width: 80px;
-  height: 80px;
-  margin-bottom: 15px;
-  padding: 10px;
-  border-radius: 8px;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .provider-card .provider-icon {
   border-radius: 6px;
 }
 
+.provider-card-copy {
+  display: flex;
+  min-width: 0;
+  min-height: 100%;
+  flex-direction: column;
+}
+
 .provider-card-meta {
   display: flex;
-  min-height: 23px;
-  margin-bottom: 6px;
+  min-height: 18px;
+  margin-bottom: 3px;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
@@ -408,20 +431,25 @@ mpr-footer {
 }
 
 .provider-summary {
-  margin: 10px 0 16px;
-  line-height: 1.5;
+  margin: 4px 0 0;
+  line-height: 1.45;
 }
 
 .provider-actions {
+  position: relative;
+  z-index: 2;
   display: flex;
-  margin-top: auto;
+  margin-top: 9px;
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
 }
 
 .provider-actions .button {
-  flex: 1 1 auto;
+  min-height: 28px;
+  padding: 4px 9px;
+  flex: 0 1 auto;
+  font-size: 11px;
 }
 
 .state-chip {

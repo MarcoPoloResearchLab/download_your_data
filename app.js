@@ -61,6 +61,7 @@ const REQUIRED_UI_KEYS = Object.freeze([
   'provider_catalog',
   'workspace',
   'guide',
+  'data_analysis',
   'open',
   'view_guide',
   'local_only',
@@ -434,48 +435,47 @@ function renderCatalog() {
       class: 'provider-card',
       'data-provider-id': providerDefinition.id
     });
+    const guideLink = element('a', {
+      class: 'provider-card-guide',
+      href: `#guide/${providerDefinition.id}`,
+      'aria-label': `${ui().guide}: ${localized.title}`,
+      'data-route': 'guide',
+      'data-provider': providerDefinition.id
+    });
     const metadata = element(
       'div',
       {class: 'provider-card-meta'},
       element('span', {
         class: 'provider-type',
-        text:
-          providerDefinition.surface === 'workspace'
-            ? `${ui().workspace} · ${ui().guide}`
-            : ui().guide
+        text: ui().guide
       })
     );
     if (providerDefinition.id === 'netflix') {
       const presentation = netflixStatePresentation();
       metadata.append(stateChip(presentation.label, presentation.tone));
     }
-    card.append(
-      providerMark(providerDefinition.id, localized.title, providerDefinition.icon_src),
+    const cardCopy = element(
+      'div',
+      {class: 'provider-card-copy'},
       metadata,
       element('h2', {class: 'provider-name', text: localized.title}),
       element('p', {class: 'provider-summary', text: localized.intro})
     );
-    const actions = element('div', {class: 'provider-actions'});
-    if (providerDefinition.id === 'netflix') {
+    if (providerDefinition.surface === 'workspace') {
+      const actions = element('div', {class: 'provider-actions'});
       actions.append(
-        actionButton(ui().view_guide, {
-          'data-route': 'guide',
-          'data-provider': providerDefinition.id
-        }),
-        actionButton(ui().open, {
-          'data-route': 'netflix',
+        actionButton(ui().data_analysis, {
+          'data-route': providerDefinition.id,
           class: 'button button-primary'
         })
       );
-    } else {
-      actions.append(
-        actionButton(ui().view_guide, {
-          'data-route': 'guide',
-          'data-provider': providerDefinition.id
-        })
-      );
+      cardCopy.append(actions);
     }
-    card.append(actions);
+    card.append(
+      guideLink,
+      providerMark(providerDefinition.id, localized.title, providerDefinition.icon_src),
+      cardCopy
+    );
     grid.append(card);
   }
   root.append(heading, grid);

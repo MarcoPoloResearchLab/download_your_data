@@ -125,19 +125,45 @@ async page => {
     const icon = mark.locator('img.provider-icon');
     assert(await icon.count() === 1, `${providerID} must render exactly one provider icon`);
     await icon.evaluate((element) => element.decode());
-    const iconRecord = await icon.evaluate((element) => ({
-      alt: element.alt,
-      cardWidth: element.closest('.provider-card').getBoundingClientRect().width,
-      complete: element.complete,
-      id: element.dataset.providerIcon,
-      markHeight: element.parentElement.getBoundingClientRect().height,
-      markText: element.parentElement.textContent.trim(),
-      markWidth: element.parentElement.getBoundingClientRect().width,
-      naturalHeight: element.naturalHeight,
-      naturalWidth: element.naturalWidth,
-      path: new URL(element.src).pathname,
-      width: element.getBoundingClientRect().width
-    }));
+    const iconRecord = await icon.evaluate((element) => {
+      const cardElement = element.closest('.provider-card');
+      const copyElement = cardElement.querySelector('.provider-card-copy');
+      const guideLink = cardElement.querySelector('.provider-card-guide');
+      const iconBox = element.getBoundingClientRect();
+      const markElement = element.parentElement;
+      const markBox = markElement.getBoundingClientRect();
+      const markStyle = getComputedStyle(markElement);
+      const cardBox = cardElement.getBoundingClientRect();
+      const copyBox = copyElement.getBoundingClientRect();
+      const linkBox = guideLink.getBoundingClientRect();
+      return {
+        alt: element.alt,
+        cardBottom: cardBox.bottom,
+        cardHeight: cardBox.height,
+        cardLeft: cardBox.left,
+        cardRight: cardBox.right,
+        cardTop: cardBox.top,
+        cardWidth: cardBox.width,
+        complete: element.complete,
+        copyLeft: copyBox.left,
+        id: element.dataset.providerIcon,
+        linkBottom: linkBox.bottom,
+        linkLeft: linkBox.left,
+        linkRight: linkBox.right,
+        linkTop: linkBox.top,
+        markBackground: markStyle.backgroundColor,
+        markBorderWidth: markStyle.borderTopWidth,
+        markHeight: markBox.height,
+        markPadding: markStyle.paddingTop,
+        markRight: markBox.right,
+        markText: markElement.textContent.trim(),
+        markWidth: markBox.width,
+        naturalHeight: element.naturalHeight,
+        naturalWidth: element.naturalWidth,
+        path: new URL(element.src).pathname,
+        width: iconBox.width
+      };
+    });
     assert(
       iconRecord.complete &&
         iconRecord.id === providerID &&
@@ -147,17 +173,27 @@ async page => {
         iconRecord.naturalHeight >= 32 &&
         iconRecord.path === `/images/providers/${providerID}.png` &&
         iconRecord.cardWidth > 0 &&
-        iconRecord.markWidth >= 78 &&
-        iconRecord.markHeight >= 78 &&
-        iconRecord.width >= 48 &&
-        iconRecord.width <= 64,
-      `${providerID} provider card does not render its reviewed product logo at the required size`
+        iconRecord.cardHeight < 190 &&
+        iconRecord.markWidth === 56 &&
+        iconRecord.markHeight === 56 &&
+        iconRecord.width === 56 &&
+        iconRecord.markBorderWidth === '0px' &&
+        iconRecord.markPadding === '0px' &&
+        iconRecord.markBackground === 'rgba(0, 0, 0, 0)' &&
+        iconRecord.markRight <= iconRecord.copyLeft &&
+        Math.abs(iconRecord.linkLeft - iconRecord.cardLeft) <= 1 &&
+        Math.abs(iconRecord.linkRight - iconRecord.cardRight) <= 1 &&
+        Math.abs(iconRecord.linkTop - iconRecord.cardTop) <= 1 &&
+        Math.abs(iconRecord.linkBottom - iconRecord.cardBottom) <= 1,
+      `${providerID} provider card is not compact, fully linked, or using its unframed reviewed logo`
     );
     assert(
       await card.locator('.provider-name').count() === 1 &&
         await card.locator('.provider-summary').count() === 1 &&
-        await card.locator('.provider-actions').count() === 1,
-      `${providerID} provider card is missing its name, summary, or action area`
+        await card.locator(
+          `.provider-card-guide[href="#guide/${providerID}"][data-route="guide"]`
+        ).count() === 1,
+      `${providerID} provider card is missing its name, summary, or full-card guide link`
     );
     providerIconPaths.push(iconRecord.path);
   }
@@ -166,20 +202,17 @@ async page => {
     'every provider must own one distinct local product icon'
   );
   assert(
-    await page.locator('.provider-card:not([data-provider-id="netflix"])').count() === 10 &&
-      await page.locator(
-        '.provider-card:not([data-provider-id="netflix"]) .provider-actions button'
-      ).count() === 10 &&
-      await page.locator(
-        '.provider-card:not([data-provider-id="netflix"]) .provider-actions [data-route="guide"]'
-      ).count() === 10 &&
+    await page.locator('.provider-card-guide[data-route="guide"]').count() === 11 &&
+      await page.locator('.provider-card [data-route="guide"] button').count() === 0 &&
+      await page.locator('.provider-card:not([data-provider-id="netflix"]) .provider-actions')
+        .count() === 0 &&
       await page.locator(
         '.provider-card:not([data-provider-id="netflix"]) .state-chip'
       ).count() === 0 &&
       await page.locator(
         '.provider-card[data-provider-id="netflix"] .provider-card-meta .state-chip'
       ).count() === 1,
-    'each guide-only catalog entry must expose one View guide action without a duplicate badge'
+    'every catalog card must link directly to its guide without a View guide button'
   );
   assert(
     await page.locator('[data-provider-id="netflix"]').count() === 1,
@@ -187,14 +220,20 @@ async page => {
   );
   assert(
     await page.locator(
-      '[data-provider-id="netflix"] [data-route="guide"][data-provider="netflix"]'
+      '[data-provider-id="netflix"] .provider-card-guide[data-provider="netflix"]'
     ).count() === 1 &&
-      await page.locator('[data-provider-id="netflix"] [data-route="netflix"]').count() === 1,
-    'Netflix catalog entry must expose both its permanent guide and workspace'
+      await page.locator(
+        '[data-provider-id="netflix"] .provider-actions [data-route="netflix"]'
+      ).count() === 1 &&
+      (await page.locator(
+        '[data-provider-id="netflix"] .provider-actions [data-route="netflix"]'
+      ).textContent()).trim() === 'Data analysis',
+    'Netflix catalog entry must link to its guide and expose one Data analysis application action'
   );
   assert(
-    await page.locator('[data-provider-id="openai"]').count() === 1,
-    'provider catalog must contain exactly one OpenAI identity'
+    await page.locator('[data-provider-id="openai"]').count() === 1 &&
+      await page.locator('[data-provider-id="openai"] .provider-actions').count() === 0,
+    'OpenAI must remain guide-linked until its browser workspace contract exists'
   );
   assert(
     await page.locator('[data-provider-id="facebook"]').count() === 1 &&
@@ -203,6 +242,21 @@ async page => {
       await page.locator('[data-provider-id="threads"]').count() === 1,
     'provider catalog must contain separate Facebook, Instagram, WhatsApp, and Threads identities'
   );
+  await page.locator('[data-provider-id="facebook"]').click({position: {x: 8, y: 8}});
+  await page.locator('#facebook').waitFor();
+  assert(
+    await page.evaluate(() => window.location.hash) === '#guide/facebook',
+    'clicking a provider card outside an application action must open its guide'
+  );
+  await route('#catalog', '.catalog');
+  await page.locator('[data-provider-id="openai"] .provider-card-guide').focus();
+  await page.keyboard.press('Enter');
+  await page.locator('#openai').waitFor();
+  assert(
+    await page.evaluate(() => window.location.hash) === '#guide/openai',
+    'provider card guide links must be keyboard operable'
+  );
+  await route('#catalog', '.catalog');
 
   const localeFacebookAlt = {
     en: 'Facebook Accounts Center: Your information and permissions',
@@ -222,12 +276,24 @@ async page => {
     fr: 'Ouvrir',
     ru: 'Открыть'
   };
+  const localeDataAnalysis = {
+    en: 'Data analysis',
+    es: 'Análisis de datos',
+    fr: 'Analyse des données',
+    ru: 'Анализ данных'
+  };
   for (const [locale, expectedAlt] of Object.entries(localeFacebookAlt)) {
     await selectLanguage(locale);
     assert(
       (await page.locator('[data-provider-id="netflix"] .provider-name').textContent()).trim() ===
         'Netflix',
       `${locale} did not preserve the canonical Netflix identity`
+    );
+    assert(
+      (await page.locator(
+        '[data-provider-id="netflix"] .provider-actions [data-route="netflix"]'
+      ).textContent()).trim() === localeDataAnalysis[locale],
+      `${locale} Netflix Data analysis action is not localized`
     );
     await route('#guide/netflix', '#netflix');
     assert(
@@ -654,40 +720,56 @@ async page => {
     const cardBox = card.getBoundingClientRect();
     const actionsBox = actions.getBoundingClientRect();
     const providerIcons = [...document.querySelectorAll('.provider-icon')];
+    const providerCards = [...document.querySelectorAll('.provider-card')];
     return {
       documentWidth: document.documentElement.scrollWidth,
       viewportWidth: window.innerWidth,
       gridColumns: getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length,
       actionCount: actions.querySelectorAll('button').length,
+      analysisLabel: actions.textContent.trim(),
       actionsLeft: actionsBox.left,
       actionsRight: actionsBox.right,
       cardLeft: cardBox.left,
       cardRight: cardBox.right,
+      cardsCompactAndHorizontal: providerCards.every((providerCard) => {
+        const providerCardBox = providerCard.getBoundingClientRect();
+        const mark = providerCard.querySelector('.provider-mark').getBoundingClientRect();
+        const copy = providerCard.querySelector('.provider-card-copy').getBoundingClientRect();
+        return providerCardBox.height < 190 && mark.right <= copy.left;
+      }),
+      cardsFullyLinked: providerCards.every((providerCard) => {
+        const providerCardBox = providerCard.getBoundingClientRect();
+        const guideLinkBox = providerCard
+          .querySelector('.provider-card-guide')
+          .getBoundingClientRect();
+        return (
+          Math.abs(providerCardBox.left - guideLinkBox.left) <= 1 &&
+          Math.abs(providerCardBox.right - guideLinkBox.right) <= 1 &&
+          Math.abs(providerCardBox.top - guideLinkBox.top) <= 1 &&
+          Math.abs(providerCardBox.bottom - guideLinkBox.bottom) <= 1
+        );
+      }),
       providerIconCount: providerIcons.length,
       providerIconsLarge: providerIcons.every(
-        (providerIcon) => providerIcon.getBoundingClientRect().width >= 48
+        (providerIcon) => providerIcon.getBoundingClientRect().width === 56
       ),
-      providerIconsContained: providerIcons.every((providerIcon) => {
-        const iconBox = providerIcon.getBoundingClientRect();
-        const markBox = providerIcon.closest('.provider-mark').getBoundingClientRect();
+      providerIconsUnframed: providerIcons.every((providerIcon) => {
+        const mark = providerIcon.closest('.provider-mark');
+        const markStyle = getComputedStyle(mark);
         return (
-          iconBox.width > 0 &&
-          iconBox.height > 0 &&
-          iconBox.left >= markBox.left &&
-          iconBox.right <= markBox.right &&
-          iconBox.top >= markBox.top &&
-          iconBox.bottom <= markBox.bottom
+          markStyle.borderTopWidth === '0px' &&
+          markStyle.paddingTop === '0px' &&
+          markStyle.backgroundColor === 'rgba(0, 0, 0, 0)'
         );
       }),
       summariesVisible: [...document.querySelectorAll('.provider-summary')].every(
         (summary) => summary.getBoundingClientRect().height > 0
       ),
-      guideOnlyCardsHaveOneAction: guideOnlyCards.every((guideOnlyCard) => {
-        const guideOnlyActions = guideOnlyCard.querySelector('.provider-actions');
+      guideOnlyCardsHaveNoAppAction: guideOnlyCards.every((guideOnlyCard) => {
         return (
-          guideOnlyActions.querySelectorAll('button').length === 1 &&
-          guideOnlyActions.querySelectorAll('[data-route="guide"]').length === 1 &&
-          guideOnlyActions.querySelector('.state-chip') === null
+          guideOnlyCard.querySelector('.provider-actions') === null &&
+          guideOnlyCard.querySelectorAll('.provider-card-guide[data-route="guide"]').length === 1 &&
+          guideOnlyCard.querySelector('.state-chip') === null
         );
       })
     };
@@ -695,21 +777,24 @@ async page => {
   assert(
     mobileNetflixCatalog.documentWidth <= mobileNetflixCatalog.viewportWidth &&
       mobileNetflixCatalog.gridColumns === 1 &&
-      mobileNetflixCatalog.actionCount === 2 &&
+      mobileNetflixCatalog.actionCount === 1 &&
+      mobileNetflixCatalog.analysisLabel === 'Data analysis' &&
       mobileNetflixCatalog.actionsLeft >= mobileNetflixCatalog.cardLeft &&
       mobileNetflixCatalog.actionsRight <= mobileNetflixCatalog.cardRight,
-    'mobile Netflix provider card must contain guide and workspace actions without overflow'
+    'mobile Netflix provider card must contain its distinct Data analysis action without overflow'
   );
   assert(
-    mobileNetflixCatalog.guideOnlyCardsHaveOneAction &&
-      mobileNetflixCatalog.summariesVisible,
-    'mobile guide-only provider cards must keep their summary and one View guide action'
+    mobileNetflixCatalog.guideOnlyCardsHaveNoAppAction &&
+      mobileNetflixCatalog.summariesVisible &&
+      mobileNetflixCatalog.cardsCompactAndHorizontal &&
+      mobileNetflixCatalog.cardsFullyLinked,
+    'mobile provider cards must remain compact, fully guide-linked, and free of obsolete actions'
   );
   assert(
     mobileNetflixCatalog.providerIconCount === 11 &&
       mobileNetflixCatalog.providerIconsLarge &&
-      mobileNetflixCatalog.providerIconsContained,
-    'mobile provider cards must retain large contained product logos'
+      mobileNetflixCatalog.providerIconsUnframed,
+    'mobile provider cards must retain large unframed product logos'
   );
 
   await route('#guide/netflix', '#netflix');

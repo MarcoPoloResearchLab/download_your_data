@@ -102,7 +102,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
 
   Requirements:
   - Expose `#guide/netflix` as the canonical visual walkthrough using the same localized step and screenshot contract as every other provider.
-  - Show separate View guide and Open workspace actions in the Netflix catalog entry.
+  - Make the complete Netflix catalog card open its guide and keep Data analysis as the separate workspace action.
   - Keep a View guide action in the Netflix workspace header across empty, building, ready, failure, and replacement states.
   - Preserve Netflix as the sole workspace-capable provider without duplicating backend state in guide content.
 
@@ -135,13 +135,13 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - `make test-browser`
   - `make ci`
 
-- [x] [B007] (P1) {B004,F009} Remove duplicate guide badges from provider actions
+- [x] [B007] (P1) {B004,F009} Remove duplicate guide controls from provider cards
   Goal:
   Keep each guide-only catalog action clear, singular, and actionable.
 
   Requirements:
-  - Render exactly one View guide button in every guide-only provider card.
-  - Remove the adjacent non-actionable Guide badge from catalog cards.
+  - Render exactly one full-card guide link in every provider card without a separate guide button.
+  - Keep the compact Guide label as metadata rather than a duplicate action.
   - Remove generic Guide badges from guide headings while preserving real Netflix workspace-state chips.
   - Prove the singular action contract at wide and narrow web viewport widths.
 
@@ -250,17 +250,43 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   Goal:
   Make the provider catalog visually scannable as a tiled product chooser with each reviewed brand mark as the card's dominant identity.
 
+  Superseded contract:
+  B014 replaces the tall card, framed 80-pixel mark, and separate View guide control with the current compact linked-card interaction.
+
   Requirements:
   - Replace the row-specific catalog markup and styles with one canonical provider-card grid.
   - Render three columns at the wide application width, two columns at intermediate widths, and one column on a narrow web viewport.
-  - Display every reviewed local provider logo in an approximately 80-pixel mark with at least a 48-pixel visible icon.
+  - Display every reviewed local provider logo as a prominent, legible product identity.
   - Keep the localized provider name, surface type, full summary, and actionable controls visible in every card.
-  - Preserve one View guide action for guide-only providers and separate state, guide, and workspace controls for Netflix.
+  - Preserve one canonical guide destination per provider and separate state and workspace controls for Netflix.
   - Keep cards compact, flat, bordered, responsive, keyboard-operable, and free of horizontal overflow.
 
   Deliverables:
   - Semantic provider-card rendering and responsive MPR tile-grid styles.
   - Updated real-browser assertions for grid shape, large local logos, summaries, actions, and narrow containment.
+
+  Validation:
+  - `make check-frontend`
+  - `make test-browser`
+  - `make ci`
+
+- [x] [B014] (P1) {B004,B011,B013,F001,F002,F008} Make compact provider cards open their guides directly
+  Goal:
+  Make each provider card a compact, immediately actionable guide entry while keeping real data-analysis applications as distinct secondary actions.
+
+  Requirements:
+  - Keep the three-, two-, and one-column catalog grid, but place the provider copy to the right of a 56-pixel reviewed local product logo.
+  - Remove the catalog logo frame, padding, and background without altering the reviewed image asset.
+  - Make the complete card surface one native, keyboard-operable link to the provider's canonical guide route.
+  - Remove every View guide button from the catalog.
+  - Render one localized Data analysis button only for providers that declare a current browser workspace route.
+  - Keep the Data analysis control above the card link so it opens the provider application while every other card location opens the guide.
+  - Treat Netflix as the current browser-workspace provider. Do not fabricate an OpenAI browser route while F001 and F002 remain incomplete; the existing OpenAI operator analysis commands are not a browser application.
+  - Preserve provider summaries, Netflix state, focus visibility, wide and narrow containment, and the shared MPR shell.
+
+  Deliverables:
+  - Compact guide-linked provider cards with unframed logos and one distinct Netflix Data analysis action.
+  - Localized action copy and real-browser assertions for card geometry, pointer and keyboard routing, application-action isolation, and responsive containment.
 
   Validation:
   - `make check-frontend`
