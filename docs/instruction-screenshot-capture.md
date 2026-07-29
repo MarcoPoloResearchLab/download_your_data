@@ -52,8 +52,9 @@ Provider-specific constraints:
 
 - Google and LinkedIn interface pixels remain unaltered; exclude account headers and member content by cropping.
 - OpenAI, Facebook, Instagram, X, Netflix, WhatsApp, and TikTok captures remain accurate, descriptive, subordinate to the instructions, and visibly unaffiliated.
+- Facebook and Instagram authenticated captures stop before profile selection; later device-export and availability steps use the matching public Meta Help Center instructions.
 - WhatsApp and TikTok first-party help captures are public help surfaces, not substitutes presented as authenticated mobile app screens.
-- Threads may reuse the Instagram Accounts Center captures because that is the current first-party export surface named by Meta.
+- Threads uses Meta’s public Android help sequence because the export starts in the Instagram app and crosses a private profile-selection boundary.
 
 ## Acceptance
 
