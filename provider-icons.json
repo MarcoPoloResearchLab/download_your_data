@@ -125,9 +125,9 @@
       "provider": "youtube",
       "source_kind": "first_party_site_icon",
       "official_site": "https://www.youtube.com/",
-      "source_url": "https://www.youtube.com/s/desktop/b747a806/img/favicon_144x144.png",
+      "source_url": "https://www.gstatic.com/youtube/img/branding/favicon/favicon_144x144.png",
       "output_path": "images/providers/youtube.png",
-      "sha256": "786813f88c524852c812a7fb67405bda157c41b25c2e5cb6db70d78e7b1abcc5",
+      "sha256": "953b8f81a484ec11eb115bc5e5f30448215131d1511bfba42ade83bef4f08abc",
       "pixel_dimensions": {
         "width": 144,
         "height": 144
