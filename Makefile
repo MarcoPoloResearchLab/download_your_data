@@ -5,7 +5,7 @@ CGO_ENABLED ?= 1
 
 export CGO_ENABLED
 
-.PHONY: build check-frontend ci eval-netflix-matcher fmt fmt-check lint run smoke-command test test-browser validate-instruction-screenshots
+.PHONY: build check-frontend ci eval-netflix-matcher fmt fmt-check lint run smoke-command smoke-netflix-command test test-browser validate-instruction-screenshots
 
 build:
 	mkdir -p build
@@ -51,4 +51,7 @@ validate-instruction-screenshots:
 smoke-command: build
 	./scripts/command-smoke.sh ./build/download-your-data
 
-ci: fmt-check lint check-frontend eval-netflix-matcher test validate-instruction-screenshots test-browser smoke-command
+smoke-netflix-command:
+	$(GO) test . -run '^TestNetflixOperatorCommandSmokeCoversInspectEnrichmentCacheAndExport$$' -count=1 -v
+
+ci: fmt-check lint check-frontend eval-netflix-matcher test smoke-netflix-command validate-instruction-screenshots test-browser smoke-command

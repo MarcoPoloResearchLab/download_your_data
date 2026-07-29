@@ -1,6 +1,8 @@
 package privatepath_test
 
 import (
+	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -79,6 +81,53 @@ func TestRootRejectsSymbolicLinkTraversal(testContext *testing.T) {
 	if _, fileError := root.File(filepath.Join("escaped", "payload.db")); fileError == nil ||
 		!strings.Contains(fileError.Error(), "symbolic links are not allowed") {
 		testContext.Fatalf("symbolic-link traversal should be rejected: %v", fileError)
+	}
+}
+
+func TestFileReplacePublishesOnlyCompleteOwnerOnlyContents(testContext *testing.T) {
+	root, rootError := privatepath.NewRoot(filepath.Join(testContext.TempDir(), "private"))
+	if rootError != nil {
+		testContext.Fatalf("create private root: %v", rootError)
+	}
+	privateFile, fileError := root.File(filepath.Join("reports", "netflix.csv"))
+	if fileError != nil {
+		testContext.Fatalf("resolve private report: %v", fileError)
+	}
+	if replaceError := privateFile.Replace(func(destination io.Writer) error {
+		_, writeError := io.WriteString(destination, "complete")
+		return writeError
+	}); replaceError != nil {
+		testContext.Fatalf("publish private report: %v", replaceError)
+	}
+	assertPermissions(testContext, privateFile.Path(), 0o600)
+	if contents, readError := os.ReadFile(privateFile.Path()); readError != nil ||
+		string(contents) != "complete" {
+		testContext.Fatalf("published contents = %q error=%v", contents, readError)
+	}
+
+	syntheticError := errors.New("synthetic write failure")
+	replaceError := privateFile.Replace(func(destination io.Writer) error {
+		if _, writeError := io.WriteString(destination, "partial"); writeError != nil {
+			return writeError
+		}
+		return syntheticError
+	})
+	if !errors.Is(replaceError, syntheticError) {
+		testContext.Fatalf("replacement failure = %v; want %v", replaceError, syntheticError)
+	}
+	if contents, readError := os.ReadFile(privateFile.Path()); readError != nil ||
+		string(contents) != "complete" {
+		testContext.Fatalf("failed replacement changed contents = %q error=%v", contents, readError)
+	}
+	temporaryMatches, matchError := filepath.Glob(
+		filepath.Join(filepath.Dir(privateFile.Path()), ".netflix.csv.*.next"),
+	)
+	if matchError != nil || len(temporaryMatches) != 0 {
+		testContext.Fatalf(
+			"failed replacement left temporary files = %v error=%v",
+			temporaryMatches,
+			matchError,
+		)
 	}
 }
 

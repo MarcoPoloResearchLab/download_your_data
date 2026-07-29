@@ -31,6 +31,22 @@ func runCommand(
 	config runtimeconfig.Config,
 	logger *slog.Logger,
 ) error {
+	return runCommandWithEnvironment(
+		applicationContext,
+		arguments,
+		config,
+		logger,
+		productionCommandEnvironment(),
+	)
+}
+
+func runCommandWithEnvironment(
+	applicationContext context.Context,
+	arguments []string,
+	config runtimeconfig.Config,
+	logger *slog.Logger,
+	environment commandEnvironment,
+) error {
 	if applicationContext == nil || logger == nil {
 		return fmt.Errorf("run %s command: context and logger are required", product.CommandName)
 	}
@@ -60,6 +76,13 @@ func runCommand(
 		return runSearch(applicationContext, config, commandArguments)
 	case "definitions":
 		return runDefinitions(applicationContext, config, commandArguments)
+	case "netflix":
+		return runNetflixCommand(
+			applicationContext,
+			config,
+			commandArguments,
+			environment,
+		)
 	case "version":
 		fmt.Println(version)
 		return nil
@@ -933,6 +956,9 @@ Usage:
   %[1]s index build [options]
   %[1]s search --query <topic> [options]
   %[1]s definitions [options]
+  %[1]s netflix inspect
+  %[1]s netflix enrich [--locale en-US]
+  %[1]s netflix export --output <relative.csv>
   %[1]s version
 
 Typical conversation-search workflow:
@@ -953,6 +979,7 @@ Runtime configuration:
   DOWNLOAD_YOUR_DATA_DATA_DIR
   DOWNLOAD_YOUR_DATA_INFERENCE_BASE_URL
   DOWNLOAD_YOUR_DATA_INFERENCE_BOUNDARY=loopback|authorized-remote
+  DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN
 
 Report --output values are relative to DOWNLOAD_YOUR_DATA_DATA_DIR.
 Run a command with -h for its flags.

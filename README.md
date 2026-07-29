@@ -43,7 +43,7 @@ The full gate checks formatting, Go static analysis, public HTTP behavior, and t
 
 ## Product operator commands
 
-The same product executable owns the browser server and conversation archive operations:
+The same product executable owns the browser server, conversation archive operations, and Netflix provider operations:
 
 ```bash
 make build
@@ -52,6 +52,7 @@ make build
 ./build/download-your-data import ~/Downloads/openai-export.zip
 ./build/download-your-data index build
 ./build/download-your-data search --query "anime" --output reports/anime.json
+./build/download-your-data netflix inspect
 ```
 
 All operator commands use the same validated runtime configuration as the local server. The sole conversation database is `<data-root>/openai/archive.db`; `--output` values are paths relative to the private data root.
@@ -60,6 +61,7 @@ Run its complete deterministic workflow with:
 
 ```bash
 make smoke-command
+make smoke-netflix-command
 ```
 
 The local inference endpoint defaults to LM Studio at `http://127.0.0.1:1234/v1`. `DOWNLOAD_YOUR_DATA_INFERENCE_BASE_URL` is the only endpoint override. It accepts a normalized HTTP or HTTPS server URL without credentials, query strings, or fragments. A remote endpoint also requires the explicit process-level authorization:
@@ -92,6 +94,18 @@ The server accepts at most one building generation, keeps the existing ready gen
 Provider state uses the sole current `netflix-generation-library-v1` contract at `<data-root>/providers/netflix/library.json`. Immutable ready records and analytics use `netflix-generation-records-v1` and `netflix-generation-analytics-v1` below `<data-root>/providers/netflix/generations/{generationID}`; record cursors use `netflix-record-cursor-v3`. The provider holds an operating-system lease for its entire lifetime, and every directory and file remains owner-only.
 
 The browser opens Netflix as the first workspace-capable provider in the compact catalog. Its Overview, Catalog, and Match quality views share the same server-owned filters and expose import, enrichment, retry, cancellation, replacement, enriched export, and complete deletion as separate actions. Run `make test-browser` for both the unconfigured real-server path and the deterministic configured fake-TMDB lifecycle.
+
+The single product executable also exposes the same provider library to an operator. Stop the local server first so the command can acquire the provider lease, and import a Viewing activity CSV through the browser before enriching:
+
+```bash
+./build/download-your-data netflix inspect
+DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN=your-read-access-token \
+  ./build/download-your-data netflix enrich --locale en-US
+./build/download-your-data netflix export \
+  --output exports/netflix-viewing-activity.csv
+```
+
+`netflix inspect` reports only bounded state and counts. `netflix enrich` is the deliberate authorization to send the active generation's unique derived title queries to TMDB, emits persisted progress without titles or viewing dates, and activates only a complete replacement. `netflix export` writes the canonical enriched CSV atomically beneath the private data root; `--generation` can select a retained ready TMDB generation instead of the active one. These commands have no separate worker, rate, timeout, credential, or cache settings.
 
 ## Optional Netflix metadata
 

@@ -17,7 +17,6 @@ import (
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/product"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix/enrichment"
 	netflixlibrary "github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix/library"
-	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix/tmdb"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/runtimeconfig"
 )
 
@@ -115,13 +114,9 @@ func newApplicationHandler(
 	config runtimeconfig.Config,
 	logger *slog.Logger,
 ) (*applicationHandler, error) {
-	var metadataClient enrichment.MetadataClient
-	if readToken, configured := config.TMDBReadToken(); configured {
-		client, clientError := tmdb.NewClient(readToken)
-		if clientError != nil {
-			return nil, fmt.Errorf("create Netflix TMDB client: %w", clientError)
-		}
-		metadataClient = client
+	metadataClient, clientError := newNetflixMetadataClient(config)
+	if clientError != nil {
+		return nil, clientError
 	}
 	return newApplicationHandlerWithNetflixMetadata(
 		config,

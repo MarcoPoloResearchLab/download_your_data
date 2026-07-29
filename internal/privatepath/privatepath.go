@@ -4,6 +4,7 @@ package privatepath
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -203,6 +204,93 @@ func (file File) Prepare() error {
 		return fmt.Errorf("close new private file %q: %w", file.path, closeError)
 	}
 	return nil
+}
+
+// Replace atomically publishes owner-only file contents after the complete
+// writer callback succeeds.
+func (file File) Replace(writeContents func(io.Writer) error) error {
+	if file.root.path == "" || file.path == "" || file.relativePath == "" {
+		return fmt.Errorf("replace private file: file is not initialized")
+	}
+	if writeContents == nil {
+		return fmt.Errorf("replace private file %q: writer is required", file.relativePath)
+	}
+	parentRelativePath := filepath.Dir(file.relativePath)
+	if _, directoryError := file.root.EnsureDirectory(parentRelativePath); directoryError != nil {
+		return directoryError
+	}
+	if validationError := file.validateExisting(); validationError != nil {
+		return validationError
+	}
+
+	temporaryHandle, createError := os.CreateTemp(
+		filepath.Dir(file.path),
+		"."+filepath.Base(file.path)+".*.next",
+	)
+	if createError != nil {
+		return fmt.Errorf("create private replacement for %q: %w", file.path, createError)
+	}
+	temporaryPath := temporaryHandle.Name()
+	removeTemporary := true
+	defer func() {
+		if removeTemporary {
+			_ = os.Remove(temporaryPath)
+		}
+	}()
+	if chmodError := temporaryHandle.Chmod(privateFileMode); chmodError != nil {
+		_ = temporaryHandle.Close()
+		return fmt.Errorf("set private replacement permissions %q: %w", temporaryPath, chmodError)
+	}
+	if writeError := writeContents(temporaryHandle); writeError != nil {
+		_ = temporaryHandle.Close()
+		return fmt.Errorf("write private replacement %q: %w", file.relativePath, writeError)
+	}
+	if syncError := temporaryHandle.Sync(); syncError != nil {
+		_ = temporaryHandle.Close()
+		return fmt.Errorf("sync private replacement %q: %w", file.relativePath, syncError)
+	}
+	if closeError := temporaryHandle.Close(); closeError != nil {
+		return fmt.Errorf("close private replacement %q: %w", file.relativePath, closeError)
+	}
+	if renameError := os.Rename(temporaryPath, file.path); renameError != nil {
+		return fmt.Errorf("publish private replacement %q: %w", file.relativePath, renameError)
+	}
+	removeTemporary = false
+
+	parentHandle, openError := os.Open(filepath.Dir(file.path))
+	if openError != nil {
+		return fmt.Errorf("open private replacement directory %q: %w", parentRelativePath, openError)
+	}
+	if syncError := parentHandle.Sync(); syncError != nil {
+		_ = parentHandle.Close()
+		return fmt.Errorf("sync private replacement directory %q: %w", parentRelativePath, syncError)
+	}
+	if closeError := parentHandle.Close(); closeError != nil {
+		return fmt.Errorf("close private replacement directory %q: %w", parentRelativePath, closeError)
+	}
+	return nil
+}
+
+func (file File) validateExisting() error {
+	pathInfo, statError := os.Lstat(file.path)
+	switch {
+	case errors.Is(statError, os.ErrNotExist):
+		return nil
+	case statError != nil:
+		return fmt.Errorf("inspect private file %q: %w", file.path, statError)
+	case pathInfo.Mode()&os.ModeSymlink != 0:
+		return fmt.Errorf("validate private file %q: symbolic links are not allowed", file.path)
+	case !pathInfo.Mode().IsRegular():
+		return fmt.Errorf("validate private file %q: path must be a regular file", file.path)
+	case pathInfo.Mode().Perm() != privateFileMode:
+		return fmt.Errorf(
+			"validate private file %q: permissions must be 0600, received %04o",
+			file.path,
+			pathInfo.Mode().Perm(),
+		)
+	default:
+		return nil
+	}
 }
 
 func (root Root) resolve(relativePath string) (string, string, error) {
