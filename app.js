@@ -490,31 +490,31 @@ function renderCatalog() {
     const guideLink = element('a', {
       class: 'provider-card-guide',
       href: `#guide/${providerDefinition.id}`,
-      'aria-label': `${ui().guide}: ${localized.title}`,
+      'aria-label': localized.title,
       'data-route': 'guide',
       'data-provider': providerDefinition.id
     });
-    const metadata = element(
-      'div',
-      {class: 'provider-card-meta'},
-      element('span', {
-        class: 'provider-type',
-        text: ui().guide
-      })
-    );
+    const cardCopy = element('div', {class: 'provider-card-copy'});
+    const providerName = element('h2', {
+      class: 'provider-name',
+      text: localized.title
+    });
     if (providerDefinition.surface === 'workspace') {
-      metadata.append(
-        actionButton(ui().data_analysis, {
-          'data-route': providerDefinition.id,
-          class: 'button button-primary provider-analysis-action'
-        })
+      cardCopy.append(
+        element(
+          'div',
+          {class: 'provider-card-meta'},
+          providerName,
+          actionButton(ui().data_analysis, {
+            'data-route': providerDefinition.id,
+            class: 'button button-primary provider-analysis-action'
+          })
+        )
       );
+    } else {
+      cardCopy.append(providerName);
     }
-    const cardCopy = element(
-      'div',
-      {class: 'provider-card-copy'},
-      metadata,
-      element('h2', {class: 'provider-name', text: localized.title}),
+    cardCopy.append(
       element('p', {class: 'provider-summary', text: localized.intro})
     );
     card.append(

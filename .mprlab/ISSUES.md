@@ -139,6 +139,9 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   Goal:
   Keep each guide-only catalog action clear, singular, and actionable.
 
+  Superseded metadata contract:
+  B017 removes the remaining Guide word from every provider card while preserving the full-card destination.
+
   Requirements:
   - Render exactly one full-card guide link in every provider card without a separate guide button.
   - Keep the compact Guide label as metadata rather than a duplicate action.
@@ -337,6 +340,26 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   Validation:
   - `make check-frontend`
   - Focused OpenAI HTTP contract tests with a synthetic archive and deterministic inference.
+  - `make test-browser`
+  - `make ci`
+
+- [x] [B017] (P1) {B007,B014,B015,B016} Remove Guide metadata from provider cards
+  Goal:
+  Remove the redundant Guide word from every catalog card while preserving the card's destination and useful application action.
+
+  Requirements:
+  - Render no visible Guide metadata in any provider card or locale.
+  - Keep the complete card surface as the provider's native keyboard-operable guide link with the provider name as its accessible label.
+  - Render a metadata row only when it contains the top-right Data analysis action.
+  - Remove obsolete Guide-label styling instead of retaining an empty or hidden element.
+  - Preserve compact wide and narrow card geometry, provider summaries, focus visibility, and action isolation.
+
+  Deliverables:
+  - Provider cards with no Guide label and no empty metadata row.
+  - Updated real-browser assertions for markup, routing, actions, and responsive containment.
+
+  Validation:
+  - `make check-frontend`
   - `make test-browser`
   - `make ci`
 

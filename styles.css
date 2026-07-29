@@ -402,11 +402,15 @@ mpr-footer {
 
 .provider-card-meta {
   display: flex;
-  min-height: 18px;
+  min-height: 24px;
   margin-bottom: 3px;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+}
+
+.provider-card-meta .provider-name {
+  min-width: 0;
 }
 
 .provider-name {
@@ -415,14 +419,6 @@ mpr-footer {
   font-size: 16px;
   font-weight: 740;
   line-height: 1.25;
-}
-
-.provider-type {
-  color: var(--faint);
-  font-size: 9px;
-  font-weight: 760;
-  letter-spacing: 0.075em;
-  text-transform: uppercase;
 }
 
 .provider-summary {

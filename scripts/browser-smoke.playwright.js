@@ -190,10 +190,11 @@ async page => {
     assert(
       await card.locator('.provider-name').count() === 1 &&
         await card.locator('.provider-summary').count() === 1 &&
+        await card.locator('.provider-type').count() === 0 &&
         await card.locator(
           `.provider-card-guide[href="#guide/${providerID}"][data-route="guide"]`
         ).count() === 1,
-      `${providerID} provider card is missing its name, summary, or full-card guide link`
+      `${providerID} provider card must keep its name, summary, and full-card link without Guide metadata`
     );
     providerIconPaths.push(iconRecord.path);
   }
@@ -204,11 +205,13 @@ async page => {
   assert(
     await page.locator('.provider-card-guide[data-route="guide"]').count() === 11 &&
       await page.locator('.provider-card [data-route="guide"] button').count() === 0 &&
+      await page.locator('.provider-card .provider-type').count() === 0 &&
+      await page.locator('.provider-card .provider-card-meta').count() === 2 &&
       await page.locator('.provider-card .state-chip').count() === 0 &&
       await page.locator(
         '.provider-card:not([data-provider-id="netflix"]):not([data-provider-id="openai"]) .provider-analysis-action'
       ).count() === 0,
-    'every catalog card must link directly to its guide without a guide button or state pill'
+    'catalog cards must keep their full-card links without Guide metadata, guide buttons, or state pills'
   );
   for (const providerID of ['netflix', 'openai']) {
     assert(
@@ -238,6 +241,7 @@ async page => {
           copyRight: copyBox.right,
           metadataBottom: metadataBox.bottom,
           metadataTop: metadataBox.top,
+          nameBottom: nameBox.bottom,
           nameTop: nameBox.top
         };
       });
@@ -245,8 +249,9 @@ async page => {
       Math.abs(analysisGeometry.actionRight - analysisGeometry.copyRight) <= 1 &&
         analysisGeometry.actionTop >= analysisGeometry.metadataTop &&
         analysisGeometry.actionBottom <= analysisGeometry.metadataBottom + 1 &&
-        analysisGeometry.actionBottom <= analysisGeometry.nameTop,
-      `${providerID} Data analysis must occupy the card top-right position above its name`
+        analysisGeometry.nameTop >= analysisGeometry.metadataTop &&
+        analysisGeometry.nameBottom <= analysisGeometry.metadataBottom + 1,
+      `${providerID} name and Data analysis must share the card's compact top row`
     );
   }
   assert(
@@ -770,6 +775,7 @@ async page => {
         copyRight: copyBox.right,
         metadataBottom: metadataBox.bottom,
         metadataTop: metadataBox.top,
+        nameBottom: nameBox.bottom,
         nameTop: nameBox.top,
         providerID
       };
@@ -823,6 +829,8 @@ async page => {
       guideOnlyCardsHaveNoAppAction: guideOnlyCards.every((guideOnlyCard) => {
         return (
           guideOnlyCard.querySelector('.provider-analysis-action') === null &&
+          guideOnlyCard.querySelector('.provider-card-meta') === null &&
+          guideOnlyCard.querySelector('.provider-type') === null &&
           guideOnlyCard.querySelectorAll('.provider-card-guide[data-route="guide"]').length === 1 &&
           guideOnlyCard.querySelector('.state-chip') === null
         );
@@ -840,12 +848,13 @@ async page => {
           Math.abs(analysisCard.actionRight - analysisCard.copyRight) <= 1 &&
           analysisCard.actionTop >= analysisCard.metadataTop &&
           analysisCard.actionBottom <= analysisCard.metadataBottom + 1 &&
-          analysisCard.actionBottom <= analysisCard.nameTop &&
-          analysisCard.actionRight <= analysisCard.cardRight
+          analysisCard.actionRight <= analysisCard.cardRight &&
+          analysisCard.nameTop >= analysisCard.metadataTop &&
+          analysisCard.nameBottom <= analysisCard.metadataBottom + 1
         );
       }) &&
       mobileWorkspaceCatalog.stateChipCount === 0,
-    'mobile Netflix and OpenAI Data analysis actions must occupy each card top right'
+    'mobile Netflix and OpenAI names and Data analysis actions must share each card top row'
   );
   assert(
     mobileWorkspaceCatalog.guideOnlyCardsHaveNoAppAction &&
