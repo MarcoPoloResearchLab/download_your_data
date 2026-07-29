@@ -10,9 +10,15 @@ Target: `/Users/tyemirov/Development/download_your_data`
 
 ## Outcome
 
-`download_your_data` becomes the sole maintained owner of the Netflix viewing-history workflow. One local Go process, one product executable, and one browser application own Netflix import, local analysis, optional TMDB enrichment, dashboarding, enriched CSV export, replacement, restart, cancellation, and deletion.
+`download_your_data` becomes the sole maintained owner of the Netflix viewing-history workflow. One authenticated browser application and one user-scoped provider service own Netflix import, private analysis, optional TMDB enrichment, dashboarding, enriched CSV export, replacement, restart, cancellation, and deletion.
 
 The target must not depend on the standalone checkout through a Go module, local replacement, subprocess, HTTP sidecar, copied database, compatibility package, or runtime filesystem path. The standalone repository remains unchanged until target-owned parity is released and the operator explicitly approves its removal.
+
+`docs/user-authentication-plan.md` is the current authority for user identity,
+storage scope, public and protected routes, frontend ownership, and deployment.
+It supersedes this plan's implemented first-release local-only boundary while
+preserving the Netflix input, lifecycle, TMDB, analytics, and privacy
+semantics.
 
 ## First Canonical Scope
 
@@ -24,16 +30,16 @@ The importer validates file content rather than depending on a filename. The cur
 
 ## Canonical Product Decisions
 
-1. Raw viewing-history import and raw analytics require no third-party service and never leave the local machine.
+1. Raw viewing-history import and raw analytics require no third-party enrichment service. The source upload enters only the authenticated user's private Download Your Data workspace.
 2. TMDB enrichment is an explicit, separately initiated operation. The app discloses that unique derived title queries will be sent to TMDB; viewing dates, profile information, the source CSV, and complete viewing rows are never sent.
-3. A missing TMDB credential does not make the local application or raw Netflix provider invalid. It is a typed `not_configured` capability state, and an enrichment request is rejected until configured.
+3. A missing TMDB credential does not make the authenticated application or raw Netflix provider invalid. It is a typed `not_configured` capability state, and an enrichment request is rejected until configured.
 4. The TMDB read token is server-only configuration named `DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN`. The browser receives only a configured/not-configured capability value.
 5. TMDB authentication uses the current Bearer-token contract, not an API key in a query string. Production calls use the fixed official HTTPS API origin; tests inject a local fake server.
 6. The application owns concurrency, rate limiting, retry, and cancellation. Users do not choose worker counts. Retries honor `Retry-After`, remain bounded, and stop with the request context.
 7. A raw generation is activated before optional enrichment. Enrichment builds a replacement generation from the active raw generation so the usable library remains available until the complete enriched replacement is ready.
 8. Matching has closed `matched`, `review`, and `unmatched` outcomes. Ambiguous or low-confidence candidates never become accepted metadata merely because they are popular.
 9. Ready analytics label Netflix rows as activity entries or plays, not completed views. Raw titles and local calendar dates are preserved exactly; derived title identity is versioned and auditable.
-10. The browser loads no third-party scripts, styles, fonts, or charts. TMDB attribution appears in the product Credits surface using approved assets and the notice required by the current [TMDB FAQ](https://developer.themoviedb.org/docs/faq).
+10. The browser loads MPRLab shell assets only through the literal `mpr-ui@latest` contract. Provider icons, guide screenshots, charts, and personal-data payloads remain application-owned. TMDB attribution appears in the product Credits surface using approved assets and the notice required by the current [TMDB FAQ](https://developer.themoviedb.org/docs/faq).
 
 ### Implemented TMDB boundary identities
 
@@ -53,9 +59,9 @@ Production uses TMDB's documented [API Read Access Token as a Bearer credential]
 
 `make eval-netflix-matcher` is the named release gate. The initial 11-case synthetic corpus records five matched, three review, and three unmatched outcomes, with accepted-match precision `1.000` and expected-accept recall `1.000`. The gate requires precision `1.00` and recall `0.90`; popularity is retained only as source evidence and never participates in scoring.
 
-### Implemented local generation boundary
+### Implemented generation boundary
 
-The target now owns the current local lifecycle through these persisted identities:
+The target owns the current lifecycle through these persisted identities:
 
 | Boundary | Current identity |
 | --- | --- |
@@ -64,7 +70,7 @@ The target now owns the current local lifecycle through these persisted identiti
 | Generation analytics | `netflix-generation-analytics-v1` |
 | Record cursor | `netflix-record-cursor-v3` |
 
-The sole state and lease paths are `providers/netflix/library.json` and `providers/netflix/library.lock` beneath the private data root. Immutable ready artifacts live under `providers/netflix/generations/{generationID}`. The state document and every artifact are validated against the exact current contract on open and read; foreign, permissive, incomplete, or stale persisted shapes are rejected.
+F011 moves the state and lease paths beneath the authenticated user's provider root. Within that root they remain `providers/netflix/library.json` and `providers/netflix/library.lock`, and immutable ready artifacts remain under `providers/netflix/generations/{generationID}`. The state document and every artifact are validated against the exact current contract on open and read; foreign, permissive, incomplete, stale, or cross-user persisted shapes are rejected.
 
 One uncompressed CSV is limited to 64 MiB, 250,000 activity rows, 100,000 unique title identities, 8 KiB titles, 16 KiB fields, and 512 MiB of generation working data. The provider permits one building generation, retains at most 256 lifecycle events per generation and 256 generation entries, and returns at most 200 records per page. Dates must resolve between Netflix's 1997 launch year and the server's current UTC date. These are product constants exposed by the provider capability payload, not user settings.
 
@@ -82,7 +88,7 @@ Creation persists `receiving`; a complete staged upload advances through `valida
 | Dashboard aggregation | Preserve all maintained measures while correcting date validation, labels, deterministic ordering, match coverage, empty outcomes, and accessibility summaries. |
 | Standalone web server | Delete at the target boundary. Its routes, temp-file cookies, templates, CDN dependencies, and second listen address are not incorporated. |
 | Standalone Bootstrap/Chart.js dashboard | Recompose as checked ES modules with self-owned application assets inside the shared `mpr-ui@latest` header and footer. |
-| `tmdbenrich` CLI | Preserve useful inspection, enrichment, and export operations as provider-scoped commands in the single `download-your-data` executable. Do not ship a second binary. |
+| `tmdbenrich` CLI | The incorporation is complete. The authenticated web release does not preserve a current end-user CLI or second binary. |
 | Tracked SQLite cache | Do not import it. The source database is empty, is a generated runtime shape, and is not a product artifact. |
 
 ## Provider Domain
@@ -124,7 +130,7 @@ Canonical HTTP surface:
 | `DELETE /api/providers/netflix/generations/{generationID}` | Cancel and remove one non-active generation. |
 | `DELETE /api/providers/netflix` | Delete the complete provider library after typed explicit confirmation. |
 
-All mutations use the shared loopback Host, Origin, CSRF, lease, data-root, and owner-only permission contracts. API payloads use opaque identifiers; filenames and raw titles never appear in route segments or logs.
+All routes are protected by the shared TAuth session and resolve state beneath the authenticated user's provider root. Mutations also use the exact production Origin, credentialed CORS, CSRF, lease, data-root, and owner-only permission contracts. API payloads use opaque identifiers; filenames and raw titles never appear in route segments or logs.
 
 ## User Experience
 
@@ -138,17 +144,17 @@ Replace the wrapping platform-link masthead and marketing hero with a compact pr
 - one main work surface plus a `210px` state/action rail at wide viewport widths;
 - the rail becomes an inline status panel on small screens.
 
-Every compact provider card opens its permanent visual download guide. A separate Data analysis action occupies the card's top-right metadata position only for a provider with a current browser workspace and remains isolated from the card link. The catalog does not duplicate transient provider state; the Netflix workspace itself owns backend states such as `NO DATA`, `READY LOCAL`, `ENRICHING`, `READY + TMDB`, and `ACTION NEEDED`. The registry surface is ready for OpenAI to become workspace-capable only when its separate lifecycle and browser issues deliver that backend contract; the existing operator commands do not constitute a browser route.
+Every compact provider card opens its permanent anonymous visual download guide. A separate Data analysis action opens `#app/netflix` and waits for the shared `mpr-ui`/TAuth lifecycle before hydrating the workspace. The catalog does not duplicate transient provider state; the Netflix workspace itself owns backend states such as `NO DATA`, `READY LOCAL`, `ENRICHING`, `READY + TMDB`, and `ACTION NEEDED`. OpenAI becomes workspace-capable only when its separate lifecycle and browser issues deliver that backend contract, using the same TAuth session.
 
 ### Empty state and import
 
 The Netflix empty state is a compact three-step panel:
 
 1. Open Netflix account settings, choose a profile, open Viewing activity, and select Download all.
-2. Select or drop the CSV. Show accepted content, size limit, and local-only privacy statement.
+2. Select or drop the CSV. Show accepted content, size limit, and the authenticated private-workspace disclosure.
 3. Validate and import. Announce progress through an accessible live region and never simulate progress.
 
-The import panel includes keyboard-operable file selection, an exact validation failure, and one clear retry. It does not request a TMDB credential or send title data during local import.
+The import panel includes keyboard-operable file selection, an exact validation failure, and one clear retry. It does not request a TMDB credential or send title data to TMDB during raw import.
 
 ### Ready workspace
 
@@ -185,7 +191,7 @@ If TMDB is not configured, the UI gives the concrete server configuration name a
 ## Privacy, Security, And Data Retention
 
 - Apply bounded request-body, CSV-row, field-length, date-range, title-count, working-disk, response-body, concurrency, and retry limits.
-- Store provider databases, caches, staging files, and exports only beneath the validated private data root.
+- Store provider databases, caches, staging files, and exports only beneath the authenticated user's validated private provider root.
 - Do not write source data to shared `os.TempDir`, filenames to logs, title strings to logs, chart payloads to logs, or arbitrary filesystem paths to cookies.
 - Stream CSV parsing and export; never expose a server filesystem path to the browser.
 - Keep the TMDB token out of URLs, browser payloads, logs, reports, and persisted provider data.
@@ -202,17 +208,18 @@ If TMDB is not configured, the UI gives the concrete server configuration name a
 5. **F008 — Netflix provider workspace:** catalog entry in all locales, import flow, progress, dashboard, match-quality view, controls, Credits, accessibility, responsive behavior, and exact shared-shell browser-network proof.
 6. **I009 — Single-executable operator parity:** provider-scoped Netflix inspect, enrich, and export commands backed by the same packages and configuration.
 7. **M409 — Standalone checkout retirement:** prove independent target parity and release, resolve any untracked/private data, then request explicit approval before removing `/Users/tyemirov/Development/netflix`.
+8. **F011 — Authenticated user migration:** replace the process-global workspace and packaged local product boundary with the shared TAuth user, user-scoped persistence, static Pages application, and two-user isolation proof.
 
 ## Completion Gate
 
 Netflix incorporation is complete only when:
 
-- every maintained source capability is present through the target's browser or single product executable;
+- every maintained source capability is present through the authenticated target browser application;
 - `go list -m all`, repository search, builds, tests, and runtime checks have no dependency on `github.com/tyemirov/netflix` or `/Users/tyemirov/Development/netflix`;
 - a synthetic viewing-history CSV passes import, raw analytics, fake-TMDB enrichment, restart, replacement, export, cancellation, and deletion through public entry points;
 - matching evaluation meets its recorded precision and review-coverage thresholds;
 - browser tests cover empty, validating, importing, ready-local, not-configured, enriching, ready-enriched, review, failure, replace, export, and delete states;
-- browser network assertions permit only the two exact `mpr-ui@latest` shell requests;
+- browser network assertions prove anonymous guides make no protected request, application requests wait for shared authentication, and no personal data reaches static or third-party asset hosts;
 - `make ci` passes with no real TMDB call or secret;
-- a released target artifact passes without the standalone checkout;
+- the released Pages and backend artifacts pass without the standalone checkout;
 - the operator separately approves any destructive removal of the standalone directory.
