@@ -63,7 +63,7 @@ func TestFrontendProviderWorkspaceContract(testContext *testing.T) {
 
 	expectedRegistry := []frontendProviderDefinition{
 		{ID: "netflix", Surface: "workspace", IconSrc: "images/providers/netflix.png"},
-		{ID: "openai", Surface: "guide", IconSrc: "images/providers/openai.png"},
+		{ID: "openai", Surface: "workspace", IconSrc: "images/providers/openai.png"},
 		{ID: "facebook", Surface: "guide", IconSrc: "images/providers/facebook.png"},
 		{ID: "instagram", Surface: "guide", IconSrc: "images/providers/instagram.png"},
 		{ID: "whatsapp", Surface: "guide", IconSrc: "images/providers/whatsapp.png"},

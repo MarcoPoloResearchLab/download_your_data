@@ -10,8 +10,10 @@ import {
   getAnalytics,
   getGenerationEvents,
   getNetflixProvider,
+  getOpenAIProvider,
   getRecords,
   initializeAPI,
+  searchOpenAI,
   uploadViewingActivity
 } from './api.js';
 import {countChart, seriesChart} from './charts.js';
@@ -22,8 +24,8 @@ const STORAGE_KEYS = Object.freeze({
 });
 
 const LOCALES = Object.freeze(['en', 'es', 'fr', 'ru']);
+const WORKSPACE_PROVIDER_IDS = Object.freeze(['netflix', 'openai']);
 const GUIDE_ONLY_PROVIDER_IDS = Object.freeze([
-  'openai',
   'facebook',
   'instagram',
   'whatsapp',
@@ -192,7 +194,30 @@ const REQUIRED_UI_KEYS = Object.freeze([
   'filters_applied',
   'page_loaded',
   'cached',
-  'progress'
+  'progress',
+  'openai_prepare_title',
+  'openai_prepare_body',
+  'openai_index_body',
+  'openai_command_intro',
+  'openai_search_title',
+  'openai_search_body',
+  'openai_search_label',
+  'openai_search_placeholder',
+  'openai_search_action',
+  'openai_mode',
+  'openai_mode_hybrid',
+  'openai_mode_semantic',
+  'openai_mode_lexical',
+  'openai_include_archived',
+  'openai_search_results',
+  'openai_no_results',
+  'openai_search_hint',
+  'openai_conversations',
+  'openai_messages',
+  'openai_indexed_documents',
+  'openai_index_model',
+  'openai_query_privacy',
+  'openai_search_completed'
 ]);
 
 const state = {
@@ -208,6 +233,14 @@ const state = {
     matchStatus: ''
   },
   netflix: null,
+  openai: null,
+  openAIQuery: '',
+  openAIMode: 'hybrid',
+  openAIIncludeArchived: true,
+  openAIResults: [],
+  openAISearchBusy: false,
+  openAISearchError: null,
+  openAISearchController: null,
   analytics: null,
   records: [],
   nextCursor: '',
@@ -237,14 +270,16 @@ async function boot() {
   initializeTheme();
   attachGlobalHandlers();
   const initialController = new AbortController();
-  const [data, capabilities, netflix] = await Promise.all([
+  const [data, capabilities, netflix, openai] = await Promise.all([
     fetchJSON('data.json', initialController.signal),
     initializeAPI(initialController.signal),
-    getNetflixProvider(initialController.signal)
+    getNetflixProvider(initialController.signal),
+    getOpenAIProvider(initialController.signal)
   ]);
   state.data = validateAppData(data);
   state.capabilities = capabilities;
   state.netflix = netflix;
+  state.openai = openai;
   state.locale = initialLocale();
   document.documentElement.lang = state.locale;
   state.route = parseRoute();
@@ -256,11 +291,13 @@ function attachGlobalHandlers() {
   window.addEventListener('hashchange', () => {
     state.route = parseRoute();
     resetWorkspaceData();
+    resetOpenAISearchData();
     render();
   });
   window.addEventListener('beforeunload', cleanupAll, {once: true});
   document.addEventListener('click', handleClick);
   document.addEventListener('change', handleChange);
+  document.addEventListener('submit', handleSubmit);
   document.addEventListener('keydown', handleKeyDown);
   document.addEventListener('dragover', handleDragOver);
   document.addEventListener('dragleave', handleDragLeave);
@@ -365,6 +402,19 @@ async function handleChange(event) {
   }
 }
 
+function handleSubmit(event) {
+  if (!event.target.matches('#openai-search-form')) {
+    return;
+  }
+  event.preventDefault();
+  const form = new FormData(event.target);
+  void beginOpenAISearch({
+    query: String(form.get('query') || ''),
+    mode: String(form.get('mode') || ''),
+    includeArchived: form.get('include_archived') === 'on'
+  });
+}
+
 function handleDragOver(event) {
   const dropZone = event.target.closest('.drop-zone');
   if (!dropZone) {
@@ -398,12 +448,14 @@ async function handleDrop(event) {
 }
 
 function render() {
-  if (!state.data || !state.netflix) {
+  if (!state.data || !state.netflix || !state.openai) {
     return;
   }
   updateChrome();
   if (state.route.name === 'netflix') {
     renderNetflixWorkspace();
+  } else if (state.route.name === 'openai') {
+    renderOpenAIWorkspace();
   } else if (state.route.name === 'guide') {
     renderGuide(state.route.provider);
   } else if (state.route.name === 'credits') {
@@ -496,11 +548,11 @@ function renderGuide(providerID) {
     element('p', {class: 'lede', text: provider.intro})
   );
   heading.append(copy);
-  if (providerID === 'netflix') {
+  if (WORKSPACE_PROVIDER_IDS.includes(providerID)) {
     const actions = element('div', {class: 'page-heading-actions'});
     actions.append(
       actionButton(ui().open, {
-        'data-route': 'netflix',
+        'data-route': providerID,
         class: 'button button-primary'
       })
     );
@@ -594,6 +646,245 @@ function renderInstructionSteps(provider) {
     );
   });
   return list;
+}
+
+function renderOpenAIWorkspace() {
+  const provider = localizedProvider('openai');
+  const definition = providerDefinition('openai');
+  setHeaderContext(provider.title);
+  const root = element('div', {class: 'workspace openai-workspace'});
+  const presentation = openAIStatePresentation();
+  const heading = element('div', {class: 'workspace-header'});
+  const title = element('div', {class: 'workspace-title'});
+  title.append(
+    element('a', {
+      class: 'back-link',
+      href: '#catalog',
+      'aria-label': ui().back_catalog,
+      text: '←'
+    }),
+    providerMark('openai', provider.title, definition.icon_src),
+    element(
+      'div',
+      {},
+      element('p', {class: 'eyebrow', text: ui().workspace}),
+      element('h1', {text: provider.title})
+    )
+  );
+  const actions = element('div', {class: 'workspace-header-actions'});
+  actions.append(
+    actionButton(ui().view_guide, {
+      'data-route': 'guide',
+      'data-provider': 'openai'
+    }),
+    stateChip(presentation.label, presentation.tone)
+  );
+  heading.append(title, actions);
+
+  const grid = element('div', {class: 'workspace-grid'});
+  const main = element('div', {class: 'workspace-main'});
+  const rail = element('aside', {
+    class: 'workspace-rail',
+    'aria-label': ui().details
+  });
+  if (state.openai.state === 'ready') {
+    main.append(renderOpenAISearchPanel());
+  } else {
+    main.append(renderOpenAIPreparationPanel());
+  }
+  rail.append(...renderOpenAIRail());
+  grid.append(main, rail);
+  root.append(heading, grid);
+  replaceApp(root);
+}
+
+function renderOpenAIPreparationPanel() {
+  const indexRequired = state.openai.state === 'index_required';
+  const commandLines = indexRequired
+    ? ['download-your-data index build']
+    : [
+        'download-your-data import /path/to/openai-export.zip',
+        'download-your-data index build'
+      ];
+  const panel = element('section', {class: 'panel panel-raised openai-prepare'});
+  panel.append(
+    element('p', {class: 'eyebrow', text: ui().local_only}),
+    element('h2', {text: ui().openai_prepare_title}),
+    element('p', {
+      class: 'panel-copy',
+      text: indexRequired ? ui().openai_index_body : ui().openai_prepare_body
+    }),
+    element('p', {class: 'openai-command-intro', text: ui().openai_command_intro}),
+    element(
+      'pre',
+      {class: 'openai-command'},
+      element('code', {text: commandLines.join('\n')})
+    )
+  );
+  return panel;
+}
+
+function renderOpenAISearchPanel() {
+  const panel = element('section', {class: 'panel panel-raised openai-search-panel'});
+  const header = element('div', {class: 'panel-header'});
+  header.append(
+    element(
+      'div',
+      {},
+      element('h2', {text: ui().openai_search_title}),
+      element('p', {class: 'panel-copy', text: ui().openai_search_body})
+    )
+  );
+  const form = element('form', {
+    id: 'openai-search-form',
+    class: 'openai-search-form'
+  });
+  const queryField = element('label', {class: 'field openai-query-field'});
+  queryField.append(
+    element('span', {text: ui().openai_search_label}),
+    element('input', {
+      type: 'search',
+      name: 'query',
+      value: state.openAIQuery,
+      placeholder: ui().openai_search_placeholder,
+      maxlength: String(state.openai.capabilities.max_query_bytes),
+      autocomplete: 'off',
+      required: true,
+      disabled: state.openAISearchBusy
+    })
+  );
+  const modeField = element('label', {class: 'field openai-mode-field'});
+  const mode = element('select', {
+    name: 'mode',
+    disabled: state.openAISearchBusy
+  });
+  for (const [value, label] of [
+    ['hybrid', ui().openai_mode_hybrid],
+    ['semantic', ui().openai_mode_semantic],
+    ['lexical', ui().openai_mode_lexical]
+  ]) {
+    mode.append(
+      element('option', {
+        value,
+        selected: state.openAIMode === value,
+        text: label
+      })
+    );
+  }
+  modeField.append(element('span', {text: ui().openai_mode}), mode);
+  const archived = element(
+    'label',
+    {class: 'openai-archived-field'},
+    element('input', {
+      type: 'checkbox',
+      name: 'include_archived',
+      checked: state.openAIIncludeArchived,
+      disabled: state.openAISearchBusy
+    }),
+    document.createTextNode(ui().openai_include_archived)
+  );
+  form.append(
+    queryField,
+    modeField,
+    archived,
+    element('button', {
+      class: 'button button-primary',
+      type: 'submit',
+      disabled: state.openAISearchBusy,
+      text: state.openAISearchBusy ? ui().loading : ui().openai_search_action
+    })
+  );
+  panel.append(
+    header,
+    form,
+    element('p', {class: 'privacy-note', text: ui().openai_query_privacy}),
+    renderOpenAISearchResults()
+  );
+  return panel;
+}
+
+function renderOpenAISearchResults() {
+  const region = element('div', {
+    class: 'openai-results',
+    'aria-live': 'polite'
+  });
+  if (state.openAISearchError) {
+    region.append(alertNode('danger', formatError(state.openAISearchError)));
+    return region;
+  }
+  if (state.openAISearchBusy) {
+    region.append(element('p', {class: 'empty-copy', text: ui().loading}));
+    return region;
+  }
+  if (!state.openAIQuery) {
+    region.append(element('p', {class: 'empty-copy', text: ui().openai_search_hint}));
+    return region;
+  }
+  region.append(element('h3', {text: ui().openai_search_results}));
+  if (!state.openAIResults.length) {
+    region.append(element('p', {class: 'empty-copy', text: ui().openai_no_results}));
+    return region;
+  }
+  const list = element('ol', {class: 'openai-result-list'});
+  state.openAIResults.forEach((result) => {
+    const item = element('li', {class: 'openai-result'});
+    const resultHeader = element('div', {class: 'openai-result-header'});
+    resultHeader.append(
+      element('h4', {text: result.conversation_title || ui().unknown}),
+      element('span', {
+        class: 'openai-result-score',
+        text: `${ui().score}: ${result.score.toFixed(4)}`
+      })
+    );
+    const excerpts = element('div', {class: 'openai-excerpts'});
+    result.excerpts.forEach((excerpt) => {
+      excerpts.append(
+        element(
+          'blockquote',
+          {class: 'openai-excerpt'},
+          element('span', {class: 'openai-excerpt-role', text: excerpt.role}),
+          element('p', {text: excerpt.text})
+        )
+      );
+    });
+    item.append(resultHeader, excerpts);
+    list.append(item);
+  });
+  region.append(list);
+  return region;
+}
+
+function renderOpenAIRail() {
+  const statistics = state.openai.statistics;
+  const summary = state.openai.search_index;
+  const archive = element('section', {class: 'panel rail-section'});
+  archive.append(
+    element('h2', {text: ui().details}),
+    element(
+      'dl',
+      {class: 'rail-list'},
+      definition(ui().openai_conversations, formatNumber(statistics.conversations)),
+      definition(ui().openai_messages, formatNumber(statistics.messages)),
+      definition(
+        ui().openai_indexed_documents,
+        formatNumber(summary?.document_count || 0)
+      )
+    )
+  );
+  const inference = element('section', {class: 'panel rail-section'});
+  inference.append(
+    element('h2', {text: ui().analysis}),
+    element(
+      'dl',
+      {class: 'rail-list'},
+      definition(ui().openai_index_model, summary?.model || '—'),
+      definition(
+        ui().type,
+        String(state.openai.capabilities.inference_boundary)
+      )
+    )
+  );
+  return [archive, inference];
 }
 
 function renderNetflixWorkspace() {
@@ -1297,6 +1588,59 @@ function renderCredits() {
   replaceApp(root);
 }
 
+async function beginOpenAISearch(searchRequest) {
+  const query = searchRequest.query.trim();
+  state.openAIQuery = query;
+  state.openAIMode = searchRequest.mode;
+  state.openAIIncludeArchived = searchRequest.includeArchived;
+  state.openAIResults = [];
+  state.openAISearchError = null;
+  const queryBytes = new TextEncoder().encode(query).byteLength;
+  if (
+    !query ||
+    queryBytes > state.openai.capabilities.max_query_bytes ||
+    !state.openai.capabilities.search_modes.includes(searchRequest.mode)
+  ) {
+    state.openAISearchError = {code: 'invalid_openai_query', row: 0};
+    render();
+    announce(formatError(state.openAISearchError));
+    return;
+  }
+
+  cleanupOpenAISearch();
+  const controller = new AbortController();
+  state.openAISearchController = controller;
+  state.openAISearchBusy = true;
+  render();
+  try {
+    const response = await searchOpenAI(
+      {
+        query,
+        mode: searchRequest.mode,
+        includeArchived: searchRequest.includeArchived,
+        limit: Math.min(20, state.openai.capabilities.max_results),
+        excerpts: Math.min(3, state.openai.capabilities.max_excerpts)
+      },
+      controller.signal
+    );
+    state.openAIResults = response.results;
+    announce(ui().openai_search_completed);
+  } catch (error) {
+    if (error.name !== 'AbortError') {
+      state.openAISearchError = normalizeError(error);
+      announce(formatError(state.openAISearchError));
+    }
+  } finally {
+    if (state.openAISearchController === controller) {
+      state.openAISearchController = null;
+    }
+    state.openAISearchBusy = false;
+    if (state.route.name === 'openai') {
+      render();
+    }
+  }
+}
+
 async function beginLocalImport(file, replacing) {
   if (!validViewingActivityFile(file)) {
     state.actionError = {code: 'invalid_csv', row: 0};
@@ -1584,10 +1928,21 @@ function resetWorkspaceData() {
   state.dataError = '';
 }
 
+function resetOpenAISearchData() {
+  cleanupOpenAISearch();
+  state.openAIQuery = '';
+  state.openAIMode = 'hybrid';
+  state.openAIIncludeArchived = true;
+  state.openAIResults = [];
+  state.openAISearchBusy = false;
+  state.openAISearchError = null;
+}
+
 function cleanupAll() {
   window.clearTimeout(state.pollTimer);
   cleanupPoll();
   cleanupDataRequest();
+  cleanupOpenAISearch();
   cleanupAction();
 }
 
@@ -1601,9 +1956,24 @@ function cleanupDataRequest() {
   state.dataController = null;
 }
 
+function cleanupOpenAISearch() {
+  state.openAISearchController?.abort();
+  state.openAISearchController = null;
+}
+
 function cleanupAction() {
   state.actionController?.abort();
   state.actionController = null;
+}
+
+function openAIStatePresentation() {
+  if (state.openai?.state === 'ready') {
+    return {label: ui().state_ready_local, tone: 'success'};
+  }
+  if (state.openai?.state === 'index_required') {
+    return {label: ui().state_action_needed, tone: 'warning'};
+  }
+  return {label: ui().state_empty, tone: 'neutral'};
 }
 
 function netflixStatePresentation() {
@@ -1694,15 +2064,24 @@ function progressBar(generation) {
 
 function parseRoute() {
   const raw = window.location.hash.replace(/^#/, '');
-  if (raw === 'provider/netflix' || raw === 'netflix') {
+  if (raw === 'netflix') {
     return {name: 'netflix'};
+  }
+  if (raw.startsWith('provider/')) {
+    const provider = raw.slice('provider/'.length);
+    if (WORKSPACE_PROVIDER_IDS.includes(provider)) {
+      return {name: provider};
+    }
   }
   if (raw === 'credits') {
     return {name: 'credits'};
   }
   if (raw.startsWith('guide/')) {
     const provider = raw.slice('guide/'.length);
-    if (provider === 'netflix' || GUIDE_ONLY_PROVIDER_IDS.includes(provider)) {
+    if (
+      WORKSPACE_PROVIDER_IDS.includes(provider) ||
+      GUIDE_ONLY_PROVIDER_IDS.includes(provider)
+    ) {
       return {name: 'guide', provider};
     }
   }
@@ -1710,8 +2089,8 @@ function parseRoute() {
 }
 
 function navigate(route, provider = '') {
-  if (route === 'netflix') {
-    window.location.hash = 'provider/netflix';
+  if (WORKSPACE_PROVIDER_IDS.includes(route)) {
+    window.location.hash = `provider/${route}`;
   } else if (route === 'guide') {
     window.location.hash = `guide/${provider}`;
   } else if (route === 'credits') {
@@ -1796,6 +2175,10 @@ function localizedProvider(providerID) {
   return localized().platforms.find((provider) => provider.id === providerID);
 }
 
+function providerDefinition(providerID) {
+  return state.data.provider_registry.find((provider) => provider.id === providerID);
+}
+
 function instructionLinkURL(providerID, href) {
   assertString(href, `${providerID} instruction link`);
   let target;
@@ -1837,10 +2220,12 @@ function validateAppData(data) {
   if (new Set(providerIDs).size !== providerIDs.length || providerIDs[0] !== 'netflix') {
     throw new Error('provider_registry must start with one unique netflix provider');
   }
-  const netflixDefinition = data.provider_registry.find((provider) => provider.id === 'netflix');
-  if (netflixDefinition.surface !== 'workspace') {
-    throw new Error('netflix must be workspace-capable');
-  }
+  WORKSPACE_PROVIDER_IDS.forEach((providerID) => {
+    const definition = data.provider_registry.find((provider) => provider.id === providerID);
+    if (!definition || definition.surface !== 'workspace') {
+      throw new Error(`${providerID} must be workspace-capable`);
+    }
+  });
   GUIDE_ONLY_PROVIDER_IDS.forEach((providerID) => {
     const definition = data.provider_registry.find((provider) => provider.id === providerID);
     if (!definition || definition.surface !== 'guide') {

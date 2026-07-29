@@ -206,55 +206,49 @@ async page => {
       await page.locator('.provider-card [data-route="guide"] button').count() === 0 &&
       await page.locator('.provider-card .state-chip').count() === 0 &&
       await page.locator(
-        '.provider-card:not([data-provider-id="netflix"]) .provider-analysis-action'
+        '.provider-card:not([data-provider-id="netflix"]):not([data-provider-id="openai"]) .provider-analysis-action'
       ).count() === 0,
     'every catalog card must link directly to its guide without a guide button or state pill'
   );
-  assert(
-    await page.locator('[data-provider-id="netflix"]').count() === 1,
-    'provider catalog must contain exactly one Netflix identity'
-  );
-  assert(
-    await page.locator(
-      '[data-provider-id="netflix"] .provider-card-guide[data-provider="netflix"]'
-    ).count() === 1 &&
-      await page.locator(
-        '[data-provider-id="netflix"] .provider-card-meta .provider-analysis-action[data-route="netflix"]'
-      ).count() === 1 &&
-      (await page.locator(
-        '[data-provider-id="netflix"] .provider-analysis-action[data-route="netflix"]'
-      ).textContent()).trim() === 'Data analysis',
-    'Netflix catalog entry must expose Data analysis in its top metadata row'
-  );
-  const netflixAnalysisGeometry = await page
-    .locator('[data-provider-id="netflix"]')
-    .evaluate((card) => {
-      const copyBox = card.querySelector('.provider-card-copy').getBoundingClientRect();
-      const metadataBox = card.querySelector('.provider-card-meta').getBoundingClientRect();
-      const actionBox = card.querySelector('.provider-analysis-action').getBoundingClientRect();
-      const nameBox = card.querySelector('.provider-name').getBoundingClientRect();
-      return {
-        actionBottom: actionBox.bottom,
-        actionRight: actionBox.right,
-        actionTop: actionBox.top,
-        copyRight: copyBox.right,
-        metadataBottom: metadataBox.bottom,
-        metadataTop: metadataBox.top,
-        nameTop: nameBox.top
-      };
-    });
-  assert(
-    Math.abs(netflixAnalysisGeometry.actionRight - netflixAnalysisGeometry.copyRight) <= 1 &&
-      netflixAnalysisGeometry.actionTop >= netflixAnalysisGeometry.metadataTop &&
-      netflixAnalysisGeometry.actionBottom <= netflixAnalysisGeometry.metadataBottom + 1 &&
-      netflixAnalysisGeometry.actionBottom <= netflixAnalysisGeometry.nameTop,
-    'Netflix Data analysis must occupy the card top-right position above its name'
-  );
-  assert(
-    await page.locator('[data-provider-id="openai"]').count() === 1 &&
-      await page.locator('[data-provider-id="openai"] .provider-analysis-action').count() === 0,
-    'OpenAI must remain guide-linked until its browser workspace contract exists'
-  );
+  for (const providerID of ['netflix', 'openai']) {
+    assert(
+      await page.locator(`[data-provider-id="${providerID}"]`).count() === 1 &&
+        await page.locator(
+          `[data-provider-id="${providerID}"] .provider-card-guide[data-provider="${providerID}"]`
+        ).count() === 1 &&
+        await page.locator(
+          `[data-provider-id="${providerID}"] .provider-card-meta .provider-analysis-action[data-route="${providerID}"]`
+        ).count() === 1 &&
+        (await page.locator(
+          `[data-provider-id="${providerID}"] .provider-analysis-action[data-route="${providerID}"]`
+        ).textContent()).trim() === 'Data analysis',
+      `${providerID} catalog entry must expose Data analysis in its top metadata row`
+    );
+    const analysisGeometry = await page
+      .locator(`[data-provider-id="${providerID}"]`)
+      .evaluate((card) => {
+        const copyBox = card.querySelector('.provider-card-copy').getBoundingClientRect();
+        const metadataBox = card.querySelector('.provider-card-meta').getBoundingClientRect();
+        const actionBox = card.querySelector('.provider-analysis-action').getBoundingClientRect();
+        const nameBox = card.querySelector('.provider-name').getBoundingClientRect();
+        return {
+          actionBottom: actionBox.bottom,
+          actionRight: actionBox.right,
+          actionTop: actionBox.top,
+          copyRight: copyBox.right,
+          metadataBottom: metadataBox.bottom,
+          metadataTop: metadataBox.top,
+          nameTop: nameBox.top
+        };
+      });
+    assert(
+      Math.abs(analysisGeometry.actionRight - analysisGeometry.copyRight) <= 1 &&
+        analysisGeometry.actionTop >= analysisGeometry.metadataTop &&
+        analysisGeometry.actionBottom <= analysisGeometry.metadataBottom + 1 &&
+        analysisGeometry.actionBottom <= analysisGeometry.nameTop,
+      `${providerID} Data analysis must occupy the card top-right position above its name`
+    );
+  }
   assert(
     await page.locator('[data-provider-id="facebook"]').count() === 1 &&
       await page.locator('[data-provider-id="instagram"]').count() === 1 &&
@@ -275,6 +269,24 @@ async page => {
   assert(
     await page.evaluate(() => window.location.hash) === '#guide/openai',
     'provider card guide links must be keyboard operable'
+  );
+  await route('#catalog', '.catalog');
+  await page.locator(
+    '[data-provider-id="openai"] .provider-analysis-action[data-route="openai"]'
+  ).click();
+  await page.locator('.openai-workspace').waitFor();
+  assert(
+    await page.evaluate(() => window.location.hash) === '#provider/openai' &&
+      (await page.locator('.openai-workspace h1').textContent()).trim() ===
+        'OpenAI (ChatGPT)' &&
+      await page.locator('.openai-workspace .openai-prepare').count() === 1 &&
+      await page.locator(
+        '.openai-workspace .openai-command:has-text("download-your-data import")'
+      ).count() === 1 &&
+      await page.locator(
+        '.openai-workspace [data-route="guide"][data-provider="openai"]'
+      ).count() === 1,
+    'OpenAI Data analysis must open the real private analysis workspace'
   );
   await route('#catalog', '.catalog');
 
@@ -314,6 +326,12 @@ async page => {
         '[data-provider-id="netflix"] .provider-analysis-action[data-route="netflix"]'
       ).textContent()).trim() === localeDataAnalysis[locale],
       `${locale} Netflix Data analysis action is not localized`
+    );
+    assert(
+      (await page.locator(
+        '[data-provider-id="openai"] .provider-analysis-action[data-route="openai"]'
+      ).textContent()).trim() === localeDataAnalysis[locale],
+      `${locale} OpenAI Data analysis action is not localized`
     );
     await route('#guide/netflix', '#netflix');
     assert(
@@ -357,6 +375,10 @@ async page => {
         '#openai a[href="https://help.openai.com/en/articles/7260999-how-do-i-export-my-chatgpt-history-and-data"]'
       ).count() === 1,
       `${locale} OpenAI official export route is missing`
+    );
+    assert(
+      await page.locator('.guide [data-route="openai"]').count() === 1,
+      `${locale} OpenAI guide cannot open the analysis workspace`
     );
     await route('#guide/whatsapp', '#whatsapp');
     assert(
@@ -728,37 +750,42 @@ async page => {
   assert(!mobileLayout.railColumns.includes(' '), 'mobile rail must use one column');
 
   await route('#catalog', '.catalog');
-  const mobileNetflixCatalog = await page.evaluate(() => {
+  const mobileWorkspaceCatalog = await page.evaluate(() => {
     const grid = document.querySelector('.catalog-grid');
-    const card = document.querySelector('[data-provider-id="netflix"]');
-    const analysisAction = card.querySelector('.provider-analysis-action');
+    const analysisCards = ['netflix', 'openai'].map((providerID) => {
+      const card = document.querySelector(`[data-provider-id="${providerID}"]`);
+      const analysisAction = card.querySelector('.provider-analysis-action');
+      const cardBox = card.getBoundingClientRect();
+      const actionBox = analysisAction.getBoundingClientRect();
+      const copyBox = card.querySelector('.provider-card-copy').getBoundingClientRect();
+      const metadataBox = card.querySelector('.provider-card-meta').getBoundingClientRect();
+      const nameBox = card.querySelector('.provider-name').getBoundingClientRect();
+      return {
+        actionCount: card.querySelectorAll('.provider-analysis-action').length,
+        actionBottom: actionBox.bottom,
+        actionRight: actionBox.right,
+        actionTop: actionBox.top,
+        analysisLabel: analysisAction.textContent.trim(),
+        cardRight: cardBox.right,
+        copyRight: copyBox.right,
+        metadataBottom: metadataBox.bottom,
+        metadataTop: metadataBox.top,
+        nameTop: nameBox.top,
+        providerID
+      };
+    });
     const guideOnlyCards = [
       ...document.querySelectorAll(
-        '.provider-card:not([data-provider-id="netflix"])'
+        '.provider-card:not([data-provider-id="netflix"]):not([data-provider-id="openai"])'
       )
     ];
-    const cardBox = card.getBoundingClientRect();
-    const actionBox = analysisAction.getBoundingClientRect();
-    const copyBox = card.querySelector('.provider-card-copy').getBoundingClientRect();
-    const metadataBox = card.querySelector('.provider-card-meta').getBoundingClientRect();
-    const nameBox = card.querySelector('.provider-name').getBoundingClientRect();
     const providerIcons = [...document.querySelectorAll('.provider-icon')];
     const providerCards = [...document.querySelectorAll('.provider-card')];
     return {
+      analysisCards,
       documentWidth: document.documentElement.scrollWidth,
       viewportWidth: window.innerWidth,
       gridColumns: getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length,
-      actionCount: card.querySelectorAll('.provider-analysis-action').length,
-      actionBottom: actionBox.bottom,
-      actionRight: actionBox.right,
-      actionTop: actionBox.top,
-      analysisLabel: analysisAction.textContent.trim(),
-      cardLeft: cardBox.left,
-      cardRight: cardBox.right,
-      copyRight: copyBox.right,
-      metadataBottom: metadataBox.bottom,
-      metadataTop: metadataBox.top,
-      nameTop: nameBox.top,
       cardsCompactAndHorizontal: providerCards.every((providerCard) => {
         const providerCardBox = providerCard.getBoundingClientRect();
         const mark = providerCard.querySelector('.provider-mark').getBoundingClientRect();
@@ -804,30 +831,54 @@ async page => {
     };
   });
   assert(
-    mobileNetflixCatalog.documentWidth <= mobileNetflixCatalog.viewportWidth &&
-      mobileNetflixCatalog.gridColumns === 1 &&
-      mobileNetflixCatalog.actionCount === 1 &&
-      mobileNetflixCatalog.analysisLabel === 'Data analysis' &&
-      Math.abs(mobileNetflixCatalog.actionRight - mobileNetflixCatalog.copyRight) <= 1 &&
-      mobileNetflixCatalog.actionTop >= mobileNetflixCatalog.metadataTop &&
-      mobileNetflixCatalog.actionBottom <= mobileNetflixCatalog.metadataBottom + 1 &&
-      mobileNetflixCatalog.actionBottom <= mobileNetflixCatalog.nameTop &&
-      mobileNetflixCatalog.actionRight <= mobileNetflixCatalog.cardRight &&
-      mobileNetflixCatalog.stateChipCount === 0,
-    'mobile Netflix Data analysis must replace the state pill at the card top right'
+    mobileWorkspaceCatalog.documentWidth <= mobileWorkspaceCatalog.viewportWidth &&
+      mobileWorkspaceCatalog.gridColumns === 1 &&
+      mobileWorkspaceCatalog.analysisCards.every((analysisCard) => {
+        return (
+          analysisCard.actionCount === 1 &&
+          analysisCard.analysisLabel === 'Data analysis' &&
+          Math.abs(analysisCard.actionRight - analysisCard.copyRight) <= 1 &&
+          analysisCard.actionTop >= analysisCard.metadataTop &&
+          analysisCard.actionBottom <= analysisCard.metadataBottom + 1 &&
+          analysisCard.actionBottom <= analysisCard.nameTop &&
+          analysisCard.actionRight <= analysisCard.cardRight
+        );
+      }) &&
+      mobileWorkspaceCatalog.stateChipCount === 0,
+    'mobile Netflix and OpenAI Data analysis actions must occupy each card top right'
   );
   assert(
-    mobileNetflixCatalog.guideOnlyCardsHaveNoAppAction &&
-      mobileNetflixCatalog.summariesVisible &&
-      mobileNetflixCatalog.cardsCompactAndHorizontal &&
-      mobileNetflixCatalog.cardsFullyLinked,
+    mobileWorkspaceCatalog.guideOnlyCardsHaveNoAppAction &&
+      mobileWorkspaceCatalog.summariesVisible &&
+      mobileWorkspaceCatalog.cardsCompactAndHorizontal &&
+      mobileWorkspaceCatalog.cardsFullyLinked,
     'mobile provider cards must remain compact, fully guide-linked, and free of obsolete actions'
   );
   assert(
-    mobileNetflixCatalog.providerIconCount === 11 &&
-      mobileNetflixCatalog.providerIconsLarge &&
-      mobileNetflixCatalog.providerIconsUnframed,
+    mobileWorkspaceCatalog.providerIconCount === 11 &&
+      mobileWorkspaceCatalog.providerIconsLarge &&
+      mobileWorkspaceCatalog.providerIconsUnframed,
     'mobile provider cards must retain large unframed product logos'
+  );
+
+  await route('#provider/openai', '.openai-workspace');
+  const mobileOpenAIWorkspace = await page.evaluate(() => {
+    const workspace = document.querySelector('.openai-workspace').getBoundingClientRect();
+    const command = document.querySelector('.openai-command').getBoundingClientRect();
+    return {
+      commandLeft: command.left,
+      commandRight: command.right,
+      documentWidth: document.documentElement.scrollWidth,
+      viewportWidth: window.innerWidth,
+      workspaceLeft: workspace.left,
+      workspaceRight: workspace.right
+    };
+  });
+  assert(
+    mobileOpenAIWorkspace.documentWidth <= mobileOpenAIWorkspace.viewportWidth &&
+      mobileOpenAIWorkspace.commandLeft >= mobileOpenAIWorkspace.workspaceLeft &&
+      mobileOpenAIWorkspace.commandRight <= mobileOpenAIWorkspace.workspaceRight,
+    'mobile OpenAI analysis workspace must contain its current import and index workflow'
   );
 
   await route('#guide/netflix', '#netflix');

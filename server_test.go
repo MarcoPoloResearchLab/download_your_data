@@ -84,6 +84,8 @@ func TestApplicationHTTPContract(testContext *testing.T) {
 			payload.Archive.MaxUploadBytes <= 0 ||
 			payload.Archive.InferenceBatchSize <= 0 ||
 			payload.Archive.BrowserUploadEnabled ||
+			!payload.Providers.OpenAI.SemanticSearch ||
+			payload.Providers.OpenAI.BrowserUpload ||
 			payload.Providers.Netflix.TMDB.Configured {
 			testContext.Fatalf("unexpected capabilities response: %+v", payload)
 		}

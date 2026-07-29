@@ -76,8 +76,21 @@ data root:
   --output reports/anime.json
 ```
 
-Reports are written beneath the private data root. The browser and every
-operator command use the same archive database and runtime configuration.
+After import and indexing complete, restart the browser server:
+
+```bash
+./download-your-data serve
+```
+
+Open the catalog and choose **Data analysis** on the OpenAI card. The OpenAI
+workspace searches the same private archive and complete ready index in hybrid,
+semantic, or exact-term mode. Reports are written beneath the private data root,
+and the browser and every operator command use the same archive database and
+runtime configuration.
+
+The browser does not accept an OpenAI ZIP. Importing a new or replacement
+archive and building its index remain explicit operator commands so the
+workspace never implies an upload or indexing lifecycle it does not own.
 
 ## Netflix import and optional enrichment
 

@@ -70,6 +70,7 @@ type archiveLimitCapability struct {
 }
 
 type providerCapabilities struct {
+	OpenAI  openAIProviderCapability  `json:"openai"`
 	Netflix netflixProviderCapability `json:"netflix"`
 }
 
@@ -154,6 +155,7 @@ func newApplicationHandlerWithNetflixMetadata(
 	routes := http.NewServeMux()
 	routes.HandleFunc("GET "+healthPath, writeHealth(logger))
 	routes.HandleFunc("GET "+capabilitiesPath, writeCapabilities(config, logger))
+	registerOpenAIRoutes(routes, config, logger)
 	registerNetflixRoutes(routes, netflixWorkspace, logger)
 	routes.Handle("/", http.FileServer(http.FS(staticRoot)))
 	return &applicationHandler{
@@ -197,6 +199,10 @@ func writeCapabilities(config runtimeconfig.Config, logger *slog.Logger) http.Ha
 				InferenceBatchSize:   product.DefaultInferenceBatchSize,
 			},
 			Providers: providerCapabilities{
+				OpenAI: openAIProviderCapability{
+					SemanticSearch: true,
+					BrowserUpload:  false,
+				},
 				Netflix: netflixProviderCapability{
 					TMDB: tmdbCapability{
 						Configured: config.TMDBConfigured(),

@@ -274,6 +274,9 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   Goal:
   Make each provider card a compact, immediately actionable guide entry while keeping real data-analysis applications as distinct secondary actions.
 
+  Superseded OpenAI boundary:
+  B016 replaces the guide-only OpenAI constraint by projecting the already-incorporated private archive and retrieval engine into a browser workspace. OpenAI ZIP upload and replacement remain separate lifecycle work.
+
   Requirements:
   - Keep the three-, two-, and one-column catalog grid, but place the provider copy to the right of a 56-pixel reviewed local product logo.
   - Remove the catalog logo frame, padding, and background without altering the reviewed image asset.
@@ -310,6 +313,30 @@ Format: `- [ ] [B042] (P1) {I007} Title`
 
   Validation:
   - `make check-frontend`
+  - `make test-browser`
+  - `make ci`
+
+- [x] [B016] (P1) {B014,B015,I003,I005,I006} Expose incorporated OpenAI search from the catalog
+  Goal:
+  Give OpenAI the same top-right Data analysis action as Netflix and open a real browser workspace backed by the incorporated private conversation engine.
+
+  Requirements:
+  - Declare OpenAI as workspace-capable while preserving the full-card OpenAI guide link beneath the distinct analysis action.
+  - Open `#provider/openai` and report the actual archive and complete ready-index state from the canonical private data root.
+  - When no archive or ready index exists, show the exact current import and indexing commands without fabricating browser upload.
+  - Search the ready archive through one validated POST contract supporting hybrid, semantic, and lexical modes, bounded results and excerpts, and the archive filter.
+  - Reuse the current retrieval engine, index identity, inference boundary, and query cache; do not introduce a second search implementation.
+  - Never write query text, conversation content, or returned excerpts to logs or browser persistence.
+  - Keep the action and workspace localized, keyboard-operable, compact, and contained at wide and narrow browser widths.
+
+  Deliverables:
+  - Top-right OpenAI Data analysis catalog action and private search workspace.
+  - Validated OpenAI provider snapshot and search HTTP contracts.
+  - Real-browser coverage for action isolation, guide routing, workspace preparation, localization, and responsive containment.
+
+  Validation:
+  - `make check-frontend`
+  - Focused OpenAI HTTP contract tests with a synthetic archive and deterministic inference.
   - `make test-browser`
   - `make ci`
 

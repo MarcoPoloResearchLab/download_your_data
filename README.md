@@ -118,6 +118,19 @@ The browser cannot override the configured inference URL. The local HTTP server 
 
 Conversation databases use the sole first-release identity `download_your_data/1` and schema contract `openai-conversation-archive-1`. A brand-new empty database is initialized with that exact minimized schema. Any nonempty database with a different identity, version, contract, or incomplete object set is rejected with an archive-and-reimport instruction; the application does not read, migrate, or repair another persisted shape.
 
+## OpenAI conversation analysis
+
+The OpenAI catalog card has a top-right **Data analysis** action in addition to
+its permanent export guide. The action opens a local workspace backed by the
+same private archive database, complete ready index, retrieval engine, query
+cache, and inference configuration as the operator commands.
+
+With a ready index, the workspace supports hybrid, semantic, and exact-term
+conversation search, an archived-conversation filter, bounded result counts,
+and supporting excerpts. Without a ready archive and index, it displays the
+exact import and indexing commands. Browser ZIP upload is not part of this
+surface; import and index construction remain explicit operator operations.
+
 ## Netflix viewing activity
 
 The Netflix provider accepts only the current per-profile Viewing activity CSV with the exact `Title,Date` column set in either order. It does not accept the full Netflix personal-information archive. A local import uses these canonical routes:
