@@ -72,6 +72,30 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - `make test-local-lifecycle`
   - `make ci`
 
+- [x] [B004] (P1) Replace text-only provider instructions with per-step visual guides
+  Goal:
+  Make every provider action directly understandable by pairing each instruction step with an approved first-party screenshot.
+
+  Requirements:
+  - Replace the localized string-step and provider-gallery shape with one canonical typed step containing text, screenshot identity, and localized alternative text.
+  - Cover every step for every provider, including the Netflix workspace and guide-only providers; no text-only exception, empty screenshot set, gallery, placeholder, mock, or third-party tutorial may survive.
+  - Render each screenshot inside its numbered step at desktop and mobile widths.
+  - Reuse approved assets across locales and across providers only when they genuinely share the same first-party surface, such as Threads and Instagram Accounts Center.
+  - Preserve privacy-safe stop boundaries for credentials, identity verification, account/profile selection, export submission, and download.
+  - Record authenticated provider captures and first-party help captures accurately in the manifest without presenting a help surface as an authenticated app screen.
+
+  Deliverables:
+  - Strict per-step frontend data and runtime validation.
+  - Approved OpenAI, Netflix, WhatsApp, and TikTok visual assets plus the existing provider captures.
+  - Updated manifest, capture runbook, localized accessibility text, contract tests, and real-browser coverage.
+
+  Validation:
+  - Contract tests reject an absent, unknown, empty, orphaned, or provider-gallery screenshot contract.
+  - Browser coverage proves every rendered step has exactly one local screenshot and localized alternative text.
+  - `make validate-instruction-screenshots`
+  - `make test-browser`
+  - `make ci`
+
 ## Improvements
 
 - [x] [I001] (P1) Establish the canonical local server and validation foundation
@@ -282,6 +306,9 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   Goal:
   Capture and publish the current web export workflow so a user can follow each supported provider without the capture operator starting an export.
 
+  Superseded contract:
+  B004 replaced this initial 12-asset web baseline and its TikTok text-only exception with the current 21-asset, every-provider, one-visual-per-step contract.
+
   Requirements:
   - Cover Facebook, Instagram, LinkedIn, X, YouTube, and Google with two canonical English desktop screenshots per provider.
   - Use the operator's authenticated Chrome session and the current official provider routes.
@@ -308,7 +335,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
 
 - [ ] [I011] (P2) {P004} Publish the authenticated TikTok mobile instruction screenshots
   Goal:
-  Add the app-owned TikTok export workflow as an independently scheduled mobile capture.
+  Replace the first-party TikTok Support visuals with authenticated app-native export screenshots.
 
   Requirements:
   - Use an operator-connected authenticated TikTok mobile surface; do not substitute an unofficial web flow, mock, or stale screenshot.
@@ -318,12 +345,13 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Record current official workflow and publication guidance at capture time.
 
   Deliverables:
-  - Two reviewed, metadata-free portrait assets and their manifest entries.
-  - Shared localized asset wiring without locale-specific image duplication.
+  - Reviewed, metadata-free portrait assets covering the current request and download panels.
+  - Updated per-step visual mappings without locale-specific image duplication.
   - Updated screenshot validation and browser coverage.
 
   Validation:
-  - Both TikTok assets match the current authenticated app labels and contain no private content.
+  - Every TikTok step still renders one visual after the first-party help captures are removed.
+  - All replacement assets match the current authenticated app labels and contain no private content.
   - `make test-browser`
   - `make ci`
 
@@ -787,12 +815,13 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Preserve the existing Facebook and Instagram entries and place WhatsApp and Threads beside them in the canonical provider order.
   - Treat WhatsApp account information and per-chat message history as separate exports; never imply that the account report contains messages.
   - Explain that Threads has its own export scope even though Meta currently starts the request from the Instagram app's Accounts Center.
-  - Localize both new guides across English, Spanish, French, and Russian without adding backend workflow state or placeholder screenshots.
+  - Localize both new guides across English, Spanish, French, and Russian without adding backend workflow state.
+  - Map every WhatsApp and Threads step to an approved first-party visual; Threads may reuse the current Instagram Accounts Center captures.
   - Link only to the current first-party WhatsApp and Meta help contracts.
 
   Deliverables:
   - Guide-only WhatsApp and Threads provider entries with distinct catalog marks, routes, instructions, references, and explanatory notes.
-  - Checked-JavaScript routing, localized data-contract coverage, screenshot-empty contracts, and real-browser coverage for all four locales.
+  - Checked-JavaScript routing, localized per-step visual contracts, and real-browser coverage for all four locales.
 
   Validation:
   - Every locale exposes exactly one Facebook, Instagram, WhatsApp, and Threads identity in the same canonical order.

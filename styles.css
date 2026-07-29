@@ -1064,15 +1064,48 @@ tbody tr:hover {
   font-size: 11px;
 }
 
-.instruction-list {
-  margin: 0;
-  padding-left: 19px;
-  color: var(--muted);
-  font-size: 12px;
+.instruction-steps {
+  display: grid;
+  margin: 14px 0 0;
+  padding: 0;
+  gap: 14px;
+  list-style: none;
 }
 
-.instruction-list li + li {
-  margin-top: 7px;
+.instruction-step {
+  display: grid;
+  padding: 14px;
+  grid-template-columns: 30px minmax(180px, 0.75fr) minmax(0, 1.25fr);
+  align-items: start;
+  gap: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.instruction-step-number {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  background: var(--surface-raised);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 780;
+}
+
+.instruction-step-copy {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.instruction-visual {
+  min-width: 0;
+  margin: 0;
 }
 
 .guide {
@@ -1094,17 +1127,12 @@ tbody tr:hover {
   font-size: 12px;
 }
 
-.screenshot-grid {
-  display: grid;
-  margin-top: 16px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
 .instruction-screenshot {
   display: block;
   width: 100%;
+  max-height: 480px;
   height: auto;
+  object-fit: contain;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface-raised);
@@ -1293,8 +1321,12 @@ code {
     grid-column: 1 / -1;
   }
 
-  .screenshot-grid {
-    grid-template-columns: 1fr;
+  .instruction-step {
+    grid-template-columns: 30px minmax(0, 1fr);
+  }
+
+  .instruction-visual {
+    grid-column: 1 / -1;
   }
 
   .tmdb-credit {

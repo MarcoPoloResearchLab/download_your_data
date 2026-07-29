@@ -28,14 +28,19 @@ type frontendLocalizedContract struct {
 }
 
 type frontendLocalizedProvider struct {
-	ID     string              `json:"id"`
-	Nav    string              `json:"nav"`
-	Title  string              `json:"title"`
-	Intro  string              `json:"intro"`
-	Steps  []string            `json:"steps"`
-	Refs   []frontendReference `json:"refs"`
-	Images []json.RawMessage   `json:"images"`
-	Note   *string             `json:"note"`
+	ID    string              `json:"id"`
+	Nav   string              `json:"nav"`
+	Title string              `json:"title"`
+	Intro string              `json:"intro"`
+	Steps []frontendStep      `json:"steps"`
+	Refs  []frontendReference `json:"refs"`
+	Note  *string             `json:"note"`
+}
+
+type frontendStep struct {
+	Text         string `json:"text"`
+	ScreenshotID string `json:"screenshot_id"`
+	Alt          string `json:"alt"`
 }
 
 type frontendReference struct {
@@ -126,12 +131,50 @@ func TestFrontendProviderWorkspaceContract(testContext *testing.T) {
 					expectedRegistry[providerIndex].ID,
 				)
 			}
+			assets := data.InstructionScreenshots[provider.ID]
+			if len(assets) == 0 {
+				testContext.Fatalf("locale %q provider %q has no screenshots", localeID, provider.ID)
+			}
+			assetIDs := make(map[string]struct{}, len(assets))
+			for _, asset := range assets {
+				assetIDs[asset.ID] = struct{}{}
+			}
+			usedAssetIDs := make(map[string]struct{}, len(assets))
+			for stepIndex, step := range provider.Steps {
+				if strings.TrimSpace(step.Text) == "" ||
+					strings.TrimSpace(step.Alt) == "" ||
+					strings.TrimSpace(step.ScreenshotID) == "" {
+					testContext.Fatalf(
+						"locale %q provider %q step %d is incomplete: %+v",
+						localeID,
+						provider.ID,
+						stepIndex,
+						step,
+					)
+				}
+				if _, exists := assetIDs[step.ScreenshotID]; !exists {
+					testContext.Fatalf(
+						"locale %q provider %q step %d references unknown screenshot %q",
+						localeID,
+						provider.ID,
+						stepIndex,
+						step.ScreenshotID,
+					)
+				}
+				usedAssetIDs[step.ScreenshotID] = struct{}{}
+			}
+			if len(usedAssetIDs) != len(assetIDs) {
+				testContext.Fatalf(
+					"locale %q provider %q leaves screenshots unused",
+					localeID,
+					provider.ID,
+				)
+			}
 		}
 		netflix := locale.Platforms[0]
 		if netflix.Title != "Netflix" ||
 			strings.TrimSpace(netflix.Intro) == "" ||
 			len(netflix.Steps) < 5 ||
-			len(netflix.Images) != 0 ||
 			len(netflix.Refs) != 1 ||
 			netflix.Refs[0].Href != "https://help.netflix.com/en/node/101917" {
 			testContext.Fatalf("locale %q has an incomplete Netflix contract: %+v", localeID, netflix)
@@ -140,7 +183,6 @@ func TestFrontendProviderWorkspaceContract(testContext *testing.T) {
 		if openAI.Title != "OpenAI (ChatGPT)" ||
 			strings.TrimSpace(openAI.Intro) == "" ||
 			len(openAI.Steps) != 7 ||
-			len(openAI.Images) != 0 ||
 			len(openAI.Refs) != 1 ||
 			openAI.Refs[0].Href !=
 				"https://help.openai.com/en/articles/7260999-how-do-i-export-my-chatgpt-history-and-data" ||
@@ -152,7 +194,6 @@ func TestFrontendProviderWorkspaceContract(testContext *testing.T) {
 		if whatsApp.Title != "WhatsApp" ||
 			strings.TrimSpace(whatsApp.Intro) == "" ||
 			len(whatsApp.Steps) != 7 ||
-			len(whatsApp.Images) != 0 ||
 			len(whatsApp.Refs) != 2 ||
 			whatsApp.Refs[0].Href != "https://faq.whatsapp.com/526463418847093/" ||
 			whatsApp.Refs[1].Href != "https://faq.whatsapp.com/1180414079177245/" ||
@@ -164,7 +205,6 @@ func TestFrontendProviderWorkspaceContract(testContext *testing.T) {
 		if threads.Title != "Threads" ||
 			strings.TrimSpace(threads.Intro) == "" ||
 			len(threads.Steps) != 7 ||
-			len(threads.Images) != 0 ||
 			len(threads.Refs) != 1 ||
 			threads.Refs[0].Href != "https://www.facebook.com/help/instagram/259803026523198" ||
 			threads.Note == nil ||

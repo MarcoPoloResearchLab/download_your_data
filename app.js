@@ -22,7 +22,7 @@ const STORAGE_KEYS = Object.freeze({
 });
 
 const LOCALES = Object.freeze(['en', 'es', 'fr', 'ru']);
-const GUIDE_SCREENSHOT_PROVIDERS = Object.freeze([
+const GUIDE_PROVIDER_IDS = Object.freeze([
   'openai',
   'facebook',
   'instagram',
@@ -485,9 +485,10 @@ function renderGuide(providerID) {
     id: provider.id,
     class: 'panel panel-raised guide-card'
   });
-  const orderedList = element('ol', {class: 'instruction-list'});
-  provider.steps.forEach((step) => orderedList.append(element('li', {text: step})));
-  section.append(element('h2', {text: ui().guide_steps_title}), orderedList);
+  section.append(
+    element('h2', {text: ui().guide_steps_title}),
+    renderInstructionSteps(provider)
+  );
 
   if (provider.refs.length) {
     const refs = element('ul', {
@@ -511,28 +512,50 @@ function renderGuide(providerID) {
     section.append(refs);
   }
 
-  const assets = state.data.instruction_screenshots[providerID] || [];
-  if (assets.length) {
-    const screenshots = element('div', {class: 'screenshot-grid'});
-    assets.forEach((asset, index) => {
-      screenshots.append(
-        element('img', {
-          class: 'instruction-screenshot',
-          src: asset.src,
-          alt: provider.images[index].alt,
-          loading: 'lazy',
-          decoding: 'async',
-          'data-screenshot-id': asset.id
-        })
-      );
-    });
-    section.append(screenshots);
-  }
   if (provider.note) {
     section.append(element('p', {class: 'panel-copy', text: provider.note}));
   }
   root.append(heading, section);
   replaceApp(root);
+}
+
+function renderInstructionSteps(provider) {
+  const assets = new Map(
+    state.data.instruction_screenshots[provider.id].map((asset) => [asset.id, asset])
+  );
+  const list = element('ol', {class: 'instruction-steps'});
+  provider.steps.forEach((step, index) => {
+    const asset = assets.get(step.screenshot_id);
+    const visual = element(
+      'figure',
+      {class: 'instruction-visual'},
+      element('img', {
+        class: 'instruction-screenshot',
+        src: asset.src,
+        alt: step.alt,
+        loading: 'lazy',
+        decoding: 'async',
+        'data-screenshot-id': asset.id
+      })
+    );
+    list.append(
+      element(
+        'li',
+        {
+          class: 'instruction-step',
+          'data-step-index': String(index + 1)
+        },
+        element('span', {
+          class: 'instruction-step-number',
+          text: String(index + 1),
+          'aria-hidden': 'true'
+        }),
+        element('p', {class: 'instruction-step-copy', text: step.text}),
+        visual
+      )
+    );
+  });
+  return list;
 }
 
 function renderNetflixWorkspace() {
@@ -617,9 +640,7 @@ function renderEmptyImport(provider) {
 
   const instructions = element('div');
   instructions.append(element('h3', {text: ui().instructions_title}));
-  const list = element('ol', {class: 'instruction-list'});
-  provider.steps.forEach((step) => list.append(element('li', {text: step})));
-  instructions.append(list);
+  instructions.append(renderInstructionSteps(provider));
   const official = provider.refs[0];
   if (official) {
     instructions.append(
@@ -1635,7 +1656,7 @@ function parseRoute() {
   }
   if (raw.startsWith('guide/')) {
     const provider = raw.slice('guide/'.length);
-    if (GUIDE_SCREENSHOT_PROVIDERS.includes(provider)) {
+    if (GUIDE_PROVIDER_IDS.includes(provider)) {
       return {name: 'guide', provider};
     }
   }
@@ -1746,12 +1767,33 @@ function validateAppData(data) {
   if (netflixDefinition.surface !== 'workspace') {
     throw new Error('netflix must be workspace-capable');
   }
-  GUIDE_SCREENSHOT_PROVIDERS.forEach((providerID) => {
+  GUIDE_PROVIDER_IDS.forEach((providerID) => {
     const definition = data.provider_registry.find((provider) => provider.id === providerID);
     if (!definition || definition.surface !== 'guide') {
       throw new Error(`${providerID} must be guide-only`);
     }
-    assertArray(data.instruction_screenshots[providerID], `${providerID} screenshots`);
+  });
+  if (Object.keys(data.instruction_screenshots).length !== providerIDs.length) {
+    throw new Error('instruction_screenshots must cover every provider');
+  }
+  const screenshotIDsByProvider = new Map();
+  providerIDs.forEach((providerID) => {
+    const assets = data.instruction_screenshots[providerID];
+    assertArray(assets, `${providerID} screenshots`);
+    if (!assets.length) {
+      throw new Error(`${providerID} must have at least one screenshot`);
+    }
+    const screenshotIDs = new Set();
+    assets.forEach((asset) => {
+      assertObject(asset, `${providerID} screenshots[]`);
+      assertString(asset.id, `${providerID} screenshot id`);
+      assertString(asset.src, `${providerID} screenshot src`);
+      if (screenshotIDs.has(asset.id)) {
+        throw new Error(`${providerID} has duplicate screenshot ${asset.id}`);
+      }
+      screenshotIDs.add(asset.id);
+    });
+    screenshotIDsByProvider.set(providerID, screenshotIDs);
   });
 
   LOCALES.forEach((locale) => {
@@ -1782,7 +1824,12 @@ function validateAppData(data) {
       }
       assertArray(provider.steps, `${provider.id}.steps`);
       assertArray(provider.refs, `${provider.id}.refs`);
-      assertArray(provider.images, `${provider.id}.images`);
+      if (!provider.steps.length) {
+        throw new Error(`${locale} ${provider.id} must have at least one instruction step`);
+      }
+      if (Object.hasOwn(provider, 'images')) {
+        throw new Error(`${locale} ${provider.id} uses the obsolete provider image gallery`);
+      }
       if (
         Object.hasOwn(provider, 'state') ||
         Object.hasOwn(provider, 'status') ||
@@ -1790,9 +1837,25 @@ function validateAppData(data) {
       ) {
         throw new Error(`localized provider ${provider.id} contains backend workflow state`);
       }
-      const sharedAssets = data.instruction_screenshots[provider.id] || [];
-      if (provider.images.length !== sharedAssets.length) {
-        throw new Error(`${locale} ${provider.id} image alternatives do not match shared assets`);
+      const availableScreenshotIDs = screenshotIDsByProvider.get(provider.id);
+      const usedScreenshotIDs = new Set();
+      provider.steps.forEach((step, index) => {
+        assertObject(step, `${locale} ${provider.id} step ${index + 1}`);
+        for (const key of ['text', 'screenshot_id', 'alt']) {
+          assertString(step[key], `${locale} ${provider.id} step ${index + 1} ${key}`);
+          if (!step[key].trim()) {
+            throw new Error(`${locale} ${provider.id} step ${index + 1} ${key} is empty`);
+          }
+        }
+        if (!availableScreenshotIDs.has(step.screenshot_id)) {
+          throw new Error(
+            `${locale} ${provider.id} step ${index + 1} references unknown screenshot ${step.screenshot_id}`
+          );
+        }
+        usedScreenshotIDs.add(step.screenshot_id);
+      });
+      if (usedScreenshotIDs.size !== availableScreenshotIDs.size) {
+        throw new Error(`${locale} ${provider.id} has an unused screenshot`);
       }
     });
   });

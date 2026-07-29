@@ -46,7 +46,30 @@
     }
   ],
   "instruction_screenshots": {
-    "openai": [],
+    "netflix": [
+      {
+        "id": "netflix-viewing-activity-help",
+        "src": "images/instructions/netflix-viewing-activity-help.png"
+      }
+    ],
+    "openai": [
+      {
+        "id": "openai-signed-in",
+        "src": "images/instructions/openai-signed-in.png"
+      },
+      {
+        "id": "openai-settings",
+        "src": "images/instructions/openai-settings.png"
+      },
+      {
+        "id": "openai-data-controls",
+        "src": "images/instructions/openai-data-controls.png"
+      },
+      {
+        "id": "openai-export-confirmation",
+        "src": "images/instructions/openai-export-confirmation.png"
+      }
+    ],
     "facebook": [
       {
         "id": "facebook-accounts-center-information",
@@ -67,8 +90,26 @@
         "src": "images/instructions/instagram-export-entry.png"
       }
     ],
-    "whatsapp": [],
-    "threads": [],
+    "whatsapp": [
+      {
+        "id": "whatsapp-account-info-help",
+        "src": "images/instructions/whatsapp-account-info-help.png"
+      },
+      {
+        "id": "whatsapp-chat-export-help",
+        "src": "images/instructions/whatsapp-chat-export-help.png"
+      }
+    ],
+    "threads": [
+      {
+        "id": "instagram-accounts-center-information",
+        "src": "images/instructions/instagram-accounts-center-information.png"
+      },
+      {
+        "id": "instagram-export-entry",
+        "src": "images/instructions/instagram-export-entry.png"
+      }
+    ],
     "linkedin": [
       {
         "id": "linkedin-data-privacy-navigation",
@@ -79,7 +120,16 @@
         "src": "images/instructions/linkedin-download-data-options.png"
       }
     ],
-    "tiktok": [],
+    "tiktok": [
+      {
+        "id": "tiktok-request-data-help",
+        "src": "images/instructions/tiktok-request-data-help.png"
+      },
+      {
+        "id": "tiktok-download-data-help",
+        "src": "images/instructions/tiktok-download-data-help.png"
+      }
+    ],
     "x": [
       {
         "id": "x-your-account-navigation",
@@ -251,7 +301,15 @@
         "page_loaded": "More activities loaded",
         "cached": "Cached titles",
         "progress": "Generation progress",
-        "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+        "weekdays": [
+          "Mon",
+          "Tue",
+          "Wed",
+          "Thu",
+          "Fri",
+          "Sat",
+          "Sun"
+        ]
       },
       "platforms": [
         {
@@ -260,12 +318,36 @@
           "title": "Netflix",
           "intro": "Import your per-profile Viewing activity CSV for private local analytics and optional TMDB enrichment.",
           "steps": [
-            "Open Netflix in a browser and go to Account.",
-            "Under Profiles, select the profile whose activity you want.",
-            "Open Viewing activity.",
-            "Use Show More until the complete history is visible if Netflix limits the list.",
-            "Select Download all at the bottom of the page to save the Viewing activity CSV.",
-            "Return here and import that CSV. Do not use the separate full-account personal-information archive."
+            {
+              "text": "Open Netflix in a browser and go to Account.",
+              "screenshot_id": "netflix-viewing-activity-help",
+              "alt": "Netflix Help Center viewing activity and Download all instructions"
+            },
+            {
+              "text": "Under Profiles, select the profile whose activity you want.",
+              "screenshot_id": "netflix-viewing-activity-help",
+              "alt": "Netflix Help Center viewing activity and Download all instructions"
+            },
+            {
+              "text": "Open Viewing activity.",
+              "screenshot_id": "netflix-viewing-activity-help",
+              "alt": "Netflix Help Center viewing activity and Download all instructions"
+            },
+            {
+              "text": "Use Show More until the complete history is visible if Netflix limits the list.",
+              "screenshot_id": "netflix-viewing-activity-help",
+              "alt": "Netflix Help Center viewing activity and Download all instructions"
+            },
+            {
+              "text": "Select Download all at the bottom of the page to save the Viewing activity CSV.",
+              "screenshot_id": "netflix-viewing-activity-help",
+              "alt": "Netflix Help Center viewing activity and Download all instructions"
+            },
+            {
+              "text": "Return here and import that CSV. Do not use the separate full-account personal-information archive.",
+              "screenshot_id": "netflix-viewing-activity-help",
+              "alt": "Netflix Help Center viewing activity and Download all instructions"
+            }
           ],
           "refs": [
             {
@@ -273,7 +355,6 @@
               "href": "https://help.netflix.com/en/node/101917"
             }
           ],
-          "images": [],
           "note": "This workspace accepts the Viewing activity CSV only."
         },
         {
@@ -282,13 +363,41 @@
           "title": "OpenAI (ChatGPT)",
           "intro": "Request a ZIP containing your ChatGPT history and other account data.",
           "steps": [
-            "Sign in to ChatGPT.",
-            "Open your profile menu, then select Settings.",
-            "Select Data controls.",
-            "Under Export data, select Export.",
-            "On the confirmation screen, select Confirm export.",
-            "Wait for OpenAI’s email or SMS; the export can take up to 7 days.",
-            "Open Download data export while signed in to the same account. The link expires after 24 hours, so save the ZIP promptly."
+            {
+              "text": "Sign in to ChatGPT.",
+              "screenshot_id": "openai-signed-in",
+              "alt": "Signed-in ChatGPT home screen"
+            },
+            {
+              "text": "Open your profile menu, then select Settings.",
+              "screenshot_id": "openai-settings",
+              "alt": "ChatGPT Settings with Data controls in the navigation"
+            },
+            {
+              "text": "Select Data controls.",
+              "screenshot_id": "openai-settings",
+              "alt": "ChatGPT Settings with Data controls in the navigation"
+            },
+            {
+              "text": "Under Export data, select Export.",
+              "screenshot_id": "openai-data-controls",
+              "alt": "ChatGPT Data controls with Export data"
+            },
+            {
+              "text": "On the confirmation screen, select Confirm export.",
+              "screenshot_id": "openai-export-confirmation",
+              "alt": "ChatGPT data export confirmation with email delivery and link expiration details"
+            },
+            {
+              "text": "Wait for OpenAI’s email or SMS; the export can take up to 7 days.",
+              "screenshot_id": "openai-export-confirmation",
+              "alt": "ChatGPT data export confirmation with email delivery and link expiration details"
+            },
+            {
+              "text": "Open Download data export while signed in to the same account. The link expires after 24 hours, so save the ZIP promptly.",
+              "screenshot_id": "openai-export-confirmation",
+              "alt": "ChatGPT data export confirmation with email delivery and link expiration details"
+            }
           ],
           "refs": [
             {
@@ -296,7 +405,6 @@
               "href": "https://help.openai.com/en/articles/7260999-how-do-i-export-my-chatgpt-history-and-data"
             }
           ],
-          "images": [],
           "note": "This guide covers an eligible signed-in ChatGPT account. After downloading, use the local product commands to inspect and import the ZIP; browser upload is not yet available."
         },
         {
@@ -305,26 +413,46 @@
           "title": "Facebook",
           "intro": "Export posts, photos, messages, and more via Facebook’s Download Your Information tool.",
           "steps": [
-            "Log in on desktop. Profile menu → Settings & privacy → Settings.",
-            "Open Accounts Center → Your information and permissions → Export your information.",
-            "Click Create export, then select the Facebook profile to export.",
-            "Select Export to device.",
-            "Choose the information, date range, format, notification email, and media quality.",
-            "Click Start export. Facebook sends an email and notification when the export is ready.",
-            "Return to Available downloads within 4 days. Complete any password or identity verification yourself, then download the ZIP."
+            {
+              "text": "Log in on desktop. Profile menu → Settings & privacy → Settings.",
+              "screenshot_id": "facebook-accounts-center-information",
+              "alt": "Facebook Accounts Center: Your information and permissions"
+            },
+            {
+              "text": "Open Accounts Center → Your information and permissions → Export your information.",
+              "screenshot_id": "facebook-accounts-center-information",
+              "alt": "Facebook Accounts Center: Your information and permissions"
+            },
+            {
+              "text": "Click Create export, then select the Facebook profile to export.",
+              "screenshot_id": "facebook-export-entry",
+              "alt": "Facebook Export your information panel"
+            },
+            {
+              "text": "Select Export to device.",
+              "screenshot_id": "facebook-export-entry",
+              "alt": "Facebook Export your information panel"
+            },
+            {
+              "text": "Choose the information, date range, format, notification email, and media quality.",
+              "screenshot_id": "facebook-export-entry",
+              "alt": "Facebook Export your information panel"
+            },
+            {
+              "text": "Click Start export. Facebook sends an email and notification when the export is ready.",
+              "screenshot_id": "facebook-export-entry",
+              "alt": "Facebook Export your information panel"
+            },
+            {
+              "text": "Return to Available downloads within 4 days. Complete any password or identity verification yourself, then download the ZIP.",
+              "screenshot_id": "facebook-export-entry",
+              "alt": "Facebook Export your information panel"
+            }
           ],
           "refs": [
             {
               "label": "Export a copy of your Facebook information",
               "href": "https://www.facebook.com/help/212802592074644"
-            }
-          ],
-          "images": [
-            {
-              "alt": "Facebook Accounts Center: Your information and permissions"
-            },
-            {
-              "alt": "Facebook Export your information panel"
             }
           ]
         },
@@ -334,26 +462,46 @@
           "title": "Instagram",
           "intro": "Request your photos, comments, profile info, and more. Instagram emails a download link.",
           "steps": [
-            "On Instagram desktop, click More in the bottom left, then Settings.",
-            "Open Accounts Center → Your information and permissions → Export your information.",
-            "Click Create export, select the Instagram profile, then click Next.",
-            "Select Export to device.",
-            "Choose the information, date range, format, notification email, and media quality.",
-            "Click Start export. Instagram sends an email and notification when the export is ready.",
-            "Return to Available downloads within 4 days. Complete any password or identity verification yourself, then download the ZIP."
+            {
+              "text": "On Instagram desktop, click More in the bottom left, then Settings.",
+              "screenshot_id": "instagram-accounts-center-information",
+              "alt": "Instagram Accounts Center: Your information and permissions"
+            },
+            {
+              "text": "Open Accounts Center → Your information and permissions → Export your information.",
+              "screenshot_id": "instagram-accounts-center-information",
+              "alt": "Instagram Accounts Center: Your information and permissions"
+            },
+            {
+              "text": "Click Create export, select the Instagram profile, then click Next.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Instagram Accounts Center Export your information panel"
+            },
+            {
+              "text": "Select Export to device.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Instagram Accounts Center Export your information panel"
+            },
+            {
+              "text": "Choose the information, date range, format, notification email, and media quality.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Instagram Accounts Center Export your information panel"
+            },
+            {
+              "text": "Click Start export. Instagram sends an email and notification when the export is ready.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Instagram Accounts Center Export your information panel"
+            },
+            {
+              "text": "Return to Available downloads within 4 days. Complete any password or identity verification yourself, then download the ZIP.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Instagram Accounts Center Export your information panel"
+            }
           ],
           "refs": [
             {
               "label": "Review and export a copy of your Instagram information",
               "href": "https://www.facebook.com/help/181231772500920"
-            }
-          ],
-          "images": [
-            {
-              "alt": "Instagram Accounts Center: Your information and permissions"
-            },
-            {
-              "alt": "Instagram Export your information panel"
             }
           ]
         },
@@ -363,13 +511,41 @@
           "title": "WhatsApp",
           "intro": "Request an account-information report or export an individual chat from the mobile app.",
           "steps": [
-            "For account information and settings, open WhatsApp on your primary device and go to Settings → Account → Request account info.",
-            "Tap Request report. WhatsApp says the report is typically ready in three days.",
-            "When notified, return to Request account info and tap Download report; the ZIP contains HTML and JSON files.",
-            "Tap Export report, choose a private destination, and store the report carefully.",
-            "The account-information report does not include personal messages. To save messages, open the individual or group chat you need.",
-            "On Android, tap More options → More → Export chat. On iPhone, open the chat details and select Export Chat.",
-            "Choose Without media or Include media, then select where to save it. The exported text file is not a WhatsApp backup and cannot be re-imported."
+            {
+              "text": "For account information and settings, open WhatsApp on your primary device and go to Settings → Account → Request account info.",
+              "screenshot_id": "whatsapp-account-info-help",
+              "alt": "WhatsApp Help Center request account information instructions"
+            },
+            {
+              "text": "Tap Request report. WhatsApp says the report is typically ready in three days.",
+              "screenshot_id": "whatsapp-account-info-help",
+              "alt": "WhatsApp Help Center request account information instructions"
+            },
+            {
+              "text": "When notified, return to Request account info and tap Download report; the ZIP contains HTML and JSON files.",
+              "screenshot_id": "whatsapp-account-info-help",
+              "alt": "WhatsApp Help Center request account information instructions"
+            },
+            {
+              "text": "Tap Export report, choose a private destination, and store the report carefully.",
+              "screenshot_id": "whatsapp-account-info-help",
+              "alt": "WhatsApp Help Center request account information instructions"
+            },
+            {
+              "text": "The account-information report does not include personal messages. To save messages, open the individual or group chat you need.",
+              "screenshot_id": "whatsapp-chat-export-help",
+              "alt": "WhatsApp Help Center export chat instructions"
+            },
+            {
+              "text": "On Android, tap More options → More → Export chat. On iPhone, open the chat details and select Export Chat.",
+              "screenshot_id": "whatsapp-chat-export-help",
+              "alt": "WhatsApp Help Center export chat instructions"
+            },
+            {
+              "text": "Choose Without media or Include media, then select where to save it. The exported text file is not a WhatsApp backup and cannot be re-imported.",
+              "screenshot_id": "whatsapp-chat-export-help",
+              "alt": "WhatsApp Help Center export chat instructions"
+            }
           ],
           "refs": [
             {
@@ -381,7 +557,6 @@
               "href": "https://faq.whatsapp.com/1180414079177245/"
             }
           ],
-          "images": [],
           "note": "WhatsApp keeps these exports separate: request account information for account metadata, and export each chat you need for message history."
         },
         {
@@ -390,13 +565,41 @@
           "title": "Threads",
           "intro": "Export posts, activity, and other information for your Threads profile through Accounts Center.",
           "steps": [
-            "Open the Instagram app, tap your profile picture, then open the menu in the top right.",
-            "Tap Accounts Center → Your information and permissions.",
-            "Tap Export your information → Create export.",
-            "Select the profile whose Threads information you want, then tap Next.",
-            "Select Export to device.",
-            "Choose the specific information, date range, format, notification email, and media quality.",
-            "Tap Start export. Meta may take up to 30 days to email the download link."
+            {
+              "text": "Open the Instagram app, tap your profile picture, then open the menu in the top right.",
+              "screenshot_id": "instagram-accounts-center-information",
+              "alt": "Instagram Accounts Center: Your information and permissions for a Threads export"
+            },
+            {
+              "text": "Tap Accounts Center → Your information and permissions.",
+              "screenshot_id": "instagram-accounts-center-information",
+              "alt": "Instagram Accounts Center: Your information and permissions for a Threads export"
+            },
+            {
+              "text": "Tap Export your information → Create export.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Instagram Accounts Center Export your information panel for Threads"
+            },
+            {
+              "text": "Select the profile whose Threads information you want, then tap Next.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Instagram Accounts Center Export your information panel for Threads"
+            },
+            {
+              "text": "Select Export to device.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Instagram Accounts Center Export your information panel for Threads"
+            },
+            {
+              "text": "Choose the specific information, date range, format, notification email, and media quality.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Instagram Accounts Center Export your information panel for Threads"
+            },
+            {
+              "text": "Tap Start export. Meta may take up to 30 days to email the download link.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Instagram Accounts Center Export your information panel for Threads"
+            }
           ],
           "refs": [
             {
@@ -404,7 +607,6 @@
               "href": "https://www.facebook.com/help/instagram/259803026523198"
             }
           ],
-          "images": [],
           "note": "Threads remains a separate provider guide even though Meta currently starts its export from the Instagram app’s Accounts Center."
         },
         {
@@ -413,26 +615,46 @@
           "title": "LinkedIn",
           "intro": "Export a full archive or specific items (connections, messages, profile, etc.).",
           "steps": [
-            "Desktop: Me → Settings & Privacy.",
-            "Open Data Privacy in the left rail.",
-            "Under How LinkedIn uses your data, open Get a copy of your data.",
-            "On Download my data, choose specific categories or the larger data archive.",
-            "Click Request archive.",
-            "LinkedIn emails specific categories within minutes and the larger archive within 24 hours.",
-            "Use the email link to download the archive within 72 hours."
+            {
+              "text": "Desktop: Me → Settings & Privacy.",
+              "screenshot_id": "linkedin-data-privacy-navigation",
+              "alt": "LinkedIn How LinkedIn uses your data settings"
+            },
+            {
+              "text": "Open Data Privacy in the left rail.",
+              "screenshot_id": "linkedin-data-privacy-navigation",
+              "alt": "LinkedIn How LinkedIn uses your data settings"
+            },
+            {
+              "text": "Under How LinkedIn uses your data, open Get a copy of your data.",
+              "screenshot_id": "linkedin-data-privacy-navigation",
+              "alt": "LinkedIn How LinkedIn uses your data settings"
+            },
+            {
+              "text": "On Download my data, choose specific categories or the larger data archive.",
+              "screenshot_id": "linkedin-download-data-options",
+              "alt": "LinkedIn Download my data options"
+            },
+            {
+              "text": "Click Request archive.",
+              "screenshot_id": "linkedin-download-data-options",
+              "alt": "LinkedIn Download my data options"
+            },
+            {
+              "text": "LinkedIn emails specific categories within minutes and the larger archive within 24 hours.",
+              "screenshot_id": "linkedin-download-data-options",
+              "alt": "LinkedIn Download my data options"
+            },
+            {
+              "text": "Use the email link to download the archive within 72 hours.",
+              "screenshot_id": "linkedin-download-data-options",
+              "alt": "LinkedIn Download my data options"
+            }
           ],
           "refs": [
             {
               "label": "Download your account data",
               "href": "https://www.linkedin.com/help/linkedin/answer/a1339364/downloading-your-account-data"
-            }
-          ],
-          "images": [
-            {
-              "alt": "LinkedIn How LinkedIn uses your data settings"
-            },
-            {
-              "alt": "LinkedIn Download my data options"
             }
           ]
         },
@@ -442,20 +664,43 @@
           "title": "TikTok",
           "intro": "Request a ZIP of your account data from the mobile app.",
           "steps": [
-            "In the TikTok app, tap Profile at the bottom.",
-            "Tap Menu (☰) at the top → Settings and privacy → Account → Download your data.",
-            "Choose which information to include and select a file format.",
-            "Tap Request data.",
-            "TikTok notifies you in the app when the file is ready; preparation may take a few days.",
-            "Return to Download your data → Download data, then tap Download. The file remains available for up to 4 days."
+            {
+              "text": "In the TikTok app, tap Profile at the bottom.",
+              "screenshot_id": "tiktok-request-data-help",
+              "alt": "TikTok Support request data instructions"
+            },
+            {
+              "text": "Tap Menu (☰) at the top → Settings and privacy → Account → Download your data.",
+              "screenshot_id": "tiktok-request-data-help",
+              "alt": "TikTok Support request data instructions"
+            },
+            {
+              "text": "Choose which information to include and select a file format.",
+              "screenshot_id": "tiktok-request-data-help",
+              "alt": "TikTok Support request data instructions"
+            },
+            {
+              "text": "Tap Request data.",
+              "screenshot_id": "tiktok-request-data-help",
+              "alt": "TikTok Support request data instructions"
+            },
+            {
+              "text": "TikTok notifies you in the app when the file is ready; preparation may take a few days.",
+              "screenshot_id": "tiktok-download-data-help",
+              "alt": "TikTok Support download data instructions"
+            },
+            {
+              "text": "Return to Download your data → Download data, then tap Download. The file remains available for up to 4 days.",
+              "screenshot_id": "tiktok-download-data-help",
+              "alt": "TikTok Support download data instructions"
+            }
           ],
           "refs": [
             {
               "label": "Requesting your data",
               "href": "https://support.tiktok.com/en/account-and-privacy/personalized-ads-and-data/requesting-your-data"
             }
-          ],
-          "images": []
+          ]
         },
         {
           "id": "x",
@@ -463,26 +708,46 @@
           "title": "X (Twitter)",
           "intro": "Get an archive including Tweets, media, DMs, and profile info.",
           "steps": [
-            "Web: More → Settings and privacy → Your account.",
-            "Click Download an archive of your data.",
-            "Enter your password and click Confirm.",
-            "Click Send code, then enter the code sent to the email address or phone number on your account.",
-            "Click Request data.",
-            "Wait for the email or push notification; preparation may take a few days.",
-            "Return to Download an archive of your data and click Download data, then download the ZIP while signed in."
+            {
+              "text": "Web: More → Settings and privacy → Your account.",
+              "screenshot_id": "x-your-account-navigation",
+              "alt": "X Your Account settings with Download an archive of your data"
+            },
+            {
+              "text": "Click Download an archive of your data.",
+              "screenshot_id": "x-your-account-navigation",
+              "alt": "X Your Account settings with Download an archive of your data"
+            },
+            {
+              "text": "Enter your password and click Confirm.",
+              "screenshot_id": "x-password-verification",
+              "alt": "X empty Verify your password form"
+            },
+            {
+              "text": "Click Send code, then enter the code sent to the email address or phone number on your account.",
+              "screenshot_id": "x-password-verification",
+              "alt": "X empty Verify your password form"
+            },
+            {
+              "text": "Click Request data.",
+              "screenshot_id": "x-password-verification",
+              "alt": "X empty Verify your password form"
+            },
+            {
+              "text": "Wait for the email or push notification; preparation may take a few days.",
+              "screenshot_id": "x-password-verification",
+              "alt": "X empty Verify your password form"
+            },
+            {
+              "text": "Return to Download an archive of your data and click Download data, then download the ZIP while signed in.",
+              "screenshot_id": "x-password-verification",
+              "alt": "X empty Verify your password form"
+            }
           ],
           "refs": [
             {
               "label": "How to download your archive",
               "href": "https://help.x.com/en/managing-your-account/how-to-download-your-x-archive"
-            }
-          ],
-          "images": [
-            {
-              "alt": "X Your Account settings with Download an archive of your data"
-            },
-            {
-              "alt": "X empty Verify your password form"
             }
           ]
         },
@@ -492,13 +757,41 @@
           "title": "YouTube",
           "intro": "Export your YouTube and YouTube Music data via Google Takeout.",
           "steps": [
-            "Open the Google Takeout page for YouTube data exports and sign in.",
-            "Confirm that YouTube and YouTube Music is the selected product; use its data-options control to refine the scope.",
-            "Click Next step.",
-            "Choose the delivery method; Send download link via email keeps the archive out of a connected external destination.",
-            "Set Frequency to Export once.",
-            "Choose the file type and maximum file size; larger exports are split into multiple archives.",
-            "Click Create export. Google emails you when the archive is ready."
+            {
+              "text": "Open the Google Takeout page for YouTube data exports and sign in.",
+              "screenshot_id": "youtube-takeout-selection",
+              "alt": "Google Takeout YouTube and YouTube Music selection"
+            },
+            {
+              "text": "Confirm that YouTube and YouTube Music is the selected product; use its data-options control to refine the scope.",
+              "screenshot_id": "youtube-takeout-selection",
+              "alt": "Google Takeout YouTube and YouTube Music selection"
+            },
+            {
+              "text": "Click Next step.",
+              "screenshot_id": "youtube-takeout-selection",
+              "alt": "Google Takeout YouTube and YouTube Music selection"
+            },
+            {
+              "text": "Choose the delivery method; Send download link via email keeps the archive out of a connected external destination.",
+              "screenshot_id": "youtube-takeout-export-options",
+              "alt": "Google Takeout YouTube export destination, frequency, and file options"
+            },
+            {
+              "text": "Set Frequency to Export once.",
+              "screenshot_id": "youtube-takeout-export-options",
+              "alt": "Google Takeout YouTube export destination, frequency, and file options"
+            },
+            {
+              "text": "Choose the file type and maximum file size; larger exports are split into multiple archives.",
+              "screenshot_id": "youtube-takeout-export-options",
+              "alt": "Google Takeout YouTube export destination, frequency, and file options"
+            },
+            {
+              "text": "Click Create export. Google emails you when the archive is ready.",
+              "screenshot_id": "youtube-takeout-export-options",
+              "alt": "Google Takeout YouTube export destination, frequency, and file options"
+            }
           ],
           "refs": [
             {
@@ -509,14 +802,6 @@
               "label": "Download your data (Google Takeout)",
               "href": "https://support.google.com/accounts/answer/3024190"
             }
-          ],
-          "images": [
-            {
-              "alt": "Google Takeout YouTube and YouTube Music selection"
-            },
-            {
-              "alt": "Google Takeout YouTube export destination, frequency, and file options"
-            }
           ]
         },
         {
@@ -525,13 +810,41 @@
           "title": "Google (All Account Data)",
           "intro": "Export Gmail, Drive, Photos, Maps, YouTube, and more via Google Takeout.",
           "steps": [
-            "Open Google Takeout and sign in.",
-            "Google products that you use and that hold your data are selected automatically; uncheck any product you do not want to include.",
-            "Click Next step.",
-            "Choose the delivery method; Send download link via email keeps the archive out of a connected external destination.",
-            "Set Frequency to Export once.",
-            "Choose the file type and maximum file size; larger exports are split into multiple archives.",
-            "Click Create export. Google emails you when the archive is ready; creating an archive does not delete the original data."
+            {
+              "text": "Open Google Takeout and sign in.",
+              "screenshot_id": "google-takeout-service-selection",
+              "alt": "Google Takeout Select data to include step"
+            },
+            {
+              "text": "Google products that you use and that hold your data are selected automatically; uncheck any product you do not want to include.",
+              "screenshot_id": "google-takeout-service-selection",
+              "alt": "Google Takeout Select data to include step"
+            },
+            {
+              "text": "Click Next step.",
+              "screenshot_id": "google-takeout-service-selection",
+              "alt": "Google Takeout Select data to include step"
+            },
+            {
+              "text": "Choose the delivery method; Send download link via email keeps the archive out of a connected external destination.",
+              "screenshot_id": "google-takeout-export-options",
+              "alt": "Google Takeout export destination, frequency, and file options"
+            },
+            {
+              "text": "Set Frequency to Export once.",
+              "screenshot_id": "google-takeout-export-options",
+              "alt": "Google Takeout export destination, frequency, and file options"
+            },
+            {
+              "text": "Choose the file type and maximum file size; larger exports are split into multiple archives.",
+              "screenshot_id": "google-takeout-export-options",
+              "alt": "Google Takeout export destination, frequency, and file options"
+            },
+            {
+              "text": "Click Create export. Google emails you when the archive is ready; creating an archive does not delete the original data.",
+              "screenshot_id": "google-takeout-export-options",
+              "alt": "Google Takeout export destination, frequency, and file options"
+            }
           ],
           "refs": [
             {
@@ -541,14 +854,6 @@
             {
               "label": "Download your data (Google Takeout)",
               "href": "https://support.google.com/accounts/answer/3024190"
-            }
-          ],
-          "images": [
-            {
-              "alt": "Google Takeout Select data to include step"
-            },
-            {
-              "alt": "Google Takeout export destination, frequency, and file options"
             }
           ],
           "note": "Security tip: Exports can contain sensitive information. Store your ZIPs in a secure, encrypted location."
@@ -694,7 +999,15 @@
         "page_loaded": "Se cargaron más actividades",
         "cached": "Títulos en caché",
         "progress": "Progreso de la generación",
-        "weekdays": ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"]
+        "weekdays": [
+          "lun",
+          "mar",
+          "mié",
+          "jue",
+          "vie",
+          "sáb",
+          "dom"
+        ]
       },
       "platforms": [
         {
@@ -703,12 +1016,36 @@
           "title": "Netflix",
           "intro": "Importa el CSV de actividad de visualización de un perfil para obtener análisis locales privados y enriquecimiento opcional con TMDB.",
           "steps": [
-            "Abre Netflix en un navegador y ve a Cuenta.",
-            "En Perfiles, selecciona el perfil cuya actividad quieres consultar.",
-            "Abre Actividad de visualización.",
-            "Pulsa Mostrar más hasta ver el historial completo si Netflix limita la lista.",
-            "Selecciona Descargar todo al final de la página para guardar el CSV de actividad de visualización.",
-            "Vuelve aquí e importa ese CSV. No uses el archivo separado de información personal de toda la cuenta."
+            {
+              "text": "Abre Netflix en un navegador y ve a Cuenta.",
+              "screenshot_id": "netflix-viewing-activity-help",
+              "alt": "Centro de ayuda de Netflix con las instrucciones de Actividad de visionado y Descargar todo"
+            },
+            {
+              "text": "En Perfiles, selecciona el perfil cuya actividad quieres consultar.",
+              "screenshot_id": "netflix-viewing-activity-help",
+              "alt": "Centro de ayuda de Netflix con las instrucciones de Actividad de visionado y Descargar todo"
+            },
+            {
+              "text": "Abre Actividad de visualización.",
+              "screenshot_id": "netflix-viewing-activity-help",
+              "alt": "Centro de ayuda de Netflix con las instrucciones de Actividad de visionado y Descargar todo"
+            },
+            {
+              "text": "Pulsa Mostrar más hasta ver el historial completo si Netflix limita la lista.",
+              "screenshot_id": "netflix-viewing-activity-help",
+              "alt": "Centro de ayuda de Netflix con las instrucciones de Actividad de visionado y Descargar todo"
+            },
+            {
+              "text": "Selecciona Descargar todo al final de la página para guardar el CSV de actividad de visualización.",
+              "screenshot_id": "netflix-viewing-activity-help",
+              "alt": "Centro de ayuda de Netflix con las instrucciones de Actividad de visionado y Descargar todo"
+            },
+            {
+              "text": "Vuelve aquí e importa ese CSV. No uses el archivo separado de información personal de toda la cuenta.",
+              "screenshot_id": "netflix-viewing-activity-help",
+              "alt": "Centro de ayuda de Netflix con las instrucciones de Actividad de visionado y Descargar todo"
+            }
           ],
           "refs": [
             {
@@ -716,7 +1053,6 @@
               "href": "https://help.netflix.com/en/node/101917"
             }
           ],
-          "images": [],
           "note": "Este espacio de trabajo solo acepta el CSV de actividad de visualización."
         },
         {
@@ -725,13 +1061,41 @@
           "title": "OpenAI (ChatGPT)",
           "intro": "Solicita un ZIP con tu historial de ChatGPT y otros datos de la cuenta.",
           "steps": [
-            "Inicia sesión en ChatGPT.",
-            "Abre el menú de tu perfil y selecciona Configuración.",
-            "Selecciona Controles de datos.",
-            "En Exportar datos, selecciona Exportar.",
-            "En la pantalla de confirmación, selecciona Confirmar exportación.",
-            "Espera el correo o SMS de OpenAI; la exportación puede tardar hasta 7 días.",
-            "Abre Descargar exportación de datos con la sesión iniciada en la misma cuenta. El enlace caduca a las 24 horas, así que guarda el ZIP cuanto antes."
+            {
+              "text": "Inicia sesión en ChatGPT.",
+              "screenshot_id": "openai-signed-in",
+              "alt": "Pantalla de inicio de ChatGPT con la sesión iniciada"
+            },
+            {
+              "text": "Abre el menú de tu perfil y selecciona Configuración.",
+              "screenshot_id": "openai-settings",
+              "alt": "Configuración de ChatGPT con Controles de datos en la navegación"
+            },
+            {
+              "text": "Selecciona Controles de datos.",
+              "screenshot_id": "openai-settings",
+              "alt": "Configuración de ChatGPT con Controles de datos en la navegación"
+            },
+            {
+              "text": "En Exportar datos, selecciona Exportar.",
+              "screenshot_id": "openai-data-controls",
+              "alt": "Controles de datos de ChatGPT con Exportar datos"
+            },
+            {
+              "text": "En la pantalla de confirmación, selecciona Confirmar exportación.",
+              "screenshot_id": "openai-export-confirmation",
+              "alt": "Confirmación de exportación de datos de ChatGPT con el envío por correo y la caducidad del enlace"
+            },
+            {
+              "text": "Espera el correo o SMS de OpenAI; la exportación puede tardar hasta 7 días.",
+              "screenshot_id": "openai-export-confirmation",
+              "alt": "Confirmación de exportación de datos de ChatGPT con el envío por correo y la caducidad del enlace"
+            },
+            {
+              "text": "Abre Descargar exportación de datos con la sesión iniciada en la misma cuenta. El enlace caduca a las 24 horas, así que guarda el ZIP cuanto antes.",
+              "screenshot_id": "openai-export-confirmation",
+              "alt": "Confirmación de exportación de datos de ChatGPT con el envío por correo y la caducidad del enlace"
+            }
           ],
           "refs": [
             {
@@ -739,7 +1103,6 @@
               "href": "https://help.openai.com/en/articles/7260999-how-do-i-export-my-chatgpt-history-and-data"
             }
           ],
-          "images": [],
           "note": "Esta guía cubre una cuenta de ChatGPT compatible con la sesión iniciada. Después de descargarlo, usa los comandos locales del producto para inspeccionar e importar el ZIP; la carga desde el navegador aún no está disponible."
         },
         {
@@ -748,26 +1111,46 @@
           "title": "Facebook",
           "intro": "Exporta publicaciones, fotos, mensajes y más con «Descargar tu información».",
           "steps": [
-            "En el escritorio, inicia sesión. Menú de perfil → Configuración y privacidad → Configuración.",
-            "Abre el Centro de cuentas → Tu información y permisos → Exportar tu información.",
-            "Pulsa Crear exportación y selecciona el perfil de Facebook que quieras exportar.",
-            "Selecciona Exportar al dispositivo.",
-            "Elige la información, el intervalo de fechas, el formato, el correo de notificación y la calidad multimedia.",
-            "Pulsa Iniciar exportación. Facebook te enviará un correo y una notificación cuando esté lista.",
-            "Vuelve a Descargas disponibles en un plazo de 4 días. Completa personalmente cualquier verificación de contraseña o identidad y descarga el ZIP."
+            {
+              "text": "En el escritorio, inicia sesión. Menú de perfil → Configuración y privacidad → Configuración.",
+              "screenshot_id": "facebook-accounts-center-information",
+              "alt": "Centro de cuentas de Facebook: Tu información y permisos"
+            },
+            {
+              "text": "Abre el Centro de cuentas → Tu información y permisos → Exportar tu información.",
+              "screenshot_id": "facebook-accounts-center-information",
+              "alt": "Centro de cuentas de Facebook: Tu información y permisos"
+            },
+            {
+              "text": "Pulsa Crear exportación y selecciona el perfil de Facebook que quieras exportar.",
+              "screenshot_id": "facebook-export-entry",
+              "alt": "Panel Exportar tu información de Facebook"
+            },
+            {
+              "text": "Selecciona Exportar al dispositivo.",
+              "screenshot_id": "facebook-export-entry",
+              "alt": "Panel Exportar tu información de Facebook"
+            },
+            {
+              "text": "Elige la información, el intervalo de fechas, el formato, el correo de notificación y la calidad multimedia.",
+              "screenshot_id": "facebook-export-entry",
+              "alt": "Panel Exportar tu información de Facebook"
+            },
+            {
+              "text": "Pulsa Iniciar exportación. Facebook te enviará un correo y una notificación cuando esté lista.",
+              "screenshot_id": "facebook-export-entry",
+              "alt": "Panel Exportar tu información de Facebook"
+            },
+            {
+              "text": "Vuelve a Descargas disponibles en un plazo de 4 días. Completa personalmente cualquier verificación de contraseña o identidad y descarga el ZIP.",
+              "screenshot_id": "facebook-export-entry",
+              "alt": "Panel Exportar tu información de Facebook"
+            }
           ],
           "refs": [
             {
               "label": "Exportar una copia de tu información de Facebook",
               "href": "https://www.facebook.com/help/212802592074644"
-            }
-          ],
-          "images": [
-            {
-              "alt": "Centro de cuentas de Facebook: Tu información y permisos"
-            },
-            {
-              "alt": "Panel Exportar tu información de Facebook"
             }
           ]
         },
@@ -777,26 +1160,46 @@
           "title": "Instagram",
           "intro": "Solicita fotos, comentarios y datos de perfil. Recibirás un enlace por correo.",
           "steps": [
-            "En Instagram para escritorio, pulsa Más en la parte inferior izquierda y luego Configuración.",
-            "Abre el Centro de cuentas → Tu información y permisos → Exportar tu información.",
-            "Pulsa Crear exportación, selecciona el perfil de Instagram y pulsa Siguiente.",
-            "Selecciona Exportar al dispositivo.",
-            "Elige la información, el intervalo de fechas, el formato, el correo de notificación y la calidad multimedia.",
-            "Pulsa Iniciar exportación. Instagram te enviará un correo y una notificación cuando esté lista.",
-            "Vuelve a Descargas disponibles en un plazo de 4 días. Completa personalmente cualquier verificación de contraseña o identidad y descarga el ZIP."
+            {
+              "text": "En Instagram para escritorio, pulsa Más en la parte inferior izquierda y luego Configuración.",
+              "screenshot_id": "instagram-accounts-center-information",
+              "alt": "Centro de cuentas de Instagram: Tu información y permisos"
+            },
+            {
+              "text": "Abre el Centro de cuentas → Tu información y permisos → Exportar tu información.",
+              "screenshot_id": "instagram-accounts-center-information",
+              "alt": "Centro de cuentas de Instagram: Tu información y permisos"
+            },
+            {
+              "text": "Pulsa Crear exportación, selecciona el perfil de Instagram y pulsa Siguiente.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Panel Exportar tu información del Centro de cuentas de Instagram"
+            },
+            {
+              "text": "Selecciona Exportar al dispositivo.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Panel Exportar tu información del Centro de cuentas de Instagram"
+            },
+            {
+              "text": "Elige la información, el intervalo de fechas, el formato, el correo de notificación y la calidad multimedia.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Panel Exportar tu información del Centro de cuentas de Instagram"
+            },
+            {
+              "text": "Pulsa Iniciar exportación. Instagram te enviará un correo y una notificación cuando esté lista.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Panel Exportar tu información del Centro de cuentas de Instagram"
+            },
+            {
+              "text": "Vuelve a Descargas disponibles en un plazo de 4 días. Completa personalmente cualquier verificación de contraseña o identidad y descarga el ZIP.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Panel Exportar tu información del Centro de cuentas de Instagram"
+            }
           ],
           "refs": [
             {
               "label": "Revisar y exportar una copia de tu información de Instagram",
               "href": "https://www.facebook.com/help/181231772500920"
-            }
-          ],
-          "images": [
-            {
-              "alt": "Centro de cuentas de Instagram: Tu información y permisos"
-            },
-            {
-              "alt": "Panel Exportar tu información de Instagram"
             }
           ]
         },
@@ -806,13 +1209,41 @@
           "title": "WhatsApp",
           "intro": "Solicita un informe de datos de la cuenta o exporta un chat individual desde la aplicación móvil.",
           "steps": [
-            "Para obtener la información y configuración de la cuenta, abre WhatsApp en tu dispositivo principal y ve a Configuración → Cuenta → Solicitar info. de mi cuenta.",
-            "Pulsa Solicitar informe. WhatsApp indica que normalmente estará listo en tres días.",
-            "Cuando recibas la notificación, vuelve a Solicitar info. de mi cuenta y pulsa Descargar informe; el ZIP contiene archivos HTML y JSON.",
-            "Pulsa Exportar informe, elige un destino privado y guarda el informe con cuidado.",
-            "El informe de datos de la cuenta no incluye mensajes personales. Para guardar mensajes, abre el chat individual o grupal que necesites.",
-            "En Android, pulsa Más opciones → Más → Exportar chat. En iPhone, abre los detalles del chat y selecciona Exportar chat.",
-            "Elige Sin archivos multimedia o Incluir archivos multimedia y selecciona dónde guardarlo. El archivo de texto exportado no es una copia de seguridad de WhatsApp y no se puede volver a importar."
+            {
+              "text": "Para obtener la información y configuración de la cuenta, abre WhatsApp en tu dispositivo principal y ve a Configuración → Cuenta → Solicitar info. de mi cuenta.",
+              "screenshot_id": "whatsapp-account-info-help",
+              "alt": "Centro de ayuda de WhatsApp con instrucciones para solicitar información de la cuenta"
+            },
+            {
+              "text": "Pulsa Solicitar informe. WhatsApp indica que normalmente estará listo en tres días.",
+              "screenshot_id": "whatsapp-account-info-help",
+              "alt": "Centro de ayuda de WhatsApp con instrucciones para solicitar información de la cuenta"
+            },
+            {
+              "text": "Cuando recibas la notificación, vuelve a Solicitar info. de mi cuenta y pulsa Descargar informe; el ZIP contiene archivos HTML y JSON.",
+              "screenshot_id": "whatsapp-account-info-help",
+              "alt": "Centro de ayuda de WhatsApp con instrucciones para solicitar información de la cuenta"
+            },
+            {
+              "text": "Pulsa Exportar informe, elige un destino privado y guarda el informe con cuidado.",
+              "screenshot_id": "whatsapp-account-info-help",
+              "alt": "Centro de ayuda de WhatsApp con instrucciones para solicitar información de la cuenta"
+            },
+            {
+              "text": "El informe de datos de la cuenta no incluye mensajes personales. Para guardar mensajes, abre el chat individual o grupal que necesites.",
+              "screenshot_id": "whatsapp-chat-export-help",
+              "alt": "Centro de ayuda de WhatsApp con instrucciones para exportar un chat"
+            },
+            {
+              "text": "En Android, pulsa Más opciones → Más → Exportar chat. En iPhone, abre los detalles del chat y selecciona Exportar chat.",
+              "screenshot_id": "whatsapp-chat-export-help",
+              "alt": "Centro de ayuda de WhatsApp con instrucciones para exportar un chat"
+            },
+            {
+              "text": "Elige Sin archivos multimedia o Incluir archivos multimedia y selecciona dónde guardarlo. El archivo de texto exportado no es una copia de seguridad de WhatsApp y no se puede volver a importar.",
+              "screenshot_id": "whatsapp-chat-export-help",
+              "alt": "Centro de ayuda de WhatsApp con instrucciones para exportar un chat"
+            }
           ],
           "refs": [
             {
@@ -824,7 +1255,6 @@
               "href": "https://faq.whatsapp.com/1180414079177245/"
             }
           ],
-          "images": [],
           "note": "WhatsApp mantiene estas exportaciones separadas: solicita la información de la cuenta para obtener sus metadatos y exporta cada chat que necesites para guardar el historial de mensajes."
         },
         {
@@ -833,13 +1263,41 @@
           "title": "Threads",
           "intro": "Exporta publicaciones, actividad y otros datos de tu perfil de Threads mediante el Centro de cuentas.",
           "steps": [
-            "Abre la aplicación de Instagram, toca tu foto de perfil y abre el menú de la esquina superior derecha.",
-            "Toca Centro de cuentas → Tu información y permisos.",
-            "Toca Exportar tu información → Crear exportación.",
-            "Selecciona el perfil cuya información de Threads quieras exportar y toca Siguiente.",
-            "Selecciona Exportar al dispositivo.",
-            "Elige la información específica, el intervalo de fechas, el formato, el correo de notificación y la calidad multimedia.",
-            "Toca Iniciar exportación. Meta puede tardar hasta 30 días en enviarte por correo el enlace de descarga."
+            {
+              "text": "Abre la aplicación de Instagram, toca tu foto de perfil y abre el menú de la esquina superior derecha.",
+              "screenshot_id": "instagram-accounts-center-information",
+              "alt": "Centro de cuentas de Instagram: Tu información y permisos para exportar Threads"
+            },
+            {
+              "text": "Toca Centro de cuentas → Tu información y permisos.",
+              "screenshot_id": "instagram-accounts-center-information",
+              "alt": "Centro de cuentas de Instagram: Tu información y permisos para exportar Threads"
+            },
+            {
+              "text": "Toca Exportar tu información → Crear exportación.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Panel Exportar tu información del Centro de cuentas de Instagram para Threads"
+            },
+            {
+              "text": "Selecciona el perfil cuya información de Threads quieras exportar y toca Siguiente.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Panel Exportar tu información del Centro de cuentas de Instagram para Threads"
+            },
+            {
+              "text": "Selecciona Exportar al dispositivo.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Panel Exportar tu información del Centro de cuentas de Instagram para Threads"
+            },
+            {
+              "text": "Elige la información específica, el intervalo de fechas, el formato, el correo de notificación y la calidad multimedia.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Panel Exportar tu información del Centro de cuentas de Instagram para Threads"
+            },
+            {
+              "text": "Toca Iniciar exportación. Meta puede tardar hasta 30 días en enviarte por correo el enlace de descarga.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Panel Exportar tu información del Centro de cuentas de Instagram para Threads"
+            }
           ],
           "refs": [
             {
@@ -847,7 +1305,6 @@
               "href": "https://www.facebook.com/help/instagram/259803026523198"
             }
           ],
-          "images": [],
           "note": "Threads sigue siendo una guía de proveedor independiente, aunque Meta inicia actualmente su exportación desde el Centro de cuentas de la aplicación de Instagram."
         },
         {
@@ -856,26 +1313,46 @@
           "title": "LinkedIn",
           "intro": "Exporta archivo completo o elementos específicos.",
           "steps": [
-            "Escritorio: Yo → Configuración y privacidad.",
-            "Abre Privacidad de datos en la barra lateral izquierda.",
-            "En Cómo utiliza LinkedIn tus datos, abre Obtener una copia de tus datos.",
-            "En Descargar mis datos, elige categorías concretas o el archivo de datos de mayor tamaño.",
-            "Pulsa Solicitar archivo.",
-            "LinkedIn envía por correo las categorías concretas en unos minutos y el archivo de mayor tamaño en un plazo de 24 horas.",
-            "Usa el enlace del correo para descargar el archivo en un plazo de 72 horas."
+            {
+              "text": "Escritorio: Yo → Configuración y privacidad.",
+              "screenshot_id": "linkedin-data-privacy-navigation",
+              "alt": "Sección Cómo usa LinkedIn tus datos"
+            },
+            {
+              "text": "Abre Privacidad de datos en la barra lateral izquierda.",
+              "screenshot_id": "linkedin-data-privacy-navigation",
+              "alt": "Sección Cómo usa LinkedIn tus datos"
+            },
+            {
+              "text": "En Cómo utiliza LinkedIn tus datos, abre Obtener una copia de tus datos.",
+              "screenshot_id": "linkedin-data-privacy-navigation",
+              "alt": "Sección Cómo usa LinkedIn tus datos"
+            },
+            {
+              "text": "En Descargar mis datos, elige categorías concretas o el archivo de datos de mayor tamaño.",
+              "screenshot_id": "linkedin-download-data-options",
+              "alt": "Opciones de Descargar mis datos de LinkedIn"
+            },
+            {
+              "text": "Pulsa Solicitar archivo.",
+              "screenshot_id": "linkedin-download-data-options",
+              "alt": "Opciones de Descargar mis datos de LinkedIn"
+            },
+            {
+              "text": "LinkedIn envía por correo las categorías concretas en unos minutos y el archivo de mayor tamaño en un plazo de 24 horas.",
+              "screenshot_id": "linkedin-download-data-options",
+              "alt": "Opciones de Descargar mis datos de LinkedIn"
+            },
+            {
+              "text": "Usa el enlace del correo para descargar el archivo en un plazo de 72 horas.",
+              "screenshot_id": "linkedin-download-data-options",
+              "alt": "Opciones de Descargar mis datos de LinkedIn"
+            }
           ],
           "refs": [
             {
               "label": "Descargar tus datos",
               "href": "https://www.linkedin.com/help/linkedin/answer/a1339364/downloading-your-account-data"
-            }
-          ],
-          "images": [
-            {
-              "alt": "Sección Cómo usa LinkedIn tus datos"
-            },
-            {
-              "alt": "Opciones de Descargar mis datos de LinkedIn"
             }
           ]
         },
@@ -885,20 +1362,43 @@
           "title": "TikTok",
           "intro": "Solicita un ZIP de tu cuenta desde la app.",
           "steps": [
-            "En la aplicación de TikTok, pulsa Perfil en la parte inferior.",
-            "Pulsa Menú (☰) en la parte superior → Configuración y privacidad → Cuenta → Descargar tus datos.",
-            "Elige la información que quieras incluir y selecciona un formato de archivo.",
-            "Pulsa Solicitar datos.",
-            "TikTok te avisará en la aplicación cuando el archivo esté listo; la preparación puede tardar unos días.",
-            "Vuelve a Descargar tus datos → Descargar datos y pulsa Descargar. El archivo estará disponible hasta 4 días."
+            {
+              "text": "En la aplicación de TikTok, pulsa Perfil en la parte inferior.",
+              "screenshot_id": "tiktok-request-data-help",
+              "alt": "Soporte de TikTok con instrucciones para solicitar tus datos"
+            },
+            {
+              "text": "Pulsa Menú (☰) en la parte superior → Configuración y privacidad → Cuenta → Descargar tus datos.",
+              "screenshot_id": "tiktok-request-data-help",
+              "alt": "Soporte de TikTok con instrucciones para solicitar tus datos"
+            },
+            {
+              "text": "Elige la información que quieras incluir y selecciona un formato de archivo.",
+              "screenshot_id": "tiktok-request-data-help",
+              "alt": "Soporte de TikTok con instrucciones para solicitar tus datos"
+            },
+            {
+              "text": "Pulsa Solicitar datos.",
+              "screenshot_id": "tiktok-request-data-help",
+              "alt": "Soporte de TikTok con instrucciones para solicitar tus datos"
+            },
+            {
+              "text": "TikTok te avisará en la aplicación cuando el archivo esté listo; la preparación puede tardar unos días.",
+              "screenshot_id": "tiktok-download-data-help",
+              "alt": "Soporte de TikTok con instrucciones para descargar tus datos"
+            },
+            {
+              "text": "Vuelve a Descargar tus datos → Descargar datos y pulsa Descargar. El archivo estará disponible hasta 4 días.",
+              "screenshot_id": "tiktok-download-data-help",
+              "alt": "Soporte de TikTok con instrucciones para descargar tus datos"
+            }
           ],
           "refs": [
             {
               "label": "Solicitar tus datos",
               "href": "https://support.tiktok.com/en/account-and-privacy/personalized-ads-and-data/requesting-your-data"
             }
-          ],
-          "images": []
+          ]
         },
         {
           "id": "x",
@@ -906,26 +1406,46 @@
           "title": "X (Twitter)",
           "intro": "Archivo con Tweets, multimedia, MD y perfil.",
           "steps": [
-            "Web: Más → Configuración y privacidad → Tu cuenta.",
-            "Descargar un archivo con tus datos.",
-            "Introduce tu contraseña y pulsa Confirmar.",
-            "Pulsa Enviar código e introduce el código enviado al correo o teléfono asociado a tu cuenta.",
-            "Pulsa Solicitar datos.",
-            "Espera el correo o la notificación push; la preparación puede tardar unos días.",
-            "Vuelve a Descargar un archivo con tus datos, pulsa Descargar datos y descarga el ZIP mientras mantienes la sesión iniciada."
+            {
+              "text": "Web: Más → Configuración y privacidad → Tu cuenta.",
+              "screenshot_id": "x-your-account-navigation",
+              "alt": "Configuración de Tu cuenta en X con la opción para descargar un archivo"
+            },
+            {
+              "text": "Descargar un archivo con tus datos.",
+              "screenshot_id": "x-your-account-navigation",
+              "alt": "Configuración de Tu cuenta en X con la opción para descargar un archivo"
+            },
+            {
+              "text": "Introduce tu contraseña y pulsa Confirmar.",
+              "screenshot_id": "x-password-verification",
+              "alt": "Formulario vacío Verifica tu contraseña de X"
+            },
+            {
+              "text": "Pulsa Enviar código e introduce el código enviado al correo o teléfono asociado a tu cuenta.",
+              "screenshot_id": "x-password-verification",
+              "alt": "Formulario vacío Verifica tu contraseña de X"
+            },
+            {
+              "text": "Pulsa Solicitar datos.",
+              "screenshot_id": "x-password-verification",
+              "alt": "Formulario vacío Verifica tu contraseña de X"
+            },
+            {
+              "text": "Espera el correo o la notificación push; la preparación puede tardar unos días.",
+              "screenshot_id": "x-password-verification",
+              "alt": "Formulario vacío Verifica tu contraseña de X"
+            },
+            {
+              "text": "Vuelve a Descargar un archivo con tus datos, pulsa Descargar datos y descarga el ZIP mientras mantienes la sesión iniciada.",
+              "screenshot_id": "x-password-verification",
+              "alt": "Formulario vacío Verifica tu contraseña de X"
+            }
           ],
           "refs": [
             {
               "label": "Cómo descargar tu archivo",
               "href": "https://help.x.com/en/managing-your-account/how-to-download-your-x-archive"
-            }
-          ],
-          "images": [
-            {
-              "alt": "Configuración de Tu cuenta en X con la opción para descargar un archivo"
-            },
-            {
-              "alt": "Formulario vacío Verifica tu contraseña de X"
             }
           ]
         },
@@ -935,13 +1455,41 @@
           "title": "YouTube",
           "intro": "Exporta YouTube y YouTube Music con Google Takeout.",
           "steps": [
-            "Abre la página de Google Takeout para exportar datos de YouTube e inicia sesión.",
-            "Confirma que YouTube y YouTube Music sea el producto seleccionado; usa su control de opciones para ajustar el contenido.",
-            "Pulsa Siguiente paso.",
-            "Elige el método de entrega; Enviar enlace de descarga por correo mantiene el archivo fuera de un destino externo conectado.",
-            "Configura Frecuencia como Exportar una vez.",
-            "Elige el tipo y el tamaño máximo del archivo; las exportaciones mayores se dividen en varios archivos.",
-            "Pulsa Crear exportación. Google te enviará un correo cuando esté lista."
+            {
+              "text": "Abre la página de Google Takeout para exportar datos de YouTube e inicia sesión.",
+              "screenshot_id": "youtube-takeout-selection",
+              "alt": "Selección de YouTube y YouTube Music en Google Takeout"
+            },
+            {
+              "text": "Confirma que YouTube y YouTube Music sea el producto seleccionado; usa su control de opciones para ajustar el contenido.",
+              "screenshot_id": "youtube-takeout-selection",
+              "alt": "Selección de YouTube y YouTube Music en Google Takeout"
+            },
+            {
+              "text": "Pulsa Siguiente paso.",
+              "screenshot_id": "youtube-takeout-selection",
+              "alt": "Selección de YouTube y YouTube Music en Google Takeout"
+            },
+            {
+              "text": "Elige el método de entrega; Enviar enlace de descarga por correo mantiene el archivo fuera de un destino externo conectado.",
+              "screenshot_id": "youtube-takeout-export-options",
+              "alt": "Destino, frecuencia y opciones de archivo para YouTube en Google Takeout"
+            },
+            {
+              "text": "Configura Frecuencia como Exportar una vez.",
+              "screenshot_id": "youtube-takeout-export-options",
+              "alt": "Destino, frecuencia y opciones de archivo para YouTube en Google Takeout"
+            },
+            {
+              "text": "Elige el tipo y el tamaño máximo del archivo; las exportaciones mayores se dividen en varios archivos.",
+              "screenshot_id": "youtube-takeout-export-options",
+              "alt": "Destino, frecuencia y opciones de archivo para YouTube en Google Takeout"
+            },
+            {
+              "text": "Pulsa Crear exportación. Google te enviará un correo cuando esté lista.",
+              "screenshot_id": "youtube-takeout-export-options",
+              "alt": "Destino, frecuencia y opciones de archivo para YouTube en Google Takeout"
+            }
           ],
           "refs": [
             {
@@ -952,14 +1500,6 @@
               "label": "Descargar tus datos (Takeout)",
               "href": "https://support.google.com/accounts/answer/3024190"
             }
-          ],
-          "images": [
-            {
-              "alt": "Selección de YouTube y YouTube Music en Google Takeout"
-            },
-            {
-              "alt": "Destino, frecuencia y opciones de archivo para YouTube en Google Takeout"
-            }
           ]
         },
         {
@@ -968,13 +1508,41 @@
           "title": "Google (Todos los datos)",
           "intro": "Exporta Gmail, Drive, Fotos, Mapas, YouTube y más con Takeout.",
           "steps": [
-            "Abre Google Takeout e inicia sesión.",
-            "Los productos de Google que utilizas y que contienen tus datos se seleccionan automáticamente; desmarca los que no quieras incluir.",
-            "Pulsa Siguiente paso.",
-            "Elige el método de entrega; Enviar enlace de descarga por correo mantiene el archivo fuera de un destino externo conectado.",
-            "Configura Frecuencia como Exportar una vez.",
-            "Elige el tipo y el tamaño máximo del archivo; las exportaciones mayores se dividen en varios archivos.",
-            "Pulsa Crear exportación. Google te enviará un correo cuando esté lista; crear un archivo no elimina los datos originales."
+            {
+              "text": "Abre Google Takeout e inicia sesión.",
+              "screenshot_id": "google-takeout-service-selection",
+              "alt": "Paso Selecciona los datos que quieras incluir de Google Takeout"
+            },
+            {
+              "text": "Los productos de Google que utilizas y que contienen tus datos se seleccionan automáticamente; desmarca los que no quieras incluir.",
+              "screenshot_id": "google-takeout-service-selection",
+              "alt": "Paso Selecciona los datos que quieras incluir de Google Takeout"
+            },
+            {
+              "text": "Pulsa Siguiente paso.",
+              "screenshot_id": "google-takeout-service-selection",
+              "alt": "Paso Selecciona los datos que quieras incluir de Google Takeout"
+            },
+            {
+              "text": "Elige el método de entrega; Enviar enlace de descarga por correo mantiene el archivo fuera de un destino externo conectado.",
+              "screenshot_id": "google-takeout-export-options",
+              "alt": "Destino, frecuencia y opciones de archivo de Google Takeout"
+            },
+            {
+              "text": "Configura Frecuencia como Exportar una vez.",
+              "screenshot_id": "google-takeout-export-options",
+              "alt": "Destino, frecuencia y opciones de archivo de Google Takeout"
+            },
+            {
+              "text": "Elige el tipo y el tamaño máximo del archivo; las exportaciones mayores se dividen en varios archivos.",
+              "screenshot_id": "google-takeout-export-options",
+              "alt": "Destino, frecuencia y opciones de archivo de Google Takeout"
+            },
+            {
+              "text": "Pulsa Crear exportación. Google te enviará un correo cuando esté lista; crear un archivo no elimina los datos originales.",
+              "screenshot_id": "google-takeout-export-options",
+              "alt": "Destino, frecuencia y opciones de archivo de Google Takeout"
+            }
           ],
           "refs": [
             {
@@ -984,14 +1552,6 @@
             {
               "label": "Descargar tus datos (Takeout)",
               "href": "https://support.google.com/accounts/answer/3024190"
-            }
-          ],
-          "images": [
-            {
-              "alt": "Paso Selecciona los datos que quieras incluir de Google Takeout"
-            },
-            {
-              "alt": "Destino, frecuencia y opciones de archivo de Google Takeout"
             }
           ],
           "note": "Consejo: guarda los ZIP cifrados y en lugar seguro."
@@ -1137,7 +1697,15 @@
         "page_loaded": "Activités supplémentaires chargées",
         "cached": "Titres en cache",
         "progress": "Progression de la génération",
-        "weekdays": ["lun.", "mar.", "mer.", "jeu.", "ven.", "sam.", "dim."]
+        "weekdays": [
+          "lun.",
+          "mar.",
+          "mer.",
+          "jeu.",
+          "ven.",
+          "sam.",
+          "dim."
+        ]
       },
       "platforms": [
         {
@@ -1146,12 +1714,36 @@
           "title": "Netflix",
           "intro": "Importez le CSV d’activité de visionnage d’un profil pour obtenir des analyses locales privées et un enrichissement TMDB facultatif.",
           "steps": [
-            "Ouvrez Netflix dans un navigateur et accédez à Compte.",
-            "Sous Profils, sélectionnez le profil dont vous souhaitez consulter l’activité.",
-            "Ouvrez Activité de visionnage.",
-            "Utilisez Voir plus jusqu’à afficher tout l’historique si Netflix limite la liste.",
-            "Sélectionnez Tout télécharger au bas de la page pour enregistrer le CSV d’activité de visionnage.",
-            "Revenez ici et importez ce CSV. N’utilisez pas l’archive distincte des informations personnelles du compte complet."
+            {
+              "text": "Ouvrez Netflix dans un navigateur et accédez à Compte.",
+              "screenshot_id": "netflix-viewing-activity-help",
+              "alt": "Centre d’aide Netflix avec les instructions pour consulter l’historique et tout télécharger"
+            },
+            {
+              "text": "Sous Profils, sélectionnez le profil dont vous souhaitez consulter l’activité.",
+              "screenshot_id": "netflix-viewing-activity-help",
+              "alt": "Centre d’aide Netflix avec les instructions pour consulter l’historique et tout télécharger"
+            },
+            {
+              "text": "Ouvrez Activité de visionnage.",
+              "screenshot_id": "netflix-viewing-activity-help",
+              "alt": "Centre d’aide Netflix avec les instructions pour consulter l’historique et tout télécharger"
+            },
+            {
+              "text": "Utilisez Voir plus jusqu’à afficher tout l’historique si Netflix limite la liste.",
+              "screenshot_id": "netflix-viewing-activity-help",
+              "alt": "Centre d’aide Netflix avec les instructions pour consulter l’historique et tout télécharger"
+            },
+            {
+              "text": "Sélectionnez Tout télécharger au bas de la page pour enregistrer le CSV d’activité de visionnage.",
+              "screenshot_id": "netflix-viewing-activity-help",
+              "alt": "Centre d’aide Netflix avec les instructions pour consulter l’historique et tout télécharger"
+            },
+            {
+              "text": "Revenez ici et importez ce CSV. N’utilisez pas l’archive distincte des informations personnelles du compte complet.",
+              "screenshot_id": "netflix-viewing-activity-help",
+              "alt": "Centre d’aide Netflix avec les instructions pour consulter l’historique et tout télécharger"
+            }
           ],
           "refs": [
             {
@@ -1159,7 +1751,6 @@
               "href": "https://help.netflix.com/en/node/101917"
             }
           ],
-          "images": [],
           "note": "Cet espace de travail accepte uniquement le CSV d’activité de visionnage."
         },
         {
@@ -1168,13 +1759,41 @@
           "title": "OpenAI (ChatGPT)",
           "intro": "Demandez un ZIP contenant votre historique ChatGPT et d’autres données du compte.",
           "steps": [
-            "Connectez-vous à ChatGPT.",
-            "Ouvrez le menu de votre profil, puis sélectionnez Paramètres.",
-            "Sélectionnez Contrôles des données.",
-            "Sous Exporter les données, sélectionnez Exporter.",
-            "Dans l’écran de confirmation, sélectionnez Confirmer l’exportation.",
-            "Attendez l’e-mail ou le SMS d’OpenAI ; l’exportation peut prendre jusqu’à 7 jours.",
-            "Ouvrez Télécharger l’exportation des données en restant connecté au même compte. Le lien expire après 24 heures ; enregistrez donc rapidement le ZIP."
+            {
+              "text": "Connectez-vous à ChatGPT.",
+              "screenshot_id": "openai-signed-in",
+              "alt": "Écran d’accueil de ChatGPT après connexion"
+            },
+            {
+              "text": "Ouvrez le menu de votre profil, puis sélectionnez Paramètres.",
+              "screenshot_id": "openai-settings",
+              "alt": "Paramètres de ChatGPT avec Contrôles des données dans la navigation"
+            },
+            {
+              "text": "Sélectionnez Contrôles des données.",
+              "screenshot_id": "openai-settings",
+              "alt": "Paramètres de ChatGPT avec Contrôles des données dans la navigation"
+            },
+            {
+              "text": "Sous Exporter les données, sélectionnez Exporter.",
+              "screenshot_id": "openai-data-controls",
+              "alt": "Contrôles des données de ChatGPT avec Exporter les données"
+            },
+            {
+              "text": "Dans l’écran de confirmation, sélectionnez Confirmer l’exportation.",
+              "screenshot_id": "openai-export-confirmation",
+              "alt": "Confirmation d’exportation des données ChatGPT avec l’envoi par e-mail et l’expiration du lien"
+            },
+            {
+              "text": "Attendez l’e-mail ou le SMS d’OpenAI ; l’exportation peut prendre jusqu’à 7 jours.",
+              "screenshot_id": "openai-export-confirmation",
+              "alt": "Confirmation d’exportation des données ChatGPT avec l’envoi par e-mail et l’expiration du lien"
+            },
+            {
+              "text": "Ouvrez Télécharger l’exportation des données en restant connecté au même compte. Le lien expire après 24 heures ; enregistrez donc rapidement le ZIP.",
+              "screenshot_id": "openai-export-confirmation",
+              "alt": "Confirmation d’exportation des données ChatGPT avec l’envoi par e-mail et l’expiration du lien"
+            }
           ],
           "refs": [
             {
@@ -1182,7 +1801,6 @@
               "href": "https://help.openai.com/en/articles/7260999-how-do-i-export-my-chatgpt-history-and-data"
             }
           ],
-          "images": [],
           "note": "Ce guide concerne un compte ChatGPT éligible avec une session ouverte. Après le téléchargement, utilisez les commandes locales du produit pour inspecter et importer le ZIP ; l’envoi depuis le navigateur n’est pas encore disponible."
         },
         {
@@ -1191,26 +1809,46 @@
           "title": "Facebook",
           "intro": "Exportez publications, photos, messages via « Télécharger vos informations ».",
           "steps": [
-            "Sur ordinateur, connectez-vous. Menu du profil → Paramètres et confidentialité → Paramètres.",
-            "Ouvrez l’Espace Comptes → Vos informations et autorisations → Exporter vos informations.",
-            "Cliquez sur Créer une exportation, puis sélectionnez le profil Facebook à exporter.",
-            "Sélectionnez Exporter vers l’appareil.",
-            "Choisissez les informations, la période, le format, l’adresse e-mail de notification et la qualité des contenus multimédias.",
-            "Cliquez sur Démarrer l’exportation. Facebook vous envoie un e-mail et une notification lorsqu’elle est prête.",
-            "Revenez dans Téléchargements disponibles sous 4 jours. Effectuez vous-même toute vérification du mot de passe ou de l’identité, puis téléchargez le ZIP."
+            {
+              "text": "Sur ordinateur, connectez-vous. Menu du profil → Paramètres et confidentialité → Paramètres.",
+              "screenshot_id": "facebook-accounts-center-information",
+              "alt": "Espace Comptes Facebook : Vos informations et autorisations"
+            },
+            {
+              "text": "Ouvrez l’Espace Comptes → Vos informations et autorisations → Exporter vos informations.",
+              "screenshot_id": "facebook-accounts-center-information",
+              "alt": "Espace Comptes Facebook : Vos informations et autorisations"
+            },
+            {
+              "text": "Cliquez sur Créer une exportation, puis sélectionnez le profil Facebook à exporter.",
+              "screenshot_id": "facebook-export-entry",
+              "alt": "Panneau Exporter vos informations de Facebook"
+            },
+            {
+              "text": "Sélectionnez Exporter vers l’appareil.",
+              "screenshot_id": "facebook-export-entry",
+              "alt": "Panneau Exporter vos informations de Facebook"
+            },
+            {
+              "text": "Choisissez les informations, la période, le format, l’adresse e-mail de notification et la qualité des contenus multimédias.",
+              "screenshot_id": "facebook-export-entry",
+              "alt": "Panneau Exporter vos informations de Facebook"
+            },
+            {
+              "text": "Cliquez sur Démarrer l’exportation. Facebook vous envoie un e-mail et une notification lorsqu’elle est prête.",
+              "screenshot_id": "facebook-export-entry",
+              "alt": "Panneau Exporter vos informations de Facebook"
+            },
+            {
+              "text": "Revenez dans Téléchargements disponibles sous 4 jours. Effectuez vous-même toute vérification du mot de passe ou de l’identité, puis téléchargez le ZIP.",
+              "screenshot_id": "facebook-export-entry",
+              "alt": "Panneau Exporter vos informations de Facebook"
+            }
           ],
           "refs": [
             {
               "label": "Exporter une copie de vos informations Facebook",
               "href": "https://www.facebook.com/help/212802592074644"
-            }
-          ],
-          "images": [
-            {
-              "alt": "Espace Comptes Facebook : Vos informations et autorisations"
-            },
-            {
-              "alt": "Panneau Exporter vos informations de Facebook"
             }
           ]
         },
@@ -1220,26 +1858,46 @@
           "title": "Instagram",
           "intro": "Demandez photos, commentaires, infos de profil. Lien par e-mail.",
           "steps": [
-            "Sur Instagram pour ordinateur, cliquez sur Plus en bas à gauche, puis sur Paramètres.",
-            "Ouvrez l’Espace Comptes → Vos informations et autorisations → Exporter vos informations.",
-            "Cliquez sur Créer une exportation, sélectionnez le profil Instagram, puis cliquez sur Suivant.",
-            "Sélectionnez Exporter vers l’appareil.",
-            "Choisissez les informations, la période, le format, l’adresse e-mail de notification et la qualité des contenus multimédias.",
-            "Cliquez sur Démarrer l’exportation. Instagram vous envoie un e-mail et une notification lorsqu’elle est prête.",
-            "Revenez dans Téléchargements disponibles sous 4 jours. Effectuez vous-même toute vérification du mot de passe ou de l’identité, puis téléchargez le ZIP."
+            {
+              "text": "Sur Instagram pour ordinateur, cliquez sur Plus en bas à gauche, puis sur Paramètres.",
+              "screenshot_id": "instagram-accounts-center-information",
+              "alt": "Espace Comptes Instagram : Vos informations et autorisations"
+            },
+            {
+              "text": "Ouvrez l’Espace Comptes → Vos informations et autorisations → Exporter vos informations.",
+              "screenshot_id": "instagram-accounts-center-information",
+              "alt": "Espace Comptes Instagram : Vos informations et autorisations"
+            },
+            {
+              "text": "Cliquez sur Créer une exportation, sélectionnez le profil Instagram, puis cliquez sur Suivant.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Panneau Exporter vos informations de l’Espace Comptes Instagram"
+            },
+            {
+              "text": "Sélectionnez Exporter vers l’appareil.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Panneau Exporter vos informations de l’Espace Comptes Instagram"
+            },
+            {
+              "text": "Choisissez les informations, la période, le format, l’adresse e-mail de notification et la qualité des contenus multimédias.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Panneau Exporter vos informations de l’Espace Comptes Instagram"
+            },
+            {
+              "text": "Cliquez sur Démarrer l’exportation. Instagram vous envoie un e-mail et une notification lorsqu’elle est prête.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Panneau Exporter vos informations de l’Espace Comptes Instagram"
+            },
+            {
+              "text": "Revenez dans Téléchargements disponibles sous 4 jours. Effectuez vous-même toute vérification du mot de passe ou de l’identité, puis téléchargez le ZIP.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Panneau Exporter vos informations de l’Espace Comptes Instagram"
+            }
           ],
           "refs": [
             {
               "label": "Consulter et exporter une copie de vos informations Instagram",
               "href": "https://www.facebook.com/help/181231772500920"
-            }
-          ],
-          "images": [
-            {
-              "alt": "Espace Comptes Instagram : Vos informations et autorisations"
-            },
-            {
-              "alt": "Panneau Exporter vos informations d’Instagram"
             }
           ]
         },
@@ -1249,13 +1907,41 @@
           "title": "WhatsApp",
           "intro": "Demandez un rapport d’informations sur le compte ou exportez une discussion depuis l’application mobile.",
           "steps": [
-            "Pour obtenir les informations et paramètres du compte, ouvrez WhatsApp sur votre appareil principal, puis allez dans Paramètres → Compte → Demander les infos du compte.",
-            "Appuyez sur Demander un rapport. WhatsApp indique qu’il est généralement prêt sous trois jours.",
-            "Après la notification, revenez dans Demander les infos du compte et appuyez sur Télécharger le rapport ; le ZIP contient des fichiers HTML et JSON.",
-            "Appuyez sur Exporter le rapport, choisissez une destination privée et conservez le rapport avec précaution.",
-            "Le rapport d’informations sur le compte ne contient pas les messages personnels. Pour enregistrer des messages, ouvrez la discussion individuelle ou de groupe voulue.",
-            "Sur Android, appuyez sur Plus d’options → Plus → Exporter la discussion. Sur iPhone, ouvrez les détails de la discussion et sélectionnez Exporter la discussion.",
-            "Choisissez Sans médias ou Inclure les médias, puis sélectionnez l’emplacement d’enregistrement. Le fichier texte exporté n’est pas une sauvegarde WhatsApp et ne peut pas être réimporté."
+            {
+              "text": "Pour obtenir les informations et paramètres du compte, ouvrez WhatsApp sur votre appareil principal, puis allez dans Paramètres → Compte → Demander les infos du compte.",
+              "screenshot_id": "whatsapp-account-info-help",
+              "alt": "Centre d’aide WhatsApp avec les instructions de demande des informations du compte"
+            },
+            {
+              "text": "Appuyez sur Demander un rapport. WhatsApp indique qu’il est généralement prêt sous trois jours.",
+              "screenshot_id": "whatsapp-account-info-help",
+              "alt": "Centre d’aide WhatsApp avec les instructions de demande des informations du compte"
+            },
+            {
+              "text": "Après la notification, revenez dans Demander les infos du compte et appuyez sur Télécharger le rapport ; le ZIP contient des fichiers HTML et JSON.",
+              "screenshot_id": "whatsapp-account-info-help",
+              "alt": "Centre d’aide WhatsApp avec les instructions de demande des informations du compte"
+            },
+            {
+              "text": "Appuyez sur Exporter le rapport, choisissez une destination privée et conservez le rapport avec précaution.",
+              "screenshot_id": "whatsapp-account-info-help",
+              "alt": "Centre d’aide WhatsApp avec les instructions de demande des informations du compte"
+            },
+            {
+              "text": "Le rapport d’informations sur le compte ne contient pas les messages personnels. Pour enregistrer des messages, ouvrez la discussion individuelle ou de groupe voulue.",
+              "screenshot_id": "whatsapp-chat-export-help",
+              "alt": "Centre d’aide WhatsApp avec les instructions d’exportation d’une discussion"
+            },
+            {
+              "text": "Sur Android, appuyez sur Plus d’options → Plus → Exporter la discussion. Sur iPhone, ouvrez les détails de la discussion et sélectionnez Exporter la discussion.",
+              "screenshot_id": "whatsapp-chat-export-help",
+              "alt": "Centre d’aide WhatsApp avec les instructions d’exportation d’une discussion"
+            },
+            {
+              "text": "Choisissez Sans médias ou Inclure les médias, puis sélectionnez l’emplacement d’enregistrement. Le fichier texte exporté n’est pas une sauvegarde WhatsApp et ne peut pas être réimporté.",
+              "screenshot_id": "whatsapp-chat-export-help",
+              "alt": "Centre d’aide WhatsApp avec les instructions d’exportation d’une discussion"
+            }
           ],
           "refs": [
             {
@@ -1267,7 +1953,6 @@
               "href": "https://faq.whatsapp.com/1180414079177245/"
             }
           ],
-          "images": [],
           "note": "WhatsApp sépare ces exportations : demandez les informations du compte pour ses métadonnées et exportez chaque discussion nécessaire pour conserver l’historique des messages."
         },
         {
@@ -1276,13 +1961,41 @@
           "title": "Threads",
           "intro": "Exportez les publications, l’activité et les autres informations de votre profil Threads via l’Espace Comptes.",
           "steps": [
-            "Ouvrez l’application Instagram, appuyez sur votre photo de profil, puis ouvrez le menu en haut à droite.",
-            "Appuyez sur Espace Comptes → Vos informations et autorisations.",
-            "Appuyez sur Exporter vos informations → Créer une exportation.",
-            "Sélectionnez le profil dont vous souhaitez exporter les informations Threads, puis appuyez sur Suivant.",
-            "Sélectionnez Exporter vers l’appareil.",
-            "Choisissez les informations précises, la période, le format, l’adresse e-mail de notification et la qualité des contenus multimédias.",
-            "Appuyez sur Démarrer l’exportation. Meta peut prendre jusqu’à 30 jours pour envoyer le lien de téléchargement par e-mail."
+            {
+              "text": "Ouvrez l’application Instagram, appuyez sur votre photo de profil, puis ouvrez le menu en haut à droite.",
+              "screenshot_id": "instagram-accounts-center-information",
+              "alt": "Espace Comptes Instagram : Vos informations et autorisations pour une exportation Threads"
+            },
+            {
+              "text": "Appuyez sur Espace Comptes → Vos informations et autorisations.",
+              "screenshot_id": "instagram-accounts-center-information",
+              "alt": "Espace Comptes Instagram : Vos informations et autorisations pour une exportation Threads"
+            },
+            {
+              "text": "Appuyez sur Exporter vos informations → Créer une exportation.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Panneau Exporter vos informations de l’Espace Comptes Instagram pour Threads"
+            },
+            {
+              "text": "Sélectionnez le profil dont vous souhaitez exporter les informations Threads, puis appuyez sur Suivant.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Panneau Exporter vos informations de l’Espace Comptes Instagram pour Threads"
+            },
+            {
+              "text": "Sélectionnez Exporter vers l’appareil.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Panneau Exporter vos informations de l’Espace Comptes Instagram pour Threads"
+            },
+            {
+              "text": "Choisissez les informations précises, la période, le format, l’adresse e-mail de notification et la qualité des contenus multimédias.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Panneau Exporter vos informations de l’Espace Comptes Instagram pour Threads"
+            },
+            {
+              "text": "Appuyez sur Démarrer l’exportation. Meta peut prendre jusqu’à 30 jours pour envoyer le lien de téléchargement par e-mail.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Panneau Exporter vos informations de l’Espace Comptes Instagram pour Threads"
+            }
           ],
           "refs": [
             {
@@ -1290,7 +2003,6 @@
               "href": "https://www.facebook.com/help/instagram/259803026523198"
             }
           ],
-          "images": [],
           "note": "Threads reste un guide fournisseur distinct, même si Meta démarre actuellement son exportation depuis l’Espace Comptes de l’application Instagram."
         },
         {
@@ -1299,26 +2011,46 @@
           "title": "LinkedIn",
           "intro": "Archive complète ou fichiers spécifiques.",
           "steps": [
-            "Moi → Paramètres et confidentialité.",
-            "Ouvrez Confidentialité des données dans la barre latérale gauche.",
-            "Sous Comment LinkedIn utilise vos données, ouvrez Obtenir une copie de vos données.",
-            "Dans Télécharger mes données, choisissez des catégories précises ou l’archive de données plus volumineuse.",
-            "Cliquez sur Demander une archive.",
-            "LinkedIn envoie les catégories précises par e-mail en quelques minutes et l’archive plus volumineuse sous 24 heures.",
-            "Utilisez le lien reçu par e-mail pour télécharger l’archive sous 72 heures."
+            {
+              "text": "Moi → Paramètres et confidentialité.",
+              "screenshot_id": "linkedin-data-privacy-navigation",
+              "alt": "Section Comment LinkedIn utilise vos données"
+            },
+            {
+              "text": "Ouvrez Confidentialité des données dans la barre latérale gauche.",
+              "screenshot_id": "linkedin-data-privacy-navigation",
+              "alt": "Section Comment LinkedIn utilise vos données"
+            },
+            {
+              "text": "Sous Comment LinkedIn utilise vos données, ouvrez Obtenir une copie de vos données.",
+              "screenshot_id": "linkedin-data-privacy-navigation",
+              "alt": "Section Comment LinkedIn utilise vos données"
+            },
+            {
+              "text": "Dans Télécharger mes données, choisissez des catégories précises ou l’archive de données plus volumineuse.",
+              "screenshot_id": "linkedin-download-data-options",
+              "alt": "Options Télécharger mes données de LinkedIn"
+            },
+            {
+              "text": "Cliquez sur Demander une archive.",
+              "screenshot_id": "linkedin-download-data-options",
+              "alt": "Options Télécharger mes données de LinkedIn"
+            },
+            {
+              "text": "LinkedIn envoie les catégories précises par e-mail en quelques minutes et l’archive plus volumineuse sous 24 heures.",
+              "screenshot_id": "linkedin-download-data-options",
+              "alt": "Options Télécharger mes données de LinkedIn"
+            },
+            {
+              "text": "Utilisez le lien reçu par e-mail pour télécharger l’archive sous 72 heures.",
+              "screenshot_id": "linkedin-download-data-options",
+              "alt": "Options Télécharger mes données de LinkedIn"
+            }
           ],
           "refs": [
             {
               "label": "Télécharger vos données",
               "href": "https://www.linkedin.com/help/linkedin/answer/a1339364/downloading-your-account-data"
-            }
-          ],
-          "images": [
-            {
-              "alt": "Section Comment LinkedIn utilise vos données"
-            },
-            {
-              "alt": "Options Télécharger mes données de LinkedIn"
             }
           ]
         },
@@ -1328,20 +2060,43 @@
           "title": "TikTok",
           "intro": "Demandez un ZIP via l’app.",
           "steps": [
-            "Dans l’application TikTok, appuyez sur Profil en bas de l’écran.",
-            "Appuyez sur Menu (☰) en haut → Paramètres et confidentialité → Compte → Télécharger vos données.",
-            "Choisissez les informations à inclure et sélectionnez un format de fichier.",
-            "Appuyez sur Demander des données.",
-            "TikTok vous avertit dans l’application lorsque le fichier est prêt ; sa préparation peut prendre quelques jours.",
-            "Revenez dans Télécharger vos données → Télécharger des données, puis appuyez sur Télécharger. Le fichier reste disponible jusqu’à 4 jours."
+            {
+              "text": "Dans l’application TikTok, appuyez sur Profil en bas de l’écran.",
+              "screenshot_id": "tiktok-request-data-help",
+              "alt": "Assistance TikTok avec les instructions de demande des données"
+            },
+            {
+              "text": "Appuyez sur Menu (☰) en haut → Paramètres et confidentialité → Compte → Télécharger vos données.",
+              "screenshot_id": "tiktok-request-data-help",
+              "alt": "Assistance TikTok avec les instructions de demande des données"
+            },
+            {
+              "text": "Choisissez les informations à inclure et sélectionnez un format de fichier.",
+              "screenshot_id": "tiktok-request-data-help",
+              "alt": "Assistance TikTok avec les instructions de demande des données"
+            },
+            {
+              "text": "Appuyez sur Demander des données.",
+              "screenshot_id": "tiktok-request-data-help",
+              "alt": "Assistance TikTok avec les instructions de demande des données"
+            },
+            {
+              "text": "TikTok vous avertit dans l’application lorsque le fichier est prêt ; sa préparation peut prendre quelques jours.",
+              "screenshot_id": "tiktok-download-data-help",
+              "alt": "Assistance TikTok avec les instructions de téléchargement des données"
+            },
+            {
+              "text": "Revenez dans Télécharger vos données → Télécharger des données, puis appuyez sur Télécharger. Le fichier reste disponible jusqu’à 4 jours.",
+              "screenshot_id": "tiktok-download-data-help",
+              "alt": "Assistance TikTok avec les instructions de téléchargement des données"
+            }
           ],
           "refs": [
             {
               "label": "Demande de données",
               "href": "https://support.tiktok.com/en/account-and-privacy/personalized-ads-and-data/requesting-your-data"
             }
-          ],
-          "images": []
+          ]
         },
         {
           "id": "x",
@@ -1349,26 +2104,46 @@
           "title": "X (Twitter)",
           "intro": "Archive : Tweets, médias, MP, profil.",
           "steps": [
-            "Web : Plus → Paramètres et confidentialité → Votre compte.",
-            "Télécharger une archive de vos données.",
-            "Saisissez votre mot de passe, puis cliquez sur Confirmer.",
-            "Cliquez sur Envoyer le code, puis saisissez le code envoyé à l’adresse e-mail ou au numéro de téléphone associé au compte.",
-            "Cliquez sur Demander des données.",
-            "Attendez l’e-mail ou la notification push ; la préparation peut prendre quelques jours.",
-            "Revenez dans Télécharger une archive de vos données, cliquez sur Télécharger les données, puis téléchargez le ZIP en restant connecté."
+            {
+              "text": "Web : Plus → Paramètres et confidentialité → Votre compte.",
+              "screenshot_id": "x-your-account-navigation",
+              "alt": "Paramètres Votre compte de X avec l’option de téléchargement d’archive"
+            },
+            {
+              "text": "Télécharger une archive de vos données.",
+              "screenshot_id": "x-your-account-navigation",
+              "alt": "Paramètres Votre compte de X avec l’option de téléchargement d’archive"
+            },
+            {
+              "text": "Saisissez votre mot de passe, puis cliquez sur Confirmer.",
+              "screenshot_id": "x-password-verification",
+              "alt": "Formulaire vide Vérifiez votre mot de passe de X"
+            },
+            {
+              "text": "Cliquez sur Envoyer le code, puis saisissez le code envoyé à l’adresse e-mail ou au numéro de téléphone associé au compte.",
+              "screenshot_id": "x-password-verification",
+              "alt": "Formulaire vide Vérifiez votre mot de passe de X"
+            },
+            {
+              "text": "Cliquez sur Demander des données.",
+              "screenshot_id": "x-password-verification",
+              "alt": "Formulaire vide Vérifiez votre mot de passe de X"
+            },
+            {
+              "text": "Attendez l’e-mail ou la notification push ; la préparation peut prendre quelques jours.",
+              "screenshot_id": "x-password-verification",
+              "alt": "Formulaire vide Vérifiez votre mot de passe de X"
+            },
+            {
+              "text": "Revenez dans Télécharger une archive de vos données, cliquez sur Télécharger les données, puis téléchargez le ZIP en restant connecté.",
+              "screenshot_id": "x-password-verification",
+              "alt": "Formulaire vide Vérifiez votre mot de passe de X"
+            }
           ],
           "refs": [
             {
               "label": "Télécharger votre archive",
               "href": "https://help.x.com/en/managing-your-account/how-to-download-your-x-archive"
-            }
-          ],
-          "images": [
-            {
-              "alt": "Paramètres Votre compte de X avec l’option de téléchargement d’archive"
-            },
-            {
-              "alt": "Formulaire vide Vérifiez votre mot de passe de X"
             }
           ]
         },
@@ -1378,13 +2153,41 @@
           "title": "YouTube",
           "intro": "Exportez YouTube/YouTube Music via Google Takeout.",
           "steps": [
-            "Ouvrez la page Google Takeout d’exportation des données YouTube et connectez-vous.",
-            "Vérifiez que YouTube et YouTube Music est le produit sélectionné ; utilisez son contrôle d’options pour préciser le contenu.",
-            "Cliquez sur Étape suivante.",
-            "Choisissez le mode d’envoi ; Envoyer le lien de téléchargement par e-mail évite de placer l’archive dans une destination externe connectée.",
-            "Réglez Fréquence sur Exporter une fois.",
-            "Choisissez le type et la taille maximale du fichier ; les exportations plus volumineuses sont divisées en plusieurs archives.",
-            "Cliquez sur Créer une exportation. Google vous envoie un e-mail lorsqu’elle est prête."
+            {
+              "text": "Ouvrez la page Google Takeout d’exportation des données YouTube et connectez-vous.",
+              "screenshot_id": "youtube-takeout-selection",
+              "alt": "Sélection YouTube et YouTube Music dans Google Takeout"
+            },
+            {
+              "text": "Vérifiez que YouTube et YouTube Music est le produit sélectionné ; utilisez son contrôle d’options pour préciser le contenu.",
+              "screenshot_id": "youtube-takeout-selection",
+              "alt": "Sélection YouTube et YouTube Music dans Google Takeout"
+            },
+            {
+              "text": "Cliquez sur Étape suivante.",
+              "screenshot_id": "youtube-takeout-selection",
+              "alt": "Sélection YouTube et YouTube Music dans Google Takeout"
+            },
+            {
+              "text": "Choisissez le mode d’envoi ; Envoyer le lien de téléchargement par e-mail évite de placer l’archive dans une destination externe connectée.",
+              "screenshot_id": "youtube-takeout-export-options",
+              "alt": "Destination, fréquence et options de fichier YouTube dans Google Takeout"
+            },
+            {
+              "text": "Réglez Fréquence sur Exporter une fois.",
+              "screenshot_id": "youtube-takeout-export-options",
+              "alt": "Destination, fréquence et options de fichier YouTube dans Google Takeout"
+            },
+            {
+              "text": "Choisissez le type et la taille maximale du fichier ; les exportations plus volumineuses sont divisées en plusieurs archives.",
+              "screenshot_id": "youtube-takeout-export-options",
+              "alt": "Destination, fréquence et options de fichier YouTube dans Google Takeout"
+            },
+            {
+              "text": "Cliquez sur Créer une exportation. Google vous envoie un e-mail lorsqu’elle est prête.",
+              "screenshot_id": "youtube-takeout-export-options",
+              "alt": "Destination, fréquence et options de fichier YouTube dans Google Takeout"
+            }
           ],
           "refs": [
             {
@@ -1395,14 +2198,6 @@
               "label": "Télécharger vos données (Takeout)",
               "href": "https://support.google.com/accounts/answer/3024190"
             }
-          ],
-          "images": [
-            {
-              "alt": "Sélection YouTube et YouTube Music dans Google Takeout"
-            },
-            {
-              "alt": "Destination, fréquence et options de fichier YouTube dans Google Takeout"
-            }
           ]
         },
         {
@@ -1411,13 +2206,41 @@
           "title": "Google (Toutes les données)",
           "intro": "Exportez Gmail, Drive, Photos, Maps, YouTube, etc.",
           "steps": [
-            "Ouvrez Google Takeout et connectez-vous.",
-            "Les produits Google que vous utilisez et qui contiennent vos données sont sélectionnés automatiquement ; décochez ceux que vous ne souhaitez pas inclure.",
-            "Cliquez sur Étape suivante.",
-            "Choisissez le mode d’envoi ; Envoyer le lien de téléchargement par e-mail évite de placer l’archive dans une destination externe connectée.",
-            "Réglez Fréquence sur Exporter une fois.",
-            "Choisissez le type et la taille maximale du fichier ; les exportations plus volumineuses sont divisées en plusieurs archives.",
-            "Cliquez sur Créer une exportation. Google vous envoie un e-mail lorsqu’elle est prête ; la création d’une archive ne supprime pas les données d’origine."
+            {
+              "text": "Ouvrez Google Takeout et connectez-vous.",
+              "screenshot_id": "google-takeout-service-selection",
+              "alt": "Étape Sélectionner les données à inclure de Google Takeout"
+            },
+            {
+              "text": "Les produits Google que vous utilisez et qui contiennent vos données sont sélectionnés automatiquement ; décochez ceux que vous ne souhaitez pas inclure.",
+              "screenshot_id": "google-takeout-service-selection",
+              "alt": "Étape Sélectionner les données à inclure de Google Takeout"
+            },
+            {
+              "text": "Cliquez sur Étape suivante.",
+              "screenshot_id": "google-takeout-service-selection",
+              "alt": "Étape Sélectionner les données à inclure de Google Takeout"
+            },
+            {
+              "text": "Choisissez le mode d’envoi ; Envoyer le lien de téléchargement par e-mail évite de placer l’archive dans une destination externe connectée.",
+              "screenshot_id": "google-takeout-export-options",
+              "alt": "Destination, fréquence et options de fichier de Google Takeout"
+            },
+            {
+              "text": "Réglez Fréquence sur Exporter une fois.",
+              "screenshot_id": "google-takeout-export-options",
+              "alt": "Destination, fréquence et options de fichier de Google Takeout"
+            },
+            {
+              "text": "Choisissez le type et la taille maximale du fichier ; les exportations plus volumineuses sont divisées en plusieurs archives.",
+              "screenshot_id": "google-takeout-export-options",
+              "alt": "Destination, fréquence et options de fichier de Google Takeout"
+            },
+            {
+              "text": "Cliquez sur Créer une exportation. Google vous envoie un e-mail lorsqu’elle est prête ; la création d’une archive ne supprime pas les données d’origine.",
+              "screenshot_id": "google-takeout-export-options",
+              "alt": "Destination, fréquence et options de fichier de Google Takeout"
+            }
           ],
           "refs": [
             {
@@ -1427,14 +2250,6 @@
             {
               "label": "Télécharger vos données (Takeout)",
               "href": "https://support.google.com/accounts/answer/3024190"
-            }
-          ],
-          "images": [
-            {
-              "alt": "Étape Sélectionner les données à inclure de Google Takeout"
-            },
-            {
-              "alt": "Destination, fréquence et options de fichier de Google Takeout"
             }
           ],
           "note": "Conseil : stockez les ZIP chiffrés et en lieu sûr."
@@ -1580,7 +2395,15 @@
         "page_loaded": "Загружены дополнительные сеансы просмотра",
         "cached": "Названия из кэша",
         "progress": "Ход генерации",
-        "weekdays": ["пн", "вт", "ср", "чт", "пт", "сб", "вс"]
+        "weekdays": [
+          "пн",
+          "вт",
+          "ср",
+          "чт",
+          "пт",
+          "сб",
+          "вс"
+        ]
       },
       "platforms": [
         {
@@ -1589,12 +2412,36 @@
           "title": "Netflix",
           "intro": "Импортируйте CSV с историей просмотров отдельного профиля для приватной локальной аналитики и необязательного обогащения через TMDB.",
           "steps": [
-            "Откройте Netflix в браузере и перейдите в раздел «Аккаунт».",
-            "В разделе профилей выберите профиль, историю которого хотите просмотреть.",
-            "Откройте «Историю просмотров».",
-            "Если Netflix показывает не весь список, нажимайте «Показать ещё», пока не появится полная история.",
-            "Внизу страницы выберите «Скачать всё», чтобы сохранить CSV с историей просмотров.",
-            "Вернитесь сюда и импортируйте этот CSV. Не используйте отдельный архив со всей персональной информацией аккаунта."
+            {
+              "text": "Откройте Netflix в браузере и перейдите в раздел «Аккаунт».",
+              "screenshot_id": "netflix-viewing-activity-help",
+              "alt": "Инструкции Справочного центра Netflix по просмотру истории и скачиванию всей активности"
+            },
+            {
+              "text": "В разделе профилей выберите профиль, историю которого хотите просмотреть.",
+              "screenshot_id": "netflix-viewing-activity-help",
+              "alt": "Инструкции Справочного центра Netflix по просмотру истории и скачиванию всей активности"
+            },
+            {
+              "text": "Откройте «Историю просмотров».",
+              "screenshot_id": "netflix-viewing-activity-help",
+              "alt": "Инструкции Справочного центра Netflix по просмотру истории и скачиванию всей активности"
+            },
+            {
+              "text": "Если Netflix показывает не весь список, нажимайте «Показать ещё», пока не появится полная история.",
+              "screenshot_id": "netflix-viewing-activity-help",
+              "alt": "Инструкции Справочного центра Netflix по просмотру истории и скачиванию всей активности"
+            },
+            {
+              "text": "Внизу страницы выберите «Скачать всё», чтобы сохранить CSV с историей просмотров.",
+              "screenshot_id": "netflix-viewing-activity-help",
+              "alt": "Инструкции Справочного центра Netflix по просмотру истории и скачиванию всей активности"
+            },
+            {
+              "text": "Вернитесь сюда и импортируйте этот CSV. Не используйте отдельный архив со всей персональной информацией аккаунта.",
+              "screenshot_id": "netflix-viewing-activity-help",
+              "alt": "Инструкции Справочного центра Netflix по просмотру истории и скачиванию всей активности"
+            }
           ],
           "refs": [
             {
@@ -1602,7 +2449,6 @@
               "href": "https://help.netflix.com/en/node/101917"
             }
           ],
-          "images": [],
           "note": "Это рабочее пространство принимает только CSV с историей просмотров."
         },
         {
@@ -1611,13 +2457,41 @@
           "title": "OpenAI (ChatGPT)",
           "intro": "Запросите ZIP-архив с историей ChatGPT и другими данными аккаунта.",
           "steps": [
-            "Войдите в ChatGPT.",
-            "Откройте меню профиля и выберите «Настройки».",
-            "Выберите «Управление данными».",
-            "В разделе «Экспорт данных» нажмите «Экспорт».",
-            "На экране подтверждения нажмите «Подтвердить экспорт».",
-            "Дождитесь письма или SMS от OpenAI; подготовка экспорта может занять до 7 дней.",
-            "Откройте ссылку «Скачать экспорт данных», не выходя из того же аккаунта. Ссылка действует 24 часа, поэтому сразу сохраните ZIP-архив."
+            {
+              "text": "Войдите в ChatGPT.",
+              "screenshot_id": "openai-signed-in",
+              "alt": "Главная страница ChatGPT после входа в аккаунт"
+            },
+            {
+              "text": "Откройте меню профиля и выберите «Настройки».",
+              "screenshot_id": "openai-settings",
+              "alt": "Настройки ChatGPT с разделом «Управление данными» в меню"
+            },
+            {
+              "text": "Выберите «Управление данными».",
+              "screenshot_id": "openai-settings",
+              "alt": "Настройки ChatGPT с разделом «Управление данными» в меню"
+            },
+            {
+              "text": "В разделе «Экспорт данных» нажмите «Экспорт».",
+              "screenshot_id": "openai-data-controls",
+              "alt": "Раздел ChatGPT «Управление данными» с кнопкой экспорта данных"
+            },
+            {
+              "text": "На экране подтверждения нажмите «Подтвердить экспорт».",
+              "screenshot_id": "openai-export-confirmation",
+              "alt": "Подтверждение экспорта данных ChatGPT с информацией об отправке по электронной почте и сроке действия ссылки"
+            },
+            {
+              "text": "Дождитесь письма или SMS от OpenAI; подготовка экспорта может занять до 7 дней.",
+              "screenshot_id": "openai-export-confirmation",
+              "alt": "Подтверждение экспорта данных ChatGPT с информацией об отправке по электронной почте и сроке действия ссылки"
+            },
+            {
+              "text": "Откройте ссылку «Скачать экспорт данных», не выходя из того же аккаунта. Ссылка действует 24 часа, поэтому сразу сохраните ZIP-архив.",
+              "screenshot_id": "openai-export-confirmation",
+              "alt": "Подтверждение экспорта данных ChatGPT с информацией об отправке по электронной почте и сроке действия ссылки"
+            }
           ],
           "refs": [
             {
@@ -1625,7 +2499,6 @@
               "href": "https://help.openai.com/en/articles/7260999-how-do-i-export-my-chatgpt-history-and-data"
             }
           ],
-          "images": [],
           "note": "Это руководство предназначено для поддерживаемого аккаунта ChatGPT с активным входом. После скачивания используйте локальные команды продукта, чтобы проверить и импортировать ZIP-архив; загрузка через браузер пока недоступна."
         },
         {
@@ -1634,26 +2507,46 @@
           "title": "Facebook",
           "intro": "Экспорт публикаций, фото, сообщений через «Скачать вашу информацию».",
           "steps": [
-            "На компьютере войдите в аккаунт. Меню профиля → «Настройки и конфиденциальность» → «Настройки».",
-            "Откройте «Центр аккаунтов» → «Ваша информация и разрешения» → «Экспорт вашей информации».",
-            "Нажмите «Создать экспорт», затем выберите профиль Facebook для экспорта.",
-            "Выберите «Экспорт на устройство».",
-            "Выберите данные, диапазон дат, формат, адрес электронной почты для уведомлений и качество медиафайлов.",
-            "Нажмите «Начать экспорт». Facebook пришлёт письмо и уведомление, когда экспорт будет готов.",
-            "Вернитесь в раздел «Доступные загрузки» в течение 4 дней. Самостоятельно пройдите проверку пароля или личности и скачайте ZIP."
+            {
+              "text": "На компьютере войдите в аккаунт. Меню профиля → «Настройки и конфиденциальность» → «Настройки».",
+              "screenshot_id": "facebook-accounts-center-information",
+              "alt": "Центр аккаунтов Facebook: раздел «Ваша информация и разрешения»"
+            },
+            {
+              "text": "Откройте «Центр аккаунтов» → «Ваша информация и разрешения» → «Экспорт вашей информации».",
+              "screenshot_id": "facebook-accounts-center-information",
+              "alt": "Центр аккаунтов Facebook: раздел «Ваша информация и разрешения»"
+            },
+            {
+              "text": "Нажмите «Создать экспорт», затем выберите профиль Facebook для экспорта.",
+              "screenshot_id": "facebook-export-entry",
+              "alt": "Панель Facebook «Экспорт вашей информации»"
+            },
+            {
+              "text": "Выберите «Экспорт на устройство».",
+              "screenshot_id": "facebook-export-entry",
+              "alt": "Панель Facebook «Экспорт вашей информации»"
+            },
+            {
+              "text": "Выберите данные, диапазон дат, формат, адрес электронной почты для уведомлений и качество медиафайлов.",
+              "screenshot_id": "facebook-export-entry",
+              "alt": "Панель Facebook «Экспорт вашей информации»"
+            },
+            {
+              "text": "Нажмите «Начать экспорт». Facebook пришлёт письмо и уведомление, когда экспорт будет готов.",
+              "screenshot_id": "facebook-export-entry",
+              "alt": "Панель Facebook «Экспорт вашей информации»"
+            },
+            {
+              "text": "Вернитесь в раздел «Доступные загрузки» в течение 4 дней. Самостоятельно пройдите проверку пароля или личности и скачайте ZIP.",
+              "screenshot_id": "facebook-export-entry",
+              "alt": "Панель Facebook «Экспорт вашей информации»"
+            }
           ],
           "refs": [
             {
               "label": "Экспорт копии вашей информации Facebook",
               "href": "https://www.facebook.com/help/212802592074644"
-            }
-          ],
-          "images": [
-            {
-              "alt": "Центр аккаунтов Facebook: раздел «Ваша информация и разрешения»"
-            },
-            {
-              "alt": "Панель Facebook «Экспорт вашей информации»"
             }
           ]
         },
@@ -1663,26 +2556,46 @@
           "title": "Instagram",
           "intro": "Запрос фото, комментариев, данных профиля. Ссылка придёт на e-mail.",
           "steps": [
-            "В веб-версии Instagram нажмите «Ещё» в левом нижнем углу, затем выберите «Настройки».",
-            "Откройте «Центр аккаунтов» → «Ваша информация и разрешения» → «Экспорт вашей информации».",
-            "Нажмите «Создать экспорт», выберите профиль Instagram и нажмите «Далее».",
-            "Выберите «Экспорт на устройство».",
-            "Выберите данные, диапазон дат, формат, адрес электронной почты для уведомлений и качество медиафайлов.",
-            "Нажмите «Начать экспорт». Instagram пришлёт письмо и уведомление, когда экспорт будет готов.",
-            "Вернитесь в раздел «Доступные загрузки» в течение 4 дней. Самостоятельно пройдите проверку пароля или личности и скачайте ZIP."
+            {
+              "text": "В веб-версии Instagram нажмите «Ещё» в левом нижнем углу, затем выберите «Настройки».",
+              "screenshot_id": "instagram-accounts-center-information",
+              "alt": "Центр аккаунтов Instagram: раздел «Ваша информация и разрешения»"
+            },
+            {
+              "text": "Откройте «Центр аккаунтов» → «Ваша информация и разрешения» → «Экспорт вашей информации».",
+              "screenshot_id": "instagram-accounts-center-information",
+              "alt": "Центр аккаунтов Instagram: раздел «Ваша информация и разрешения»"
+            },
+            {
+              "text": "Нажмите «Создать экспорт», выберите профиль Instagram и нажмите «Далее».",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Панель экспорта информации в Центре аккаунтов Instagram"
+            },
+            {
+              "text": "Выберите «Экспорт на устройство».",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Панель экспорта информации в Центре аккаунтов Instagram"
+            },
+            {
+              "text": "Выберите данные, диапазон дат, формат, адрес электронной почты для уведомлений и качество медиафайлов.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Панель экспорта информации в Центре аккаунтов Instagram"
+            },
+            {
+              "text": "Нажмите «Начать экспорт». Instagram пришлёт письмо и уведомление, когда экспорт будет готов.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Панель экспорта информации в Центре аккаунтов Instagram"
+            },
+            {
+              "text": "Вернитесь в раздел «Доступные загрузки» в течение 4 дней. Самостоятельно пройдите проверку пароля или личности и скачайте ZIP.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Панель экспорта информации в Центре аккаунтов Instagram"
+            }
           ],
           "refs": [
             {
               "label": "Просмотр и экспорт копии вашей информации Instagram",
               "href": "https://www.facebook.com/help/181231772500920"
-            }
-          ],
-          "images": [
-            {
-              "alt": "Центр аккаунтов Instagram: раздел «Ваша информация и разрешения»"
-            },
-            {
-              "alt": "Панель Instagram «Экспорт вашей информации»"
             }
           ]
         },
@@ -1692,13 +2605,41 @@
           "title": "WhatsApp",
           "intro": "Запросите отчёт с информацией об аккаунте или экспортируйте отдельный чат из мобильного приложения.",
           "steps": [
-            "Чтобы получить информацию и настройки аккаунта, откройте WhatsApp на основном устройстве и выберите «Настройки» → «Аккаунт» → «Запросить информацию аккаунта».",
-            "Нажмите «Запросить отчёт». По данным WhatsApp, отчёт обычно готовится три дня.",
-            "Когда придёт уведомление, вернитесь в раздел «Запросить информацию аккаунта» и нажмите «Скачать отчёт»; ZIP-архив содержит файлы HTML и JSON.",
-            "Нажмите «Экспортировать отчёт», выберите защищённое место хранения и бережно храните отчёт.",
-            "Отчёт с информацией об аккаунте не содержит личных сообщений. Чтобы сохранить сообщения, откройте нужный личный или групповой чат.",
-            "На Android нажмите «Другие параметры» → «Ещё» → «Экспорт чата». На iPhone откройте сведения о чате и выберите «Экспорт чата».",
-            "Выберите «Без медиафайлов» или «Добавить медиафайлы», затем укажите, куда сохранить экспорт. Экспортированный текстовый файл не является резервной копией WhatsApp, поэтому его нельзя импортировать обратно."
+            {
+              "text": "Чтобы получить информацию и настройки аккаунта, откройте WhatsApp на основном устройстве и выберите «Настройки» → «Аккаунт» → «Запросить информацию аккаунта».",
+              "screenshot_id": "whatsapp-account-info-help",
+              "alt": "Инструкции Справочного центра WhatsApp по запросу сведений об аккаунте"
+            },
+            {
+              "text": "Нажмите «Запросить отчёт». По данным WhatsApp, отчёт обычно готовится три дня.",
+              "screenshot_id": "whatsapp-account-info-help",
+              "alt": "Инструкции Справочного центра WhatsApp по запросу сведений об аккаунте"
+            },
+            {
+              "text": "Когда придёт уведомление, вернитесь в раздел «Запросить информацию аккаунта» и нажмите «Скачать отчёт»; ZIP-архив содержит файлы HTML и JSON.",
+              "screenshot_id": "whatsapp-account-info-help",
+              "alt": "Инструкции Справочного центра WhatsApp по запросу сведений об аккаунте"
+            },
+            {
+              "text": "Нажмите «Экспортировать отчёт», выберите защищённое место хранения и бережно храните отчёт.",
+              "screenshot_id": "whatsapp-account-info-help",
+              "alt": "Инструкции Справочного центра WhatsApp по запросу сведений об аккаунте"
+            },
+            {
+              "text": "Отчёт с информацией об аккаунте не содержит личных сообщений. Чтобы сохранить сообщения, откройте нужный личный или групповой чат.",
+              "screenshot_id": "whatsapp-chat-export-help",
+              "alt": "Инструкции Справочного центра WhatsApp по экспорту чата"
+            },
+            {
+              "text": "На Android нажмите «Другие параметры» → «Ещё» → «Экспорт чата». На iPhone откройте сведения о чате и выберите «Экспорт чата».",
+              "screenshot_id": "whatsapp-chat-export-help",
+              "alt": "Инструкции Справочного центра WhatsApp по экспорту чата"
+            },
+            {
+              "text": "Выберите «Без медиафайлов» или «Добавить медиафайлы», затем укажите, куда сохранить экспорт. Экспортированный текстовый файл не является резервной копией WhatsApp, поэтому его нельзя импортировать обратно.",
+              "screenshot_id": "whatsapp-chat-export-help",
+              "alt": "Инструкции Справочного центра WhatsApp по экспорту чата"
+            }
           ],
           "refs": [
             {
@@ -1710,7 +2651,6 @@
               "href": "https://faq.whatsapp.com/1180414079177245/"
             }
           ],
-          "images": [],
           "note": "WhatsApp разделяет эти экспорты: отчёт об аккаунте содержит метаданные аккаунта, а история сообщений выгружается отдельно для каждого нужного чата."
         },
         {
@@ -1719,13 +2659,41 @@
           "title": "Threads",
           "intro": "Экспортируйте публикации, действия и другие данные профиля Threads через Центр аккаунтов.",
           "steps": [
-            "Откройте приложение Instagram, нажмите на фото профиля, затем откройте меню в правом верхнем углу.",
-            "Выберите «Центр аккаунтов» → «Ваша информация и разрешения».",
-            "Выберите «Экспорт вашей информации» → «Создать экспорт».",
-            "Выберите профиль, данные Threads которого хотите экспортировать, затем нажмите «Далее».",
-            "Выберите «Экспорт на устройство».",
-            "Выберите нужные данные, диапазон дат, формат, адрес электронной почты для уведомлений и качество медиафайлов.",
-            "Нажмите «Начать экспорт». Meta может готовить ссылку для скачивания и отправлять её по электронной почте до 30 дней."
+            {
+              "text": "Откройте приложение Instagram, нажмите на фото профиля, затем откройте меню в правом верхнем углу.",
+              "screenshot_id": "instagram-accounts-center-information",
+              "alt": "Центр аккаунтов Instagram: раздел «Ваша информация и разрешения» для экспорта данных Threads"
+            },
+            {
+              "text": "Выберите «Центр аккаунтов» → «Ваша информация и разрешения».",
+              "screenshot_id": "instagram-accounts-center-information",
+              "alt": "Центр аккаунтов Instagram: раздел «Ваша информация и разрешения» для экспорта данных Threads"
+            },
+            {
+              "text": "Выберите «Экспорт вашей информации» → «Создать экспорт».",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Панель экспорта информации в Центре аккаунтов Instagram для Threads"
+            },
+            {
+              "text": "Выберите профиль, данные Threads которого хотите экспортировать, затем нажмите «Далее».",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Панель экспорта информации в Центре аккаунтов Instagram для Threads"
+            },
+            {
+              "text": "Выберите «Экспорт на устройство».",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Панель экспорта информации в Центре аккаунтов Instagram для Threads"
+            },
+            {
+              "text": "Выберите нужные данные, диапазон дат, формат, адрес электронной почты для уведомлений и качество медиафайлов.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Панель экспорта информации в Центре аккаунтов Instagram для Threads"
+            },
+            {
+              "text": "Нажмите «Начать экспорт». Meta может готовить ссылку для скачивания и отправлять её по электронной почте до 30 дней.",
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Панель экспорта информации в Центре аккаунтов Instagram для Threads"
+            }
           ],
           "refs": [
             {
@@ -1733,7 +2701,6 @@
               "href": "https://www.facebook.com/help/instagram/259803026523198"
             }
           ],
-          "images": [],
           "note": "Threads остаётся отдельным разделом каталога, хотя сейчас Meta запускает экспорт через Центр аккаунтов в приложении Instagram."
         },
         {
@@ -1742,26 +2709,46 @@
           "title": "LinkedIn",
           "intro": "Полный архив или отдельные файлы.",
           "steps": [
-            "«Я» → «Настройки и конфиденциальность».",
-            "Откройте раздел «Конфиденциальность данных» в левой панели.",
-            "В разделе «Как LinkedIn использует ваши данные» откройте «Получить копию своих данных».",
-            "На странице «Скачать мои данные» выберите отдельные категории или расширенный архив данных.",
-            "Нажмите «Запросить архив».",
-            "LinkedIn отправит отдельные категории по электронной почте через несколько минут, а расширенный архив — в течение 24 часов.",
-            "Перейдите по ссылке из письма и скачайте архив в течение 72 часов."
+            {
+              "text": "«Я» → «Настройки и конфиденциальность».",
+              "screenshot_id": "linkedin-data-privacy-navigation",
+              "alt": "Раздел LinkedIn «Как LinkedIn использует ваши данные»"
+            },
+            {
+              "text": "Откройте раздел «Конфиденциальность данных» в левой панели.",
+              "screenshot_id": "linkedin-data-privacy-navigation",
+              "alt": "Раздел LinkedIn «Как LinkedIn использует ваши данные»"
+            },
+            {
+              "text": "В разделе «Как LinkedIn использует ваши данные» откройте «Получить копию своих данных».",
+              "screenshot_id": "linkedin-data-privacy-navigation",
+              "alt": "Раздел LinkedIn «Как LinkedIn использует ваши данные»"
+            },
+            {
+              "text": "На странице «Скачать мои данные» выберите отдельные категории или расширенный архив данных.",
+              "screenshot_id": "linkedin-download-data-options",
+              "alt": "Параметры LinkedIn «Скачать мои данные»"
+            },
+            {
+              "text": "Нажмите «Запросить архив».",
+              "screenshot_id": "linkedin-download-data-options",
+              "alt": "Параметры LinkedIn «Скачать мои данные»"
+            },
+            {
+              "text": "LinkedIn отправит отдельные категории по электронной почте через несколько минут, а расширенный архив — в течение 24 часов.",
+              "screenshot_id": "linkedin-download-data-options",
+              "alt": "Параметры LinkedIn «Скачать мои данные»"
+            },
+            {
+              "text": "Перейдите по ссылке из письма и скачайте архив в течение 72 часов.",
+              "screenshot_id": "linkedin-download-data-options",
+              "alt": "Параметры LinkedIn «Скачать мои данные»"
+            }
           ],
           "refs": [
             {
               "label": "Скачать данные аккаунта",
               "href": "https://www.linkedin.com/help/linkedin/answer/a1339364/downloading-your-account-data"
-            }
-          ],
-          "images": [
-            {
-              "alt": "Раздел LinkedIn «Как LinkedIn использует ваши данные»"
-            },
-            {
-              "alt": "Параметры LinkedIn «Скачать мои данные»"
             }
           ]
         },
@@ -1771,20 +2758,43 @@
           "title": "TikTok",
           "intro": "Запрос ZIP-архива в приложении.",
           "steps": [
-            "В приложении TikTok нажмите «Профиль» внизу экрана.",
-            "Нажмите «Меню» (☰) вверху → «Настройки и конфиденциальность» → «Аккаунт» → «Скачать ваши данные».",
-            "Выберите данные, которые нужно включить, и формат файла.",
-            "Нажмите «Запросить данные».",
-            "TikTok уведомит вас в приложении, когда файл будет готов; подготовка может занять несколько дней.",
-            "Вернитесь в раздел «Скачать ваши данные» → «Загрузка данных» и нажмите «Скачать». Файл будет доступен до 4 дней."
+            {
+              "text": "В приложении TikTok нажмите «Профиль» внизу экрана.",
+              "screenshot_id": "tiktok-request-data-help",
+              "alt": "Инструкции TikTok Support по запросу данных"
+            },
+            {
+              "text": "Нажмите «Меню» (☰) вверху → «Настройки и конфиденциальность» → «Аккаунт» → «Скачать ваши данные».",
+              "screenshot_id": "tiktok-request-data-help",
+              "alt": "Инструкции TikTok Support по запросу данных"
+            },
+            {
+              "text": "Выберите данные, которые нужно включить, и формат файла.",
+              "screenshot_id": "tiktok-request-data-help",
+              "alt": "Инструкции TikTok Support по запросу данных"
+            },
+            {
+              "text": "Нажмите «Запросить данные».",
+              "screenshot_id": "tiktok-request-data-help",
+              "alt": "Инструкции TikTok Support по запросу данных"
+            },
+            {
+              "text": "TikTok уведомит вас в приложении, когда файл будет готов; подготовка может занять несколько дней.",
+              "screenshot_id": "tiktok-download-data-help",
+              "alt": "Инструкции TikTok Support по скачиванию данных"
+            },
+            {
+              "text": "Вернитесь в раздел «Скачать ваши данные» → «Загрузка данных» и нажмите «Скачать». Файл будет доступен до 4 дней.",
+              "screenshot_id": "tiktok-download-data-help",
+              "alt": "Инструкции TikTok Support по скачиванию данных"
+            }
           ],
           "refs": [
             {
               "label": "Запрос данных",
               "href": "https://support.tiktok.com/en/account-and-privacy/personalized-ads-and-data/requesting-your-data"
             }
-          ],
-          "images": []
+          ]
         },
         {
           "id": "x",
@@ -1792,26 +2802,46 @@
           "title": "X (Twitter)",
           "intro": "Архив: твиты, медиа, ЛС и профиль.",
           "steps": [
-            "Веб: «Ещё» → «Настройки и конфиденциальность» → «Ваша учётная запись».",
-            "«Скачать архив ваших данных».",
-            "Введите пароль и нажмите «Подтвердить».",
-            "Нажмите «Отправить код» и введите код, отправленный на адрес электронной почты или номер телефона, указанный в аккаунте.",
-            "Нажмите «Запросить данные».",
-            "Дождитесь письма или push-уведомления; подготовка может занять несколько дней.",
-            "Вернитесь в раздел «Скачать архив ваших данных», нажмите «Скачать данные» и загрузите ZIP, не выходя из аккаунта."
+            {
+              "text": "Веб: «Ещё» → «Настройки и конфиденциальность» → «Ваша учётная запись».",
+              "screenshot_id": "x-your-account-navigation",
+              "alt": "Раздел X «Ваш аккаунт» с пунктом скачивания архива"
+            },
+            {
+              "text": "«Скачать архив ваших данных».",
+              "screenshot_id": "x-your-account-navigation",
+              "alt": "Раздел X «Ваш аккаунт» с пунктом скачивания архива"
+            },
+            {
+              "text": "Введите пароль и нажмите «Подтвердить».",
+              "screenshot_id": "x-password-verification",
+              "alt": "Пустая форма X «Подтвердите пароль»"
+            },
+            {
+              "text": "Нажмите «Отправить код» и введите код, отправленный на адрес электронной почты или номер телефона, указанный в аккаунте.",
+              "screenshot_id": "x-password-verification",
+              "alt": "Пустая форма X «Подтвердите пароль»"
+            },
+            {
+              "text": "Нажмите «Запросить данные».",
+              "screenshot_id": "x-password-verification",
+              "alt": "Пустая форма X «Подтвердите пароль»"
+            },
+            {
+              "text": "Дождитесь письма или push-уведомления; подготовка может занять несколько дней.",
+              "screenshot_id": "x-password-verification",
+              "alt": "Пустая форма X «Подтвердите пароль»"
+            },
+            {
+              "text": "Вернитесь в раздел «Скачать архив ваших данных», нажмите «Скачать данные» и загрузите ZIP, не выходя из аккаунта.",
+              "screenshot_id": "x-password-verification",
+              "alt": "Пустая форма X «Подтвердите пароль»"
+            }
           ],
           "refs": [
             {
               "label": "Как скачать архив",
               "href": "https://help.x.com/en/managing-your-account/how-to-download-your-x-archive"
-            }
-          ],
-          "images": [
-            {
-              "alt": "Раздел X «Ваш аккаунт» с пунктом скачивания архива"
-            },
-            {
-              "alt": "Пустая форма X «Подтвердите пароль»"
             }
           ]
         },
@@ -1821,13 +2851,41 @@
           "title": "YouTube",
           "intro": "Экспорт YouTube/YouTube Music через Google Takeout.",
           "steps": [
-            "Откройте страницу Google Takeout для экспорта данных YouTube и войдите в аккаунт.",
-            "Убедитесь, что выбран продукт «YouTube и YouTube Music»; настройте состав данных с помощью его параметров.",
-            "Нажмите «Следующий шаг».",
-            "Выберите способ доставки; вариант «Отправить ссылку для скачивания по электронной почте» не передаёт архив во внешнее подключённое хранилище.",
-            "Установите для параметра «Частота» значение «Однократный экспорт».",
-            "Выберите тип и максимальный размер файла; более крупный экспорт будет разделён на несколько архивов.",
-            "Нажмите «Создать экспорт». Google отправит письмо, когда архив будет готов."
+            {
+              "text": "Откройте страницу Google Takeout для экспорта данных YouTube и войдите в аккаунт.",
+              "screenshot_id": "youtube-takeout-selection",
+              "alt": "Выбор YouTube и YouTube Music в Google Takeout"
+            },
+            {
+              "text": "Убедитесь, что выбран продукт «YouTube и YouTube Music»; настройте состав данных с помощью его параметров.",
+              "screenshot_id": "youtube-takeout-selection",
+              "alt": "Выбор YouTube и YouTube Music в Google Takeout"
+            },
+            {
+              "text": "Нажмите «Следующий шаг».",
+              "screenshot_id": "youtube-takeout-selection",
+              "alt": "Выбор YouTube и YouTube Music в Google Takeout"
+            },
+            {
+              "text": "Выберите способ доставки; вариант «Отправить ссылку для скачивания по электронной почте» не передаёт архив во внешнее подключённое хранилище.",
+              "screenshot_id": "youtube-takeout-export-options",
+              "alt": "Способ доставки, частота и параметры файлов YouTube в Google Takeout"
+            },
+            {
+              "text": "Установите для параметра «Частота» значение «Однократный экспорт».",
+              "screenshot_id": "youtube-takeout-export-options",
+              "alt": "Способ доставки, частота и параметры файлов YouTube в Google Takeout"
+            },
+            {
+              "text": "Выберите тип и максимальный размер файла; более крупный экспорт будет разделён на несколько архивов.",
+              "screenshot_id": "youtube-takeout-export-options",
+              "alt": "Способ доставки, частота и параметры файлов YouTube в Google Takeout"
+            },
+            {
+              "text": "Нажмите «Создать экспорт». Google отправит письмо, когда архив будет готов.",
+              "screenshot_id": "youtube-takeout-export-options",
+              "alt": "Способ доставки, частота и параметры файлов YouTube в Google Takeout"
+            }
           ],
           "refs": [
             {
@@ -1838,14 +2896,6 @@
               "label": "Скачать данные (Takeout)",
               "href": "https://support.google.com/accounts/answer/3024190"
             }
-          ],
-          "images": [
-            {
-              "alt": "Выбор YouTube и YouTube Music в Google Takeout"
-            },
-            {
-              "alt": "Способ доставки, частота и параметры файлов YouTube в Google Takeout"
-            }
           ]
         },
         {
@@ -1854,13 +2904,41 @@
           "title": "Google (Все данные)",
           "intro": "Экспорт Gmail, Drive, Photos, Maps, YouTube и др.",
           "steps": [
-            "Откройте Google Takeout и войдите в аккаунт.",
-            "Продукты Google, которыми вы пользуетесь и в которых хранятся ваши данные, выбираются автоматически; снимите отметку с продуктов, которые не нужно включать.",
-            "Нажмите «Следующий шаг».",
-            "Выберите способ доставки; вариант «Отправить ссылку для скачивания по электронной почте» не передаёт архив во внешнее подключённое хранилище.",
-            "Установите для параметра «Частота» значение «Однократный экспорт».",
-            "Выберите тип и максимальный размер файла; более крупный экспорт будет разделён на несколько архивов.",
-            "Нажмите «Создать экспорт». Google отправит письмо, когда архив будет готов; создание архива не удаляет исходные данные."
+            {
+              "text": "Откройте Google Takeout и войдите в аккаунт.",
+              "screenshot_id": "google-takeout-service-selection",
+              "alt": "Шаг Google Takeout «Выберите данные для включения»"
+            },
+            {
+              "text": "Продукты Google, которыми вы пользуетесь и в которых хранятся ваши данные, выбираются автоматически; снимите отметку с продуктов, которые не нужно включать.",
+              "screenshot_id": "google-takeout-service-selection",
+              "alt": "Шаг Google Takeout «Выберите данные для включения»"
+            },
+            {
+              "text": "Нажмите «Следующий шаг».",
+              "screenshot_id": "google-takeout-service-selection",
+              "alt": "Шаг Google Takeout «Выберите данные для включения»"
+            },
+            {
+              "text": "Выберите способ доставки; вариант «Отправить ссылку для скачивания по электронной почте» не передаёт архив во внешнее подключённое хранилище.",
+              "screenshot_id": "google-takeout-export-options",
+              "alt": "Способ доставки, частота и параметры файлов Google Takeout"
+            },
+            {
+              "text": "Установите для параметра «Частота» значение «Однократный экспорт».",
+              "screenshot_id": "google-takeout-export-options",
+              "alt": "Способ доставки, частота и параметры файлов Google Takeout"
+            },
+            {
+              "text": "Выберите тип и максимальный размер файла; более крупный экспорт будет разделён на несколько архивов.",
+              "screenshot_id": "google-takeout-export-options",
+              "alt": "Способ доставки, частота и параметры файлов Google Takeout"
+            },
+            {
+              "text": "Нажмите «Создать экспорт». Google отправит письмо, когда архив будет готов; создание архива не удаляет исходные данные.",
+              "screenshot_id": "google-takeout-export-options",
+              "alt": "Способ доставки, частота и параметры файлов Google Takeout"
+            }
           ],
           "refs": [
             {
@@ -1870,14 +2948,6 @@
             {
               "label": "Скачать данные (Takeout)",
               "href": "https://support.google.com/accounts/answer/3024190"
-            }
-          ],
-          "images": [
-            {
-              "alt": "Шаг Google Takeout «Выберите данные для включения»"
-            },
-            {
-              "alt": "Способ доставки, частота и параметры файлов Google Takeout"
             }
           ],
           "note": "Совет: храните ZIP-архивы зашифрованными."

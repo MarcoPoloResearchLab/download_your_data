@@ -107,7 +107,7 @@ async page => {
       `${locale} OpenAI guide heading is incorrect`
     );
     assert(
-      await page.locator('#openai .instruction-list li').count() === 7,
+      await page.locator('#openai .instruction-step').count() === 7,
       `${locale} OpenAI export instructions are incomplete`
     );
     assert(
@@ -122,7 +122,7 @@ async page => {
       `${locale} did not preserve the canonical WhatsApp identity`
     );
     assert(
-      await page.locator('#whatsapp .instruction-list li').count() === 7,
+      await page.locator('#whatsapp .instruction-step').count() === 7,
       `${locale} WhatsApp export instructions are incomplete`
     );
     assert(
@@ -140,7 +140,7 @@ async page => {
       `${locale} did not preserve the canonical Threads identity`
     );
     assert(
-      await page.locator('#threads .instruction-list li').count() === 7,
+      await page.locator('#threads .instruction-step').count() === 7,
       `${locale} Threads export instructions are incomplete`
     );
     assert(
@@ -151,7 +151,9 @@ async page => {
     );
     await route('#guide/facebook', '#facebook');
     assert(
-      await page.locator(`#facebook img[alt="${expectedAlt}"]`).count() === 1,
+      await page.locator(
+        `#facebook .instruction-step[data-step-index="1"] img[alt="${expectedAlt}"]`
+      ).count() === 1,
       `${locale} Facebook screenshot alternative is missing`
     );
     await route('#provider/netflix', '.workspace');
@@ -160,7 +162,7 @@ async page => {
       `${locale} Netflix workspace identity changed`
     );
     assert(
-      await page.locator('.import-panel .instruction-list li').count() === 6,
+      await page.locator('.import-panel .instruction-step').count() === 6,
       `${locale} Netflix instructions are incomplete`
     );
     assert(
@@ -173,27 +175,44 @@ async page => {
   }
   await selectLanguage('en');
 
-  const screenshotCounts = {
-    openai: 0,
-    facebook: 2,
-    instagram: 2,
-    whatsapp: 0,
-    threads: 0,
-    linkedin: 2,
-    tiktok: 0,
-    x: 2,
-    youtube: 2,
-    google: 2
+  const stepCounts = {
+    netflix: 6,
+    openai: 7,
+    facebook: 7,
+    instagram: 7,
+    whatsapp: 7,
+    threads: 7,
+    linkedin: 7,
+    tiktok: 6,
+    x: 7,
+    youtube: 7,
+    google: 7
   };
   const screenshotIDs = [];
-  for (const [provider, expectedCount] of Object.entries(screenshotCounts)) {
-    await route(`#guide/${provider}`, `#${provider}`);
-    const images = page.locator(`#${provider} img.instruction-screenshot`);
+  for (const [provider, expectedStepCount] of Object.entries(stepCounts)) {
+    if (provider === 'netflix') {
+      await route('#provider/netflix', '.workspace');
+    } else {
+      await route(`#guide/${provider}`, `#${provider}`);
+    }
+    const providerRoot = provider === 'netflix' ? '.import-panel' : `#${provider}`;
+    const steps = page.locator(`${providerRoot} .instruction-step`);
     assert(
-      await images.count() === expectedCount,
-      `${provider} screenshot count must be ${expectedCount}`
+      await steps.count() === expectedStepCount,
+      `${provider} instruction step count must be ${expectedStepCount}`
     );
-    for (const image of await images.all()) {
+    for (const step of await steps.all()) {
+      assert(
+        await step.locator('.instruction-step-copy').count() === 1,
+        `${provider} step requires one instruction`
+      );
+      const stepNumber = await step.getAttribute('data-step-index');
+      assert(
+        await step.locator('.instruction-step-number').textContent() === stepNumber,
+        `${provider} step requires its visible sequence number`
+      );
+      const image = step.locator('img.instruction-screenshot');
+      assert(await image.count() === 1, `${provider} step requires exactly one screenshot`);
       await image.scrollIntoViewIfNeeded();
       await image.evaluate((element) => element.decode());
       const record = await image.evaluate((element) => ({
@@ -218,9 +237,12 @@ async page => {
       screenshotIDs.push(record.id);
     }
   }
-  assert(screenshotIDs.length === 12, 'authenticated guide set must contain 12 screenshots');
-  assert(new Set(screenshotIDs).size === 12, 'authenticated screenshot IDs must be unique');
-  assert(await page.locator('.ratio').count() === 0, 'placeholder screenshot tiles remain');
+  assert(screenshotIDs.length === 75, 'every instruction step must render one screenshot');
+  assert(new Set(screenshotIDs).size === 21, 'approved screenshot set must contain 21 assets');
+  assert(
+    await page.locator('.screenshot-grid, .instruction-list, .ratio').count() === 0,
+    'obsolete gallery, text-only, or placeholder instruction UI remains'
+  );
 
   await route('#guide/youtube', '#youtube');
   assert(
@@ -397,6 +419,46 @@ async page => {
   );
   assert(mobileLayout.railBottom <= mobileLayout.mainTop + 1, 'mobile rail must collapse above content');
   assert(!mobileLayout.railColumns.includes(' '), 'mobile rail must use one column');
+
+  await route('#guide/openai', '#openai');
+  const mobileGuideLayout = await page.evaluate(() => {
+    const step = document.querySelector('#openai .instruction-step');
+    const copy = step.querySelector('.instruction-step-copy').getBoundingClientRect();
+    const image = step.querySelector('.instruction-screenshot').getBoundingClientRect();
+    const stepBox = step.getBoundingClientRect();
+    return {
+      documentWidth: document.documentElement.scrollWidth,
+      viewportWidth: window.innerWidth,
+      gridColumns: getComputedStyle(step).gridTemplateColumns,
+      copyBottom: copy.bottom,
+      imageTop: image.top,
+      imageLeft: image.left,
+      imageRight: image.right,
+      stepLeft: stepBox.left,
+      stepRight: stepBox.right
+    };
+  });
+  assert(
+    mobileGuideLayout.documentWidth <= mobileGuideLayout.viewportWidth,
+    `mobile visual guide overflows by ${
+      mobileGuideLayout.documentWidth - mobileGuideLayout.viewportWidth
+    }px`
+  );
+  assert(
+    mobileGuideLayout.gridColumns.split(' ').length === 2,
+    'mobile visual step must collapse to number and instruction columns'
+  );
+  assert(
+    mobileGuideLayout.imageTop >= mobileGuideLayout.copyBottom &&
+      mobileGuideLayout.imageLeft >= mobileGuideLayout.stepLeft &&
+      mobileGuideLayout.imageRight <= mobileGuideLayout.stepRight,
+    'mobile screenshot must stack beneath its instruction inside the numbered step'
+  );
+  assert(
+    await page.locator('#openai .instruction-step img.instruction-screenshot').count() === 7,
+    'mobile OpenAI guide must retain one screenshot per step'
+  );
+  await route('#provider/netflix', '.workspace');
 
   await page.emulateMedia({reducedMotion: 'reduce'});
   const reducedMotion = await page.locator('.button').first().evaluate((element) => ({
