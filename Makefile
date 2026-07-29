@@ -10,14 +10,14 @@ export CGO_ENABLED
 .PHONY: build check-frontend ci deploy deploy-dry-run down eval-netflix-matcher fmt fmt-check lint pages-deploy publish publish-release release release-artifacts smoke-command smoke-netflix-command test test-browser test-local-lifecycle test-release-artifact test-release-workflow up validate-instruction-screenshots
 
 build:
-	mkdir -p build
-	$(GO) build -o build/download-your-data .
+	@mkdir -p build
+	@$(GO) build -o build/download-your-data .
 
 up: build
-	./scripts/local-server.sh up "$(abspath build/download-your-data)"
+	@./scripts/local-server.sh up "$(abspath build/download-your-data)"
 
 down:
-	./scripts/local-server.sh down "$(abspath build/download-your-data)"
+	@./scripts/local-server.sh down "$(abspath build/download-your-data)"
 
 fmt:
 	gofmt -w $$(find . -name '*.go' -not -path './build/*')

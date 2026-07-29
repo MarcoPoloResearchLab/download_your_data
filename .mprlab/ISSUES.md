@@ -58,6 +58,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
 
   Requirements:
   - Keep `make up` attached to its terminal while recording the exact server process identity beneath the checkout's Git state.
+  - Keep `up` and `down` as phony operator targets without echoing internal build or launcher commands.
   - Make `make down` idempotent when no managed server is running.
   - Refuse to signal a reused, malformed, or unrelated process identity.
   - Keep custom address, data-root, inference, and TMDB environment configuration attached to the server process.
