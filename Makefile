@@ -7,14 +7,17 @@ override PAGES_URL := https://dyd.mprlab.com/
 
 export CGO_ENABLED
 
-.PHONY: build check-frontend ci deploy deploy-dry-run eval-netflix-matcher fmt fmt-check lint pages-deploy publish publish-release release release-artifacts smoke-command smoke-netflix-command test test-browser test-release-artifact test-release-workflow up validate-instruction-screenshots
+.PHONY: build check-frontend ci deploy deploy-dry-run down eval-netflix-matcher fmt fmt-check lint pages-deploy publish publish-release release release-artifacts smoke-command smoke-netflix-command test test-browser test-local-lifecycle test-release-artifact test-release-workflow up validate-instruction-screenshots
 
 build:
 	mkdir -p build
 	$(GO) build -o build/download-your-data .
 
-up:
-	$(GO) run . serve
+up: build
+	./scripts/local-server.sh up "$(abspath build/download-your-data)"
+
+down:
+	./scripts/local-server.sh down "$(abspath build/download-your-data)"
 
 fmt:
 	gofmt -w $$(find . -name '*.go' -not -path './build/*')
@@ -37,6 +40,9 @@ check-frontend:
 
 test:
 	$(GO) test ./...
+
+test-local-lifecycle: build
+	./scripts/test-local-lifecycle.sh ./scripts/local-server.sh "$(abspath build/download-your-data)"
 
 eval-netflix-matcher:
 	$(GO) test ./internal/providers/netflix -run '^TestMatcherEvaluationGate$$' -count=1 -v
@@ -80,4 +86,4 @@ deploy: pages-deploy
 
 deploy-dry-run: test-release-workflow test-release-artifact
 
-ci: fmt-check lint check-frontend eval-netflix-matcher test smoke-netflix-command validate-instruction-screenshots test-browser smoke-command test-release-workflow test-release-artifact
+ci: fmt-check lint check-frontend eval-netflix-matcher test test-local-lifecycle smoke-netflix-command validate-instruction-screenshots test-browser smoke-command test-release-workflow test-release-artifact
