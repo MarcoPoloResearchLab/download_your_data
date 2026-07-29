@@ -39,10 +39,10 @@ const GUIDE_ONLY_PROVIDER_IDS = Object.freeze([
 const INSTRUCTION_LINK_HOSTS = Object.freeze({
   netflix: Object.freeze(['help.netflix.com']),
   openai: Object.freeze(['chatgpt.com']),
-  facebook: Object.freeze(['accountscenter.facebook.com']),
-  instagram: Object.freeze(['accountscenter.instagram.com']),
+  facebook: Object.freeze(['accountscenter.facebook.com', 'www.facebook.com']),
+  instagram: Object.freeze(['accountscenter.instagram.com', 'www.facebook.com']),
   whatsapp: Object.freeze(['faq.whatsapp.com']),
-  threads: Object.freeze(['accountscenter.instagram.com']),
+  threads: Object.freeze(['www.facebook.com']),
   linkedin: Object.freeze(['www.linkedin.com']),
   tiktok: Object.freeze(['support.tiktok.com']),
   x: Object.freeze(['x.com']),
@@ -889,6 +889,7 @@ function renderOpenAIRail() {
 
 function renderNetflixWorkspace() {
   const provider = localizedProvider('netflix');
+  const definition = providerDefinition('netflix');
   setHeaderContext(provider.title);
   const root = element('div', {class: 'workspace'});
   const presentation = netflixStatePresentation();
@@ -901,7 +902,7 @@ function renderNetflixWorkspace() {
       'aria-label': ui().back_catalog,
       text: '←'
     }),
-    providerMark('netflix', provider.title),
+    providerMark('netflix', provider.title, definition.icon_src),
     element(
       'div',
       {},
