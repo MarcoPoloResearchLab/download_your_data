@@ -5,6 +5,10 @@
       "surface": "workspace"
     },
     {
+      "id": "openai",
+      "surface": "guide"
+    },
+    {
       "id": "facebook",
       "surface": "guide"
     },
@@ -34,6 +38,7 @@
     }
   ],
   "instruction_screenshots": {
+    "openai": [],
     "facebook": [
       {
         "id": "facebook-accounts-center-information",
@@ -225,6 +230,7 @@
         "official_website": "Open the official TMDB website",
         "no_external_assets": "The shipped interface loads styles, scripts, icons, screenshots, and chart rendering from this local server only.",
         "guide_title": "Export guide",
+        "guide_steps_title": "How to download your data",
         "official_help": "Official help",
         "file_selected": "Selected file",
         "import_started": "Local Netflix import started",
@@ -259,6 +265,29 @@
           ],
           "images": [],
           "note": "This workspace accepts the Viewing activity CSV only."
+        },
+        {
+          "id": "openai",
+          "nav": "OpenAI",
+          "title": "OpenAI (ChatGPT)",
+          "intro": "Request a ZIP containing your ChatGPT history and other account data.",
+          "steps": [
+            "Sign in to ChatGPT.",
+            "Open your profile menu, then select Settings.",
+            "Select Data controls.",
+            "Under Export data, select Export.",
+            "On the confirmation screen, select Confirm export.",
+            "Wait for OpenAI’s email or SMS; the export can take up to 7 days.",
+            "Open Download data export while signed in to the same account. The link expires after 24 hours, so save the ZIP promptly."
+          ],
+          "refs": [
+            {
+              "label": "OpenAI: Exporting your ChatGPT history and data",
+              "href": "https://help.openai.com/en/articles/7260999-how-do-i-export-my-chatgpt-history-and-data"
+            }
+          ],
+          "images": [],
+          "note": "This guide covers an eligible signed-in ChatGPT account. After downloading, use the local product commands to inspect and import the ZIP; browser upload is not yet available."
         },
         {
           "id": "facebook",
@@ -594,6 +623,7 @@
         "official_website": "Abrir el sitio web oficial de TMDB",
         "no_external_assets": "La interfaz incluida carga estilos, scripts, iconos, capturas y gráficos únicamente desde este servidor local.",
         "guide_title": "Guía de exportación",
+        "guide_steps_title": "Cómo descargar tus datos",
         "official_help": "Ayuda oficial",
         "file_selected": "Archivo seleccionado",
         "import_started": "Importación local de Netflix iniciada",
@@ -628,6 +658,29 @@
           ],
           "images": [],
           "note": "Este espacio de trabajo solo acepta el CSV de actividad de visualización."
+        },
+        {
+          "id": "openai",
+          "nav": "OpenAI",
+          "title": "OpenAI (ChatGPT)",
+          "intro": "Solicita un ZIP con tu historial de ChatGPT y otros datos de la cuenta.",
+          "steps": [
+            "Inicia sesión en ChatGPT.",
+            "Abre el menú de tu perfil y selecciona Configuración.",
+            "Selecciona Controles de datos.",
+            "En Exportar datos, selecciona Exportar.",
+            "En la pantalla de confirmación, selecciona Confirmar exportación.",
+            "Espera el correo o SMS de OpenAI; la exportación puede tardar hasta 7 días.",
+            "Abre Descargar exportación de datos con la sesión iniciada en la misma cuenta. El enlace caduca a las 24 horas, así que guarda el ZIP cuanto antes."
+          ],
+          "refs": [
+            {
+              "label": "OpenAI: exportar el historial y los datos de ChatGPT",
+              "href": "https://help.openai.com/en/articles/7260999-how-do-i-export-my-chatgpt-history-and-data"
+            }
+          ],
+          "images": [],
+          "note": "Esta guía cubre una cuenta de ChatGPT compatible con la sesión iniciada. Después de descargarlo, usa los comandos locales del producto para inspeccionar e importar el ZIP; la carga desde el navegador aún no está disponible."
         },
         {
           "id": "facebook",
@@ -963,6 +1016,7 @@
         "official_website": "Ouvrir le site officiel de TMDB",
         "no_external_assets": "L’interface livrée charge les styles, scripts, icônes, captures et graphiques uniquement depuis ce serveur local.",
         "guide_title": "Guide d’exportation",
+        "guide_steps_title": "Comment télécharger vos données",
         "official_help": "Aide officielle",
         "file_selected": "Fichier sélectionné",
         "import_started": "Importation locale de Netflix lancée",
@@ -997,6 +1051,29 @@
           ],
           "images": [],
           "note": "Cet espace de travail accepte uniquement le CSV d’activité de visionnage."
+        },
+        {
+          "id": "openai",
+          "nav": "OpenAI",
+          "title": "OpenAI (ChatGPT)",
+          "intro": "Demandez un ZIP contenant votre historique ChatGPT et d’autres données du compte.",
+          "steps": [
+            "Connectez-vous à ChatGPT.",
+            "Ouvrez le menu de votre profil, puis sélectionnez Paramètres.",
+            "Sélectionnez Contrôles des données.",
+            "Sous Exporter les données, sélectionnez Exporter.",
+            "Dans l’écran de confirmation, sélectionnez Confirmer l’exportation.",
+            "Attendez l’e-mail ou le SMS d’OpenAI ; l’exportation peut prendre jusqu’à 7 jours.",
+            "Ouvrez Télécharger l’exportation des données en restant connecté au même compte. Le lien expire après 24 heures ; enregistrez donc rapidement le ZIP."
+          ],
+          "refs": [
+            {
+              "label": "OpenAI : exporter votre historique et vos données ChatGPT",
+              "href": "https://help.openai.com/en/articles/7260999-how-do-i-export-my-chatgpt-history-and-data"
+            }
+          ],
+          "images": [],
+          "note": "Ce guide concerne un compte ChatGPT éligible avec une session ouverte. Après le téléchargement, utilisez les commandes locales du produit pour inspecter et importer le ZIP ; l’envoi depuis le navigateur n’est pas encore disponible."
         },
         {
           "id": "facebook",
@@ -1332,6 +1409,7 @@
         "official_website": "Открыть официальный сайт TMDB",
         "no_external_assets": "Поставляемый интерфейс загружает стили, скрипты, значки, снимки экрана и графики только с этого локального сервера.",
         "guide_title": "Инструкция по экспорту",
+        "guide_steps_title": "Как скачать ваши данные",
         "official_help": "Официальная справка",
         "file_selected": "Выбран файл",
         "import_started": "Локальный импорт Netflix начат",
@@ -1366,6 +1444,29 @@
           ],
           "images": [],
           "note": "Это рабочее пространство принимает только CSV с историей просмотров."
+        },
+        {
+          "id": "openai",
+          "nav": "OpenAI",
+          "title": "OpenAI (ChatGPT)",
+          "intro": "Запросите ZIP-архив с историей ChatGPT и другими данными аккаунта.",
+          "steps": [
+            "Войдите в ChatGPT.",
+            "Откройте меню профиля и выберите «Настройки».",
+            "Выберите «Управление данными».",
+            "В разделе «Экспорт данных» нажмите «Экспорт».",
+            "На экране подтверждения нажмите «Подтвердить экспорт».",
+            "Дождитесь письма или SMS от OpenAI; подготовка экспорта может занять до 7 дней.",
+            "Откройте ссылку «Скачать экспорт данных», не выходя из того же аккаунта. Ссылка действует 24 часа, поэтому сразу сохраните ZIP-архив."
+          ],
+          "refs": [
+            {
+              "label": "OpenAI: экспорт истории и данных ChatGPT",
+              "href": "https://help.openai.com/en/articles/7260999-how-do-i-export-my-chatgpt-history-and-data"
+            }
+          ],
+          "images": [],
+          "note": "Это руководство предназначено для поддерживаемого аккаунта ChatGPT с активным входом. После скачивания используйте локальные команды продукта, чтобы проверить и импортировать ZIP-архив; загрузка через браузер пока недоступна."
         },
         {
           "id": "facebook",

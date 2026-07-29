@@ -23,6 +23,7 @@ const STORAGE_KEYS = Object.freeze({
 
 const LOCALES = Object.freeze(['en', 'es', 'fr', 'ru']);
 const GUIDE_SCREENSHOT_PROVIDERS = Object.freeze([
+  'openai',
   'facebook',
   'instagram',
   'linkedin',
@@ -165,6 +166,7 @@ const REQUIRED_UI_KEYS = Object.freeze([
   'official_website',
   'no_external_assets',
   'guide_title',
+  'guide_steps_title',
   'official_help',
   'file_selected',
   'import_started',
@@ -483,7 +485,7 @@ function renderGuide(providerID) {
   });
   const orderedList = element('ol', {class: 'instruction-list'});
   provider.steps.forEach((step) => orderedList.append(element('li', {text: step})));
-  section.append(element('h2', {text: ui().instructions_title}), orderedList);
+  section.append(element('h2', {text: ui().guide_steps_title}), orderedList);
 
   if (provider.refs.length) {
     const refs = element('ul', {
@@ -1942,6 +1944,7 @@ function statusCell(status) {
 function providerMark(providerID, title) {
   const labels = {
     netflix: 'N',
+    openai: 'AI',
     facebook: 'f',
     instagram: '◎',
     linkedin: 'in',

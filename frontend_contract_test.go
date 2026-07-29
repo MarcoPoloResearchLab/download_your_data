@@ -57,6 +57,7 @@ func TestFrontendProviderWorkspaceContract(testContext *testing.T) {
 
 	expectedRegistry := []frontendProviderDefinition{
 		{ID: "netflix", Surface: "workspace"},
+		{ID: "openai", Surface: "guide"},
 		{ID: "facebook", Surface: "guide"},
 		{ID: "instagram", Surface: "guide"},
 		{ID: "linkedin", Surface: "guide"},
@@ -132,6 +133,18 @@ func TestFrontendProviderWorkspaceContract(testContext *testing.T) {
 			len(netflix.Refs) != 1 ||
 			netflix.Refs[0].Href != "https://help.netflix.com/en/node/101917" {
 			testContext.Fatalf("locale %q has an incomplete Netflix contract: %+v", localeID, netflix)
+		}
+		openAI := locale.Platforms[1]
+		if openAI.Title != "OpenAI (ChatGPT)" ||
+			strings.TrimSpace(openAI.Intro) == "" ||
+			len(openAI.Steps) != 7 ||
+			len(openAI.Images) != 0 ||
+			len(openAI.Refs) != 1 ||
+			openAI.Refs[0].Href !=
+				"https://help.openai.com/en/articles/7260999-how-do-i-export-my-chatgpt-history-and-data" ||
+			openAI.Note == nil ||
+			strings.TrimSpace(*openAI.Note) == "" {
+			testContext.Fatalf("locale %q has an incomplete OpenAI guide contract: %+v", localeID, openAI)
 		}
 	}
 	if len(canonicalUIKeys) < 120 {

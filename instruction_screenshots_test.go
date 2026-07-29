@@ -21,6 +21,7 @@ const (
 )
 
 var instructionScreenshotPlatformIDs = []string{
+	"openai",
 	"facebook",
 	"instagram",
 	"linkedin",
@@ -96,6 +97,7 @@ func TestInstructionScreenshotContract(testContext *testing.T) {
 	}
 
 	expectedWebCounts := map[string]int{
+		"openai":    0,
 		"facebook":  2,
 		"instagram": 2,
 		"linkedin":  2,

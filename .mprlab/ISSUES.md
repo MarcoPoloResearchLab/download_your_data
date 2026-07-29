@@ -603,6 +603,8 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Playwright coverage of keyboard flow, accessible announcements, replacement confirmation, reconnect, and retry.
   - Browser-network assertion proving the shipped page requests no external asset.
 
+  Progress 2026-07-29: OpenAI now appears directly in the provider catalog as a guide-only surface in every supported locale. The guide follows OpenAI's current signed-in export flow, links to the official help article, explains how the downloaded ZIP connects to the existing local product commands, and has real-browser contract coverage. F002 remains open for the backend-owned browser upload, indexing, progress, failure, and replacement experience.
+
 - [ ] [F003] (P1) {F001,F002,I004} Add hybrid semantic conversation search
   Goal:
   Search the active OpenAI archive by meaning and exact terms with conversation-level results.
