@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"log/slog"
 	"net/http"
@@ -102,6 +103,54 @@ func TestSearchRejectsAnOutputPathOutsideThePrivateDataRoot(testContext *testing
 	}, config)
 	if searchError == nil || !strings.Contains(searchError.Error(), "absolute paths are not allowed") {
 		testContext.Fatalf("unexpected escaped report error: %v", searchError)
+	}
+}
+
+func TestEmbedRejectsInvalidRunBoundsBeforeOpeningTheArchive(
+	testContext *testing.T,
+) {
+	for _, testCase := range []struct {
+		name      string
+		arguments []string
+		message   string
+	}{
+		{
+			name:      "nonpositive batch size",
+			arguments: []string{"embed", "--batch-size", "0"},
+			message:   "--batch-size must be positive",
+		},
+		{
+			name:      "negative maximum messages",
+			arguments: []string{"embed", "--max-messages", "-1"},
+			message:   "--max-messages must not be negative",
+		},
+	} {
+		testContext.Run(testCase.name, func(testContext *testing.T) {
+			config := testArchiveRuntimeConfig(
+				testContext,
+				inference.DefaultBaseURL,
+			)
+			runError := runTestCommand(
+				testContext,
+				testCase.arguments,
+				config,
+			)
+			if runError == nil || runError.Error() != testCase.message {
+				testContext.Fatalf(
+					"invalid embed bounds error = %v; want %q",
+					runError,
+					testCase.message,
+				)
+			}
+			if _, statError := os.Stat(
+				config.ArchiveDatabase().Path(),
+			); !errors.Is(statError, os.ErrNotExist) {
+				testContext.Fatalf(
+					"invalid embed bounds opened the archive: %v",
+					statError,
+				)
+			}
+		})
 	}
 }
 
