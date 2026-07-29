@@ -533,6 +533,19 @@ func (workspace *Workspace) UploadViewingActivity(
 			context.Canceled,
 		)
 	}
+	if requestError := ctx.Err(); requestError != nil {
+		workspace.mutex.Unlock()
+		canceledError := newLibraryError(
+			ErrorCanceled,
+			generationID,
+			0,
+			requestError,
+		)
+		return Generation{}, errors.Join(
+			canceledError,
+			workspace.failGeneration(generationID, canceledError),
+		)
+	}
 	nowMilliseconds := workspace.now().UTC().UnixMilli()
 	mutationError := workspace.repository.mutate(func(state *repositoryState) error {
 		generationIndex, found := findGenerationIndex(*state, generationID)

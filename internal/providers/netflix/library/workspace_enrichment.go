@@ -394,7 +394,18 @@ func (workspace *Workspace) enrichRemainingTitles(
 			}
 		}
 	}
-	return firstError
+	if firstError != nil {
+		return firstError
+	}
+	if contextError := ctx.Err(); contextError != nil {
+		return newLibraryError(
+			ErrorCanceled,
+			generation.ID,
+			0,
+			contextError,
+		)
+	}
+	return nil
 }
 
 func (workspace *Workspace) enrichmentSource(
