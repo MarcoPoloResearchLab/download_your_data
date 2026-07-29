@@ -33,7 +33,7 @@ If a required authenticated screen cannot be reached without crossing a forbidde
 1. Reconcile every instruction, label, source, and route against the current official provider help contract.
 2. Confirm the provider’s current brand, copyright, and terms guidance permits the proposed independent instructional use and record any attribution requirement.
 3. Confirm the declared surface is available without crossing its forbidden boundary.
-4. For authenticated desktop captures, use English at a consistent desktop viewport and preserve the provider’s current appearance.
+4. For authenticated web captures, use English at a consistent wide browser viewport and preserve the provider’s current appearance.
 5. Navigate only to the allowlisted panel and stop before the forbidden action.
 6. Hide animation, focus carets, transient notifications, browser chrome, and unrelated account content.
 7. Exclude every personal identifier through cropping or a flat opaque capture-time mask. Blur is not acceptable.
@@ -64,7 +64,7 @@ The set is accepted only when:
 - every provider screenshot is used by at least one step and every manifest screenshot is referenced;
 - no provider-level screenshot gallery, text-only exception, placeholder, mock, or locale-specific duplicate survives;
 - every metadata-free PNG exists beneath `images/instructions/`;
-- desktop and mobile browser coverage proves each step renders its visual beside the instruction without overflow;
+- wide and narrow browser coverage proves each step renders its visual beside the instruction without overflow;
 - `make validate-instruction-screenshots`, `make test-browser`, and `make ci` pass.
 
 Provider names, trademarks, help content, and interfaces remain the property of their respective owners. Publication is an independent instructional reference and does not imply affiliation or endorsement.

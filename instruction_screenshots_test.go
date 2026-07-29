@@ -132,7 +132,7 @@ func TestInstructionScreenshotContract(testContext *testing.T) {
 		if len(screenshot.ExpectedVisibleLabels) == 0 {
 			testContext.Fatalf("screenshot %q has no expected visible labels", screenshot.ID)
 		}
-		if screenshot.Surface != "authenticated_desktop_chrome" &&
+		if screenshot.Surface != "authenticated_web" &&
 			screenshot.Surface != "first_party_help_web" {
 			testContext.Fatalf(
 				"screenshot %q has unsupported surface %q",

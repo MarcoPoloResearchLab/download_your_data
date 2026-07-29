@@ -135,7 +135,7 @@ Replace the wrapping platform-link masthead and marketing hero with a compact pr
 - centered `960px` catalog and `1180px` provider workspace;
 - compact header with product identity, provider switcher, language, theme, and provider state;
 - dark-first charcoal surfaces, thin borders, restrained semantic accents, and small controls;
-- one main work surface plus a `210px` state/action rail on desktop;
+- one main work surface plus a `210px` state/action rail at wide viewport widths;
 - the rail becomes an inline status panel on small screens.
 
 Guide-only providers remain available in the catalog. Netflix has a permanent visual download-guide route alongside its workspace and keeps that guide reachable regardless of workspace state. Netflix is the current workspace-capable provider with backend-owned state chips such as `NO DATA`, `READY LOCAL`, `ENRICHING`, `READY + TMDB`, and `ACTION NEEDED`. The registry surface is ready for OpenAI to become workspace-capable only when its separate lifecycle and browser issues deliver that backend contract.

@@ -414,7 +414,7 @@
           "intro": "Export posts, photos, messages, and more via Facebook’s Download Your Information tool.",
           "steps": [
             {
-              "text": "Log in on desktop. Profile menu → Settings & privacy → Settings.",
+              "text": "Log in on the web. Profile menu → Settings & privacy → Settings.",
               "screenshot_id": "facebook-accounts-center-information",
               "alt": "Facebook Accounts Center: Your information and permissions"
             },
@@ -463,7 +463,7 @@
           "intro": "Request your photos, comments, profile info, and more. Instagram emails a download link.",
           "steps": [
             {
-              "text": "On Instagram desktop, click More in the bottom left, then Settings.",
+              "text": "In Instagram on the web, click More in the bottom left, then Settings.",
               "screenshot_id": "instagram-accounts-center-information",
               "alt": "Instagram Accounts Center: Your information and permissions"
             },
@@ -616,7 +616,7 @@
           "intro": "Export a full archive or specific items (connections, messages, profile, etc.).",
           "steps": [
             {
-              "text": "Desktop: Me → Settings & Privacy.",
+              "text": "On LinkedIn on the web, select Me → Settings & Privacy.",
               "screenshot_id": "linkedin-data-privacy-navigation",
               "alt": "LinkedIn How LinkedIn uses your data settings"
             },
@@ -1112,7 +1112,7 @@
           "intro": "Exporta publicaciones, fotos, mensajes y más con «Descargar tu información».",
           "steps": [
             {
-              "text": "En el escritorio, inicia sesión. Menú de perfil → Configuración y privacidad → Configuración.",
+              "text": "Inicia sesión en la web. Menú de perfil → Configuración y privacidad → Configuración.",
               "screenshot_id": "facebook-accounts-center-information",
               "alt": "Centro de cuentas de Facebook: Tu información y permisos"
             },
@@ -1161,7 +1161,7 @@
           "intro": "Solicita fotos, comentarios y datos de perfil. Recibirás un enlace por correo.",
           "steps": [
             {
-              "text": "En Instagram para escritorio, pulsa Más en la parte inferior izquierda y luego Configuración.",
+              "text": "En Instagram en la web, pulsa Más en la parte inferior izquierda y luego Configuración.",
               "screenshot_id": "instagram-accounts-center-information",
               "alt": "Centro de cuentas de Instagram: Tu información y permisos"
             },
@@ -1314,7 +1314,7 @@
           "intro": "Exporta archivo completo o elementos específicos.",
           "steps": [
             {
-              "text": "Escritorio: Yo → Configuración y privacidad.",
+              "text": "En LinkedIn en la web, selecciona Yo → Configuración y privacidad.",
               "screenshot_id": "linkedin-data-privacy-navigation",
               "alt": "Sección Cómo usa LinkedIn tus datos"
             },
@@ -1810,7 +1810,7 @@
           "intro": "Exportez publications, photos, messages via « Télécharger vos informations ».",
           "steps": [
             {
-              "text": "Sur ordinateur, connectez-vous. Menu du profil → Paramètres et confidentialité → Paramètres.",
+              "text": "Connectez-vous sur le Web. Menu du profil → Paramètres et confidentialité → Paramètres.",
               "screenshot_id": "facebook-accounts-center-information",
               "alt": "Espace Comptes Facebook : Vos informations et autorisations"
             },
@@ -1859,7 +1859,7 @@
           "intro": "Demandez photos, commentaires, infos de profil. Lien par e-mail.",
           "steps": [
             {
-              "text": "Sur Instagram pour ordinateur, cliquez sur Plus en bas à gauche, puis sur Paramètres.",
+              "text": "Sur le site Web d’Instagram, cliquez sur Plus en bas à gauche, puis sur Paramètres.",
               "screenshot_id": "instagram-accounts-center-information",
               "alt": "Espace Comptes Instagram : Vos informations et autorisations"
             },
@@ -2012,7 +2012,7 @@
           "intro": "Archive complète ou fichiers spécifiques.",
           "steps": [
             {
-              "text": "Moi → Paramètres et confidentialité.",
+              "text": "Sur le site Web de LinkedIn, sélectionnez Moi → Paramètres et confidentialité.",
               "screenshot_id": "linkedin-data-privacy-navigation",
               "alt": "Section Comment LinkedIn utilise vos données"
             },
@@ -2508,7 +2508,7 @@
           "intro": "Экспорт публикаций, фото, сообщений через «Скачать вашу информацию».",
           "steps": [
             {
-              "text": "На компьютере войдите в аккаунт. Меню профиля → «Настройки и конфиденциальность» → «Настройки».",
+              "text": "В веб-версии Facebook войдите в аккаунт. Меню профиля → «Настройки и конфиденциальность» → «Настройки».",
               "screenshot_id": "facebook-accounts-center-information",
               "alt": "Центр аккаунтов Facebook: раздел «Ваша информация и разрешения»"
             },
@@ -2710,7 +2710,7 @@
           "intro": "Полный архив или отдельные файлы.",
           "steps": [
             {
-              "text": "«Я» → «Настройки и конфиденциальность».",
+              "text": "В веб-версии LinkedIn выберите «Я» → «Настройки и конфиденциальность».",
               "screenshot_id": "linkedin-data-privacy-navigation",
               "alt": "Раздел LinkedIn «Как LinkedIn использует ваши данные»"
             },

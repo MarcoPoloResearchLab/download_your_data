@@ -79,7 +79,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   Requirements:
   - Replace the localized string-step and provider-gallery shape with one canonical typed step containing text, screenshot identity, and localized alternative text.
   - Cover every step for every provider, including the Netflix workspace and guide-only providers; no text-only exception, empty screenshot set, gallery, placeholder, mock, or third-party tutorial may survive.
-  - Render each screenshot inside its numbered step at desktop and mobile widths.
+  - Render each screenshot inside its numbered step at wide and narrow web viewport widths.
   - Reuse approved assets across locales and across providers only when they genuinely share the same first-party surface, such as Threads and Instagram Accounts Center.
   - Preserve privacy-safe stop boundaries for credentials, identity verification, account/profile selection, export submission, and download.
   - Record authenticated provider captures and first-party help captures accurately in the manifest without presenting a help surface as an authenticated app screen.
@@ -108,10 +108,30 @@ Format: `- [ ] [B042] (P1) {I007} Title`
 
   Deliverables:
   - Permanent Netflix guide route and bidirectional guide/workspace navigation.
-  - Desktop and mobile browser coverage across every locale and a ready workspace.
+  - Wide and narrow web browser coverage across every locale and a ready workspace.
 
   Validation:
   - `make check-frontend`
+  - `make test-browser`
+  - `make ci`
+
+- [x] [B006] (P1) {B004,B005,F009} Use web platform terminology consistently
+  Goal:
+  Describe provider workflows by their actual platform instead of a device class.
+
+  Requirements:
+  - Use web wording in every localized provider instruction that refers to a browser-based workflow.
+  - Rename capture-manifest fields and surface identities to the sole current web contract.
+  - Describe responsive validation by wide and narrow viewport behavior.
+  - Remove the obsolete label case-insensitively from every tracked file and path.
+
+  Deliverables:
+  - Updated English, Spanish, French, and Russian provider instructions.
+  - Updated screenshot manifest, validation, planning, and capture documentation.
+
+  Validation:
+  - Case-insensitive tracked-content and tracked-path audits return no obsolete label.
+  - `make validate-instruction-screenshots`
   - `make test-browser`
   - `make ci`
 
@@ -329,11 +349,11 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   B004 replaced this initial 12-asset web baseline and its TikTok text-only exception with the current 21-asset, every-provider, one-visual-per-step contract.
 
   Requirements:
-  - Cover Facebook, Instagram, LinkedIn, X, YouTube, and Google with two canonical English desktop screenshots per provider.
+  - Cover Facebook, Instagram, LinkedIn, X, YouTube, and Google with two canonical English web screenshots per provider.
   - Use the operator's authenticated Chrome session and the current official provider routes.
   - Navigate only through instructional setup screens and stop before every archive request, export creation, download, destination connection, password entry, verification-code request, or account mutation.
   - Treat X's empty password-verification form as the second instructional boundary; do not enter credentials solely to reach a later screen.
-  - Capture the smallest useful panel at a consistent desktop viewport without browser chrome, credentials, names, handles, email addresses, avatars, organizations, account identifiers, notifications, or private counts.
+  - Capture the smallest useful panel at a consistent wide browser viewport without browser chrome, credentials, names, handles, email addresses, avatars, organizations, account identifiers, notifications, or private counts.
   - Keep one 12-entry shared manifest and reuse the assets across `en`, `es`, `fr`, and `ru`; do not duplicate screenshots by locale.
   - Remove web placeholders when the complete 12-shot set is accepted. TikTok remains text-only until `I011` supplies its separate mobile set.
 
@@ -346,7 +366,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   Validation:
   - The manifest contains exactly 12 unique web screenshot IDs and two local assets for each supported web provider.
   - Every image is privacy-reviewed at full resolution and matches its recorded current live labels.
-  - All four locales render the shared images without placeholders at desktop and mobile application viewports.
+  - All four locales render the shared images without placeholders at wide and narrow application viewports.
   - `make test-browser`
   - `make ci`
   - `git diff --check`
@@ -820,7 +840,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   Validation:
   - Playwright covers every declared state and user action through the real local server and deterministic fake TMDB.
   - Accessibility coverage asserts keyboard flow, names, focus, live announcements, status semantics, chart alternatives, contrast, and reduced motion.
-  - Desktop and mobile coverage proves the main/rail composition, dense filters, tables, charts, and destructive confirmations remain usable.
+  - Wide and narrow viewport coverage proves the main/rail composition, dense filters, tables, charts, and destructive confirmations remain usable.
   - Browser network assertion proves no external frontend asset request and no TMDB call before explicit enrichment.
   - All four locales resolve the same `netflix` provider identity and backend state without missing copy or placeholder assets.
   - `make test-browser`
