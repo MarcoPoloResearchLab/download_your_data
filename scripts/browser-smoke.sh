@@ -5,7 +5,12 @@ readonly address="${DOWNLOAD_YOUR_DATA_BROWSER_TEST_ADDRESS:-127.0.0.1:18787}"
 readonly base_url="http://${address}"
 readonly session_name="download-your-data-ci-$$"
 readonly playwright_version="${PLAYWRIGHT_CLI_VERSION:?PLAYWRIGHT_CLI_VERSION is required}"
+readonly script_directory="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly repository_directory="$(cd "${script_directory}/.." && pwd)"
+readonly valid_csv="${repository_directory}/internal/providers/netflix/testdata/viewing_activity.csv"
+readonly invalid_csv="${repository_directory}/internal/providers/netflix/testdata/invalid_viewing_activity.csv"
 readonly server_log="$(mktemp -t download-your-data-server.XXXXXX.log)"
+readonly data_directory="$(mktemp -d -t download-your-data-data.XXXXXX)"
 
 server_pid=""
 
@@ -21,10 +26,13 @@ cleanup() {
     wait "${server_pid}" >/dev/null 2>&1 || true
   fi
   rm -f "${server_log}"
+  rm -rf "${data_directory}"
 }
 trap cleanup EXIT
 
-DOWNLOAD_YOUR_DATA_ADDRESS="${address}" go run . >"${server_log}" 2>&1 &
+DOWNLOAD_YOUR_DATA_ADDRESS="${address}" \
+DOWNLOAD_YOUR_DATA_DATA_DIR="${data_directory}" \
+go run . serve >"${server_log}" 2>&1 &
 server_pid=$!
 
 for _ in $(seq 1 100); do
@@ -39,11 +47,17 @@ for _ in $(seq 1 100); do
 done
 
 curl --fail --silent --show-error "${base_url}/api/health" >/dev/null
-run_playwright open "${base_url}" >/dev/null
-snapshot="$(run_playwright snapshot)"
 
-grep -Fq "Download Your Data" <<<"${snapshot}"
-grep -Fq "Facebook" <<<"${snapshot}"
-grep -Fq "Google" <<<"${snapshot}"
+scenario="$(<"${script_directory}/browser-smoke.playwright.js")"
+scenario="${scenario/__BASE_URL__/${base_url}}"
+scenario="${scenario/__VALID_CSV__/${valid_csv}}"
+scenario="${scenario/__INVALID_CSV__/${invalid_csv}}"
+
+run_playwright open about:blank >/dev/null
+scenario_output="$(run_playwright run-code "${scenario}")"
+if [[ "${scenario_output}" == *"### Error"* ]]; then
+  printf '%s\n' "${scenario_output}" >&2
+  exit 1
+fi
 
 echo "Browser smoke test passed at ${base_url}"

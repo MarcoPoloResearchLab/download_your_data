@@ -96,7 +96,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - `make smoke-chatindex`
   - `make ci`
 
-- [ ] [I003] (P1) {I002} Normalize the incorporated engine to the forward-only product contract
+- [x] [I003] (P1) {I002} Normalize the incorporated engine to the forward-only product contract
   Goal:
   Remove copied project identity and persistence compatibility paths before new application APIs depend on them.
 
@@ -139,7 +139,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Eligible-document coverage is 100% before a generation can become ready.
   - `make eval-search`
 
-- [ ] [I005] (P1) {I003} Establish the secure local data and inference boundary
+- [x] [I005] (P1) {I003} Establish the secure local data and inference boundary
   Goal:
   Give every HTTP, storage, and inference operation one validated local runtime configuration.
 
@@ -163,13 +163,13 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Filesystem tests prove path confinement and owner-only permissions.
   - `make test`
 
-- [ ] [I006] (P1) {I003,P003} Consolidate operator workflows into the product command
+- [x] [I006] (P1) {I003,P003} Consolidate operator workflows into the product command
   Goal:
-  Ship one product-owned executable without retaining a transitional ChatIndex binary or alias.
+  Ship one product-owned executable without retaining a transitional archive binary or alias.
 
   Requirements:
   - Make `download-your-data` own `serve`, `inspect`, `import`, `index`, `search`, and `definitions` entry points.
-  - Delete `cmd/chatindex`, `build/chatindex`, ChatIndex-named Make targets, and old command documentation after command parity passes.
+  - Delete `cmd/archive`, `build/download-your-data-archive`, the archive build and smoke targets, and transitional command documentation after command parity passes.
   - Keep definition analysis and reproducible reports as operator subcommands for the first release.
   - Share packages and validated runtime configuration with the browser backend; do not invoke one command from another as a subprocess.
   - Preserve one canonical command spelling only.
@@ -181,7 +181,130 @@ Format: `- [ ] [B042] (P1) {I007} Title`
 
   Validation:
   - Black-box command smoke covers inspect, import, index, hybrid search, definitions, and serve.
-  - Repository search finds no shipped `chatindex` executable, command, or build target.
+  - Repository search finds no shipped second archive executable, command, or build target.
+  - `make ci`
+
+- [x] [I007] (P1) Incorporate the Netflix viewing-history domain
+  Goal:
+  Move the maintained local Netflix CSV and analytics capabilities into this repository without importing the standalone runtime boundary.
+
+  Requirements:
+  - Follow `docs/netflix-provider-plan.md` as the canonical incorporation contract.
+  - Own validated viewing-activity rows, local dates, versioned title identities, deterministic aggregation, and enriched CSV shapes beneath the current module.
+  - Replace the source parser's broad colon truncation, invalid-record fallbacks, and unchecked row indexing with typed edge validation.
+  - Preserve raw titles and dates exactly while keeping derived title identity explicit and versioned.
+  - Carry every maintained dashboard measure into deterministic target-owned aggregation with accurate activity terminology and match-coverage inputs.
+  - Add synthetic fixtures for films, episodic titles, punctuation, localized text, ambiguous titles, invalid headers, short rows, invalid dates, duplicate columns, cancellation, and empty input.
+  - Do not copy the source HTTP server, templates, CDN assets, duplicate CLI implementation, tracked SQLite cache, module namespace, or standalone filesystem path.
+  - Leave `/Users/tyemirov/Development/netflix` unchanged and abandoned after target parity; do not add a Go module, path replacement, subprocess, or sidecar dependency.
+
+  Deliverables:
+  - Target-owned Netflix provider domain, CSV adapter, analytics, export shape, fixtures, and public-contract tests.
+  - Capability disposition documentation tied to source revision `e4079718730533aa15141b567fa378def66b1265`.
+  - No network dependency in this slice.
+
+  Validation:
+  - Black-box package or command tests prove valid import, exact rejection, cancellation, deterministic aggregation, and enriched CSV round-trip.
+  - Repository search finds no active import or runtime reference to `github.com/tyemirov/netflix` or `/Users/tyemirov/Development/netflix`.
+  - `make test`
+  - `make ci`
+
+- [x] [I008] (P1) {I005,I007} Establish the TMDB enrichment and matching boundary
+  Goal:
+  Enrich Netflix title identities through one privacy-explicit, server-owned TMDB client with measurable match quality.
+
+  Requirements:
+  - Use `DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN` as the sole server-side credential and report only a configured/not-configured capability to the browser.
+  - Use Bearer authentication against the fixed official HTTPS API origin; allow endpoint injection only in tests.
+  - Send only unique derived title queries after explicit user initiation; never send dates, source CSV bytes, profile data, or complete viewing rows.
+  - Return closed `matched`, `review`, and `unmatched` outcomes with matcher identity and evidence.
+  - Build a deterministic labeled corpus covering exact films and series, episodic titles, punctuation, localized titles, remakes, ambiguous popularity, unrelated negatives, and no-result cases.
+  - Never accept an ambiguous or low-confidence result merely because it is popular.
+  - Centralize bounded concurrency, response sizes, rate control, `Retry-After`, retry budget, cancellation, and contextual errors.
+  - Persist cache entries only beneath the private data root with query, locale, client, matcher, and freshness identity; delete the cache with the provider.
+  - Include the current TMDB attribution and approved-logo requirements in the product Credits contract.
+  - Make no real TMDB request in tests or CI.
+
+  Deliverables:
+  - Injected official-boundary TMDB client, matcher, private cache, capability state, and evaluation command.
+  - Deterministic fake-TMDB integration harness covering search, details, rate limits, malformed responses, cancellation, and outages.
+  - Precision, review, and unmatched metrics recorded with every matcher evaluation.
+
+  Validation:
+  - Evaluation thresholds are recorded before accepted matches can become product metadata.
+  - Fake-server tests prove the token is in the authorization header and absent from URLs, payloads, logs, and persisted provider data.
+  - Incomplete remote work returns a typed failure rather than partial accepted metadata.
+  - `make test`
+  - `make ci`
+
+- [x] [I009] (P1) {I006,I007,I008} Preserve Netflix operator parity in the single product executable
+  Goal:
+  Keep useful Netflix inspection, enrichment, and CSV export operations without shipping `tmdbenrich` or a second server.
+
+  Requirements:
+  - Add provider-scoped `netflix inspect`, `netflix enrich`, and `netflix export` operations to `download-your-data`.
+  - Reuse the same validated provider packages, runtime configuration, match contract, cache, and export adapter as the browser backend.
+  - Keep one canonical command spelling and delete copied Cobra, Viper, Zap, flag, worker, and cache configuration surfaces.
+  - Preserve cancellation, bounded progress, contextual errors, and private-data logging rules.
+  - Do not invoke the browser server, another command, the standalone executable, or the standalone checkout as a subprocess.
+
+  Deliverables:
+  - Product-owned Netflix operator commands and deterministic smoke workflow.
+  - Updated operator documentation within the single-executable contract.
+  - No target-owned `tmdbenrich` binary, alias, package, or build target.
+
+  Validation:
+  - Black-box smoke covers inspect, fake-TMDB enrichment, cache reuse, and enriched CSV export.
+  - Repository search finds no shipped `tmdbenrich` command or standalone Netflix runtime reference.
+  - `make ci`
+
+- [x] [I010] (P1) {P004} Publish the authenticated web instruction screenshot set
+  Goal:
+  Capture and publish the current web export workflow so a user can follow each supported provider without the capture operator starting an export.
+
+  Requirements:
+  - Cover Facebook, Instagram, LinkedIn, X, YouTube, and Google with two canonical English desktop screenshots per provider.
+  - Use the operator's authenticated Chrome session and the current official provider routes.
+  - Navigate only through instructional setup screens and stop before every archive request, export creation, download, destination connection, password entry, verification-code request, or account mutation.
+  - Treat X's empty password-verification form as the second instructional boundary; do not enter credentials solely to reach a later screen.
+  - Capture the smallest useful panel at a consistent desktop viewport without browser chrome, credentials, names, handles, email addresses, avatars, organizations, account identifiers, notifications, or private counts.
+  - Keep one 12-entry shared manifest and reuse the assets across `en`, `es`, `fr`, and `ru`; do not duplicate screenshots by locale.
+  - Remove web placeholders when the complete 12-shot set is accepted. TikTok remains text-only until `I011` supplies its separate mobile set.
+
+  Deliverables:
+  - Twelve reviewed, metadata-free local assets beneath `images/instructions/`.
+  - Current provider instructions, official references, capture runbook, and shared screenshot manifest.
+  - Shared asset wiring with localized alternative text for all four locales.
+  - Repository-native screenshot validation and browser coverage.
+
+  Validation:
+  - The manifest contains exactly 12 unique web screenshot IDs and two local assets for each supported web provider.
+  - Every image is privacy-reviewed at full resolution and matches its recorded current live labels.
+  - All four locales render the shared images without placeholders at desktop and mobile application viewports.
+  - `make test-browser`
+  - `make ci`
+  - `git diff --check`
+  - `git status --short`
+
+- [ ] [I011] (P2) {P004} Publish the authenticated TikTok mobile instruction screenshots
+  Goal:
+  Add the app-owned TikTok export workflow as an independently scheduled mobile capture.
+
+  Requirements:
+  - Use an operator-connected authenticated TikTok mobile surface; do not substitute an unofficial web flow, mock, or stale screenshot.
+  - Capture Settings and privacy navigation and Download your data before Request data.
+  - Keep credentials, identity-verification material, personal identifiers, notifications, and private account content out of published assets.
+  - Do not request, cancel, or download an archive, change settings, switch accounts, or cross an identity-verification boundary.
+  - Record current official workflow and publication guidance at capture time.
+
+  Deliverables:
+  - Two reviewed, metadata-free portrait assets and their manifest entries.
+  - Shared localized asset wiring without locale-specific image duplication.
+  - Updated screenshot validation and browser coverage.
+
+  Validation:
+  - Both TikTok assets match the current authenticated app labels and contain no private content.
+  - `make test-browser`
   - `make ci`
 
 ## Maintenance
@@ -381,6 +504,28 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Search confirms the target has no runtime, build, test, or documentation dependency on the old path or repository.
   - `git status --short`
 
+- [ ] [M409] (P1) {F008,I009} Retire the abandoned standalone Netflix checkout
+  Goal:
+  Remove the obsolete Netflix project boundary after a target-owned release proves browser and operator parity.
+
+  Requirements:
+  - Confirm the target owns viewing-history validation, import, analytics, TMDB enrichment, matching outcomes, cache, dashboard, CSV export, operator commands, fixtures, and validation without the standalone checkout.
+  - Prove the released target artifact runs without a module, subprocess, HTTP, build, test, documentation, or filesystem dependency on the source repository.
+  - Inspect `/Users/tyemirov/Development/netflix` for untracked or private runtime data and record explicit operator disposition without printing or copying personal content.
+  - Do not import or preserve `netflix_cache.sqlite` as a target artifact.
+  - Remove `/Users/tyemirov/Development/netflix` only after explicit operator approval for that destructive action.
+  - Do not retain or create a compatibility repository, package, binary, service, or redirect for the old boundary.
+
+  Deliverables:
+  - Target release and parity evidence tied to the incorporated source revision.
+  - Operator-approved disposition of any non-source data.
+  - Removed standalone checkout and stale owning-source references.
+
+  Validation:
+  - Run target `make ci` and artifact smoke with the standalone path unavailable.
+  - `go list -m all` and repository search find no dependency on `github.com/tyemirov/netflix` or the old checkout.
+  - `git status --short`
+
 ## Features
 
 - [ ] [F001] (P1) {I001,I002,I005} Add the OpenAI archive generation lifecycle
@@ -495,6 +640,96 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - `make ci`
   - `make release`
 
+- [x] [F006] (P1) {I001,I005,I007} Add the local Netflix generation lifecycle
+  Goal:
+  Accept one Netflix viewing-activity CSV and atomically activate a private local generation with raw analytics.
+
+  Requirements:
+  - Define `GET /api/providers/netflix`, `POST /api/providers/netflix/generations`, `PUT /api/providers/netflix/generations/{generationID}/viewing-activity`, and `GET /api/providers/netflix/generations/{generationID}/events` as the canonical snapshot, create, upload, and progress contract.
+  - Define generation analytics, cursor-paged records, cancellation, and complete provider deletion through the paths recorded in `docs/netflix-provider-plan.md`.
+  - Accept only the current per-profile Viewing activity CSV contract; do not treat a full Netflix personal-information archive as the same input.
+  - Validate request, upload, CSV, header, row, field, date, and generation boundaries once and return typed payloads and errors.
+  - Use the closed `receiving`, `validating`, `importing`, `enriching`, `ready`, and `failed` lifecycle with an explicit `local` or `tmdb` analysis level.
+  - Allow one building generation while keeping one ready generation active; reject conflicting creation and upload requests.
+  - Enforce centralized compressed-independent byte, row, title, field, date, working-disk, progress, and concurrency limits.
+  - Store parsed rows, title identities, analytics inputs, and checkpoints under a private generation staging directory.
+  - Remove source CSV bytes after the validated reader closes on success or failure.
+  - Activate only after row, date, title-identity, count, and analytics completeness checks pass.
+  - Keep logs limited to opaque IDs, counts, states, durations, and typed failures.
+
+  Deliverables:
+  - Typed Netflix provider, generation, capability, progress, analytics, record, and error payloads.
+  - Private persisted job repository, bounded worker, provider lease, and atomic active-generation pointer.
+  - Raw activity analytics covering activity count, unique titles, date range, monthly activity, weekday rhythm, and top raw titles without TMDB.
+
+  Validation:
+  - Black-box HTTP test imports a synthetic Netflix CSV and queries its active raw analytics.
+  - Failure tests prove invalid, oversized, canceled, incomplete, and conflicting generations never become active and leave no source upload behind.
+  - Restart and lease tests prove checkpoints and single-process mutation ownership.
+  - Filesystem tests prove path confinement, owner-only permissions, replacement isolation, and complete deletion.
+  - `make ci`
+
+- [x] [F007] (P1) {F006,I008} Add the TMDB replacement, matching, and export lifecycle
+  Goal:
+  Build a complete enriched replacement from the active raw Netflix generation without sacrificing local availability or privacy.
+
+  Requirements:
+  - Create TMDB analysis as a new generation derived from an explicit ready source generation.
+  - Require a configured server-side token and explicit user initiation before any unique derived title query leaves the machine.
+  - Keep the active raw generation readable while enrichment builds and activate the replacement atomically only after request and metadata completeness passes.
+  - Persist every title as `matched`, `review`, or `unmatched`; omit metadata for non-accepted outcomes and report exact coverage.
+  - Fail the replacement on exhausted transport, protocol, cache, or metadata errors instead of activating partial remote work.
+  - Resume safe checkpoints after restart without duplicate requests, rows, or cache entries.
+  - Replay ordered progress after browser reconnect and support explicit cancellation without changing the active generation.
+  - Stream the canonical enriched CSV from a declared ready generation with raw values, match status, matcher identity, and accepted metadata.
+  - Keep TMDB cache identity and accepted metadata reproducible; a matcher or cache-contract change requires a new generation.
+  - Remove generation data, cache, WAL/SHM files, exports, and staging state through the declared cancellation, replacement, and provider-deletion contracts.
+
+  Deliverables:
+  - Enriched-generation orchestration, progress, cache provenance, match coverage, analytics, and streaming CSV export.
+  - Typed not-configured, consent-required, rate-limited, unavailable, invalid-response, incomplete, canceled, and stale-source errors.
+  - Required TMDB attribution payload for the browser Credits surface.
+
+  Validation:
+  - Fake-TMDB black-box test covers accepted, review, unmatched, cached, rate-limited, canceled, failed, resumed, and successfully activated generations.
+  - Test proves the active raw generation remains readable through failed and canceled enrichment.
+  - Export round-trip preserves raw rows and exposes deterministic match and metadata fields.
+  - Filesystem and log audits prove no token, title, date, source row, temporary export, or orphaned provider data escapes its contract.
+  - `make ci`
+
+- [x] [F008] (P1) {F006,F007} Add the Netflix provider workspace
+  Goal:
+  Make Netflix a first-class localized provider with import, progress, analysis, enrichment, export, replacement, and deletion in the shared application shell.
+
+  Requirements:
+  - Add `netflix` to every supported locale in the canonical provider registry with current Viewing activity download instructions and official help.
+  - Distinguish workspace-capable providers from guide-only providers without duplicating backend workflow state in localized content.
+  - Replace the wrapping platform masthead and marketing hero with the compact provider catalog and MPR workspace described in `docs/netflix-provider-plan.md`.
+  - Render one backend-owned Netflix state across empty, validating, importing, ready-local, not-configured, enriching, ready-enriched, review, failure, canceled, and replacement states.
+  - Provide separate Overview, Catalog, and Match quality views with shared date and match-status filters.
+  - Preserve all maintained source analytics: activity and unique-title KPIs, media type, genres, genres by viewing year, monthly activity, original language, origin country, release data, ratings, runtimes, seasons, episodes, weekday-by-genre activity, and top titles.
+  - Label rows as activities or plays rather than completed views and show exact match coverage.
+  - Keep import, TMDB enrichment, retry, cancel, replace, CSV export, and full delete as independent intent-specific controls.
+  - Explain the local-only raw path and the exact TMDB title-query boundary before enrichment.
+  - Display approved TMDB attribution and the current non-endorsement notice in Credits.
+  - Use checked ES modules and self-owned styles, scripts, fonts, icons, and chart assets with no browser-side third-party request.
+  - Provide keyboard operation, focus visibility, accessible progress announcements, chart summaries and tables, responsive rail collapse, and reduced-motion behavior.
+  - Clean up event streams, pending requests, object URLs, chart instances, and subscriptions.
+
+  Deliverables:
+  - Localized Netflix catalog entry, empty/import state, provider workspace, dashboard views, match-quality view, state rail, and Credits attribution.
+  - Compact dark-first MPR tokens and components adapted to the shared provider shell.
+  - Browser fixtures and tests for the complete raw and enriched workflows.
+
+  Validation:
+  - Playwright covers every declared state and user action through the real local server and deterministic fake TMDB.
+  - Accessibility coverage asserts keyboard flow, names, focus, live announcements, status semantics, chart alternatives, contrast, and reduced motion.
+  - Desktop and mobile coverage proves the main/rail composition, dense filters, tables, charts, and destructive confirmations remain usable.
+  - Browser network assertion proves no external frontend asset request and no TMDB call before explicit enrichment.
+  - All four locales resolve the same `netflix` provider identity and backend state without missing copy or placeholder assets.
+  - `make test-browser`
+  - `make ci`
+
 ## Planning
 
 - [x] [P001] (P1) Confirm the first canonical deployment and inference contract
@@ -536,38 +771,35 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   Validation:
   - Confirm `I006` owns command consolidation and `F005` validates both browser and operator surfaces from the packaged artifact.
 
-- [ ] [P004] (P1) Produce the privacy-safe authenticated instruction screenshot set
+- [x] [P004] (P1) Confirm the privacy-safe instruction screenshot execution split
   Goal:
-  Establish and execute one operator-assisted capture contract that lets an agent prepare every missing platform screenshot from the current authenticated interfaces without receiving or persisting credentials, changing account state, or publishing personal information.
-
-  Requirements:
-  - Treat the current registry as the required inventory: Facebook, Instagram, LinkedIn, TikTok, X, YouTube, and Google; two screenshot purposes per platform; four site locales (`en`, `es`, `fr`, and `ru`).
-  - Produce 14 canonical screenshots shared by all locales, not 56 duplicated locale-specific files. Keep screenshot identity, path, provenance, and capture metadata in one shared manifest; keep localized alt text and captions in locale-owned content.
-  - Before capture, reconcile every instruction, screenshot purpose, direct route, and help link against the current official provider workflow. The verified starting references are Facebook export help (`https://www.facebook.com/help/212802592074644`), Instagram export help (`https://www.facebook.com/help/181231772500920`), LinkedIn data download help (`https://www.linkedin.com/help/linkedin/answer/a1339364/downloading-your-account-data`), TikTok data request help (`https://support.tiktok.com/en/account-and-privacy/personalized-ads-and-data/requesting-your-data`), X archive help (`https://help.x.com/en/managing-your-account/how-to-download-your-x-archive`), and Google Takeout help (`https://support.google.com/accounts/answer/3024190`). Replace stale instructions and links at their owning source instead of documenting old and new paths together.
-  - Use the user's existing authenticated Chrome session for the supported web flows: Meta Accounts Center for Facebook and Instagram, LinkedIn Settings & Privacy, X account settings, and Google Takeout for both YouTube-only and full-Google exports. Do not clone the default browser profile, export cookies or storage, save Playwright authentication state, or build a reusable credential-bearing automation profile.
-  - Use an operator-connected mobile surface for TikTok because its current official export workflow is app-owned. Prefer iPhone Mirroring on a compatible Mac and iPhone; if no supported authenticated mobile surface is available, record the exact TikTok capture blocker rather than substituting an unofficial web flow, mock, or stale screenshot.
-  - Require the operator to perform every sign-in, password, passcode, MFA, CAPTCHA, account/profile selection, and other identity-verification step. The agent may resume read-only navigation only after the operator states that the authenticated surface is ready.
-  - Limit agent actions to opening the allowlisted settings routes, navigating to the documented panels, normalizing the visual state, and capturing images. Do not start or cancel an export, request an archive, download personal data, connect an external destination, change a setting, accept a new permission, or cross any provider's final submission boundary solely to obtain a screenshot.
-  - Define the 14-shot manifest before opening authenticated pages. Each entry must name the platform, screenshot ID, instructional purpose, expected visible labels, official source, direct route, desktop or mobile surface, operator checkpoint, forbidden final action, output path, viewport, capture date, and review status.
-  - Capture web panels in English at a fixed desktop viewport, 100% zoom, light theme, and CSS-pixel scale. Capture TikTok in a consistent portrait mobile frame. Clip to the smallest panel that still preserves navigational context; hide animations, carets, transient notifications, browser chrome, and unrelated account content.
-  - Remove names, handles, email addresses, phone numbers, avatars, organizations, account identifiers, locations, notifications, private counts, and other user-specific content with opaque capture-time masks or cropping. Do not rely on blur, and do not commit raw authenticated screenshots.
-  - Write raw captures only to a private temporary directory outside the repository. Publish only reviewed, metadata-free local assets beneath `images/instructions/`, then remove the raw temporary captures after the sanitized derivatives are approved.
-  - Confirm that publishing each provider interface screenshot for instructional use is compatible with the provider's current brand, copyright, and terms guidance. Record provenance and any required attribution in the manifest; do not import screenshots from unofficial guides or search results.
-  - Remove all placeholder copy and empty screenshot sources once the complete set is accepted. The product must either have the current complete canonical set or fail validation; do not retain placeholder tiles, partial locale wiring, or fallback assets.
+  Separate current web capture from the operator-dependent mobile capture so each can be executed and validated independently.
 
   Deliverables:
-  - A checked-in capture runbook and 14-entry screenshot manifest containing the platform-specific routes, user handoffs, read-only stop boundaries, capture specification, provenance, and recapture date.
-  - Fourteen privacy-reviewed local screenshot assets covering the two declared purposes for all seven platform sections.
-  - One shared screenshot registry referenced by all four localized instruction sets, with localized alt text and captions and no duplicated image contract.
-  - Current provider instructions and official references that match the labels visible in the accepted screenshots.
-  - A repository-native screenshot validator and browser coverage that reject missing files, empty sources, duplicate locale-owned assets, remote image URLs, invalid dimensions, unexpected metadata, and placeholder rendering.
+  - `I010` owns the authenticated Chrome capture, publication, registry, and validation for Facebook, Instagram, LinkedIn, X, YouTube, and Google.
+  - `I011` owns the authenticated TikTok mobile capture and publication.
+  - Both issues stop before export submission, archive request, download, credential entry, identity verification, destination connection, or account mutation.
+  - The application uses only the current accepted asset contract; no partial-set fallback or legacy screenshot registry is introduced.
 
   Validation:
-  - Machine-check that the shared manifest contains exactly 14 unique screenshot IDs and local tracked assets, every locale maps all seven platforms to the same two canonical IDs, and no image source is empty or remote.
-  - Inspect every final image at full resolution and confirm that it contains no credentials, identity-verification material, personal identifiers, private account content, browser chrome, or embedded metadata.
-  - Compare every image and instruction path with the current live provider labels and its recorded official reference on the capture date; reject the set if any path is stale or any shot requires crossing its recorded submission boundary.
-  - Exercise `en`, `es`, `fr`, and `ru` at desktop and mobile application viewports and assert that all screenshots load, preserve aspect ratio, render useful localized alternatives, and do not show placeholder tiles.
-  - `make test-browser`
-  - `make ci`
-  - `git diff --check`
-  - `git status --short`
+  - Confirm the web task can close without an authenticated mobile surface.
+  - Confirm the mobile task can add TikTok assets without recapturing the web set.
+
+- [x] [P005] (P1) Confirm the Netflix provider incorporation contract
+  Goal:
+  Select one ownership, privacy, lifecycle, UI, and retirement contract before Netflix implementation begins.
+
+  Deliverables:
+  - `download_your_data` is the sole maintained owner; no module, path, subprocess, HTTP sidecar, copied database, CLI alias, or compatibility boundary survives.
+  - The first accepted input is the per-profile Netflix Viewing activity CSV, not the separate full-account personal-information archive.
+  - Raw import and raw analytics remain local and require no TMDB account.
+  - TMDB enrichment is a separate explicit operation using a server-only read token and sends only unique derived title queries.
+  - A raw generation remains active while an enriched replacement builds and activates atomically.
+  - The shared compact provider catalog and Netflix MPR workspace own browser import, status, analytics, enrichment, export, replacement, and deletion.
+  - Useful CLI capability moves under the single product executable rather than preserving `tmdbenrich`.
+  - The standalone checkout remains unchanged until released target parity passes and destructive removal receives explicit operator approval.
+  - `docs/netflix-provider-plan.md` records the complete accepted contract and delivery sequence.
+
+  Validation:
+  - Confirm `I007`, `I008`, `I009`, `F006`, `F007`, `F008`, and `M409` cover incorporation through retirement without a legacy bridge.
+  - Confirm downstream API, UI, privacy, validation, and release requirements cite the same canonical plan.

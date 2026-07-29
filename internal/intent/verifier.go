@@ -43,7 +43,7 @@ type IdentifiedVerifier interface {
 }
 
 type HTTPVerifier struct {
-	BaseURL    string
+	BaseURL    inference.BaseURL
 	APIKey     string
 	Model      string
 	HTTPClient *http.Client
@@ -92,7 +92,7 @@ func (verifier *HTTPVerifier) Verify(contextValue context.Context, inputs []Veri
 func (verifier *HTTPVerifier) Identity() string {
 	return normalize.Hash(
 		VerificationPromptVersion,
-		inference.NormalizeBaseURL(verifier.BaseURL),
+		verifier.BaseURL.String(),
 		verifierModel(verifier.Model),
 	)
 }
@@ -202,7 +202,10 @@ func (verifier *HTTPVerifier) verifyBatch(contextValue context.Context, inputs [
 		}
 		httpClient = &http.Client{Timeout: timeout}
 	}
-	endpoint := chatCompletionsEndpoint(verifier.BaseURL)
+	endpoint, endpointError := verifier.BaseURL.Endpoint("chat/completions")
+	if endpointError != nil {
+		return nil, endpointError
+	}
 	request, requestError := http.NewRequestWithContext(contextValue, http.MethodPost, endpoint, bytes.NewReader(encodedRequest))
 	if requestError != nil {
 		return nil, fmt.Errorf("create verifier request: %w", requestError)
@@ -254,12 +257,4 @@ func verifierModel(model string) string {
 		return inference.DefaultVerifierModel
 	}
 	return strings.TrimSpace(model)
-}
-
-func chatCompletionsEndpoint(baseURL string) string {
-	endpoint := inference.NormalizeBaseURL(baseURL)
-	if !strings.HasSuffix(endpoint, "/chat/completions") {
-		endpoint += "/chat/completions"
-	}
-	return endpoint
 }

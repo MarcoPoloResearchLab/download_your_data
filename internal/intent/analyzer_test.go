@@ -7,15 +7,10 @@ import (
 	"time"
 
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/ingest"
-	"github.com/MarcoPoloResearchLab/download_your_data/internal/store"
 )
 
 func TestAnalyzerLexicalMode(testContext *testing.T) {
-	databasePath := filepath.Join(testContext.TempDir(), "chatindex.db")
-	openedStore, openError := store.Open(databasePath)
-	if openError != nil {
-		testContext.Fatalf("open store: %v", openError)
-	}
+	openedStore := openIntentTestStore(testContext)
 	defer openedStore.Close()
 
 	sourcePath := filepath.Join("..", "..", "testdata", "synthetic-openai-export.zip")

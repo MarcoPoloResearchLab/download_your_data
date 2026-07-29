@@ -3,11 +3,13 @@ package embedding
 import (
 	"path/filepath"
 	"testing"
+
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/privatepath"
 )
 
 func TestVectorFileAppendReadAndRepair(testContext *testing.T) {
-	vectorPath := filepath.Join(testContext.TempDir(), "vectors.f32")
-	vectorFile, openError := OpenVectorFile(vectorPath, 3, -1)
+	vectorFilePath := testVectorFile(testContext, "vectors.f32")
+	vectorFile, openError := OpenVectorFile(vectorFilePath, 3, -1)
 	if openError != nil {
 		testContext.Fatalf("open vector file: %v", openError)
 	}
@@ -29,7 +31,7 @@ func TestVectorFileAppendReadAndRepair(testContext *testing.T) {
 		testContext.Fatalf("close vector file: %v", closeError)
 	}
 
-	repairedFile, repairError := OpenVectorFile(vectorPath, 3, 0)
+	repairedFile, repairError := OpenVectorFile(vectorFilePath, 3, 0)
 	if repairError != nil {
 		testContext.Fatalf("repair vector file: %v", repairError)
 	}
@@ -40,8 +42,8 @@ func TestVectorFileAppendReadAndRepair(testContext *testing.T) {
 }
 
 func TestScanVectorFileVisitsEveryContiguousRow(testContext *testing.T) {
-	vectorPath := filepath.Join(testContext.TempDir(), "scan.f32")
-	vectorFile, openError := OpenVectorFile(vectorPath, 3, -1)
+	vectorFilePath := testVectorFile(testContext, "scan.f32")
+	vectorFile, openError := OpenVectorFile(vectorFilePath, 3, -1)
 	if openError != nil {
 		testContext.Fatalf("open vector file: %v", openError)
 	}
@@ -54,7 +56,7 @@ func TestScanVectorFileVisitsEveryContiguousRow(testContext *testing.T) {
 	}
 
 	visited := make([][]float32, 0)
-	if scanError := ScanVectorFile(vectorPath, 3, func(row int64, vector []float32) error {
+	if scanError := ScanVectorFile(vectorFilePath, 3, func(row int64, vector []float32) error {
 		if row != int64(len(visited)) {
 			testContext.Fatalf("unexpected scan row %d", row)
 		}
@@ -66,4 +68,17 @@ func TestScanVectorFileVisitsEveryContiguousRow(testContext *testing.T) {
 	if len(visited) != 3 || visited[1][1] != 1 {
 		testContext.Fatalf("unexpected scanned vectors: %+v", visited)
 	}
+}
+
+func testVectorFile(testContext *testing.T, name string) privatepath.File {
+	testContext.Helper()
+	root, rootError := privatepath.NewRoot(filepath.Join(testContext.TempDir(), "data"))
+	if rootError != nil {
+		testContext.Fatalf("create private test root: %v", rootError)
+	}
+	file, fileError := root.File(name)
+	if fileError != nil {
+		testContext.Fatalf("resolve private test file: %v", fileError)
+	}
+	return file
 }

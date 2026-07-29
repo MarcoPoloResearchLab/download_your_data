@@ -13,6 +13,7 @@ import (
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/domain"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/intent"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/normalize"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/privatepath"
 )
 
 type AuditMetadata struct {
@@ -54,10 +55,10 @@ type SearchAuditMetadata struct {
 	QueryEmbeddingCached bool
 }
 
-func WriteConversationSearchResults(path string, format string, results []domain.ConversationSearchResult) error {
+func WriteConversationSearchResults(file privatepath.File, format string, results []domain.ConversationSearchResult) error {
 	normalizedFormat := strings.ToLower(strings.TrimSpace(format))
 	if normalizedFormat == "" {
-		normalizedFormat = strings.TrimPrefix(strings.ToLower(filepath.Ext(path)), ".")
+		normalizedFormat = strings.TrimPrefix(strings.ToLower(filepath.Ext(file.RelativePath())), ".")
 	}
 	switch normalizedFormat {
 	case "json":
@@ -65,23 +66,20 @@ func WriteConversationSearchResults(path string, format string, results []domain
 		if marshalError != nil {
 			return fmt.Errorf("encode conversation search JSON: %w", marshalError)
 		}
-		if directoryError := os.MkdirAll(filepath.Dir(path), 0o755); directoryError != nil {
-			return fmt.Errorf("create conversation search report directory: %w", directoryError)
-		}
-		if writeError := os.WriteFile(path, append(encodedResults, '\n'), 0o600); writeError != nil {
+		if writeError := writePrivateFile(file, append(encodedResults, '\n')); writeError != nil {
 			return fmt.Errorf("write conversation search JSON: %w", writeError)
 		}
 		return nil
 	case "csv":
-		return writeConversationSearchCSV(path, results)
+		return writeConversationSearchCSV(file, results)
 	case "table", "text", "txt":
-		return writeConversationSearchTable(path, results)
+		return writeConversationSearchTable(file, results)
 	default:
 		return fmt.Errorf("unsupported conversation search format %q; use table, csv, or json", normalizedFormat)
 	}
 }
 
-func WriteConversationSearchAudit(path string, metadata SearchAuditMetadata) error {
+func WriteConversationSearchAudit(file privatepath.File, metadata SearchAuditMetadata) error {
 	dateRange := map[string]any{
 		"timezone": metadata.Timezone,
 	}
@@ -123,31 +121,28 @@ func WriteConversationSearchAudit(path string, metadata SearchAuditMetadata) err
 	if marshalError != nil {
 		return fmt.Errorf("encode conversation search audit: %w", marshalError)
 	}
-	if directoryError := os.MkdirAll(filepath.Dir(path), 0o755); directoryError != nil {
-		return fmt.Errorf("create conversation search audit directory: %w", directoryError)
-	}
-	if writeError := os.WriteFile(path, append(encodedAudit, '\n'), 0o600); writeError != nil {
+	if writeError := writePrivateFile(file, append(encodedAudit, '\n')); writeError != nil {
 		return fmt.Errorf("write conversation search audit: %w", writeError)
 	}
 	return nil
 }
 
-func WriteDefinitionResults(path string, format string, results []domain.DefinitionResult) error {
+func WriteDefinitionResults(file privatepath.File, format string, results []domain.DefinitionResult) error {
 	normalizedFormat := strings.ToLower(strings.TrimSpace(format))
 	if normalizedFormat == "" {
-		normalizedFormat = strings.TrimPrefix(strings.ToLower(filepath.Ext(path)), ".")
+		normalizedFormat = strings.TrimPrefix(strings.ToLower(filepath.Ext(file.RelativePath())), ".")
 	}
 	switch normalizedFormat {
 	case "csv":
-		return writeCSV(path, results)
+		return writeCSV(file, results)
 	case "json":
-		return writeJSON(path, results)
+		return writeJSON(file, results)
 	default:
 		return fmt.Errorf("unsupported report format %q; use csv or json", normalizedFormat)
 	}
 }
 
-func WriteAudit(path string, output intent.AnalyzeOutput, metadata AuditMetadata) error {
+func WriteAudit(file privatepath.File, output intent.AnalyzeOutput, metadata AuditMetadata) error {
 	encodedIntentConfig, marshalConfigError := json.Marshal(metadata.IntentConfig)
 	if marshalConfigError != nil {
 		return fmt.Errorf("encode audit intent configuration: %w", marshalConfigError)
@@ -209,26 +204,38 @@ func WriteAudit(path string, output intent.AnalyzeOutput, metadata AuditMetadata
 	if marshalError != nil {
 		return fmt.Errorf("encode audit report: %w", marshalError)
 	}
-	if directoryError := os.MkdirAll(filepath.Dir(path), 0o755); directoryError != nil {
-		return fmt.Errorf("create audit report directory: %w", directoryError)
-	}
-	if writeError := os.WriteFile(path, append(encodedAudit, '\n'), 0o600); writeError != nil {
+	if writeError := writePrivateFile(file, append(encodedAudit, '\n')); writeError != nil {
 		return fmt.Errorf("write audit report: %w", writeError)
 	}
 	return nil
 }
 
-func RelatedPath(path string, suffix string) string {
-	extension := filepath.Ext(path)
-	basePath := strings.TrimSuffix(path, extension)
-	return basePath + suffix + extension
+// RelatedFile derives a confined sibling report path from an existing report file.
+func RelatedFile(
+	file privatepath.File,
+	suffix string,
+	replacementExtension string,
+) (privatepath.File, error) {
+	relativePath := file.RelativePath()
+	if relativePath == "" {
+		return privatepath.File{}, fmt.Errorf("derive related report file: source file is not initialized")
+	}
+	extension := filepath.Ext(relativePath)
+	if replacementExtension == "" {
+		replacementExtension = extension
+	}
+	if replacementExtension != "" && !strings.HasPrefix(replacementExtension, ".") {
+		return privatepath.File{}, fmt.Errorf(
+			"derive related report file: replacement extension %q must begin with a dot",
+			replacementExtension,
+		)
+	}
+	baseName := strings.TrimSuffix(filepath.Base(relativePath), extension)
+	return file.Sibling(baseName + suffix + replacementExtension)
 }
 
-func writeCSV(path string, results []domain.DefinitionResult) error {
-	if directoryError := os.MkdirAll(filepath.Dir(path), 0o755); directoryError != nil {
-		return fmt.Errorf("create CSV report directory: %w", directoryError)
-	}
-	outputFile, createError := os.Create(path)
+func writeCSV(file privatepath.File, results []domain.DefinitionResult) error {
+	outputFile, createError := openPrivateFile(file)
 	if createError != nil {
 		return fmt.Errorf("create CSV report: %w", createError)
 	}
@@ -293,25 +300,19 @@ func writeCSV(path string, results []domain.DefinitionResult) error {
 	return nil
 }
 
-func writeJSON(path string, results []domain.DefinitionResult) error {
-	if directoryError := os.MkdirAll(filepath.Dir(path), 0o755); directoryError != nil {
-		return fmt.Errorf("create JSON report directory: %w", directoryError)
-	}
+func writeJSON(file privatepath.File, results []domain.DefinitionResult) error {
 	encodedResults, marshalError := json.MarshalIndent(results, "", "  ")
 	if marshalError != nil {
 		return fmt.Errorf("encode JSON report: %w", marshalError)
 	}
-	if writeError := os.WriteFile(path, append(encodedResults, '\n'), 0o600); writeError != nil {
+	if writeError := writePrivateFile(file, append(encodedResults, '\n')); writeError != nil {
 		return fmt.Errorf("write JSON report: %w", writeError)
 	}
 	return nil
 }
 
-func writeConversationSearchCSV(path string, results []domain.ConversationSearchResult) error {
-	if directoryError := os.MkdirAll(filepath.Dir(path), 0o755); directoryError != nil {
-		return fmt.Errorf("create conversation search CSV directory: %w", directoryError)
-	}
-	outputFile, createError := os.Create(path)
+func writeConversationSearchCSV(file privatepath.File, results []domain.ConversationSearchResult) error {
+	outputFile, createError := openPrivateFile(file)
 	if createError != nil {
 		return fmt.Errorf("create conversation search CSV: %w", createError)
 	}
@@ -359,7 +360,7 @@ func writeConversationSearchCSV(path string, results []domain.ConversationSearch
 	return nil
 }
 
-func writeConversationSearchTable(path string, results []domain.ConversationSearchResult) error {
+func writeConversationSearchTable(file privatepath.File, results []domain.ConversationSearchResult) error {
 	var output strings.Builder
 	for resultIndex, result := range results {
 		fmt.Fprintf(
@@ -375,11 +376,22 @@ func writeConversationSearchTable(path string, results []domain.ConversationSear
 		}
 		output.WriteByte('\n')
 	}
-	if directoryError := os.MkdirAll(filepath.Dir(path), 0o755); directoryError != nil {
-		return fmt.Errorf("create conversation search table directory: %w", directoryError)
-	}
-	if writeError := os.WriteFile(path, []byte(output.String()), 0o600); writeError != nil {
+	if writeError := writePrivateFile(file, []byte(output.String())); writeError != nil {
 		return fmt.Errorf("write conversation search table: %w", writeError)
 	}
 	return nil
+}
+
+func writePrivateFile(file privatepath.File, contents []byte) error {
+	if prepareError := file.Prepare(); prepareError != nil {
+		return prepareError
+	}
+	return os.WriteFile(file.Path(), contents, 0o600)
+}
+
+func openPrivateFile(file privatepath.File) (*os.File, error) {
+	if prepareError := file.Prepare(); prepareError != nil {
+		return nil, prepareError
+	}
+	return os.OpenFile(file.Path(), os.O_WRONLY|os.O_TRUNC, 0o600)
 }

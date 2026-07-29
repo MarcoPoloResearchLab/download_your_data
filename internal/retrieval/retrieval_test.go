@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/domain"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/inference"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/privatepath"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/store"
 )
 
@@ -98,7 +100,7 @@ func TestScenarioBuildAllVisibleBranchesAndFindAnimeConversations(testContext *t
 		Provider:       "fixture",
 		Model:          "fixture-model",
 		Dimensions:     3,
-		BaseURL:        "http://127.0.0.1:1234/v1",
+		BaseURL:        mustRetrievalBaseURL(testContext, "http://127.0.0.1:1234/v1"),
 		DocumentPrefix: DefaultDocumentPrefix,
 		QueryPrefix:    DefaultQueryPrefix,
 		BatchSize:      2,
@@ -213,7 +215,7 @@ func TestScenarioInterruptedIndexResumesAndRefreshesOnlyChangedDocuments(testCon
 		Provider:         "fixture",
 		Model:            "fixture-model",
 		Dimensions:       3,
-		BaseURL:          "http://127.0.0.1:1234/v1",
+		BaseURL:          mustRetrievalBaseURL(testContext, "http://127.0.0.1:1234/v1"),
 		DocumentPrefix:   DefaultDocumentPrefix,
 		QueryPrefix:      DefaultQueryPrefix,
 		BatchSize:        2,
@@ -273,7 +275,7 @@ func TestScenarioInterruptedIndexResumesAndRefreshesOnlyChangedDocuments(testCon
 
 	// And completing any later import invalidates the ready search lifecycle
 	// until an explicit reconciliation proves the corpus current again.
-	importID, importError := openedStore.BeginImport(context.Background(), "later-fixture", "later-hash", domain.ParserVersion)
+	importID, importError := openedStore.BeginImport(context.Background(), "later-hash", domain.ParserVersion)
 	if importError != nil {
 		testContext.Fatalf("begin later import: %v", importError)
 	}
@@ -309,7 +311,7 @@ func TestScenarioModelPreflightFailsBeforeCreatingIndexState(testContext *testin
 		Provider:       "fixture",
 		Model:          "fixture-model",
 		Dimensions:     3,
-		BaseURL:        "http://127.0.0.1:1234/v1",
+		BaseURL:        mustRetrievalBaseURL(testContext, "http://127.0.0.1:1234/v1"),
 		DocumentPrefix: DefaultDocumentPrefix,
 		QueryPrefix:    DefaultQueryPrefix,
 	})
@@ -338,7 +340,7 @@ func TestScenarioExplicitRebuildReplacesAnIncompatibleSearchIndex(testContext *t
 		Provider:       "fixture",
 		Model:          "fixture-model-v1",
 		Dimensions:     3,
-		BaseURL:        "http://127.0.0.1:1234/v1",
+		BaseURL:        mustRetrievalBaseURL(testContext, "http://127.0.0.1:1234/v1"),
 		DocumentPrefix: DefaultDocumentPrefix,
 		QueryPrefix:    DefaultQueryPrefix,
 	}
@@ -346,8 +348,11 @@ func TestScenarioExplicitRebuildReplacesAnIncompatibleSearchIndex(testContext *t
 	if indexError != nil {
 		testContext.Fatalf("build original retrieval index: %v", indexError)
 	}
-	oldVectorPath := openedStore.ResolveSearchVectorPath(oldConfig)
-	if _, statError := os.Stat(oldVectorPath); statError != nil {
+	oldVectorFile, pathError := openedStore.ResolveSearchVectorFile(oldConfig)
+	if pathError != nil {
+		testContext.Fatalf("resolve original vector file: %v", pathError)
+	}
+	if _, statError := os.Stat(oldVectorFile.Path()); statError != nil {
 		testContext.Fatalf("stat original vector file: %v", statError)
 	}
 	oldEngine := Engine{Store: openedStore, QueryEmbedder: &semanticFixtureEmbedder{}}
@@ -377,7 +382,7 @@ func TestScenarioExplicitRebuildReplacesAnIncompatibleSearchIndex(testContext *t
 	if preservedConfig, configError := openedStore.SearchIndexByID(context.Background(), oldConfig.ID); configError != nil || preservedConfig.Status != "ready" {
 		testContext.Fatalf("failed preflight destroyed the working index: config=%+v error=%v", preservedConfig, configError)
 	}
-	if _, statError := os.Stat(oldVectorPath); statError != nil {
+	if _, statError := os.Stat(oldVectorFile.Path()); statError != nil {
 		testContext.Fatalf("failed preflight removed the working vector file: %v", statError)
 	}
 
@@ -392,7 +397,7 @@ func TestScenarioExplicitRebuildReplacesAnIncompatibleSearchIndex(testContext *t
 	if newConfig.ID == oldConfig.ID || newConfig.Model != options.Model || newConfig.Status != "ready" || embeddedCount != 7 {
 		testContext.Fatalf("unexpected rebuilt index: old=%+v new=%+v embedded=%d", oldConfig, newConfig, embeddedCount)
 	}
-	if _, statError := os.Stat(oldVectorPath); !os.IsNotExist(statError) {
+	if _, statError := os.Stat(oldVectorFile.Path()); !os.IsNotExist(statError) {
 		testContext.Fatalf("old vector file still exists after rebuild: %v", statError)
 	}
 	var indexCount int
@@ -421,7 +426,15 @@ func TestScenarioExplicitRebuildReplacesAnIncompatibleSearchIndex(testContext *t
 
 func openRetrievalFixture(testContext *testing.T) *store.Store {
 	testContext.Helper()
-	openedStore, openError := store.Open(filepath.Join(testContext.TempDir(), "chatindex.db"))
+	root, rootError := privatepath.NewRoot(filepath.Join(testContext.TempDir(), "data"))
+	if rootError != nil {
+		testContext.Fatalf("create private retrieval root: %v", rootError)
+	}
+	databaseFile, fileError := root.File("archive.db")
+	if fileError != nil {
+		testContext.Fatalf("resolve private retrieval database: %v", fileError)
+	}
+	openedStore, openError := store.Open(databaseFile)
 	if openError != nil {
 		testContext.Fatalf("open retrieval fixture: %v", openError)
 	}
@@ -431,15 +444,14 @@ func openRetrievalFixture(testContext *testing.T) *store.Store {
 func seedRetrievalFixture(testContext *testing.T, openedStore *store.Store) {
 	testContext.Helper()
 	contextValue := context.Background()
-	importID, importError := openedStore.BeginImport(contextValue, "fixture", "fixture-hash", domain.ParserVersion)
+	importID, importError := openedStore.BeginImport(contextValue, "fixture-hash", domain.ParserVersion)
 	if importError != nil {
 		testContext.Fatalf("begin fixture import: %v", importError)
 	}
 	conversations := []domain.Conversation{
 		{
-			ID:         "anime-semantic",
-			Title:      "Space western recommendation",
-			SourceFile: "fixture.json",
+			ID:    "anime-semantic",
+			Title: "Space western recommendation",
 			Messages: []domain.Message{
 				fixtureMessage("anime-question", "anime-semantic", "anime-question-node", "", "user", "text", "Recommend a space western series"),
 				fixtureMessage("anime-answer-a", "anime-semantic", "anime-answer-a-node", "anime-question-node", "assistant", "text", "Cowboy Bebop is a landmark Japanese animated series"),
@@ -456,7 +468,6 @@ func seedRetrievalFixture(testContext *testing.T, openedStore *store.Store) {
 			ID:         "anime-literal",
 			Title:      "Weekend viewing",
 			IsArchived: boolPointer(true),
-			SourceFile: "fixture.json",
 			Messages: []domain.Message{
 				fixtureMessage("literal-question", "anime-literal", "literal-question-node", "", "user", "text", "What anime should I watch this weekend?"),
 				fixtureMessage("literal-answer", "anime-literal", "literal-answer-node", "literal-question-node", "assistant", "text", "Try a short science fiction series"),
@@ -464,9 +475,8 @@ func seedRetrievalFixture(testContext *testing.T, openedStore *store.Store) {
 			Edges: []domain.MessageEdge{{ConversationID: "anime-literal", ParentNodeID: "literal-question-node", ChildNodeID: "literal-answer-node"}},
 		},
 		{
-			ID:         "gardening",
-			Title:      "Vegetable garden",
-			SourceFile: "fixture.json",
+			ID:    "gardening",
+			Title: "Vegetable garden",
 			Messages: []domain.Message{
 				fixtureMessage("garden-question", "gardening", "garden-question-node", "", "user", "text", "How do I grow tomatoes?"),
 				fixtureMessage("garden-answer", "gardening", "garden-answer-node", "garden-question-node", "assistant", "text", "Give the garden full sun and steady water"),
@@ -487,6 +497,15 @@ func seedRetrievalFixture(testContext *testing.T, openedStore *store.Store) {
 	}
 }
 
+func mustRetrievalBaseURL(testContext *testing.T, value string) inference.BaseURL {
+	testContext.Helper()
+	baseURL, baseURLError := inference.NewBaseURL(value)
+	if baseURLError != nil {
+		testContext.Fatalf("create retrieval inference URL: %v", baseURLError)
+	}
+	return baseURL
+}
+
 func fixtureMessage(id string, conversationID string, nodeID string, parentNodeID string, role string, contentType string, text string) domain.Message {
 	createdAt := time.Date(2026, time.July, 1, 12, 0, 0, 0, time.UTC)
 	return domain.Message{
@@ -500,7 +519,6 @@ func fixtureMessage(id string, conversationID string, nodeID string, parentNodeI
 		OriginalText:    text,
 		NormalizedText:  strings.ToLower(text),
 		ContentHash:     id + "-hash",
-		SourceFile:      "fixture.json",
 		SourceNodeID:    nodeID,
 	}
 }

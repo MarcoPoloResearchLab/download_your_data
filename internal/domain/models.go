@@ -15,8 +15,6 @@ type Conversation struct {
 	UpdatedAt     *time.Time
 	IsArchived    *bool
 	CurrentNodeID string
-	SourceFile    string
-	RawMetadata   string
 	Messages      []Message
 	Edges         []MessageEdge
 }
@@ -32,10 +30,8 @@ type Message struct {
 	OriginalText      string
 	NormalizedText    string
 	ContentHash       string
-	SourceFile        string
 	SourceNodeID      string
 	ExtractionWarning string
-	RawMetadata       string
 }
 
 type MessageEdge struct {
