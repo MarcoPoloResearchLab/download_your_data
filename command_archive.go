@@ -288,6 +288,12 @@ func runEmbed(
 	if flagSet.NArg() != 0 {
 		return fmt.Errorf("usage: %s embed [options]", product.CommandName)
 	}
+	if *batchSize <= 0 {
+		return fmt.Errorf("--batch-size must be positive")
+	}
+	if *maximumMessages < 0 {
+		return fmt.Errorf("--max-messages must not be negative")
+	}
 
 	apiKey, apiKeyError := readOptionalAPIKey(*apiKeyEnvironment)
 	if apiKeyError != nil {
