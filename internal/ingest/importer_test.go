@@ -6,15 +6,12 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/privatepath"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/store"
 )
 
 func TestImporterPreservesArchivedConversationsAndBranches(testContext *testing.T) {
-	databasePath := filepath.Join(testContext.TempDir(), "chatindex.db")
-	openedStore, openError := store.Open(databasePath)
-	if openError != nil {
-		testContext.Fatalf("open store: %v", openError)
-	}
+	openedStore := openIngestTestStore(testContext)
 	defer openedStore.Close()
 
 	sourcePath := filepath.Join("..", "..", "testdata", "synthetic-openai-export.zip")
@@ -43,11 +40,7 @@ func TestImporterPreservesArchivedConversationsAndBranches(testContext *testing.
 }
 
 func TestImporterPreservesRepeatedSourceMessageIDsAsDistinctOccurrences(testContext *testing.T) {
-	databasePath := filepath.Join(testContext.TempDir(), "chatindex.db")
-	openedStore, openError := store.Open(databasePath)
-	if openError != nil {
-		testContext.Fatalf("open store: %v", openError)
-	}
+	openedStore := openIngestTestStore(testContext)
 	defer openedStore.Close()
 
 	exportPath := filepath.Join(testContext.TempDir(), "conversations.json")
@@ -161,11 +154,7 @@ func TestImporterPreservesRepeatedSourceMessageIDsAsDistinctOccurrences(testCont
 }
 
 func TestEmbeddingContextExcludesAssistantThoughtRecords(testContext *testing.T) {
-	databasePath := filepath.Join(testContext.TempDir(), "chatindex.db")
-	openedStore, openError := store.Open(databasePath)
-	if openError != nil {
-		testContext.Fatalf("open store: %v", openError)
-	}
+	openedStore := openIngestTestStore(testContext)
 	defer openedStore.Close()
 
 	exportPath := filepath.Join(testContext.TempDir(), "conversations.json")
@@ -244,4 +233,21 @@ func TestEmbeddingContextExcludesAssistantThoughtRecords(testContext *testing.T)
 	if candidates[0].FollowingText != "This is the visible answer." {
 		testContext.Fatalf("expected visible assistant answer, received %q", candidates[0].FollowingText)
 	}
+}
+
+func openIngestTestStore(testContext *testing.T) *store.Store {
+	testContext.Helper()
+	root, rootError := privatepath.NewRoot(filepath.Join(testContext.TempDir(), "data"))
+	if rootError != nil {
+		testContext.Fatalf("create private test root: %v", rootError)
+	}
+	databaseFile, fileError := root.File("archive.db")
+	if fileError != nil {
+		testContext.Fatalf("resolve private test database: %v", fileError)
+	}
+	openedStore, openError := store.Open(databaseFile)
+	if openError != nil {
+		testContext.Fatalf("open store: %v", openError)
+	}
+	return openedStore
 }

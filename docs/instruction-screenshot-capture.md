@@ -1,6 +1,6 @@
 # Authenticated instruction screenshot capture
 
-This runbook is the only capture contract for the authenticated web screenshots listed in `instruction-screenshots.json`. It permits an agent to prepare provider-interface screenshots from the operator's existing Chrome session without receiving credentials, changing account state, requesting an archive, or retaining personal information. Authenticated TikTok mobile capture is independently owned by `I008`.
+This runbook is the only capture contract for the authenticated web screenshots listed in `instruction-screenshots.json`. It permits an agent to prepare provider-interface screenshots from the operator's existing Chrome session without receiving credentials, changing account state, requesting an archive, or retaining personal information. Authenticated TikTok mobile capture is independently owned by `I011`.
 
 ## Roles and stop conditions
 
@@ -60,10 +60,10 @@ Provider-specific publication rules narrow that general masking rule:
 - LinkedIn allows screenshots for instructive, educational, or illustrative purposes when their appearance is unchanged and no other member is identifiable. Exclude the account header and any member content by cropping; do not superimpose a mask on LinkedIn interface pixels.
 - Instagram does not require a permission request for this non-broadcast, non-radio, non-out-of-home, standard-size digital instructional use, but the interface and brand must remain accurate and must not imply endorsement.
 - Facebook and X captures must remain accurate, descriptive, subordinate to the product instructions, and visibly unaffiliated.
-- TikTok mobile publication is outside this web set and remains owned by `I008`.
+- TikTok mobile publication is outside this web set and remains owned by `I011`.
 
 ## Acceptance
 
-The web set is accepted only when all twelve entries are `approved`, all twelve metadata-free PNGs exist beneath `images/instructions/`, every locale maps the six web platforms to the same two screenshot IDs, and the repository validator plus desktop and mobile application browser coverage pass. TikTok remains text-only until `I008`; it must not render an empty image placeholder.
+The web set is accepted only when all twelve entries are `approved`, all twelve metadata-free PNGs exist beneath `images/instructions/`, every locale maps the six web platforms to the same two screenshot IDs, and the repository validator plus desktop and mobile application browser coverage pass. TikTok remains text-only until `I011`; it must not render an empty image placeholder.
 
 The screenshots are independent instructional references. Provider names, trademarks, and interfaces remain the property of their respective owners; publication does not imply affiliation or endorsement. The manifest records the official capture source, rights-review source, capture date, and required attribution for every image.

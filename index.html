@@ -1,84 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en" data-theme="dark">
 <head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1" name="viewport"/>
-    <title>Download Your Data</title>
-
-    <!-- Bootswatch: Materia (Bootstrap 5.3) -->
-    <link href="https://cdn.jsdelivr.net/npm/bootswatch@5/dist/materia/bootstrap.min.css" rel="stylesheet"/>
-
-    <link href="images/favicon.svg" rel="icon" type="image/svg+xml"/>
-    <link href="images/favicon.png" rel="icon" sizes="32x32" type="image/png"/>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Download Your Data</title>
+  <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="images/favicon.png" sizes="32x32" type="image/png">
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body data-bs-theme="light">
-
-<!-- STICKY APP BAR (single navigation, always visible) -->
-<header class="sticky-top bg-body border-bottom">
-    <div class="container py-2">
-        <div class="d-flex align-items-center gap-3 flex-wrap">
-
-            <!-- Brand -->
-            <a class="fw-semibold text-primary text-decoration-none" href="#" id="brand">
-                Download Your Data
-            </a>
-
-            <!-- Platforms (always visible; wraps on small screens) -->
-            <ul class="nav ms-2 flex-wrap gap-1" id="nav-platforms"><!-- filled by app.js --></ul>
-
-            <!-- Actions -->
-            <div class="ms-auto d-flex align-items-center gap-2">
-                <!-- Language switcher (abbreviations instead of flags) -->
-                <div aria-label="Language" class="btn-group btn-group-sm" id="lang-switcher" role="group">
-                    <button class="btn btn-outline-primary" data-lang="en" title="English" type="button">EN</button>
-                    <button class="btn btn-outline-primary" data-lang="es" title="Español" type="button">ES</button>
-                    <button class="btn btn-outline-primary" data-lang="fr" title="Français" type="button">FR</button>
-                    <button class="btn btn-outline-primary" data-lang="ru" title="Русский" type="button">RU</button>
-                </div>
-
-
-                <div aria-label="Theme" class="btn-group btn-group-sm" role="group">
-                    <button class="btn btn-outline-secondary" id="theme-toggle" type="button">🌙</button>
-                </div>
-            </div>
-
+<body>
+  <a class="skip-link" href="#app">Skip to content</a>
+  <header class="app-bar">
+    <div class="app-bar-inner">
+      <a class="brand" href="#catalog" id="brand">
+        <span class="brand-mark" aria-hidden="true">DYD</span>
+        <span id="brand-label">Download Your Data</span>
+      </a>
+      <span class="header-context" id="header-context">Provider catalog</span>
+      <div class="header-actions">
+        <button class="button button-quiet" type="button" data-route="credits" id="credits-button">
+          Credits
+        </button>
+        <div class="segmented" id="language-switcher" aria-label="Language">
+          <button type="button" data-language="en" aria-pressed="false">EN</button>
+          <button type="button" data-language="es" aria-pressed="false">ES</button>
+          <button type="button" data-language="fr" aria-pressed="false">FR</button>
+          <button type="button" data-language="ru" aria-pressed="false">RU</button>
         </div>
+        <button class="icon-button" id="theme-toggle" type="button" aria-label="Use light theme">
+          <span aria-hidden="true">◐</span>
+        </button>
+      </div>
     </div>
-</header>
+  </header>
 
-<!-- HERO (theme-aware surface) -->
-<section class="bg-body-secondary py-4 border-bottom">
-    <div class="container">
-        <h1 class="h3 mb-2" id="hero-heading">Get a copy of your data from social & search platforms</h1>
-        <p class="mb-0 text-muted" id="hero-sub">
-            Click a platform above to jump to its section.
-        </p>
+  <div class="sr-only" id="app-announcer" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <main class="app-main" id="app" tabindex="-1">
+    <section class="panel loading-block" aria-label="Loading"></section>
+  </main>
+
+  <footer class="app-footer">
+    <div class="footer-inner">
+      <span id="footer-local">Local-only workspace</span>
+      <span id="footer-privacy">Your imported files stay on this computer.</span>
     </div>
-</section>
+  </footer>
 
-<!-- CONTENT -->
-<main class="container my-4" id="content">
-    <div class="alert alert-info my-3" id="loading">Loading…</div>
-</main>
-
-<!-- FOOTER -->
-<footer class="py-4 border-top">
-    <div class="container d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-        <div>
-            <strong id="footer-brand">Download Your Data</strong>
-            — <span class="text-muted" id="footer-tagline">a quick guide to export your information from major platforms.</span>
-        </div>
-        <div class="text-muted">
-            <span id="built-with">Built with</span>
-            <a class="link-primary" href="https://getbootstrap.com/" rel="noopener" target="_blank">Bootstrap 5</a> +
-            <a class="link-primary" href="https://bootswatch.com/materia/" rel="noopener" target="_blank">Bootswatch
-                Materia</a>.
-            <span id="hosted-on">Runs locally on your computer.</span>
-        </div>
-    </div>
-</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5/dist/js/bootstrap.bundle.min.js"></script>
-<script src="app.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>

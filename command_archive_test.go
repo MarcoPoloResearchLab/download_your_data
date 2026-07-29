@@ -1,7 +1,11 @@
 package main
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
+	"io"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -9,27 +13,17 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-)
 
-func TestValidateInferenceBoundaryRequiresExplicitRemoteAuthorization(testContext *testing.T) {
-	if boundaryError := validateInferenceBoundary("embedding", "http://127.0.0.1:1234/v1", false); boundaryError != nil {
-		testContext.Fatalf("loopback endpoint should be allowed: %v", boundaryError)
-	}
-	boundaryError := validateInferenceBoundary("embedding", "https://example.com/v1", false)
-	if boundaryError == nil || !strings.Contains(boundaryError.Error(), "--allow-remote") {
-		testContext.Fatalf("remote endpoint should require explicit authorization: %v", boundaryError)
-	}
-	if boundaryError := validateInferenceBoundary("embedding", "https://example.com/v1", true); boundaryError != nil {
-		testContext.Fatalf("explicitly authorized remote endpoint should be allowed: %v", boundaryError)
-	}
-}
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/inference"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/runtimeconfig"
+)
 
 func TestReadOptionalAPIKeyRequiresNamedEnvironmentValue(testContext *testing.T) {
 	if apiKey, keyError := readOptionalAPIKey(""); keyError != nil || apiKey != "" {
 		testContext.Fatalf("empty environment name should disable authentication: key=%q error=%v", apiKey, keyError)
 	}
-	testContext.Setenv("CHATINDEX_TEST_API_KEY", "secret")
-	apiKey, keyError := readOptionalAPIKey("CHATINDEX_TEST_API_KEY")
+	testContext.Setenv("DOWNLOAD_YOUR_DATA_TEST_API_KEY", "secret")
+	apiKey, keyError := readOptionalAPIKey("DOWNLOAD_YOUR_DATA_TEST_API_KEY")
 	if keyError != nil || apiKey != "secret" {
 		testContext.Fatalf("read named API key: key=%q error=%v", apiKey, keyError)
 	}
@@ -60,33 +54,30 @@ func TestScenarioCLIIndexesVisibleConversationTextAndProducesLexicalSearchReport
 	}))
 	defer server.Close()
 
-	workingDirectory := testContext.TempDir()
-	databasePath := filepath.Join(workingDirectory, "chatindex.db")
-	sourcePath := filepath.Join("..", "..", "testdata", "synthetic-openai-export.zip")
-	if importError := run([]string{"import", "--db", databasePath, sourcePath}); importError != nil {
+	config := testArchiveRuntimeConfig(testContext, server.URL+"/v1")
+	sourcePath := filepath.Join("testdata", "synthetic-openai-export.zip")
+	if importError := runTestCommand(testContext, []string{"import", sourcePath}, config); importError != nil {
 		testContext.Fatalf("import CLI fixture: %v", importError)
 	}
-	if indexError := run([]string{
+	if indexError := runTestCommand(testContext, []string{
 		"index", "build",
-		"--db", databasePath,
 		"--provider", "fixture",
 		"--model", "fixture-model",
 		"--dimensions", "3",
-		"--base-url", server.URL + "/v1",
 		"--batch-size", "2",
-	}); indexError != nil {
+	}, config); indexError != nil {
 		testContext.Fatalf("build CLI retrieval index: %v", indexError)
 	}
 
-	outputPath := filepath.Join(workingDirectory, "berth-search.json")
-	if searchError := run([]string{
+	outputRelativePath := filepath.Join("reports", "berth-search.json")
+	outputPath := filepath.Join(config.DataRoot().Path(), outputRelativePath)
+	if searchError := runTestCommand(testContext, []string{
 		"search",
-		"--db", databasePath,
 		"--query", "berth",
 		"--mode", "lexical",
 		"--limit", strconv.Itoa(20),
-		"--output", outputPath,
-	}); searchError != nil {
+		"--output", outputRelativePath,
+	}, config); searchError != nil {
 		testContext.Fatalf("search CLI retrieval index: %v", searchError)
 	}
 	encodedResults, readError := os.ReadFile(outputPath)
@@ -101,6 +92,19 @@ func TestScenarioCLIIndexesVisibleConversationTextAndProducesLexicalSearchReport
 	}
 }
 
+func TestSearchRejectsAnOutputPathOutsideThePrivateDataRoot(testContext *testing.T) {
+	config := testArchiveRuntimeConfig(testContext, inference.DefaultBaseURL)
+	searchError := runTestCommand(testContext, []string{
+		"search",
+		"--query", "berth",
+		"--mode", "lexical",
+		"--output", filepath.Join(testContext.TempDir(), "escaped.json"),
+	}, config)
+	if searchError == nil || !strings.Contains(searchError.Error(), "absolute paths are not allowed") {
+		testContext.Fatalf("unexpected escaped report error: %v", searchError)
+	}
+}
+
 func TestScenarioCLIReportsExactModelLoadCommandWhenLMStudioHasNoModel(testContext *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(responseWriter http.ResponseWriter, _ *http.Request) {
 		responseWriter.Header().Set("Content-Type", "application/json")
@@ -109,19 +113,47 @@ func TestScenarioCLIReportsExactModelLoadCommandWhenLMStudioHasNoModel(testConte
 	}))
 	defer server.Close()
 
-	workingDirectory := testContext.TempDir()
-	databasePath := filepath.Join(workingDirectory, "chatindex.db")
-	sourcePath := filepath.Join("..", "..", "testdata", "synthetic-openai-export.zip")
-	if importError := run([]string{"import", "--db", databasePath, sourcePath}); importError != nil {
+	config := testArchiveRuntimeConfig(testContext, server.URL+"/v1")
+	sourcePath := filepath.Join("testdata", "synthetic-openai-export.zip")
+	if importError := runTestCommand(testContext, []string{"import", sourcePath}, config); importError != nil {
 		testContext.Fatalf("import CLI fixture: %v", importError)
 	}
-	indexError := run([]string{
+	indexError := runTestCommand(testContext, []string{
 		"index", "build",
-		"--db", databasePath,
-		"--base-url", server.URL + "/v1",
 		"--dimensions", "3",
-	})
+	}, config)
 	if indexError == nil || !strings.Contains(indexError.Error(), "lms load text-embedding-nomic-embed-text-v1.5") {
 		testContext.Fatalf("missing actionable model load instruction: %v", indexError)
 	}
+}
+
+func runTestCommand(
+	testContext *testing.T,
+	arguments []string,
+	config runtimeconfig.Config,
+) error {
+	testContext.Helper()
+	return runCommand(
+		context.Background(),
+		arguments,
+		config,
+		slog.New(slog.NewTextHandler(io.Discard, nil)),
+	)
+}
+
+func testArchiveRuntimeConfig(testContext *testing.T, baseURL string) runtimeconfig.Config {
+	testContext.Helper()
+	environment := map[string]string{
+		runtimeconfig.DataDirectoryEnvironment: filepath.Join(testContext.TempDir(), "data"),
+		inference.BaseURLEnvironment:           baseURL,
+	}
+	config, configError := runtimeconfig.Load(
+		func(key string) string { return environment[key] },
+		testContext.TempDir(),
+		bytes.NewReader(bytes.Repeat([]byte{0x3c}, 32)),
+	)
+	if configError != nil {
+		testContext.Fatalf("load archive command config: %v", configError)
+	}
+	return config
 }

@@ -20,7 +20,7 @@ type Embedder interface {
 }
 
 type HTTPEmbedder struct {
-	BaseURL     string
+	BaseURL     inference.BaseURL
 	APIKey      string
 	Model       string
 	Dimensions  int
@@ -75,13 +75,17 @@ func (embedder *HTTPEmbedder) Embed(contextValue context.Context, inputs []strin
 	if maximumRetries <= 0 {
 		maximumRetries = 5
 	}
+	endpoint, endpointError := embedder.BaseURL.Endpoint("embeddings")
+	if endpointError != nil {
+		return nil, endpointError
+	}
 
 	var lastError error
 	for attemptNumber := 0; attemptNumber <= maximumRetries; attemptNumber++ {
 		request, requestError := http.NewRequestWithContext(
 			contextValue,
 			http.MethodPost,
-			embeddingsEndpoint(embedder.BaseURL),
+			endpoint,
 			bytes.NewReader(encodedPayload),
 		)
 		if requestError != nil {
@@ -153,14 +157,6 @@ func (embedder *HTTPEmbedder) Embed(contextValue context.Context, inputs []strin
 		lastError = fmt.Errorf("embedding request failed")
 	}
 	return nil, lastError
-}
-
-func embeddingsEndpoint(baseURL string) string {
-	trimmedBaseURL := inference.NormalizeBaseURL(baseURL)
-	if strings.HasSuffix(trimmedBaseURL, "/embeddings") {
-		return trimmedBaseURL
-	}
-	return trimmedBaseURL + "/embeddings"
 }
 
 func normalizeVector(vector []float32) {

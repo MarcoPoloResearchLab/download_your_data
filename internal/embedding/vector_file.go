@@ -7,7 +7,8 @@ import (
 	"io"
 	"math"
 	"os"
-	"path/filepath"
+
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/privatepath"
 )
 
 type VectorFile struct {
@@ -16,14 +17,14 @@ type VectorFile struct {
 	rowBytes   int64
 }
 
-func OpenVectorFile(path string, dimensions int, maximumCommittedRow int64) (*VectorFile, error) {
+func OpenVectorFile(file privatepath.File, dimensions int, maximumCommittedRow int64) (*VectorFile, error) {
 	if dimensions <= 0 {
 		return nil, fmt.Errorf("vector dimensions must be positive")
 	}
-	if directoryError := os.MkdirAll(filepath.Dir(path), 0o755); directoryError != nil {
-		return nil, fmt.Errorf("create vector directory: %w", directoryError)
+	if prepareError := file.Prepare(); prepareError != nil {
+		return nil, fmt.Errorf("prepare private vector file: %w", prepareError)
 	}
-	vectorHandle, openError := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0o600)
+	vectorHandle, openError := os.OpenFile(file.Path(), os.O_RDWR, 0o600)
 	if openError != nil {
 		return nil, fmt.Errorf("open vector file: %w", openError)
 	}
@@ -127,11 +128,11 @@ func DotProduct(leftVector []float32, rightVector []float32) (float64, error) {
 	return dotProduct, nil
 }
 
-func ScanVectorFile(path string, dimensions int, visit func(row int64, vector []float32) error) error {
+func ScanVectorFile(file privatepath.File, dimensions int, visit func(row int64, vector []float32) error) error {
 	if dimensions <= 0 {
 		return fmt.Errorf("vector dimensions must be positive")
 	}
-	vectorHandle, openError := os.Open(path)
+	vectorHandle, openError := os.Open(file.Path())
 	if openError != nil {
 		return fmt.Errorf("open vector file for scan: %w", openError)
 	}

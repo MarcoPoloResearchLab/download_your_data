@@ -6,14 +6,17 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
-	"path/filepath"
 	"time"
 
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/domain"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/normalize"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/privatepath"
 )
 
 func (store *Store) GetOrCreateEmbeddingConfig(contextValue context.Context, config domain.EmbeddingConfig) (domain.EmbeddingConfig, error) {
+	if _, pathError := store.resolveDatabaseRelativeFile(config.VectorPath); pathError != nil {
+		return config, pathError
+	}
 	config.CreatedAtMillis = time.Now().UTC().UnixMilli()
 	_, insertError := store.database.ExecContext(
 		contextValue,
@@ -39,6 +42,12 @@ func (store *Store) GetOrCreateEmbeddingConfig(contextValue context.Context, con
 	loadedConfig, loadError := store.loadEmbeddingConfigByIdentity(contextValue, config)
 	if loadError != nil {
 		return config, loadError
+	}
+	if loadedConfig.VectorPath != config.VectorPath ||
+		loadedConfig.InputPrefix != config.InputPrefix {
+		return loadedConfig, fmt.Errorf(
+			"embedding configuration identity resolves to a different current contract",
+		)
 	}
 	return loadedConfig, nil
 }
@@ -216,11 +225,8 @@ func (store *Store) MarkEmbeddingConfigReady(contextValue context.Context, confi
 	return nil
 }
 
-func (store *Store) ResolveVectorPath(config domain.EmbeddingConfig) string {
-	if filepath.IsAbs(config.VectorPath) {
-		return config.VectorPath
-	}
-	return filepath.Join(store.DatabaseDirectory(), config.VectorPath)
+func (store *Store) ResolveVectorFile(config domain.EmbeddingConfig) (privatepath.File, error) {
+	return store.resolveDatabaseRelativeFile(config.VectorPath)
 }
 
 func (store *Store) MaximumVectorRow(contextValue context.Context, configID int64) (int64, error) {

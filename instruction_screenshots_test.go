@@ -63,7 +63,6 @@ type instructionScreenshotAsset struct {
 }
 
 type instructionScreenshotLocale struct {
-	HeroSub   string                                   `json:"hero_sub"`
 	Platforms []instructionScreenshotLocalizedPlatform `json:"platforms"`
 }
 
@@ -352,25 +351,38 @@ func validateInstructionScreenshotLocales(
 		if !exists {
 			testContext.Fatalf("localized strings are missing %q", localeID)
 		}
-		if strings.Contains(strings.ToLower(locale.HeroSub), "placeholder") {
-			testContext.Fatalf("locale %q retains placeholder copy", localeID)
-		}
-		if len(locale.Platforms) != len(instructionScreenshotPlatformIDs) {
+		if len(locale.Platforms) != len(instructionScreenshotPlatformIDs)+1 {
 			testContext.Fatalf(
 				"locale %q platform count = %d; want %d",
 				localeID,
 				len(locale.Platforms),
-				len(instructionScreenshotPlatformIDs),
+				len(instructionScreenshotPlatformIDs)+1,
 			)
 		}
-		for platformIndex, platform := range locale.Platforms {
-			expectedPlatformID := instructionScreenshotPlatformIDs[platformIndex]
-			if platform.ID != expectedPlatformID {
+		if locale.Platforms[0].ID != "netflix" ||
+			len(locale.Platforms[0].Images) != 0 {
+			testContext.Fatalf(
+				"locale %q must start with the screenshot-free Netflix workspace",
+				localeID,
+			)
+		}
+		platformByID := make(map[string]instructionScreenshotLocalizedPlatform, len(locale.Platforms))
+		for _, platform := range locale.Platforms {
+			if _, exists := platformByID[platform.ID]; exists {
 				testContext.Fatalf(
-					"locale %q platform %d = %q; want %q",
+					"locale %q contains duplicate provider %q",
 					localeID,
-					platformIndex,
 					platform.ID,
+				)
+			}
+			platformByID[platform.ID] = platform
+		}
+		for _, expectedPlatformID := range instructionScreenshotPlatformIDs {
+			platform, exists := platformByID[expectedPlatformID]
+			if !exists {
+				testContext.Fatalf(
+					"locale %q is missing provider %q",
+					localeID,
 					expectedPlatformID,
 				)
 			}

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "capture_contract": {
     "scope": "authenticated_web",
-    "mobile_follow_up_issue": "I008",
+    "mobile_follow_up_issue": "I011",
     "route_review_date": "2026-07-28",
     "desktop": {
       "browser": "Chrome",

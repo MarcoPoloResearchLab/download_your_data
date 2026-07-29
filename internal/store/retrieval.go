@@ -6,17 +6,15 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
-	"path/filepath"
 	"time"
 
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/domain"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/privatepath"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/product"
 )
 
-func (store *Store) ResolveSearchVectorPath(config domain.SearchIndexConfig) string {
-	if filepath.IsAbs(config.VectorPath) {
-		return config.VectorPath
-	}
-	return filepath.Join(store.DatabaseDirectory(), config.VectorPath)
+func (store *Store) ResolveSearchVectorFile(config domain.SearchIndexConfig) (privatepath.File, error) {
+	return store.resolveDatabaseRelativeFile(config.VectorPath)
 }
 
 func (store *Store) ListRetrievalSourceNodes(contextValue context.Context) ([]domain.RetrievalSourceNode, error) {
@@ -92,6 +90,9 @@ func (store *Store) ListMessageEdges(contextValue context.Context) ([]domain.Mes
 }
 
 func (store *Store) GetOrCreateSearchIndex(contextValue context.Context, config domain.SearchIndexConfig) (domain.SearchIndexConfig, error) {
+	if _, pathError := store.resolveDatabaseRelativeFile(config.VectorPath); pathError != nil {
+		return config, pathError
+	}
 	config.CreatedAtMillis = time.Now().UTC().UnixMilli()
 	_, insertError := store.database.ExecContext(
 		contextValue,
@@ -122,6 +123,7 @@ func (store *Store) GetOrCreateSearchIndex(contextValue context.Context, config 
 	if loaded.Provider != config.Provider || loaded.Model != config.Model ||
 		loaded.Dimensions != config.Dimensions || loaded.BaseURL != config.BaseURL ||
 		loaded.DocumentPrefix != config.DocumentPrefix || loaded.QueryPrefix != config.QueryPrefix ||
+		loaded.VectorPath != config.VectorPath ||
 		loaded.BuilderVersion != config.BuilderVersion || loaded.CorpusPolicy != config.CorpusPolicy {
 		return loaded, fmt.Errorf(
 			"search index %q already exists with a different identity; rerun with --rebuild to replace it",
@@ -131,13 +133,16 @@ func (store *Store) GetOrCreateSearchIndex(contextValue context.Context, config 
 	return loaded, nil
 }
 
-// DeleteSearchIndexByName removes one index's relational and FTS state and
-// returns its vector path so the caller can remove the external vector file.
-// The delete cascades to search_documents and query_embedding_cache.
-func (store *Store) DeleteSearchIndexByName(contextValue context.Context, name string) (string, bool, error) {
+// DeleteSearchIndexByName validates the stored private vector file before
+// removing one index's relational and FTS state. The delete cascades to
+// search_documents and query_embedding_cache.
+func (store *Store) DeleteSearchIndexByName(
+	contextValue context.Context,
+	name string,
+) (privatepath.File, bool, error) {
 	transaction, beginError := store.database.BeginTx(contextValue, nil)
 	if beginError != nil {
-		return "", false, fmt.Errorf("begin search index deletion: %w", beginError)
+		return privatepath.File{}, false, fmt.Errorf("begin search index deletion: %w", beginError)
 	}
 	rollbackRequired := true
 	defer func() {
@@ -156,32 +161,36 @@ func (store *Store) DeleteSearchIndexByName(contextValue context.Context, name s
 	if queryError != nil {
 		if queryError == sql.ErrNoRows {
 			if rollbackError := transaction.Rollback(); rollbackError != nil {
-				return "", false, fmt.Errorf("rollback absent search index deletion: %w", rollbackError)
+				return privatepath.File{}, false, fmt.Errorf("rollback absent search index deletion: %w", rollbackError)
 			}
 			rollbackRequired = false
-			return "", false, nil
+			return privatepath.File{}, false, nil
 		}
-		return "", false, fmt.Errorf("locate search index %q for deletion: %w", name, queryError)
+		return privatepath.File{}, false, fmt.Errorf("locate search index %q for deletion: %w", name, queryError)
+	}
+	vectorFile, pathError := store.resolveDatabaseRelativeFile(vectorPath)
+	if pathError != nil {
+		return privatepath.File{}, false, pathError
 	}
 	if _, deleteError := transaction.ExecContext(
 		contextValue,
 		`DELETE FROM search_documents_fts WHERE search_index_id=?`,
 		indexID,
 	); deleteError != nil {
-		return "", false, fmt.Errorf("delete search index %q FTS documents: %w", name, deleteError)
+		return privatepath.File{}, false, fmt.Errorf("delete search index %q FTS documents: %w", name, deleteError)
 	}
 	if _, deleteError := transaction.ExecContext(
 		contextValue,
 		`DELETE FROM search_indexes WHERE search_index_id=?`,
 		indexID,
 	); deleteError != nil {
-		return "", false, fmt.Errorf("delete search index %q: %w", name, deleteError)
+		return privatepath.File{}, false, fmt.Errorf("delete search index %q: %w", name, deleteError)
 	}
 	if commitError := transaction.Commit(); commitError != nil {
-		return "", false, fmt.Errorf("commit search index %q deletion: %w", name, commitError)
+		return privatepath.File{}, false, fmt.Errorf("commit search index %q deletion: %w", name, commitError)
 	}
 	rollbackRequired = false
-	return vectorPath, true, nil
+	return vectorFile, true, nil
 }
 
 func (store *Store) SearchIndexByName(contextValue context.Context, name string) (domain.SearchIndexConfig, error) {
@@ -207,7 +216,10 @@ func (store *Store) LatestReadySearchIndex(contextValue context.Context) (domain
 		contextValue,
 		`WHERE status = 'ready' ORDER BY COALESCE(completed_at_ms, created_at_ms) DESC, search_index_id DESC LIMIT 1`,
 		nil,
-		"no ready conversation search index exists; run chatindex index build first",
+		fmt.Sprintf(
+			"no ready conversation search index exists; run %s index build first",
+			product.CommandName,
+		),
 	)
 }
 

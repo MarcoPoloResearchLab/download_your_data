@@ -10,6 +10,7 @@ import (
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/domain"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/inference"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/normalize"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/product"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/store"
 )
 
@@ -17,7 +18,7 @@ type ServiceOptions struct {
 	Provider        string
 	Model           string
 	Dimensions      int
-	BaseURL         string
+	BaseURL         inference.BaseURL
 	InputPrefix     string
 	BatchSize       int
 	MaximumMessages int
@@ -50,13 +51,16 @@ func (service *Service) Run(contextValue context.Context, options ServiceOptions
 		return domain.EmbeddingConfig{}, 0, fmt.Errorf("embedding model must not be empty")
 	}
 	if options.BatchSize <= 0 {
-		options.BatchSize = 64
+		options.BatchSize = product.DefaultInferenceBatchSize
 	}
 	provider := strings.TrimSpace(options.Provider)
 	if provider == "" {
 		provider = inference.DefaultEmbeddingProvider
 	}
-	baseURL := inference.NormalizeBaseURL(options.BaseURL)
+	baseURL := options.BaseURL.String()
+	if baseURL == "" {
+		return domain.EmbeddingConfig{}, 0, fmt.Errorf("inference base URL is required")
+	}
 	preprocessingVersion := preprocessingIdentity(options.InputPrefix)
 	vectorIdentity := normalize.Hash(provider, options.Model, fmt.Sprintf("%d", options.Dimensions), baseURL, preprocessingVersion, domain.ContextVersion)
 	vectorPath := filepath.Join("vectors", vectorIdentity[:20]+".f32")
@@ -78,7 +82,11 @@ func (service *Service) Run(contextValue context.Context, options ServiceOptions
 	if rowError != nil {
 		return config, 0, rowError
 	}
-	vectorFile, vectorError := OpenVectorFile(service.Store.ResolveVectorPath(config), config.Dimensions, maximumVectorRow)
+	privateVectorFile, pathError := service.Store.ResolveVectorFile(config)
+	if pathError != nil {
+		return config, 0, pathError
+	}
+	vectorFile, vectorError := OpenVectorFile(privateVectorFile, config.Dimensions, maximumVectorRow)
 	if vectorError != nil {
 		return config, 0, vectorError
 	}
