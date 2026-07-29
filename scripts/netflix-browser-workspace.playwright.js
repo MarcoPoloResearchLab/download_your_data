@@ -76,6 +76,38 @@ async page => {
         request.url.endsWith('/api/providers/netflix/generations') &&
         request.postData.includes('"analysis_level":"tmdb"')
     );
+  const localCreateRequests = () =>
+    requests.filter(
+      (request) =>
+        request.method === 'POST' &&
+        request.url.endsWith('/api/providers/netflix/generations') &&
+        request.postData.includes('"analysis_level":"local"')
+    );
+  const syntheticViewingCSV = `Title,Date
+Synthetic Film,1/1/26
+Synthetic Series: Season 1: First,1/2/26
+Synthetic Series: Season 1: Second,2/2/26
+Another Film,2/3/26
+`;
+  const dropViewingActivity = async () => {
+    await page.evaluate((contents) => {
+      const dropZone = document.querySelector('.drop-zone');
+      if (!dropZone) {
+        throw new Error('Netflix drop zone is missing');
+      }
+      const transfer = new DataTransfer();
+      transfer.items.add(
+        new File([contents], 'ViewingActivity.csv', {type: 'text/csv'})
+      );
+      dropZone.dispatchEvent(
+        new DragEvent('drop', {
+          bubbles: true,
+          cancelable: true,
+          dataTransfer: transfer
+        })
+      );
+    }, syntheticViewingCSV);
+  };
 
   await page.setViewportSize({width: 1440, height: 1000});
   await page.goto(baseURL, {waitUntil: 'networkidle'});
@@ -128,7 +160,44 @@ async page => {
     collect();
   });
 
-  await page.locator('#netflix-file').setInputFiles(viewingCSV);
+  let signalInitialLocalCreate = () => {};
+  const initialLocalCreateSeen = new Promise((resolve) => {
+    signalInitialLocalCreate = resolve;
+  });
+  let releaseInitialLocalCreate = () => {};
+  const initialLocalCreateGate = new Promise((resolve) => {
+    releaseInitialLocalCreate = resolve;
+  });
+  let holdingInitialLocalCreate = false;
+  const generationCreationPattern = '**/api/providers/netflix/generations';
+  const holdInitialLocalCreate = async (requestRoute) => {
+    const request = requestRoute.request();
+    if (
+      !holdingInitialLocalCreate &&
+      request.method() === 'POST' &&
+      request.postData()?.includes('"analysis_level":"local"')
+    ) {
+      holdingInitialLocalCreate = true;
+      signalInitialLocalCreate();
+      await initialLocalCreateGate;
+    }
+    await requestRoute.continue();
+  };
+  await page.route(generationCreationPattern, holdInitialLocalCreate);
+  await dropViewingActivity();
+  await Promise.race([
+    initialLocalCreateSeen,
+    page.waitForTimeout(5000).then(() => {
+      throw new Error('timed out waiting for initial local creation request');
+    })
+  ]);
+  await dropViewingActivity();
+  await page.waitForTimeout(100);
+  assert(
+    localCreateRequests().length === 1,
+    `busy drop zone created ${localCreateRequests().length} local generations; want 1`
+  );
+  releaseInitialLocalCreate();
   const local = await waitForState(
     (value) => value.active_generation?.analysis_level === 'local',
     'initial ready-local generation'
