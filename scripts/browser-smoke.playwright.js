@@ -58,8 +58,8 @@ async page => {
   await page.goto(baseURL, {waitUntil: 'networkidle'});
   await page.locator('[data-provider-id="netflix"]').waitFor();
   assert(
-    await page.locator('.provider-row[data-provider-id]').count() === 9,
-    'provider catalog must contain nine canonical providers'
+    await page.locator('.provider-row[data-provider-id]').count() === 11,
+    'provider catalog must contain eleven canonical providers'
   );
   assert(
     await page.locator('[data-provider-id="netflix"]').count() === 1,
@@ -68,6 +68,13 @@ async page => {
   assert(
     await page.locator('[data-provider-id="openai"]').count() === 1,
     'provider catalog must contain exactly one OpenAI identity'
+  );
+  assert(
+    await page.locator('[data-provider-id="facebook"]').count() === 1 &&
+      await page.locator('[data-provider-id="instagram"]').count() === 1 &&
+      await page.locator('[data-provider-id="whatsapp"]').count() === 1 &&
+      await page.locator('[data-provider-id="threads"]').count() === 1,
+    'provider catalog must contain separate Facebook, Instagram, WhatsApp, and Threads identities'
   );
 
   const localeFacebookAlt = {
@@ -109,6 +116,39 @@ async page => {
       ).count() === 1,
       `${locale} OpenAI official export route is missing`
     );
+    await route('#guide/whatsapp', '#whatsapp');
+    assert(
+      (await page.locator('.guide h1').textContent()).trim() === 'WhatsApp',
+      `${locale} did not preserve the canonical WhatsApp identity`
+    );
+    assert(
+      await page.locator('#whatsapp .instruction-list li').count() === 7,
+      `${locale} WhatsApp export instructions are incomplete`
+    );
+    assert(
+      await page.locator(
+        '#whatsapp a[href="https://faq.whatsapp.com/526463418847093/"]'
+      ).count() === 1 &&
+        await page.locator(
+          '#whatsapp a[href="https://faq.whatsapp.com/1180414079177245/"]'
+        ).count() === 1,
+      `${locale} WhatsApp official export routes are missing`
+    );
+    await route('#guide/threads', '#threads');
+    assert(
+      (await page.locator('.guide h1').textContent()).trim() === 'Threads',
+      `${locale} did not preserve the canonical Threads identity`
+    );
+    assert(
+      await page.locator('#threads .instruction-list li').count() === 7,
+      `${locale} Threads export instructions are incomplete`
+    );
+    assert(
+      await page.locator(
+        '#threads a[href="https://www.facebook.com/help/instagram/259803026523198"]'
+      ).count() === 1,
+      `${locale} Threads official export route is missing`
+    );
     await route('#guide/facebook', '#facebook');
     assert(
       await page.locator(`#facebook img[alt="${expectedAlt}"]`).count() === 1,
@@ -137,6 +177,8 @@ async page => {
     openai: 0,
     facebook: 2,
     instagram: 2,
+    whatsapp: 0,
+    threads: 0,
     linkedin: 2,
     tiktok: 0,
     x: 2,

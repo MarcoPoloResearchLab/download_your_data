@@ -779,6 +779,27 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - `make test-browser`
   - `make ci`
 
+- [x] [F009] (P1) {I001,P004} Add separate guides for the major Meta products
+  Goal:
+  Keep Facebook, Instagram, WhatsApp, and Threads as distinct provider identities with current, product-specific export instructions.
+
+  Requirements:
+  - Preserve the existing Facebook and Instagram entries and place WhatsApp and Threads beside them in the canonical provider order.
+  - Treat WhatsApp account information and per-chat message history as separate exports; never imply that the account report contains messages.
+  - Explain that Threads has its own export scope even though Meta currently starts the request from the Instagram app's Accounts Center.
+  - Localize both new guides across English, Spanish, French, and Russian without adding backend workflow state or placeholder screenshots.
+  - Link only to the current first-party WhatsApp and Meta help contracts.
+
+  Deliverables:
+  - Guide-only WhatsApp and Threads provider entries with distinct catalog marks, routes, instructions, references, and explanatory notes.
+  - Checked-JavaScript routing, localized data-contract coverage, screenshot-empty contracts, and real-browser coverage for all four locales.
+
+  Validation:
+  - Every locale exposes exactly one Facebook, Instagram, WhatsApp, and Threads identity in the same canonical order.
+  - Browser tests open the WhatsApp and Threads routes, verify complete instructions, and verify the official first-party references.
+  - `make test-browser`
+  - `make ci`
+
 ## Planning
 
 - [x] [P001] (P1) Confirm the first canonical deployment and inference contract

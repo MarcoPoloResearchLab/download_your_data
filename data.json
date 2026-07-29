@@ -17,6 +17,14 @@
       "surface": "guide"
     },
     {
+      "id": "whatsapp",
+      "surface": "guide"
+    },
+    {
+      "id": "threads",
+      "surface": "guide"
+    },
+    {
       "id": "linkedin",
       "surface": "guide"
     },
@@ -59,6 +67,8 @@
         "src": "images/instructions/instagram-export-entry.png"
       }
     ],
+    "whatsapp": [],
+    "threads": [],
     "linkedin": [
       {
         "id": "linkedin-data-privacy-navigation",
@@ -346,6 +356,56 @@
               "alt": "Instagram Export your information panel"
             }
           ]
+        },
+        {
+          "id": "whatsapp",
+          "nav": "WhatsApp",
+          "title": "WhatsApp",
+          "intro": "Request an account-information report or export an individual chat from the mobile app.",
+          "steps": [
+            "For account information and settings, open WhatsApp on your primary device and go to Settings → Account → Request account info.",
+            "Tap Request report. WhatsApp says the report is typically ready in three days.",
+            "When notified, return to Request account info and tap Download report; the ZIP contains HTML and JSON files.",
+            "Tap Export report, choose a private destination, and store the report carefully.",
+            "The account-information report does not include personal messages. To save messages, open the individual or group chat you need.",
+            "On Android, tap More options → More → Export chat. On iPhone, open the chat details and select Export Chat.",
+            "Choose Without media or Include media, then select where to save it. The exported text file is not a WhatsApp backup and cannot be re-imported."
+          ],
+          "refs": [
+            {
+              "label": "WhatsApp: How to request account information",
+              "href": "https://faq.whatsapp.com/526463418847093/"
+            },
+            {
+              "label": "WhatsApp: How to export your chat history",
+              "href": "https://faq.whatsapp.com/1180414079177245/"
+            }
+          ],
+          "images": [],
+          "note": "WhatsApp keeps these exports separate: request account information for account metadata, and export each chat you need for message history."
+        },
+        {
+          "id": "threads",
+          "nav": "Threads",
+          "title": "Threads",
+          "intro": "Export posts, activity, and other information for your Threads profile through Accounts Center.",
+          "steps": [
+            "Open the Instagram app, tap your profile picture, then open the menu in the top right.",
+            "Tap Accounts Center → Your information and permissions.",
+            "Tap Export your information → Create export.",
+            "Select the profile whose Threads information you want, then tap Next.",
+            "Select Export to device.",
+            "Choose the specific information, date range, format, notification email, and media quality.",
+            "Tap Start export. Meta may take up to 30 days to email the download link."
+          ],
+          "refs": [
+            {
+              "label": "Review and export your Threads information",
+              "href": "https://www.facebook.com/help/instagram/259803026523198"
+            }
+          ],
+          "images": [],
+          "note": "Threads remains a separate provider guide even though Meta currently starts its export from the Instagram app’s Accounts Center."
         },
         {
           "id": "linkedin",
@@ -741,6 +801,56 @@
           ]
         },
         {
+          "id": "whatsapp",
+          "nav": "WhatsApp",
+          "title": "WhatsApp",
+          "intro": "Solicita un informe de datos de la cuenta o exporta un chat individual desde la aplicación móvil.",
+          "steps": [
+            "Para obtener la información y configuración de la cuenta, abre WhatsApp en tu dispositivo principal y ve a Configuración → Cuenta → Solicitar info. de mi cuenta.",
+            "Pulsa Solicitar informe. WhatsApp indica que normalmente estará listo en tres días.",
+            "Cuando recibas la notificación, vuelve a Solicitar info. de mi cuenta y pulsa Descargar informe; el ZIP contiene archivos HTML y JSON.",
+            "Pulsa Exportar informe, elige un destino privado y guarda el informe con cuidado.",
+            "El informe de datos de la cuenta no incluye mensajes personales. Para guardar mensajes, abre el chat individual o grupal que necesites.",
+            "En Android, pulsa Más opciones → Más → Exportar chat. En iPhone, abre los detalles del chat y selecciona Exportar chat.",
+            "Elige Sin archivos multimedia o Incluir archivos multimedia y selecciona dónde guardarlo. El archivo de texto exportado no es una copia de seguridad de WhatsApp y no se puede volver a importar."
+          ],
+          "refs": [
+            {
+              "label": "WhatsApp: solicitar la información de la cuenta",
+              "href": "https://faq.whatsapp.com/526463418847093/"
+            },
+            {
+              "label": "WhatsApp: exportar el historial de chats",
+              "href": "https://faq.whatsapp.com/1180414079177245/"
+            }
+          ],
+          "images": [],
+          "note": "WhatsApp mantiene estas exportaciones separadas: solicita la información de la cuenta para obtener sus metadatos y exporta cada chat que necesites para guardar el historial de mensajes."
+        },
+        {
+          "id": "threads",
+          "nav": "Threads",
+          "title": "Threads",
+          "intro": "Exporta publicaciones, actividad y otros datos de tu perfil de Threads mediante el Centro de cuentas.",
+          "steps": [
+            "Abre la aplicación de Instagram, toca tu foto de perfil y abre el menú de la esquina superior derecha.",
+            "Toca Centro de cuentas → Tu información y permisos.",
+            "Toca Exportar tu información → Crear exportación.",
+            "Selecciona el perfil cuya información de Threads quieras exportar y toca Siguiente.",
+            "Selecciona Exportar al dispositivo.",
+            "Elige la información específica, el intervalo de fechas, el formato, el correo de notificación y la calidad multimedia.",
+            "Toca Iniciar exportación. Meta puede tardar hasta 30 días en enviarte por correo el enlace de descarga."
+          ],
+          "refs": [
+            {
+              "label": "Revisar y exportar tu información de Threads",
+              "href": "https://www.facebook.com/help/instagram/259803026523198"
+            }
+          ],
+          "images": [],
+          "note": "Threads sigue siendo una guía de proveedor independiente, aunque Meta inicia actualmente su exportación desde el Centro de cuentas de la aplicación de Instagram."
+        },
+        {
           "id": "linkedin",
           "nav": "LinkedIn",
           "title": "LinkedIn",
@@ -1134,6 +1244,56 @@
           ]
         },
         {
+          "id": "whatsapp",
+          "nav": "WhatsApp",
+          "title": "WhatsApp",
+          "intro": "Demandez un rapport d’informations sur le compte ou exportez une discussion depuis l’application mobile.",
+          "steps": [
+            "Pour obtenir les informations et paramètres du compte, ouvrez WhatsApp sur votre appareil principal, puis allez dans Paramètres → Compte → Demander les infos du compte.",
+            "Appuyez sur Demander un rapport. WhatsApp indique qu’il est généralement prêt sous trois jours.",
+            "Après la notification, revenez dans Demander les infos du compte et appuyez sur Télécharger le rapport ; le ZIP contient des fichiers HTML et JSON.",
+            "Appuyez sur Exporter le rapport, choisissez une destination privée et conservez le rapport avec précaution.",
+            "Le rapport d’informations sur le compte ne contient pas les messages personnels. Pour enregistrer des messages, ouvrez la discussion individuelle ou de groupe voulue.",
+            "Sur Android, appuyez sur Plus d’options → Plus → Exporter la discussion. Sur iPhone, ouvrez les détails de la discussion et sélectionnez Exporter la discussion.",
+            "Choisissez Sans médias ou Inclure les médias, puis sélectionnez l’emplacement d’enregistrement. Le fichier texte exporté n’est pas une sauvegarde WhatsApp et ne peut pas être réimporté."
+          ],
+          "refs": [
+            {
+              "label": "WhatsApp : demander les informations du compte",
+              "href": "https://faq.whatsapp.com/526463418847093/"
+            },
+            {
+              "label": "WhatsApp : exporter l’historique d’une discussion",
+              "href": "https://faq.whatsapp.com/1180414079177245/"
+            }
+          ],
+          "images": [],
+          "note": "WhatsApp sépare ces exportations : demandez les informations du compte pour ses métadonnées et exportez chaque discussion nécessaire pour conserver l’historique des messages."
+        },
+        {
+          "id": "threads",
+          "nav": "Threads",
+          "title": "Threads",
+          "intro": "Exportez les publications, l’activité et les autres informations de votre profil Threads via l’Espace Comptes.",
+          "steps": [
+            "Ouvrez l’application Instagram, appuyez sur votre photo de profil, puis ouvrez le menu en haut à droite.",
+            "Appuyez sur Espace Comptes → Vos informations et autorisations.",
+            "Appuyez sur Exporter vos informations → Créer une exportation.",
+            "Sélectionnez le profil dont vous souhaitez exporter les informations Threads, puis appuyez sur Suivant.",
+            "Sélectionnez Exporter vers l’appareil.",
+            "Choisissez les informations précises, la période, le format, l’adresse e-mail de notification et la qualité des contenus multimédias.",
+            "Appuyez sur Démarrer l’exportation. Meta peut prendre jusqu’à 30 jours pour envoyer le lien de téléchargement par e-mail."
+          ],
+          "refs": [
+            {
+              "label": "Consulter et exporter vos informations Threads",
+              "href": "https://www.facebook.com/help/instagram/259803026523198"
+            }
+          ],
+          "images": [],
+          "note": "Threads reste un guide fournisseur distinct, même si Meta démarre actuellement son exportation depuis l’Espace Comptes de l’application Instagram."
+        },
+        {
           "id": "linkedin",
           "nav": "LinkedIn",
           "title": "LinkedIn",
@@ -1525,6 +1685,56 @@
               "alt": "Панель Instagram «Экспорт вашей информации»"
             }
           ]
+        },
+        {
+          "id": "whatsapp",
+          "nav": "WhatsApp",
+          "title": "WhatsApp",
+          "intro": "Запросите отчёт с информацией об аккаунте или экспортируйте отдельный чат из мобильного приложения.",
+          "steps": [
+            "Чтобы получить информацию и настройки аккаунта, откройте WhatsApp на основном устройстве и выберите «Настройки» → «Аккаунт» → «Запросить информацию аккаунта».",
+            "Нажмите «Запросить отчёт». По данным WhatsApp, отчёт обычно готовится три дня.",
+            "Когда придёт уведомление, вернитесь в раздел «Запросить информацию аккаунта» и нажмите «Скачать отчёт»; ZIP-архив содержит файлы HTML и JSON.",
+            "Нажмите «Экспортировать отчёт», выберите защищённое место хранения и бережно храните отчёт.",
+            "Отчёт с информацией об аккаунте не содержит личных сообщений. Чтобы сохранить сообщения, откройте нужный личный или групповой чат.",
+            "На Android нажмите «Другие параметры» → «Ещё» → «Экспорт чата». На iPhone откройте сведения о чате и выберите «Экспорт чата».",
+            "Выберите «Без медиафайлов» или «Добавить медиафайлы», затем укажите, куда сохранить экспорт. Экспортированный текстовый файл не является резервной копией WhatsApp, поэтому его нельзя импортировать обратно."
+          ],
+          "refs": [
+            {
+              "label": "WhatsApp: запрос информации об аккаунте",
+              "href": "https://faq.whatsapp.com/526463418847093/"
+            },
+            {
+              "label": "WhatsApp: экспорт истории чата",
+              "href": "https://faq.whatsapp.com/1180414079177245/"
+            }
+          ],
+          "images": [],
+          "note": "WhatsApp разделяет эти экспорты: отчёт об аккаунте содержит метаданные аккаунта, а история сообщений выгружается отдельно для каждого нужного чата."
+        },
+        {
+          "id": "threads",
+          "nav": "Threads",
+          "title": "Threads",
+          "intro": "Экспортируйте публикации, действия и другие данные профиля Threads через Центр аккаунтов.",
+          "steps": [
+            "Откройте приложение Instagram, нажмите на фото профиля, затем откройте меню в правом верхнем углу.",
+            "Выберите «Центр аккаунтов» → «Ваша информация и разрешения».",
+            "Выберите «Экспорт вашей информации» → «Создать экспорт».",
+            "Выберите профиль, данные Threads которого хотите экспортировать, затем нажмите «Далее».",
+            "Выберите «Экспорт на устройство».",
+            "Выберите нужные данные, диапазон дат, формат, адрес электронной почты для уведомлений и качество медиафайлов.",
+            "Нажмите «Начать экспорт». Meta может готовить ссылку для скачивания и отправлять её по электронной почте до 30 дней."
+          ],
+          "refs": [
+            {
+              "label": "Просмотр и экспорт вашей информации Threads",
+              "href": "https://www.facebook.com/help/instagram/259803026523198"
+            }
+          ],
+          "images": [],
+          "note": "Threads остаётся отдельным разделом каталога, хотя сейчас Meta запускает экспорт через Центр аккаунтов в приложении Instagram."
         },
         {
           "id": "linkedin",

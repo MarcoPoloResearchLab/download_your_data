@@ -60,6 +60,8 @@ func TestFrontendProviderWorkspaceContract(testContext *testing.T) {
 		{ID: "openai", Surface: "guide"},
 		{ID: "facebook", Surface: "guide"},
 		{ID: "instagram", Surface: "guide"},
+		{ID: "whatsapp", Surface: "guide"},
+		{ID: "threads", Surface: "guide"},
 		{ID: "linkedin", Surface: "guide"},
 		{ID: "tiktok", Surface: "guide"},
 		{ID: "x", Surface: "guide"},
@@ -145,6 +147,29 @@ func TestFrontendProviderWorkspaceContract(testContext *testing.T) {
 			openAI.Note == nil ||
 			strings.TrimSpace(*openAI.Note) == "" {
 			testContext.Fatalf("locale %q has an incomplete OpenAI guide contract: %+v", localeID, openAI)
+		}
+		whatsApp := locale.Platforms[4]
+		if whatsApp.Title != "WhatsApp" ||
+			strings.TrimSpace(whatsApp.Intro) == "" ||
+			len(whatsApp.Steps) != 7 ||
+			len(whatsApp.Images) != 0 ||
+			len(whatsApp.Refs) != 2 ||
+			whatsApp.Refs[0].Href != "https://faq.whatsapp.com/526463418847093/" ||
+			whatsApp.Refs[1].Href != "https://faq.whatsapp.com/1180414079177245/" ||
+			whatsApp.Note == nil ||
+			strings.TrimSpace(*whatsApp.Note) == "" {
+			testContext.Fatalf("locale %q has an incomplete WhatsApp guide contract: %+v", localeID, whatsApp)
+		}
+		threads := locale.Platforms[5]
+		if threads.Title != "Threads" ||
+			strings.TrimSpace(threads.Intro) == "" ||
+			len(threads.Steps) != 7 ||
+			len(threads.Images) != 0 ||
+			len(threads.Refs) != 1 ||
+			threads.Refs[0].Href != "https://www.facebook.com/help/instagram/259803026523198" ||
+			threads.Note == nil ||
+			strings.TrimSpace(*threads.Note) == "" {
+			testContext.Fatalf("locale %q has an incomplete Threads guide contract: %+v", localeID, threads)
 		}
 	}
 	if len(canonicalUIKeys) < 120 {
