@@ -374,6 +374,7 @@ h3 {
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -424,6 +425,15 @@ h3 {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+.page-heading-actions,
+.workspace-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .workspace-title {
@@ -1350,6 +1360,12 @@ code {
   .page-heading,
   .workspace-header {
     flex-direction: column;
+  }
+
+  .page-heading-actions,
+  .workspace-header-actions {
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .provider-row {

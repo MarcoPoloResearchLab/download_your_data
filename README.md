@@ -127,7 +127,7 @@ The server accepts at most one building generation, keeps the existing ready gen
 
 Provider state uses the sole current `netflix-generation-library-v1` contract at `<data-root>/providers/netflix/library.json`. Immutable ready records and analytics use `netflix-generation-records-v1` and `netflix-generation-analytics-v1` below `<data-root>/providers/netflix/generations/{generationID}`; record cursors use `netflix-record-cursor-v3`. The provider holds an operating-system lease for its entire lifetime, and every directory and file remains owner-only.
 
-The browser opens Netflix as the first workspace-capable provider in the compact catalog. Its Overview, Catalog, and Match quality views share the same server-owned filters and expose import, enrichment, retry, cancellation, replacement, enriched export, and complete deletion as separate actions. Run `make test-browser` for both the unconfigured real-server path and the deterministic configured fake-TMDB lifecycle.
+The browser exposes both a permanent visual Netflix download guide and the first workspace-capable provider in the compact catalog. The guide remains reachable from the catalog and workspace regardless of provider state. Its Overview, Catalog, and Match quality views share the same server-owned filters and expose import, enrichment, retry, cancellation, replacement, enriched export, and complete deletion as separate actions. Run `make test-browser` for both the unconfigured real-server path and the deterministic configured fake-TMDB lifecycle.
 
 The single product executable also exposes the same provider library to an operator. Stop the local server first so the command can acquire the provider lease, and import a Viewing activity CSV through the browser before enriching:
 

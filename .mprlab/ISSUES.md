@@ -96,6 +96,25 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - `make test-browser`
   - `make ci`
 
+- [x] [B005] (P1) {B004,F008} Keep the Netflix visual guide permanently reachable
+  Goal:
+  Make the Netflix download walkthrough available independently of the workspace's current data state.
+
+  Requirements:
+  - Expose `#guide/netflix` as the canonical visual walkthrough using the same localized step and screenshot contract as every other provider.
+  - Show separate View guide and Open workspace actions in the Netflix catalog entry.
+  - Keep a View guide action in the Netflix workspace header across empty, building, ready, failure, and replacement states.
+  - Preserve Netflix as the sole workspace-capable provider without duplicating backend state in guide content.
+
+  Deliverables:
+  - Permanent Netflix guide route and bidirectional guide/workspace navigation.
+  - Desktop and mobile browser coverage across every locale and a ready workspace.
+
+  Validation:
+  - `make check-frontend`
+  - `make test-browser`
+  - `make ci`
+
 ## Improvements
 
 - [x] [I001] (P1) Establish the canonical local server and validation foundation

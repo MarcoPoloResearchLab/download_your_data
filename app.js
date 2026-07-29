@@ -22,7 +22,7 @@ const STORAGE_KEYS = Object.freeze({
 });
 
 const LOCALES = Object.freeze(['en', 'es', 'fr', 'ru']);
-const GUIDE_PROVIDER_IDS = Object.freeze([
+const GUIDE_ONLY_PROVIDER_IDS = Object.freeze([
   'openai',
   'facebook',
   'instagram',
@@ -429,7 +429,10 @@ function renderCatalog() {
         element('span', {class: 'provider-name', text: localized.title}),
         element('span', {
           class: 'provider-type',
-          text: providerDefinition.surface === 'workspace' ? ui().workspace : ui().guide
+          text:
+            providerDefinition.surface === 'workspace'
+              ? `${ui().workspace} · ${ui().guide}`
+              : ui().guide
         })
       ),
       element('p', {class: 'provider-summary', text: localized.intro})
@@ -439,6 +442,10 @@ function renderCatalog() {
       const presentation = netflixStatePresentation();
       actions.append(
         stateChip(presentation.label, presentation.tone),
+        actionButton(ui().view_guide, {
+          'data-route': 'guide',
+          'data-provider': providerDefinition.id
+        }),
         actionButton(ui().open, {
           'data-route': 'netflix',
           class: 'button button-primary'
@@ -462,7 +469,7 @@ function renderCatalog() {
 
 function renderGuide(providerID) {
   const provider = localizedProvider(providerID);
-  if (!provider || providerID === 'netflix') {
+  if (!provider) {
     navigate('catalog');
     return;
   }
@@ -479,7 +486,17 @@ function renderGuide(providerID) {
     element('h1', {text: provider.title}),
     element('p', {class: 'lede', text: provider.intro})
   );
-  heading.append(copy, stateChip(ui().guide, 'neutral'));
+  const actions = element('div', {class: 'page-heading-actions'});
+  actions.append(stateChip(ui().guide, 'neutral'));
+  if (providerID === 'netflix') {
+    actions.append(
+      actionButton(ui().open, {
+        'data-route': 'netflix',
+        class: 'button button-primary'
+      })
+    );
+  }
+  heading.append(copy, actions);
 
   const section = element('section', {
     id: provider.id,
@@ -580,7 +597,15 @@ function renderNetflixWorkspace() {
       element('h1', {text: provider.title})
     )
   );
-  heading.append(title, stateChip(presentation.label, presentation.tone));
+  const actions = element('div', {class: 'workspace-header-actions'});
+  actions.append(
+    actionButton(ui().view_guide, {
+      'data-route': 'guide',
+      'data-provider': 'netflix'
+    }),
+    stateChip(presentation.label, presentation.tone)
+  );
+  heading.append(title, actions);
 
   const grid = element('div', {class: 'workspace-grid'});
   const main = element('div', {class: 'workspace-main'});
@@ -1656,7 +1681,7 @@ function parseRoute() {
   }
   if (raw.startsWith('guide/')) {
     const provider = raw.slice('guide/'.length);
-    if (GUIDE_PROVIDER_IDS.includes(provider)) {
+    if (provider === 'netflix' || GUIDE_ONLY_PROVIDER_IDS.includes(provider)) {
       return {name: 'guide', provider};
     }
   }
@@ -1767,7 +1792,7 @@ function validateAppData(data) {
   if (netflixDefinition.surface !== 'workspace') {
     throw new Error('netflix must be workspace-capable');
   }
-  GUIDE_PROVIDER_IDS.forEach((providerID) => {
+  GUIDE_ONLY_PROVIDER_IDS.forEach((providerID) => {
     const definition = data.provider_registry.find((provider) => provider.id === providerID);
     if (!definition || definition.surface !== 'guide') {
       throw new Error(`${providerID} must be guide-only`);

@@ -66,6 +66,13 @@ async page => {
     'provider catalog must contain exactly one Netflix identity'
   );
   assert(
+    await page.locator(
+      '[data-provider-id="netflix"] [data-route="guide"][data-provider="netflix"]'
+    ).count() === 1 &&
+      await page.locator('[data-provider-id="netflix"] [data-route="netflix"]').count() === 1,
+    'Netflix catalog entry must expose both its permanent guide and workspace'
+  );
+  assert(
     await page.locator('[data-provider-id="openai"]').count() === 1,
     'provider catalog must contain exactly one OpenAI identity'
   );
@@ -95,6 +102,25 @@ async page => {
       (await page.locator('[data-provider-id="netflix"] .provider-name').textContent()).trim() ===
         'Netflix',
       `${locale} did not preserve the canonical Netflix identity`
+    );
+    await route('#guide/netflix', '#netflix');
+    assert(
+      (await page.locator('.guide h1').textContent()).trim() === 'Netflix',
+      `${locale} Netflix guide identity changed`
+    );
+    assert(
+      await page.locator('#netflix .instruction-step').count() === 6,
+      `${locale} Netflix guide instructions are incomplete`
+    );
+    assert(
+      await page.locator(
+        '#netflix a[href="https://help.netflix.com/en/node/101917"]'
+      ).count() === 1,
+      `${locale} Netflix guide official help route is missing`
+    );
+    assert(
+      await page.locator('.guide [data-route="netflix"]').count() === 1,
+      `${locale} Netflix guide cannot open the workspace`
     );
     await route('#guide/openai', '#openai');
     assert(
@@ -162,6 +188,12 @@ async page => {
       `${locale} Netflix workspace identity changed`
     );
     assert(
+      await page.locator(
+        '.workspace-header [data-route="guide"][data-provider="netflix"]'
+      ).count() === 1,
+      `${locale} Netflix workspace cannot open its guide`
+    );
+    assert(
       await page.locator('.import-panel .instruction-step').count() === 6,
       `${locale} Netflix instructions are incomplete`
     );
@@ -190,12 +222,8 @@ async page => {
   };
   const screenshotIDs = [];
   for (const [provider, expectedStepCount] of Object.entries(stepCounts)) {
-    if (provider === 'netflix') {
-      await route('#provider/netflix', '.workspace');
-    } else {
-      await route(`#guide/${provider}`, `#${provider}`);
-    }
-    const providerRoot = provider === 'netflix' ? '.import-panel' : `#${provider}`;
+    await route(`#guide/${provider}`, `#${provider}`);
+    const providerRoot = `#${provider}`;
     const steps = page.locator(`${providerRoot} .instruction-step`);
     assert(
       await steps.count() === expectedStepCount,
@@ -325,6 +353,12 @@ async page => {
     await page.getByText('TMDB not configured', {exact: true}).count() >= 1,
     'ready-local state must disclose missing TMDB configuration'
   );
+  assert(
+    await page.locator(
+      '.workspace-header [data-route="guide"][data-provider="netflix"]'
+    ).count() === 1,
+    'ready Netflix workspace must retain its permanent guide action'
+  );
 
   const localSnapshot = await snapshot();
   const localEvents = await page.evaluate(async (generationID) => {
@@ -420,9 +454,33 @@ async page => {
   assert(mobileLayout.railBottom <= mobileLayout.mainTop + 1, 'mobile rail must collapse above content');
   assert(!mobileLayout.railColumns.includes(' '), 'mobile rail must use one column');
 
-  await route('#guide/openai', '#openai');
+  await route('#catalog', '.catalog');
+  const mobileNetflixCatalog = await page.evaluate(() => {
+    const row = document.querySelector('[data-provider-id="netflix"]');
+    const actions = row.querySelector('.row-actions');
+    const rowBox = row.getBoundingClientRect();
+    const actionsBox = actions.getBoundingClientRect();
+    return {
+      documentWidth: document.documentElement.scrollWidth,
+      viewportWidth: window.innerWidth,
+      actionCount: actions.querySelectorAll('button').length,
+      actionsLeft: actionsBox.left,
+      actionsRight: actionsBox.right,
+      rowLeft: rowBox.left,
+      rowRight: rowBox.right
+    };
+  });
+  assert(
+    mobileNetflixCatalog.documentWidth <= mobileNetflixCatalog.viewportWidth &&
+      mobileNetflixCatalog.actionCount === 2 &&
+      mobileNetflixCatalog.actionsLeft >= mobileNetflixCatalog.rowLeft &&
+      mobileNetflixCatalog.actionsRight <= mobileNetflixCatalog.rowRight,
+    'mobile Netflix catalog entry must contain guide and workspace actions without overflow'
+  );
+
+  await route('#guide/netflix', '#netflix');
   const mobileGuideLayout = await page.evaluate(() => {
-    const step = document.querySelector('#openai .instruction-step');
+    const step = document.querySelector('#netflix .instruction-step');
     const copy = step.querySelector('.instruction-step-copy').getBoundingClientRect();
     const image = step.querySelector('.instruction-screenshot').getBoundingClientRect();
     const stepBox = step.getBoundingClientRect();
@@ -455,8 +513,8 @@ async page => {
     'mobile screenshot must stack beneath its instruction inside the numbered step'
   );
   assert(
-    await page.locator('#openai .instruction-step img.instruction-screenshot').count() === 7,
-    'mobile OpenAI guide must retain one screenshot per step'
+    await page.locator('#netflix .instruction-step img.instruction-screenshot').count() === 6,
+    'mobile Netflix guide must retain one screenshot per step'
   );
   await route('#provider/netflix', '.workspace');
 
