@@ -205,6 +205,26 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - `make test-browser`
   - `make ci`
 
+- [x] [B011] (P1) {F008,F009} Replace imaginary provider glyphs with first-party icons
+  Goal:
+  Make every catalog identity immediately recognizable through its current product mark instead of a letter, text abbreviation, or invented symbol.
+
+  Requirements:
+  - Ship one reviewed first-party favicon or launcher icon for every canonical provider.
+  - Keep provider icon files local to the application; rendering the catalog must not request a provider or third-party asset host.
+  - Record the exact official site, source URL, review date, dimensions, digest, and local output path for every icon.
+  - Remove the hard-coded glyph map and require the canonical local icon path in the provider registry.
+  - Preserve legibility and containment at wide and narrow web viewport widths.
+
+  Deliverables:
+  - Eleven normalized provider icon assets and a strict provenance manifest.
+  - Runtime validation, contract tests, and real-browser coverage.
+
+  Validation:
+  - `make validate-provider-icons`
+  - `make test-browser`
+  - `make ci`
+
 ## Improvements
 
 - [x] [I001] (P1) Establish the canonical local server and validation foundation

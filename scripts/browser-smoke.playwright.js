@@ -61,6 +61,41 @@ async page => {
     await page.locator('.provider-row[data-provider-id]').count() === 11,
     'provider catalog must contain eleven canonical providers'
   );
+  const providerIconPaths = [];
+  for (const row of await page.locator('.provider-row[data-provider-id]').all()) {
+    const providerID = await row.getAttribute('data-provider-id');
+    const mark = row.locator('.provider-mark');
+    const icon = mark.locator('img.provider-icon');
+    assert(await icon.count() === 1, `${providerID} must render exactly one provider icon`);
+    await icon.evaluate((element) => element.decode());
+    const iconRecord = await icon.evaluate((element) => ({
+      alt: element.alt,
+      complete: element.complete,
+      id: element.dataset.providerIcon,
+      markText: element.parentElement.textContent.trim(),
+      naturalHeight: element.naturalHeight,
+      naturalWidth: element.naturalWidth,
+      path: new URL(element.src).pathname,
+      width: element.getBoundingClientRect().width
+    }));
+    assert(
+      iconRecord.complete &&
+        iconRecord.id === providerID &&
+        iconRecord.alt === '' &&
+        iconRecord.markText === '' &&
+        iconRecord.naturalWidth >= 32 &&
+        iconRecord.naturalHeight >= 32 &&
+        iconRecord.path === `/images/providers/${providerID}.png` &&
+        iconRecord.width > 0 &&
+        iconRecord.width <= 24,
+      `${providerID} provider icon is not the reviewed local product asset`
+    );
+    providerIconPaths.push(iconRecord.path);
+  }
+  assert(
+    new Set(providerIconPaths).size === 11,
+    'every provider must own one distinct local product icon'
+  );
   assert(
     await page.locator('.provider-row:not([data-provider-id="netflix"])').count() === 10 &&
       await page.locator(
@@ -545,6 +580,7 @@ async page => {
     ];
     const rowBox = row.getBoundingClientRect();
     const actionsBox = actions.getBoundingClientRect();
+    const providerIcons = [...document.querySelectorAll('.provider-icon')];
     return {
       documentWidth: document.documentElement.scrollWidth,
       viewportWidth: window.innerWidth,
@@ -553,6 +589,19 @@ async page => {
       actionsRight: actionsBox.right,
       rowLeft: rowBox.left,
       rowRight: rowBox.right,
+      providerIconCount: providerIcons.length,
+      providerIconsContained: providerIcons.every((providerIcon) => {
+        const iconBox = providerIcon.getBoundingClientRect();
+        const markBox = providerIcon.closest('.provider-mark').getBoundingClientRect();
+        return (
+          iconBox.width > 0 &&
+          iconBox.height > 0 &&
+          iconBox.left >= markBox.left &&
+          iconBox.right <= markBox.right &&
+          iconBox.top >= markBox.top &&
+          iconBox.bottom <= markBox.bottom
+        );
+      }),
       guideOnlyRowsHaveOneAction: guideOnlyRows.every((guideOnlyRow) => {
         const guideOnlyActions = guideOnlyRow.querySelector('.row-actions');
         return (
@@ -573,6 +622,11 @@ async page => {
   assert(
     mobileNetflixCatalog.guideOnlyRowsHaveOneAction,
     'mobile guide-only catalog entries must expose one View guide action without a duplicate badge'
+  );
+  assert(
+    mobileNetflixCatalog.providerIconCount === 11 &&
+      mobileNetflixCatalog.providerIconsContained,
+    'mobile provider icons must remain present and contained in their catalog marks'
   );
 
   await route('#guide/netflix', '#netflix');

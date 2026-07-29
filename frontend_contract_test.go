@@ -19,6 +19,7 @@ type frontendDataContract struct {
 type frontendProviderDefinition struct {
 	ID      string `json:"id"`
 	Surface string `json:"surface"`
+	IconSrc string `json:"icon_src"`
 }
 
 type frontendLocalizedContract struct {
@@ -61,17 +62,17 @@ func TestFrontendProviderWorkspaceContract(testContext *testing.T) {
 	}
 
 	expectedRegistry := []frontendProviderDefinition{
-		{ID: "netflix", Surface: "workspace"},
-		{ID: "openai", Surface: "guide"},
-		{ID: "facebook", Surface: "guide"},
-		{ID: "instagram", Surface: "guide"},
-		{ID: "whatsapp", Surface: "guide"},
-		{ID: "threads", Surface: "guide"},
-		{ID: "linkedin", Surface: "guide"},
-		{ID: "tiktok", Surface: "guide"},
-		{ID: "x", Surface: "guide"},
-		{ID: "youtube", Surface: "guide"},
-		{ID: "google", Surface: "guide"},
+		{ID: "netflix", Surface: "workspace", IconSrc: "images/providers/netflix.png"},
+		{ID: "openai", Surface: "guide", IconSrc: "images/providers/openai.png"},
+		{ID: "facebook", Surface: "guide", IconSrc: "images/providers/facebook.png"},
+		{ID: "instagram", Surface: "guide", IconSrc: "images/providers/instagram.png"},
+		{ID: "whatsapp", Surface: "guide", IconSrc: "images/providers/whatsapp.png"},
+		{ID: "threads", Surface: "guide", IconSrc: "images/providers/threads.png"},
+		{ID: "linkedin", Surface: "guide", IconSrc: "images/providers/linkedin.png"},
+		{ID: "tiktok", Surface: "guide", IconSrc: "images/providers/tiktok.png"},
+		{ID: "x", Surface: "guide", IconSrc: "images/providers/x.png"},
+		{ID: "youtube", Surface: "guide", IconSrc: "images/providers/youtube.png"},
+		{ID: "google", Surface: "guide", IconSrc: "images/providers/google.png"},
 	}
 	if !reflect.DeepEqual(data.ProviderRegistry, expectedRegistry) {
 		testContext.Fatalf("provider registry = %#v; want %#v", data.ProviderRegistry, expectedRegistry)

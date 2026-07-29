@@ -2,47 +2,58 @@
   "provider_registry": [
     {
       "id": "netflix",
-      "surface": "workspace"
+      "surface": "workspace",
+      "icon_src": "images/providers/netflix.png"
     },
     {
       "id": "openai",
-      "surface": "guide"
+      "surface": "guide",
+      "icon_src": "images/providers/openai.png"
     },
     {
       "id": "facebook",
-      "surface": "guide"
+      "surface": "guide",
+      "icon_src": "images/providers/facebook.png"
     },
     {
       "id": "instagram",
-      "surface": "guide"
+      "surface": "guide",
+      "icon_src": "images/providers/instagram.png"
     },
     {
       "id": "whatsapp",
-      "surface": "guide"
+      "surface": "guide",
+      "icon_src": "images/providers/whatsapp.png"
     },
     {
       "id": "threads",
-      "surface": "guide"
+      "surface": "guide",
+      "icon_src": "images/providers/threads.png"
     },
     {
       "id": "linkedin",
-      "surface": "guide"
+      "surface": "guide",
+      "icon_src": "images/providers/linkedin.png"
     },
     {
       "id": "tiktok",
-      "surface": "guide"
+      "surface": "guide",
+      "icon_src": "images/providers/tiktok.png"
     },
     {
       "id": "x",
-      "surface": "guide"
+      "surface": "guide",
+      "icon_src": "images/providers/x.png"
     },
     {
       "id": "youtube",
-      "surface": "guide"
+      "surface": "guide",
+      "icon_src": "images/providers/youtube.png"
     },
     {
       "id": "google",
-      "surface": "guide"
+      "surface": "guide",
+      "icon_src": "images/providers/google.png"
     }
   ],
   "instruction_screenshots": {

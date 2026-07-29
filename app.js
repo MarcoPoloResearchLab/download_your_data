@@ -435,7 +435,7 @@ function renderCatalog() {
       'data-provider-id': providerDefinition.id
     });
     row.append(
-      providerMark(providerDefinition.id, localized.title),
+      providerMark(providerDefinition.id, localized.title, providerDefinition.icon_src),
       element(
         'div',
         {},
@@ -1825,6 +1825,10 @@ function validateAppData(data) {
   const providerIDs = data.provider_registry.map((provider) => {
     assertObject(provider, 'provider_registry[]');
     assertString(provider.id, 'provider_registry[].id');
+    assertString(provider.icon_src, `provider ${provider.id} icon_src`);
+    if (provider.icon_src !== `images/providers/${provider.id}.png`) {
+      throw new Error(`provider ${provider.id} icon_src must use its canonical local asset`);
+    }
     if (provider.surface !== 'workspace' && provider.surface !== 'guide') {
       throw new Error(`provider ${provider.id} has invalid surface`);
     }
@@ -2077,26 +2081,24 @@ function statusCell(status) {
   );
 }
 
-function providerMark(providerID, title) {
-  const labels = {
-    netflix: 'N',
-    openai: 'AI',
-    facebook: 'f',
-    instagram: '◎',
-    whatsapp: 'WA',
-    threads: '@',
-    linkedin: 'in',
-    tiktok: '♪',
-    x: 'X',
-    youtube: '▶',
-    google: 'G'
-  };
-  return element('span', {
-    class: 'provider-mark',
-    title,
-    'aria-hidden': 'true',
-    text: labels[providerID] || title.slice(0, 1)
-  });
+function providerMark(providerID, title, iconSource) {
+  return element(
+    'span',
+    {
+      class: 'provider-mark',
+      title,
+      'aria-hidden': 'true'
+    },
+    element('img', {
+      class: 'provider-icon',
+      src: iconSource,
+      alt: '',
+      width: '24',
+      height: '24',
+      decoding: 'async',
+      'data-provider-icon': providerID
+    })
+  );
 }
 
 function stateChip(label, tone) {

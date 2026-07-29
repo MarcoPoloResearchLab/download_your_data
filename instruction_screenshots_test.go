@@ -252,7 +252,7 @@ func validateInstructionScreenshotPNG(
 		testContext.Fatalf("screenshot %q is too small at %dx%d", screenshot.ID, config.Width, config.Height)
 	}
 
-	chunkTypes, chunkError := instructionScreenshotPNGChunkTypes(content)
+	chunkTypes, chunkError := pngChunkTypes(content)
 	if chunkError != nil {
 		testContext.Fatalf("inspect screenshot %q PNG chunks: %v", screenshot.ID, chunkError)
 	}
@@ -269,7 +269,7 @@ func validateInstructionScreenshotPNG(
 	}
 }
 
-func instructionScreenshotPNGChunkTypes(content []byte) ([]string, error) {
+func pngChunkTypes(content []byte) ([]string, error) {
 	const pngSignatureLength = 8
 	expectedSignature := []byte{0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n'}
 	if len(content) < pngSignatureLength || !bytes.Equal(content[:pngSignatureLength], expectedSignature) {
