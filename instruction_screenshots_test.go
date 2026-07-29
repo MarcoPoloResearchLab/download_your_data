@@ -37,6 +37,36 @@ var instructionScreenshotPlatformIDs = []string{
 
 var instructionScreenshotLocaleIDs = []string{"en", "es", "fr", "ru"}
 
+var instructionScreenshotExpectedMetaStepIDs = map[string][]string{
+	"facebook": {
+		"facebook-accounts-center-information",
+		"facebook-export-entry",
+		"facebook-help-export-device",
+		"facebook-help-export-device",
+		"facebook-help-export-device",
+		"facebook-help-export-device",
+		"facebook-help-available-downloads",
+	},
+	"instagram": {
+		"instagram-accounts-center-information",
+		"instagram-export-entry",
+		"instagram-help-export-device",
+		"instagram-help-export-device",
+		"instagram-help-export-device",
+		"instagram-help-export-device",
+		"instagram-help-available-downloads",
+	},
+	"threads": {
+		"threads-help-export-device",
+		"threads-help-export-device",
+		"threads-help-export-device",
+		"threads-help-export-device",
+		"threads-help-export-device",
+		"threads-help-export-device",
+		"threads-help-export-device",
+	},
+}
+
 type instructionScreenshotManifest struct {
 	Screenshots []instructionScreenshotEntry `json:"screenshots"`
 }
@@ -94,7 +124,7 @@ func TestInstructionScreenshotContract(testContext *testing.T) {
 		instructionScreenshotDataPath,
 	)
 
-	const expectedScreenshotCount = 21
+	const expectedScreenshotCount = 26
 	if len(manifest.Screenshots) != expectedScreenshotCount {
 		testContext.Fatalf(
 			"manifest screenshot count = %d; want %d",
@@ -106,8 +136,9 @@ func TestInstructionScreenshotContract(testContext *testing.T) {
 	expectedPlatformCounts := map[string]int{
 		"netflix":   1,
 		"openai":    4,
-		"facebook":  2,
-		"instagram": 2,
+		"facebook":  4,
+		"instagram": 4,
+		"threads":   1,
 		"whatsapp":  2,
 		"linkedin":  2,
 		"tiktok":    2,
@@ -429,6 +460,29 @@ func validateInstructionScreenshotLocales(
 			sharedAssets := data.InstructionScreenshots[platform.ID]
 			if len(platform.Steps) == 0 {
 				testContext.Fatalf("locale %q %s has no instruction steps", localeID, platform.ID)
+			}
+			if expectedStepIDs, mustMatch := instructionScreenshotExpectedMetaStepIDs[platform.ID]; mustMatch {
+				if len(platform.Steps) != len(expectedStepIDs) {
+					testContext.Fatalf(
+						"locale %q %s step count = %d; want %d",
+						localeID,
+						platform.ID,
+						len(platform.Steps),
+						len(expectedStepIDs),
+					)
+				}
+				for stepIndex, expectedScreenshotID := range expectedStepIDs {
+					if platform.Steps[stepIndex].ScreenshotID != expectedScreenshotID {
+						testContext.Fatalf(
+							"locale %q %s step %d screenshot = %q; want %q",
+							localeID,
+							platform.ID,
+							stepIndex+1,
+							platform.Steps[stepIndex].ScreenshotID,
+							expectedScreenshotID,
+						)
+					}
+				}
 			}
 			assetIDs := make(map[string]struct{}, len(sharedAssets))
 			for _, asset := range sharedAssets {
