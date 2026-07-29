@@ -36,6 +36,9 @@ eval-netflix-matcher:
 
 test-browser:
 	PLAYWRIGHT_CLI_VERSION=$(PLAYWRIGHT_CLI_VERSION) ./scripts/browser-smoke.sh
+	DOWNLOAD_YOUR_DATA_RUN_BROWSER_CONTRACT=1 \
+		PLAYWRIGHT_CLI_VERSION=$(PLAYWRIGHT_CLI_VERSION) \
+		$(GO) test . -run '^TestNetflixBrowserWorkspaceContract$$' -count=1
 
 validate-instruction-screenshots:
 	$(GO) test . -run '^TestInstructionScreenshotContract$$' -count=1

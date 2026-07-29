@@ -27,10 +27,10 @@ const (
 	healthStatusReady     = "ready"
 	inferenceNotChecked   = "not_checked"
 	csrfHeaderName        = "X-CSRF-Token"
-	contentSecurityPolicy = "default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self' https://fonts.gstatic.com data:; frame-ancestors 'none'; img-src 'self' data:; object-src 'none'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://cdn.jsdelivr.net https://fonts.googleapis.com"
+	contentSecurityPolicy = "default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self'; form-action 'self'; frame-ancestors 'none'; img-src 'self' data:; object-src 'none'; script-src 'self'; style-src 'self'"
 )
 
-//go:embed index.html app.js data.json images
+//go:embed index.html app.js api.js charts.js styles.css data.json images
 var applicationAssets embed.FS
 
 type healthResponse struct {

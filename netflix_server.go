@@ -279,7 +279,7 @@ func getNetflixGenerationAnalytics(
 	return func(responseWriter http.ResponseWriter, request *http.Request) {
 		if queryError := requireQueryKeys(
 			request,
-			[]string{"start_date", "end_date"},
+			[]string{"start_date", "end_date", "match_status"},
 		); queryError != nil {
 			writeRequestError(responseWriter, http.StatusBadRequest, "invalid_query")
 			return
@@ -287,8 +287,13 @@ func getNetflixGenerationAnalytics(
 		analytics, analyticsError := workspace.Analytics(
 			request.Context(),
 			request.PathValue("generationID"),
-			request.URL.Query().Get("start_date"),
-			request.URL.Query().Get("end_date"),
+			netflixlibrary.ActivityFilter{
+				StartDate: request.URL.Query().Get("start_date"),
+				EndDate:   request.URL.Query().Get("end_date"),
+				MatchStatus: netflix.MatchStatus(
+					request.URL.Query().Get("match_status"),
+				),
+			},
 		)
 		if analyticsError != nil {
 			writeNetflixLibraryError(responseWriter, logger, analyticsError)
@@ -305,7 +310,7 @@ func getNetflixGenerationRecords(
 	return func(responseWriter http.ResponseWriter, request *http.Request) {
 		if queryError := requireQueryKeys(
 			request,
-			[]string{"cursor", "limit", "match_status"},
+			[]string{"cursor", "limit", "start_date", "end_date", "match_status"},
 		); queryError != nil {
 			writeRequestError(responseWriter, http.StatusBadRequest, "invalid_query")
 			return
@@ -328,7 +333,13 @@ func getNetflixGenerationRecords(
 			request.PathValue("generationID"),
 			request.URL.Query().Get("cursor"),
 			limit,
-			netflix.MatchStatus(request.URL.Query().Get("match_status")),
+			netflixlibrary.ActivityFilter{
+				StartDate: request.URL.Query().Get("start_date"),
+				EndDate:   request.URL.Query().Get("end_date"),
+				MatchStatus: netflix.MatchStatus(
+					request.URL.Query().Get("match_status"),
+				),
+			},
 		)
 		if recordsError != nil {
 			writeNetflixLibraryError(responseWriter, logger, recordsError)

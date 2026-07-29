@@ -62,7 +62,7 @@ The target now owns the current local lifecycle through these persisted identiti
 | Provider repository | `netflix-generation-library-v1` |
 | Generation records | `netflix-generation-records-v1` |
 | Generation analytics | `netflix-generation-analytics-v1` |
-| Record cursor | `netflix-record-cursor-v2` |
+| Record cursor | `netflix-record-cursor-v3` |
 
 The sole state and lease paths are `providers/netflix/library.json` and `providers/netflix/library.lock` beneath the private data root. Immutable ready artifacts live under `providers/netflix/generations/{generationID}`. The state document and every artifact are validated against the exact current contract on open and read; foreign, permissive, incomplete, or stale persisted shapes are rejected.
 
@@ -118,8 +118,8 @@ Canonical HTTP surface:
 | `POST /api/providers/netflix/generations` | Create either `{"analysis_level":"local"}` or a TMDB replacement with the active local `source_generation_id`, an exact locale, and `tmdb_title_query_consent:"authorize-tmdb-title-queries"`. |
 | `PUT /api/providers/netflix/generations/{generationID}/viewing-activity` | Stream one bounded CSV into a receiving generation. |
 | `GET /api/providers/netflix/generations/{generationID}/events` | Ordered resumable progress events owned by the backend. |
-| `GET /api/providers/netflix/generations/{generationID}/analytics` | Validated date-filtered analytics for one ready generation. |
-| `GET /api/providers/netflix/generations/{generationID}/records` | Deterministic, cursor-paged activity and match rows; `match_status` accepts only `matched`, `review`, or `unmatched`. |
+| `GET /api/providers/netflix/generations/{generationID}/analytics` | Validated analytics for one ready generation with the shared optional `start_date`, `end_date`, and `match_status` filter. |
+| `GET /api/providers/netflix/generations/{generationID}/records` | Deterministic, cursor-paged activity and match rows using the same optional `start_date`, `end_date`, and `match_status` filter. Match status accepts only `matched`, `review`, or `unmatched`, and every cursor is bound to the exact filter. |
 | `GET /api/providers/netflix/generations/{generationID}/export` | Stream the canonical enriched CSV without a temporary path cookie. |
 | `DELETE /api/providers/netflix/generations/{generationID}` | Cancel and remove one non-active generation. |
 | `DELETE /api/providers/netflix` | Delete the complete provider library after typed explicit confirmation. |
@@ -138,7 +138,7 @@ Replace the wrapping platform-link masthead and marketing hero with a compact pr
 - one main work surface plus a `210px` state/action rail on desktop;
 - the rail becomes an inline status panel on small screens.
 
-Guide-only providers remain available in the catalog. Netflix and OpenAI appear as workspace-capable providers with backend-owned state chips such as `NO DATA`, `READY LOCAL`, `ENRICHING`, `READY + TMDB`, and `ACTION NEEDED`.
+Guide-only providers remain available in the catalog. Netflix is the current workspace-capable provider with backend-owned state chips such as `NO DATA`, `READY LOCAL`, `ENRICHING`, `READY + TMDB`, and `ACTION NEEDED`. The registry surface is ready for OpenAI to become workspace-capable only when its separate lifecycle and browser issues deliver that backend contract.
 
 ### Empty state and import
 

@@ -718,16 +718,16 @@ func readActivityPage(
 	generationID string,
 	afterIndex int64,
 	limit int,
-	matchStatus netflix.MatchStatus,
+	filter ActivityFilter,
 ) ([]Activity, int64, error) {
 	if ctx == nil ||
 		afterIndex < 0 ||
 		limit <= 0 ||
 		limit > product.MaxNetflixRecordPageSize ||
-		(matchStatus != "" &&
-			matchStatus != netflix.MatchStatusMatched &&
-			matchStatus != netflix.MatchStatusReview &&
-			matchStatus != netflix.MatchStatusUnmatched) {
+		(filter.MatchStatus != "" &&
+			filter.MatchStatus != netflix.MatchStatusMatched &&
+			filter.MatchStatus != netflix.MatchStatusReview &&
+			filter.MatchStatus != netflix.MatchStatusUnmatched) {
 		return nil, 0, newLibraryError(
 			ErrorInvalidRequest,
 			generationID,
@@ -778,13 +778,18 @@ func readActivityPage(
 		if recordError != nil {
 			return nil, 0, recordError
 		}
-		if matchStatus != "" {
+		activity := record.Activity()
+		dateISO := activity.Date().ISO()
+		if filter.StartDate != "" &&
+			(dateISO < filter.StartDate || dateISO > filter.EndDate) {
+			continue
+		}
+		if filter.MatchStatus != "" {
 			match, hasMatch := record.Match()
-			if !hasMatch || match.Status() != matchStatus {
+			if !hasMatch || match.Status() != filter.MatchStatus {
 				continue
 			}
 		}
-		activity := record.Activity()
 		identity := activity.TitleIdentity()
 		match, hasMatch := record.Match()
 		metadata, hasMetadata := record.Metadata()

@@ -81,6 +81,39 @@ func TestNetflixAnalyticsContract(testContext *testing.T) {
 		{Label: "fr", Value: 1},
 		{Label: "unknown", Value: 1},
 	})
+	requireCounts(testContext, "origin countries", analytics.OriginCountries, []netflix.Count{
+		{Label: "CA", Value: 2},
+		{Label: "FR", Value: 1},
+		{Label: "GB", Value: 1},
+		{Label: "US", Value: 1},
+		{Label: "unknown", Value: 1},
+	})
+	requireCounts(testContext, "release years", analytics.ReleaseYears, []netflix.Count{
+		{Label: "2025", Value: 2},
+		{Label: "2023", Value: 1},
+		{Label: "2024", Value: 1},
+		{Label: "unknown", Value: 1},
+	})
+	requireCounts(testContext, "rating bands", analytics.RatingBands, []netflix.Count{
+		{Label: "7.0–7.9", Value: 2},
+		{Label: "5.0–6.9", Value: 1},
+		{Label: "8.0–10.0", Value: 1},
+		{Label: "unknown", Value: 1},
+	})
+	requireCounts(testContext, "runtime bands", analytics.RuntimeBands, []netflix.Count{
+		{Label: "30–59 min", Value: 2},
+		{Label: "90–119 min", Value: 1},
+		{Label: "<30 min", Value: 1},
+		{Label: "unknown", Value: 1},
+	})
+	requireCounts(testContext, "seasons", analytics.SeasonCounts, []netflix.Count{
+		{Label: "unknown", Value: 3},
+		{Label: "2", Value: 2},
+	})
+	requireCounts(testContext, "episodes", analytics.EpisodeBands, []netflix.Count{
+		{Label: "unknown", Value: 3},
+		{Label: "11–25", Value: 2},
+	})
 	requireCounts(testContext, "top titles", analytics.TopTitles, []netflix.Count{
 		{Label: "Synthetic Series", Value: 2},
 		{Label: "Another Film", Value: 1},
@@ -185,6 +218,12 @@ func TestNetflixAnalyticsReturnsExplicitEmptyState(testContext *testing.T) {
 	if analytics.MediaTypes == nil ||
 		analytics.Genres == nil ||
 		analytics.MonthLabels == nil ||
+		analytics.OriginCountries == nil ||
+		analytics.ReleaseYears == nil ||
+		analytics.RatingBands == nil ||
+		analytics.RuntimeBands == nil ||
+		analytics.SeasonCounts == nil ||
+		analytics.EpisodeBands == nil ||
 		analytics.TopTitles == nil {
 		testContext.Fatalf("empty analytics must use explicit empty collections")
 	}
@@ -273,27 +312,52 @@ func TestNetflixMetadataRejectsInconsistentStates(testContext *testing.T) {
 
 func syntheticAnalyticsRecords(testContext *testing.T) []netflix.ActivityRecord {
 	testContext.Helper()
+	movieRuntime := 115
+	movieVote := 8.2
+	movieVoteCount := 1200
 	movieMetadata := mustTitleMetadata(testContext, netflix.TitleMetadataInput{
 		MediaType:        netflix.MediaTypeMovie,
 		Genres:           []string{"Drama", "Mystery"},
 		ReleaseDate:      "2024-01-10",
+		RuntimeMinutes:   &movieRuntime,
 		OriginalLanguage: "en",
+		VoteAverage:      &movieVote,
+		VoteCount:        &movieVoteCount,
+		OriginCountries:  []string{"US", "GB"},
 		TMDBID:           1001,
 		MatchedTitle:     "Synthetic Film",
 	})
+	seriesRuntime := 45
+	seriesVote := 7.5
+	seriesVoteCount := 600
+	seriesSeasons := 2
+	seriesEpisodes := 16
 	seriesMetadata := mustTitleMetadata(testContext, netflix.TitleMetadataInput{
 		MediaType:        netflix.MediaTypeSeries,
 		Genres:           []string{"Drama", "Science Fiction"},
 		ReleaseDate:      "2025-03-04",
+		RuntimeMinutes:   &seriesRuntime,
 		OriginalLanguage: "en",
+		VoteAverage:      &seriesVote,
+		VoteCount:        &seriesVoteCount,
+		OriginCountries:  []string{"CA"},
+		Seasons:          &seriesSeasons,
+		Episodes:         &seriesEpisodes,
 		TMDBID:           1002,
 		MatchedTitle:     "Synthetic Series",
 	})
+	otherRuntime := 25
+	otherVote := 6.5
+	otherVoteCount := 300
 	otherMovieMetadata := mustTitleMetadata(testContext, netflix.TitleMetadataInput{
 		MediaType:        netflix.MediaTypeMovie,
 		Genres:           []string{"Comedy"},
 		ReleaseDate:      "2023-05-06",
+		RuntimeMinutes:   &otherRuntime,
 		OriginalLanguage: "fr",
+		VoteAverage:      &otherVote,
+		VoteCount:        &otherVoteCount,
+		OriginCountries:  []string{"FR"},
 		TMDBID:           1003,
 		MatchedTitle:     "Another Film",
 	})

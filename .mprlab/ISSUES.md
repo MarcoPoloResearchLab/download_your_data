@@ -697,7 +697,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Filesystem and log audits prove no token, title, date, source row, temporary export, or orphaned provider data escapes its contract.
   - `make ci`
 
-- [ ] [F008] (P1) {F002,F006,F007} Add the Netflix provider workspace
+- [x] [F008] (P1) {F006,F007} Add the Netflix provider workspace
   Goal:
   Make Netflix a first-class localized provider with import, progress, analysis, enrichment, export, replacement, and deletion in the shared application shell.
 

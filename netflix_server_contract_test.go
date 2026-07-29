@@ -175,7 +175,7 @@ func TestNetflixHTTPImportsQueriesRestartsAndDeletesLocalGeneration(
 	var analytics netflixlibrary.Analytics
 	decodeResponse(testContext, analyticsResponse, &analytics)
 	if analytics.Data.ActivityCount != 2 ||
-		analytics.DateFilter.StartDate != "2026-02-01" {
+		analytics.Filter.StartDate != "2026-02-01" {
 		testContext.Fatalf("unexpected HTTP analytics: %+v", analytics)
 	}
 
@@ -508,6 +508,25 @@ func TestNetflixHTTPEnrichesFiltersAndStreamsCanonicalCSV(
 			testContext.Fatalf("invalid HTTP review record: %+v", record)
 		}
 	}
+	filteredReviewResponse := getResponse(
+		testContext,
+		server.URL+netflixGenerationsPath+"/"+enriched.Generation.ID+
+			"/records?start_date=2026-02-01&end_date=2026-02-28&match_status=review&limit=10",
+	)
+	if filteredReviewResponse.StatusCode != http.StatusOK {
+		testContext.Fatalf(
+			"filtered review records status = %d; body=%s",
+			filteredReviewResponse.StatusCode,
+			readBody(testContext, filteredReviewResponse),
+		)
+	}
+	var filteredReviewPage netflixlibrary.ActivityPage
+	decodeResponse(testContext, filteredReviewResponse, &filteredReviewPage)
+	if len(filteredReviewPage.Records) != 1 ||
+		filteredReviewPage.Records[0].DateISO != "2026-02-02" ||
+		filteredReviewPage.Filter.MatchStatus != netflix.MatchStatusReview {
+		testContext.Fatalf("unexpected shared HTTP record filter: %+v", filteredReviewPage)
+	}
 
 	analyticsResponse := getResponse(
 		testContext,
@@ -525,6 +544,26 @@ func TestNetflixHTTPEnrichesFiltersAndStreamsCanonicalCSV(
 	if len(analytics.Data.MatchStatusTitles) != 3 ||
 		len(analytics.Data.MatchStatusActivities) != 3 {
 		testContext.Fatalf("incomplete HTTP match analytics: %+v", analytics.Data)
+	}
+	filteredAnalyticsResponse := getResponse(
+		testContext,
+		server.URL+netflixGenerationsPath+"/"+enriched.Generation.ID+
+			"/analytics?start_date=2026-02-01&end_date=2026-02-28&match_status=review",
+	)
+	if filteredAnalyticsResponse.StatusCode != http.StatusOK {
+		testContext.Fatalf(
+			"filtered review analytics status = %d; body=%s",
+			filteredAnalyticsResponse.StatusCode,
+			readBody(testContext, filteredAnalyticsResponse),
+		)
+	}
+	var filteredAnalytics netflixlibrary.Analytics
+	decodeResponse(testContext, filteredAnalyticsResponse, &filteredAnalytics)
+	if filteredAnalytics.Data.ActivityCount != 1 ||
+		filteredAnalytics.Data.UniqueTitleCount != 1 ||
+		filteredAnalytics.Filter.StartDate != "2026-02-01" ||
+		filteredAnalytics.Filter.MatchStatus != netflix.MatchStatusReview {
+		testContext.Fatalf("unexpected shared HTTP analytics filter: %+v", filteredAnalytics)
 	}
 
 	exportResponse := getResponse(

@@ -66,8 +66,7 @@ func TestLocalGenerationLifecycleIsPrivateAtomicPagedAndRestartSafe(
 	analytics, analyticsError := workspace.Analytics(
 		context.Background(),
 		firstGeneration.ID,
-		"",
-		"",
+		ActivityFilter{},
 	)
 	if analyticsError != nil {
 		testContext.Fatalf("read first analytics: %v", analyticsError)
@@ -80,8 +79,10 @@ func TestLocalGenerationLifecycleIsPrivateAtomicPagedAndRestartSafe(
 	filtered, filteredError := workspace.Analytics(
 		context.Background(),
 		firstGeneration.ID,
-		"2026-02-01",
-		"2026-02-28",
+		ActivityFilter{
+			StartDate: "2026-02-01",
+			EndDate:   "2026-02-28",
+		},
 	)
 	if filteredError != nil || filtered.Data.ActivityCount != 2 {
 		testContext.Fatalf("filtered analytics = %+v error=%v", filtered, filteredError)
@@ -92,7 +93,7 @@ func TestLocalGenerationLifecycleIsPrivateAtomicPagedAndRestartSafe(
 		firstGeneration.ID,
 		"",
 		2,
-		"",
+		ActivityFilter{},
 	)
 	if pageError != nil {
 		testContext.Fatalf("read first records page: %v", pageError)
@@ -100,12 +101,27 @@ func TestLocalGenerationLifecycleIsPrivateAtomicPagedAndRestartSafe(
 	if len(firstPage.Records) != 2 || firstPage.NextCursor == "" {
 		testContext.Fatalf("unexpected first records page: %+v", firstPage)
 	}
+	if _, changedFilterError := workspace.Records(
+		context.Background(),
+		firstGeneration.ID,
+		firstPage.NextCursor,
+		2,
+		ActivityFilter{
+			StartDate: "2026-02-01",
+			EndDate:   "2026-02-28",
+		},
+	); errorCode(changedFilterError) != ErrorInvalidRequest {
+		testContext.Fatalf(
+			"cursor accepted a changed shared filter: %v",
+			changedFilterError,
+		)
+	}
 	secondPage, pageError := workspace.Records(
 		context.Background(),
 		firstGeneration.ID,
 		firstPage.NextCursor,
 		2,
-		"",
+		ActivityFilter{},
 	)
 	if pageError != nil {
 		testContext.Fatalf("read second records page: %v", pageError)
@@ -147,7 +163,7 @@ func TestLocalGenerationLifecycleIsPrivateAtomicPagedAndRestartSafe(
 		firstGeneration.ID,
 		"",
 		1,
-		"",
+		ActivityFilter{},
 	); oldPageError != nil || len(oldPage.Records) != 1 {
 		testContext.Fatalf("old ready generation was not preserved: %+v %v", oldPage, oldPageError)
 	}

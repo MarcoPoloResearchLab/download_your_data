@@ -81,14 +81,16 @@ The Netflix provider accepts only the current per-profile Viewing activity CSV w
 - `POST /api/providers/netflix/generations` with `{"analysis_level":"local"}` to create one receiving generation.
 - `PUT /api/providers/netflix/generations/{generationID}/viewing-activity` with `Content-Type: text/csv` to stage the CSV.
 - `GET /api/providers/netflix/generations/{generationID}/events` for ordered resumable progress.
-- `GET /api/providers/netflix/generations/{generationID}/analytics` and `/records` for declared ready results. Enriched records may be filtered with `match_status=matched`, `review`, or `unmatched`.
+- `GET /api/providers/netflix/generations/{generationID}/analytics` and `/records` for declared ready results. Both use one optional `start_date`, `end_date`, and `match_status` filter; match status accepts only `matched`, `review`, or `unmatched`, and record cursors are bound to the exact filter.
 - `GET /api/providers/netflix/generations/{generationID}/export` to stream the canonical enriched CSV from a declared ready TMDB generation.
 - `DELETE /api/providers/netflix/generations/{generationID}` to cancel and remove a non-active generation.
 - `DELETE /api/providers/netflix` with `{"confirmation":"delete-netflix-provider"}` to remove the complete provider library and TMDB cache.
 
 The server accepts at most one building generation, keeps the existing ready generation active while a replacement builds, and swaps the active pointer only after it revalidates every record, title identity, date, count, analytics result, and artifact hash. Upload bytes are removed after import success or failure; only a complete staged upload needed to resume a nonterminal generation survives an orderly process restart.
 
-Provider state uses the sole current `netflix-generation-library-v1` contract at `<data-root>/providers/netflix/library.json`. Immutable ready records and analytics use `netflix-generation-records-v1` and `netflix-generation-analytics-v1` below `<data-root>/providers/netflix/generations/{generationID}`; record cursors use `netflix-record-cursor-v2`. The provider holds an operating-system lease for its entire lifetime, and every directory and file remains owner-only.
+Provider state uses the sole current `netflix-generation-library-v1` contract at `<data-root>/providers/netflix/library.json`. Immutable ready records and analytics use `netflix-generation-records-v1` and `netflix-generation-analytics-v1` below `<data-root>/providers/netflix/generations/{generationID}`; record cursors use `netflix-record-cursor-v3`. The provider holds an operating-system lease for its entire lifetime, and every directory and file remains owner-only.
+
+The browser opens Netflix as the first workspace-capable provider in the compact catalog. Its Overview, Catalog, and Match quality views share the same server-owned filters and expose import, enrichment, retry, cancellation, replacement, enriched export, and complete deletion as separate actions. Run `make test-browser` for both the unconfigured real-server path and the deterministic configured fake-TMDB lifecycle.
 
 ## Optional Netflix metadata
 

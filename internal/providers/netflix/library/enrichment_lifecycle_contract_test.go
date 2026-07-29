@@ -57,8 +57,7 @@ func TestTMDBReplacementKeepsRawActiveAndPublishesCompleteCoverageAndExport(
 	if rawAnalytics, analyticsError := workspace.Analytics(
 		context.Background(),
 		localGeneration.ID,
-		"",
-		"",
+		ActivityFilter{},
 	); analyticsError != nil || rawAnalytics.Data.ActivityCount != 4 {
 		testContext.Fatalf(
 			"raw analytics during enrichment = %+v error=%v",
@@ -97,8 +96,7 @@ func TestTMDBReplacementKeepsRawActiveAndPublishesCompleteCoverageAndExport(
 	analytics, analyticsError := workspace.Analytics(
 		context.Background(),
 		tmdbGeneration.ID,
-		"",
-		"",
+		ActivityFilter{},
 	)
 	if analyticsError != nil {
 		testContext.Fatalf("read enriched analytics: %v", analyticsError)
@@ -119,7 +117,7 @@ func TestTMDBReplacementKeepsRawActiveAndPublishesCompleteCoverageAndExport(
 		tmdbGeneration.ID,
 		"",
 		10,
-		netflix.MatchStatusReview,
+		ActivityFilter{MatchStatus: netflix.MatchStatusReview},
 	)
 	if pageError != nil {
 		testContext.Fatalf("read review records: %v", pageError)
@@ -133,6 +131,44 @@ func TestTMDBReplacementKeepsRawActiveAndPublishesCompleteCoverageAndExport(
 			record.Metadata != nil {
 			testContext.Fatalf("invalid review record: %+v", record)
 		}
+	}
+	filteredReviewAnalytics, analyticsError := workspace.Analytics(
+		context.Background(),
+		tmdbGeneration.ID,
+		ActivityFilter{
+			StartDate:   "2026-02-01",
+			EndDate:     "2026-02-28",
+			MatchStatus: netflix.MatchStatusReview,
+		},
+	)
+	if analyticsError != nil ||
+		filteredReviewAnalytics.Data.ActivityCount != 1 ||
+		filteredReviewAnalytics.Data.UniqueTitleCount != 1 {
+		testContext.Fatalf(
+			"shared review analytics filter = %+v error=%v",
+			filteredReviewAnalytics,
+			analyticsError,
+		)
+	}
+	filteredReviewPage, pageError := workspace.Records(
+		context.Background(),
+		tmdbGeneration.ID,
+		"",
+		10,
+		ActivityFilter{
+			StartDate:   "2026-02-01",
+			EndDate:     "2026-02-28",
+			MatchStatus: netflix.MatchStatusReview,
+		},
+	)
+	if pageError != nil ||
+		len(filteredReviewPage.Records) != 1 ||
+		filteredReviewPage.Records[0].DateISO != "2026-02-02" {
+		testContext.Fatalf(
+			"shared review records filter = %+v error=%v",
+			filteredReviewPage,
+			pageError,
+		)
 	}
 
 	exportRecords, exportError := workspace.ExportRecords(
@@ -387,8 +423,7 @@ func TestTMDBRateLimitedFailureKeepsRawActiveAndRetryUsesPrivateCache(
 	if rawAnalytics, analyticsError := workspace.Analytics(
 		context.Background(),
 		localGeneration.ID,
-		"",
-		"",
+		ActivityFilter{},
 	); analyticsError != nil || rawAnalytics.Data.ActivityCount != 4 {
 		testContext.Fatalf(
 			"raw analytics after failure = %+v error=%v",
@@ -493,7 +528,7 @@ func TestCancelTMDBReplacementKeepsRawActiveAndRemovesPartialGeneration(
 		localGeneration.ID,
 		"",
 		10,
-		"",
+		ActivityFilter{},
 	); pageError != nil || len(rawPage.Records) != 4 {
 		testContext.Fatalf("raw records after cancellation = %+v error=%v", rawPage, pageError)
 	}

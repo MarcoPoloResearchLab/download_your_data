@@ -253,22 +253,25 @@ type Metadata struct {
 
 // ActivityPage is one deterministic generation-bound records page.
 type ActivityPage struct {
-	GenerationID string     `json:"generation_id"`
-	Records      []Activity `json:"records"`
-	NextCursor   string     `json:"next_cursor,omitempty"`
+	GenerationID string         `json:"generation_id"`
+	Filter       ActivityFilter `json:"filter"`
+	Records      []Activity     `json:"records"`
+	NextCursor   string         `json:"next_cursor,omitempty"`
 }
 
 // Analytics is the generation-bound analytics response.
 type Analytics struct {
-	GenerationID string             `json:"generation_id"`
-	DateFilter   AnalyticsDateRange `json:"date_filter"`
-	Data         netflix.Analytics  `json:"data"`
+	GenerationID string            `json:"generation_id"`
+	Filter       ActivityFilter    `json:"filter"`
+	Data         netflix.Analytics `json:"data"`
 }
 
-// AnalyticsDateRange is the normalized inclusive API filter.
-type AnalyticsDateRange struct {
-	StartDate string `json:"start_date,omitempty"`
-	EndDate   string `json:"end_date,omitempty"`
+// ActivityFilter is the one normalized inclusive filter shared by analytics
+// and paged records.
+type ActivityFilter struct {
+	StartDate   string              `json:"start_date,omitempty"`
+	EndDate     string              `json:"end_date,omitempty"`
+	MatchStatus netflix.MatchStatus `json:"match_status,omitempty"`
 }
 
 type repositoryState struct {

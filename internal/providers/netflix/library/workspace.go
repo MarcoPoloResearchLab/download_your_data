@@ -23,7 +23,7 @@ import (
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix/tmdb"
 )
 
-const recordCursorIdentity = "netflix-record-cursor-v2"
+const recordCursorIdentity = "netflix-record-cursor-v3"
 
 type workspaceOptions struct {
 	now                       func() time.Time
@@ -604,8 +604,7 @@ func (workspace *Workspace) Events(
 func (workspace *Workspace) Analytics(
 	ctx context.Context,
 	generationID string,
-	startDate string,
-	endDate string,
+	filter ActivityFilter,
 ) (Analytics, error) {
 	if ctx == nil || !validGenerationID(generationID) {
 		return Analytics{}, newLibraryError(
@@ -615,41 +614,12 @@ func (workspace *Workspace) Analytics(
 			errors.New("analytics context and generation are required"),
 		)
 	}
-	dateRange := netflix.AllDates()
-	normalizedFilter := AnalyticsDateRange{}
-	if startDate != "" || endDate != "" {
-		if startDate == "" || endDate == "" {
-			return Analytics{}, newLibraryError(
-				ErrorInvalidRequest,
-				generationID,
-				0,
-				errors.New("analytics start and end dates are required together"),
-			)
-		}
-		start, startError := netflix.ParseISODate(startDate)
-		end, endError := netflix.ParseISODate(endDate)
-		if startError != nil || endError != nil {
-			return Analytics{}, newLibraryError(
-				ErrorInvalidDate,
-				generationID,
-				0,
-				errors.Join(startError, endError),
-			)
-		}
-		var rangeError error
-		dateRange, rangeError = netflix.NewDateRange(start, end)
-		if rangeError != nil {
-			return Analytics{}, newLibraryError(
-				ErrorInvalidDate,
-				generationID,
-				0,
-				rangeError,
-			)
-		}
-		normalizedFilter = AnalyticsDateRange{
-			StartDate: startDate,
-			EndDate:   endDate,
-		}
+	normalizedFilter, dateRange, filterError := normalizeActivityFilter(
+		generationID,
+		filter,
+	)
+	if filterError != nil {
+		return Analytics{}, filterError
 	}
 	generation, generationError := workspace.readyGeneration(generationID)
 	if generationError != nil {
@@ -663,7 +633,8 @@ func (workspace *Workspace) Analytics(
 	if recordsError != nil {
 		return Analytics{}, recordsError
 	}
-	aggregated, aggregateError := netflix.Aggregate(ctx, records, dateRange)
+	filteredRecords := filterActivityRecords(records, normalizedFilter.MatchStatus)
+	aggregated, aggregateError := netflix.Aggregate(ctx, filteredRecords, dateRange)
 	if aggregateError != nil {
 		code := ErrorIncomplete
 		if ctx.Err() != nil {
@@ -673,7 +644,7 @@ func (workspace *Workspace) Analytics(
 	}
 	return Analytics{
 		GenerationID: generationID,
-		DateFilter:   normalizedFilter,
+		Filter:       normalizedFilter,
 		Data:         aggregated,
 	}, nil
 }
@@ -684,7 +655,7 @@ func (workspace *Workspace) Records(
 	generationID string,
 	cursor string,
 	limit int,
-	matchStatus netflix.MatchStatus,
+	filter ActivityFilter,
 ) (ActivityPage, error) {
 	if ctx == nil || !validGenerationID(generationID) {
 		return ActivityPage{}, newLibraryError(
@@ -705,24 +676,17 @@ func (workspace *Workspace) Records(
 			errors.New("records limit is outside the current bound"),
 		)
 	}
-	if matchStatus != "" &&
-		matchStatus != netflix.MatchStatusMatched &&
-		matchStatus != netflix.MatchStatusReview &&
-		matchStatus != netflix.MatchStatusUnmatched {
-		return ActivityPage{}, newLibraryError(
-			ErrorInvalidRequest,
-			generationID,
-			0,
-			errors.New("records match-status filter is invalid"),
-		)
+	normalizedFilter, _, filterError := normalizeActivityFilter(generationID, filter)
+	if filterError != nil {
+		return ActivityPage{}, filterError
 	}
 	afterIndex := int64(0)
 	if cursor != "" {
-		decodedGenerationID, decodedIndex, decodedStatus, cursorError :=
+		decodedGenerationID, decodedIndex, decodedFilter, cursorError :=
 			decodeRecordCursor(cursor)
 		if cursorError != nil ||
 			decodedGenerationID != generationID ||
-			decodedStatus != matchStatus {
+			decodedFilter != normalizedFilter {
 			return ActivityPage{}, newLibraryError(
 				ErrorInvalidRequest,
 				generationID,
@@ -741,20 +705,21 @@ func (workspace *Workspace) Records(
 		generationID,
 		afterIndex,
 		limit,
-		matchStatus,
+		normalizedFilter,
 	)
 	if recordsError != nil {
 		return ActivityPage{}, recordsError
 	}
 	result := ActivityPage{
 		GenerationID: generationID,
+		Filter:       normalizedFilter,
 		Records:      records,
 	}
 	if nextAfter > 0 {
 		result.NextCursor = encodeRecordCursor(
 			generationID,
 			nextAfter,
-			matchStatus,
+			normalizedFilter,
 		)
 	}
 	return result, nil
@@ -1612,14 +1577,16 @@ func removeString(values []string, target string) []string {
 func encodeRecordCursor(
 	generationID string,
 	afterIndex int64,
-	matchStatus netflix.MatchStatus,
+	filter ActivityFilter,
 ) string {
 	payload := strings.Join(
 		[]string{
 			recordCursorIdentity,
 			generationID,
 			strconv.FormatInt(afterIndex, 10),
-			string(matchStatus),
+			filter.StartDate,
+			filter.EndDate,
+			string(filter.MatchStatus),
 		},
 		"\x00",
 	)
@@ -1628,30 +1595,99 @@ func encodeRecordCursor(
 
 func decodeRecordCursor(
 	cursor string,
-) (string, int64, netflix.MatchStatus, error) {
-	if len(cursor) == 0 || len(cursor) > 256 {
-		return "", 0, "", errors.New("record cursor length is invalid")
+) (string, int64, ActivityFilter, error) {
+	if len(cursor) == 0 || len(cursor) > 512 {
+		return "", 0, ActivityFilter{}, errors.New("record cursor length is invalid")
 	}
 	decoded, decodeError := base64.RawURLEncoding.DecodeString(cursor)
 	if decodeError != nil {
-		return "", 0, "", decodeError
+		return "", 0, ActivityFilter{}, decodeError
 	}
 	parts := strings.Split(string(decoded), "\x00")
-	if len(parts) != 4 ||
+	if len(parts) != 6 ||
 		parts[0] != recordCursorIdentity ||
 		!validGenerationID(parts[1]) {
-		return "", 0, "", errors.New("record cursor identity is invalid")
+		return "", 0, ActivityFilter{}, errors.New("record cursor identity is invalid")
 	}
 	afterIndex, parseError := strconv.ParseInt(parts[2], 10, 64)
 	if parseError != nil || afterIndex <= 0 || afterIndex > product.MaxNetflixViewingRows {
-		return "", 0, "", errors.New("record cursor position is invalid")
+		return "", 0, ActivityFilter{}, errors.New("record cursor position is invalid")
 	}
-	matchStatus := netflix.MatchStatus(parts[3])
-	if matchStatus != "" &&
-		matchStatus != netflix.MatchStatusMatched &&
-		matchStatus != netflix.MatchStatusReview &&
-		matchStatus != netflix.MatchStatusUnmatched {
-		return "", 0, "", errors.New("record cursor match status is invalid")
+	filter := ActivityFilter{
+		StartDate:   parts[3],
+		EndDate:     parts[4],
+		MatchStatus: netflix.MatchStatus(parts[5]),
 	}
-	return parts[1], afterIndex, matchStatus, nil
+	normalized, _, filterError := normalizeActivityFilter(parts[1], filter)
+	if filterError != nil || normalized != filter {
+		return "", 0, ActivityFilter{}, errors.New("record cursor filter is invalid")
+	}
+	return parts[1], afterIndex, filter, nil
+}
+
+func normalizeActivityFilter(
+	generationID string,
+	filter ActivityFilter,
+) (ActivityFilter, netflix.DateRange, error) {
+	if filter.MatchStatus != "" &&
+		filter.MatchStatus != netflix.MatchStatusMatched &&
+		filter.MatchStatus != netflix.MatchStatusReview &&
+		filter.MatchStatus != netflix.MatchStatusUnmatched {
+		return ActivityFilter{}, netflix.DateRange{}, newLibraryError(
+			ErrorInvalidRequest,
+			generationID,
+			0,
+			errors.New("activity match-status filter is invalid"),
+		)
+	}
+	dateRange := netflix.AllDates()
+	if filter.StartDate == "" && filter.EndDate == "" {
+		return filter, dateRange, nil
+	}
+	if filter.StartDate == "" || filter.EndDate == "" {
+		return ActivityFilter{}, netflix.DateRange{}, newLibraryError(
+			ErrorInvalidRequest,
+			generationID,
+			0,
+			errors.New("activity start and end dates are required together"),
+		)
+	}
+	start, startError := netflix.ParseISODate(filter.StartDate)
+	end, endError := netflix.ParseISODate(filter.EndDate)
+	if startError != nil || endError != nil {
+		return ActivityFilter{}, netflix.DateRange{}, newLibraryError(
+			ErrorInvalidDate,
+			generationID,
+			0,
+			errors.Join(startError, endError),
+		)
+	}
+	var rangeError error
+	dateRange, rangeError = netflix.NewDateRange(start, end)
+	if rangeError != nil {
+		return ActivityFilter{}, netflix.DateRange{}, newLibraryError(
+			ErrorInvalidDate,
+			generationID,
+			0,
+			rangeError,
+		)
+	}
+	return filter, dateRange, nil
+}
+
+func filterActivityRecords(
+	records []netflix.ActivityRecord,
+	matchStatus netflix.MatchStatus,
+) []netflix.ActivityRecord {
+	if matchStatus == "" {
+		return records
+	}
+	filtered := make([]netflix.ActivityRecord, 0, len(records))
+	for _, record := range records {
+		match, hasMatch := record.Match()
+		if hasMatch && match.Status() == matchStatus {
+			filtered = append(filtered, record)
+		}
+	}
+	return filtered
 }

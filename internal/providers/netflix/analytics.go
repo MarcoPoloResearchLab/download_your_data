@@ -81,8 +81,8 @@ type Series struct {
 	Values []int  `json:"values"`
 }
 
-// Analytics is the deterministic Netflix activity summary consumed by future
-// HTTP and browser adapters.
+// Analytics is the deterministic Netflix activity summary consumed by the
+// current HTTP and browser adapters.
 type Analytics struct {
 	ActivityCount         int      `json:"activity_count"`
 	UniqueTitleCount      int      `json:"unique_title_count"`
@@ -99,6 +99,12 @@ type Analytics struct {
 	MonthLabels           []string `json:"month_labels"`
 	MonthlyMedia          []Series `json:"monthly_media"`
 	Languages             []Count  `json:"languages"`
+	OriginCountries       []Count  `json:"origin_countries"`
+	ReleaseYears          []Count  `json:"release_years"`
+	RatingBands           []Count  `json:"rating_bands"`
+	RuntimeBands          []Count  `json:"runtime_bands"`
+	SeasonCounts          []Count  `json:"season_counts"`
+	EpisodeBands          []Count  `json:"episode_bands"`
 	WeekdayLabels         []string `json:"weekday_labels"`
 	GenresByWeekday       []Series `json:"genres_by_weekday"`
 	TopTitles             []Count  `json:"top_titles"`
@@ -143,6 +149,12 @@ func Aggregate(
 	genreYearCounts := make(map[int]map[string]int)
 	monthMediaCounts := make(map[string]map[string]int)
 	languageCounts := make(map[string]int)
+	originCountryCounts := make(map[string]int)
+	releaseYearCounts := make(map[string]int)
+	ratingBandCounts := make(map[string]int)
+	runtimeBandCounts := make(map[string]int)
+	seasonCounts := make(map[string]int)
+	episodeBandCounts := make(map[string]int)
 	weekdayGenreCounts := make(map[int]map[string]int)
 	titleCounts := make(map[string]int)
 	var earliestDate LocalDate
@@ -184,6 +196,12 @@ func Aggregate(
 
 		mediaType := unknownDimensionLabel
 		language := unknownDimensionLabel
+		originCountries := []string{unknownDimensionLabel}
+		releaseYear := unknownDimensionLabel
+		ratingBand := unknownDimensionLabel
+		runtimeBand := unknownDimensionLabel
+		seasonCount := unknownDimensionLabel
+		episodeBand := unknownDimensionLabel
 		genres := []string(nil)
 		metadata, hasMetadata := record.Metadata()
 		if hasMetadata {
@@ -193,10 +211,36 @@ func Aggregate(
 			if metadata.OriginalLanguage() != "" {
 				language = metadata.OriginalLanguage()
 			}
+			if countries := metadata.OriginCountries(); len(countries) > 0 {
+				originCountries = countries
+			}
+			if releaseDate := metadata.ReleaseDate(); releaseDate != "" {
+				releaseYear = releaseDate[:4]
+			}
+			if voteAverage, hasVoteAverage := metadata.VoteAverage(); hasVoteAverage {
+				ratingBand = ratingBucket(voteAverage)
+			}
+			if runtimeMinutes, hasRuntime := metadata.RuntimeMinutes(); hasRuntime {
+				runtimeBand = runtimeBucket(runtimeMinutes)
+			}
+			if seasons, hasSeasons := metadata.Seasons(); hasSeasons {
+				seasonCount = fmt.Sprintf("%d", seasons)
+			}
+			if episodes, hasEpisodes := metadata.Episodes(); hasEpisodes {
+				episodeBand = episodeBucket(episodes)
+			}
 			genres = metadata.Genres()
 		}
 		mediaTypeCounts[mediaType]++
 		languageCounts[language]++
+		for _, originCountry := range originCountries {
+			originCountryCounts[originCountry]++
+		}
+		releaseYearCounts[releaseYear]++
+		ratingBandCounts[ratingBand]++
+		runtimeBandCounts[runtimeBand]++
+		seasonCounts[seasonCount]++
+		episodeBandCounts[episodeBand]++
 		for _, genre := range genres {
 			genreCounts[genre]++
 		}
@@ -240,6 +284,12 @@ func Aggregate(
 	analytics.MediaTypes = sortedCounts(mediaTypeCounts, 0)
 	analytics.Genres = sortedCounts(genreCounts, topGenreLimit)
 	analytics.Languages = sortedCounts(languageCounts, topLanguageLimit)
+	analytics.OriginCountries = sortedCounts(originCountryCounts, 0)
+	analytics.ReleaseYears = sortedCounts(releaseYearCounts, 0)
+	analytics.RatingBands = sortedCounts(ratingBandCounts, 0)
+	analytics.RuntimeBands = sortedCounts(runtimeBandCounts, 0)
+	analytics.SeasonCounts = sortedCounts(seasonCounts, 0)
+	analytics.EpisodeBands = sortedCounts(episodeBandCounts, 0)
 	analytics.TopTitles = sortedCounts(titleCounts, topTitleLimit)
 
 	analytics.ViewingYears = sortedYears(genreYearCounts)
@@ -316,9 +366,56 @@ func emptyAnalytics() Analytics {
 			{Label: unknownDimensionLabel, Values: []int{}},
 		},
 		Languages:       []Count{},
+		OriginCountries: []Count{},
+		ReleaseYears:    []Count{},
+		RatingBands:     []Count{},
+		RuntimeBands:    []Count{},
+		SeasonCounts:    []Count{},
+		EpisodeBands:    []Count{},
 		WeekdayLabels:   []string{"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"},
 		GenresByWeekday: []Series{},
 		TopTitles:       []Count{},
+	}
+}
+
+func ratingBucket(voteAverage float64) string {
+	switch {
+	case voteAverage < 5:
+		return "0.0–4.9"
+	case voteAverage < 7:
+		return "5.0–6.9"
+	case voteAverage < 8:
+		return "7.0–7.9"
+	default:
+		return "8.0–10.0"
+	}
+}
+
+func runtimeBucket(runtimeMinutes int) string {
+	switch {
+	case runtimeMinutes < 30:
+		return "<30 min"
+	case runtimeMinutes < 60:
+		return "30–59 min"
+	case runtimeMinutes < 90:
+		return "60–89 min"
+	case runtimeMinutes < 120:
+		return "90–119 min"
+	default:
+		return "120+ min"
+	}
+}
+
+func episodeBucket(episodes int) string {
+	switch {
+	case episodes <= 10:
+		return "1–10"
+	case episodes <= 25:
+		return "11–25"
+	case episodes <= 50:
+		return "26–50"
+	default:
+		return "51+"
 	}
 }
 
