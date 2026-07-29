@@ -5,6 +5,7 @@ binary_path="${1:-./build/download-your-data}"
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 working_directory="$(mktemp -d)"
 export DOWNLOAD_YOUR_DATA_DATA_DIR="${working_directory}/data"
+export DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN=""
 server_pid=""
 cleanup() {
   if [[ -n "${server_pid}" ]]; then
@@ -14,6 +15,9 @@ cleanup() {
   rm -rf "${working_directory}"
 }
 trap cleanup EXIT
+
+"${binary_path}" help | grep -q "netflix inspect"
+"${binary_path}" netflix inspect | grep -q "state=empty"
 
 "${binary_path}" inspect "${repository_root}/testdata/synthetic-openai-export.zip"
 "${binary_path}" import \

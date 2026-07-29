@@ -237,7 +237,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - `make test`
   - `make ci`
 
-- [ ] [I009] (P1) {I006,I007,I008} Preserve Netflix operator parity in the single product executable
+- [x] [I009] (P1) {I006,I007,I008} Preserve Netflix operator parity in the single product executable
   Goal:
   Keep useful Netflix inspection, enrichment, and CSV export operations without shipping `tmdbenrich` or a second server.
 
