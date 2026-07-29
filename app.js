@@ -1,3 +1,5 @@
+// @ts-check
+
 import {
   APIError,
   cancelGeneration,
@@ -304,7 +306,9 @@ async function handleClick(event) {
   }
   const action = actionButton.dataset.action;
   if (action === 'choose-file' || action === 'replace') {
-    document.querySelector('#netflix-file')?.click();
+    /** @type {HTMLInputElement | null} */
+    const fileInput = document.querySelector('#netflix-file');
+    fileInput?.click();
   } else if (action === 'clear-filters') {
     state.filter = {startDate: '', endDate: '', matchStatus: ''};
     resetWorkspaceData();
@@ -820,17 +824,17 @@ function renderCatalogView() {
   fragment.append(renderKPIs(data));
   const dimensions = element('div', {class: 'dimension-grid'});
   const charts = [
-    ['media_types', 'media_types', translateDimension],
-    ['genres', 'genres'],
-    ['languages', 'languages', translateDimension],
-    ['origin_countries', 'origin_countries', translateDimension],
-    ['release_years', 'release_years', translateDimension],
-    ['rating_bands', 'rating_bands', translateDimension],
-    ['runtime_bands', 'runtime_bands', translateDimension],
-    ['season_counts', 'seasons', translateDimension],
-    ['episode_bands', 'episodes', translateDimension]
+    {field: 'media_types', titleKey: 'media_types', formatter: translateDimension},
+    {field: 'genres', titleKey: 'genres'},
+    {field: 'languages', titleKey: 'languages', formatter: translateDimension},
+    {field: 'origin_countries', titleKey: 'origin_countries', formatter: translateDimension},
+    {field: 'release_years', titleKey: 'release_years', formatter: translateDimension},
+    {field: 'rating_bands', titleKey: 'rating_bands', formatter: translateDimension},
+    {field: 'runtime_bands', titleKey: 'runtime_bands', formatter: translateDimension},
+    {field: 'season_counts', titleKey: 'seasons', formatter: translateDimension},
+    {field: 'episode_bands', titleKey: 'episodes', formatter: translateDimension}
   ];
-  charts.forEach(([field, titleKey, formatter]) => {
+  charts.forEach(({field, titleKey, formatter}) => {
     dimensions.append(
       countChart({
         title: ui()[titleKey],
@@ -1659,7 +1663,7 @@ function updateChrome() {
   document.querySelectorAll('[data-language]').forEach((button) => {
     button.setAttribute(
       'aria-pressed',
-      button.dataset.language === state.locale ? 'true' : 'false'
+      button.getAttribute('data-language') === state.locale ? 'true' : 'false'
     );
   });
   const themeToggle = document.querySelector('#theme-toggle');

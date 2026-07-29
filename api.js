@@ -1,3 +1,5 @@
+// @ts-check
+
 const PROVIDER_STATES = new Set([
   'empty',
   'building',

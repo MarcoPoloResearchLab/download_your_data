@@ -164,6 +164,10 @@ func TestFrontendAssetsAreSelfOwnedModules(testContext *testing.T) {
 			strings.Contains(content, "style=") {
 			testContext.Fatalf("%s contains a forbidden external or unchecked frontend boundary", path)
 		}
+		if strings.HasSuffix(path, ".js") &&
+			!strings.HasPrefix(content, "// @ts-check\n") {
+			testContext.Fatalf("%s is missing the checked-JavaScript contract", path)
+		}
 	}
 	if !strings.Contains(appScript, "from './api.js'") ||
 		!strings.Contains(appScript, "from './charts.js'") ||
