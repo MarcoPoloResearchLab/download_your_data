@@ -363,6 +363,71 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - `make test-browser`
   - `make ci`
 
+- [x] [B018] (P1) {B004,F009} Match every Meta export action to a first-party visual
+  Goal:
+  Replace the reused export-entry images that did not show later Facebook, Instagram, or Threads actions.
+
+  Requirements:
+  - Use current public first-party help captures for profile selection, device export, options, submission, availability, and protected retrieval without crossing an authenticated export boundary.
+  - Keep each locale on the same canonical per-step screenshot mapping.
+  - Fail the screenshot contract if the Meta mappings regress to the landing-panel images.
+
+  Deliverables:
+  - Privacy-reviewed Facebook, Instagram, and Threads help captures with exact manifest provenance.
+  - Updated localized mappings and real-browser coverage.
+
+  Validation:
+  - `make validate-instruction-screenshots`
+  - `make test-browser`
+  - `make ci`
+
+- [x] [B019] (P1) {B016} Require the current inference identity for OpenAI readiness
+  Goal:
+  Prevent the browser from advertising search readiness for an index built against another inference base URL.
+
+  Requirements:
+  - Select only a complete ready index whose persisted base URL matches the current validated inference configuration.
+  - Report `index_required` consistently from both the provider snapshot and search endpoint when no compatible index exists.
+
+  Deliverables:
+  - One canonical compatible-index selection path and an HTTP regression scenario.
+
+  Validation:
+  - Focused OpenAI HTTP contract tests.
+  - `make ci`
+
+- [x] [B020] (P1) {B005,B011} Restore the Netflix workspace provider icon
+  Goal:
+  Render the canonical Netflix brand asset in the workspace header instead of an empty mark.
+
+  Requirements:
+  - Resolve the icon from the provider registry.
+  - Decode and verify the shipped image through the real browser entry point.
+
+  Deliverables:
+  - Netflix workspace icon rendering and browser coverage in every locale.
+
+  Validation:
+  - `make check-frontend`
+  - `make test-browser`
+  - `make ci`
+
+- [x] [B021] (P1) {B016} Contain unbroken OpenAI search result text
+  Goal:
+  Keep imported titles and excerpts inside the narrow OpenAI workspace.
+
+  Requirements:
+  - Permit arbitrary unbroken title and excerpt text to wrap.
+  - Prove containment with a ready search response at the narrow browser viewport.
+
+  Deliverables:
+  - Result-text containment styles and a real-browser regression scenario.
+
+  Validation:
+  - `make check-frontend`
+  - `make test-browser`
+  - `make ci`
+
 ## Improvements
 
 - [x] [I001] (P1) Establish the canonical local server and validation foundation
@@ -574,7 +639,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   Capture and publish the current web export workflow so a user can follow each supported provider without the capture operator starting an export.
 
   Superseded contract:
-  B004 replaced this initial 12-asset web baseline and its TikTok text-only exception with the current 21-asset, every-provider, one-visual-per-step contract.
+  B004 and B018 replaced this initial 12-asset web baseline and its TikTok text-only exception with the current 26-asset, every-provider, one-visual-per-step contract.
 
   Requirements:
   - Cover Facebook, Instagram, LinkedIn, X, YouTube, and Google with two canonical English web screenshots per provider.
