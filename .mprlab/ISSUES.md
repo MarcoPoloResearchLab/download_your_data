@@ -140,8 +140,8 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   Keep each guide-only catalog action clear, singular, and actionable.
 
   Requirements:
-  - Render exactly one View guide button in every guide-only provider row.
-  - Remove the adjacent non-actionable Guide badge from catalog rows.
+  - Render exactly one View guide button in every guide-only provider card.
+  - Remove the adjacent non-actionable Guide badge from catalog cards.
   - Remove generic Guide badges from guide headings while preserving real Netflix workspace-state chips.
   - Prove the singular action contract at wide and narrow web viewport widths.
 
@@ -240,6 +240,27 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   Deliverables:
   - Shared header and footer integration with the retired local chrome removed.
   - Localized Credits disclosure, documentation, CSP contract, and real-browser network coverage.
+
+  Validation:
+  - `make check-frontend`
+  - `make test-browser`
+  - `make ci`
+
+- [x] [B013] (P1) {B011,B012,F008,F009} Replace provider rows with large-logo tile cards
+  Goal:
+  Make the provider catalog visually scannable as a tiled product chooser with each reviewed brand mark as the card's dominant identity.
+
+  Requirements:
+  - Replace the row-specific catalog markup and styles with one canonical provider-card grid.
+  - Render three columns at the wide application width, two columns at intermediate widths, and one column on a narrow web viewport.
+  - Display every reviewed local provider logo in an approximately 80-pixel mark with at least a 48-pixel visible icon.
+  - Keep the localized provider name, surface type, full summary, and actionable controls visible in every card.
+  - Preserve one View guide action for guide-only providers and separate state, guide, and workspace controls for Netflix.
+  - Keep cards compact, flat, bordered, responsive, keyboard-operable, and free of horizontal overflow.
+
+  Deliverables:
+  - Semantic provider-card rendering and responsive MPR tile-grid styles.
+  - Updated real-browser assertions for grid shape, large local logos, summaries, actions, and narrow containment.
 
   Validation:
   - `make check-frontend`

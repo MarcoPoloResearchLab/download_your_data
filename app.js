@@ -424,37 +424,40 @@ function renderCatalog() {
   );
   heading.append(copy);
 
-  const list = element('section', {
-    class: 'catalog-list',
+  const grid = element('section', {
+    class: 'catalog-grid',
     'aria-label': ui().provider_catalog
   });
   for (const providerDefinition of state.data.provider_registry) {
     const localized = localizedProvider(providerDefinition.id);
-    const row = element('article', {
-      class: 'provider-row',
+    const card = element('article', {
+      class: 'provider-card',
       'data-provider-id': providerDefinition.id
     });
-    row.append(
-      providerMark(providerDefinition.id, localized.title, providerDefinition.icon_src),
-      element(
-        'div',
-        {},
-        element('span', {class: 'provider-name', text: localized.title}),
-        element('span', {
-          class: 'provider-type',
-          text:
-            providerDefinition.surface === 'workspace'
-              ? `${ui().workspace} · ${ui().guide}`
-              : ui().guide
-        })
-      ),
-      element('p', {class: 'provider-summary', text: localized.intro})
+    const metadata = element(
+      'div',
+      {class: 'provider-card-meta'},
+      element('span', {
+        class: 'provider-type',
+        text:
+          providerDefinition.surface === 'workspace'
+            ? `${ui().workspace} · ${ui().guide}`
+            : ui().guide
+      })
     );
-    const actions = element('div', {class: 'row-actions'});
     if (providerDefinition.id === 'netflix') {
       const presentation = netflixStatePresentation();
+      metadata.append(stateChip(presentation.label, presentation.tone));
+    }
+    card.append(
+      providerMark(providerDefinition.id, localized.title, providerDefinition.icon_src),
+      metadata,
+      element('h2', {class: 'provider-name', text: localized.title}),
+      element('p', {class: 'provider-summary', text: localized.intro})
+    );
+    const actions = element('div', {class: 'provider-actions'});
+    if (providerDefinition.id === 'netflix') {
       actions.append(
-        stateChip(presentation.label, presentation.tone),
         actionButton(ui().view_guide, {
           'data-route': 'guide',
           'data-provider': providerDefinition.id
@@ -472,10 +475,10 @@ function renderCatalog() {
         })
       );
     }
-    row.append(actions);
-    list.append(row);
+    card.append(actions);
+    grid.append(card);
   }
-  root.append(heading, list);
+  root.append(heading, grid);
   replaceApp(root);
 }
 

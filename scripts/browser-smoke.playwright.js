@@ -107,21 +107,32 @@ async page => {
   );
   await page.locator('[data-provider-id="netflix"]').waitFor();
   assert(
-    await page.locator('.provider-row[data-provider-id]').count() === 11,
+    await page.locator('.provider-card[data-provider-id]').count() === 11,
     'provider catalog must contain eleven canonical providers'
   );
+  const wideCatalogLayout = await page.locator('.catalog-grid').evaluate((grid) => ({
+    columns: getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length,
+    width: grid.getBoundingClientRect().width
+  }));
+  assert(
+    wideCatalogLayout.columns === 3 && wideCatalogLayout.width <= 960,
+    'wide provider catalog must use a compact three-column tile grid'
+  );
   const providerIconPaths = [];
-  for (const row of await page.locator('.provider-row[data-provider-id]').all()) {
-    const providerID = await row.getAttribute('data-provider-id');
-    const mark = row.locator('.provider-mark');
+  for (const card of await page.locator('.provider-card[data-provider-id]').all()) {
+    const providerID = await card.getAttribute('data-provider-id');
+    const mark = card.locator('.provider-mark');
     const icon = mark.locator('img.provider-icon');
     assert(await icon.count() === 1, `${providerID} must render exactly one provider icon`);
     await icon.evaluate((element) => element.decode());
     const iconRecord = await icon.evaluate((element) => ({
       alt: element.alt,
+      cardWidth: element.closest('.provider-card').getBoundingClientRect().width,
       complete: element.complete,
       id: element.dataset.providerIcon,
+      markHeight: element.parentElement.getBoundingClientRect().height,
       markText: element.parentElement.textContent.trim(),
+      markWidth: element.parentElement.getBoundingClientRect().width,
       naturalHeight: element.naturalHeight,
       naturalWidth: element.naturalWidth,
       path: new URL(element.src).pathname,
@@ -135,9 +146,18 @@ async page => {
         iconRecord.naturalWidth >= 32 &&
         iconRecord.naturalHeight >= 32 &&
         iconRecord.path === `/images/providers/${providerID}.png` &&
-        iconRecord.width > 0 &&
-        iconRecord.width <= 24,
-      `${providerID} provider icon is not the reviewed local product asset`
+        iconRecord.cardWidth > 0 &&
+        iconRecord.markWidth >= 78 &&
+        iconRecord.markHeight >= 78 &&
+        iconRecord.width >= 48 &&
+        iconRecord.width <= 64,
+      `${providerID} provider card does not render its reviewed product logo at the required size`
+    );
+    assert(
+      await card.locator('.provider-name').count() === 1 &&
+        await card.locator('.provider-summary').count() === 1 &&
+        await card.locator('.provider-actions').count() === 1,
+      `${providerID} provider card is missing its name, summary, or action area`
     );
     providerIconPaths.push(iconRecord.path);
   }
@@ -146,16 +166,19 @@ async page => {
     'every provider must own one distinct local product icon'
   );
   assert(
-    await page.locator('.provider-row:not([data-provider-id="netflix"])').count() === 10 &&
+    await page.locator('.provider-card:not([data-provider-id="netflix"])').count() === 10 &&
       await page.locator(
-        '.provider-row:not([data-provider-id="netflix"]) .row-actions button'
+        '.provider-card:not([data-provider-id="netflix"]) .provider-actions button'
       ).count() === 10 &&
       await page.locator(
-        '.provider-row:not([data-provider-id="netflix"]) .row-actions [data-route="guide"]'
+        '.provider-card:not([data-provider-id="netflix"]) .provider-actions [data-route="guide"]'
       ).count() === 10 &&
       await page.locator(
-        '.provider-row:not([data-provider-id="netflix"]) .row-actions .state-chip'
-      ).count() === 0,
+        '.provider-card:not([data-provider-id="netflix"]) .state-chip'
+      ).count() === 0 &&
+      await page.locator(
+        '.provider-card[data-provider-id="netflix"] .provider-card-meta .state-chip'
+      ).count() === 1,
     'each guide-only catalog entry must expose one View guide action without a duplicate badge'
   );
   assert(
@@ -620,25 +643,30 @@ async page => {
 
   await route('#catalog', '.catalog');
   const mobileNetflixCatalog = await page.evaluate(() => {
-    const row = document.querySelector('[data-provider-id="netflix"]');
-    const actions = row.querySelector('.row-actions');
-    const guideOnlyRows = [
+    const grid = document.querySelector('.catalog-grid');
+    const card = document.querySelector('[data-provider-id="netflix"]');
+    const actions = card.querySelector('.provider-actions');
+    const guideOnlyCards = [
       ...document.querySelectorAll(
-        '.provider-row:not([data-provider-id="netflix"])'
+        '.provider-card:not([data-provider-id="netflix"])'
       )
     ];
-    const rowBox = row.getBoundingClientRect();
+    const cardBox = card.getBoundingClientRect();
     const actionsBox = actions.getBoundingClientRect();
     const providerIcons = [...document.querySelectorAll('.provider-icon')];
     return {
       documentWidth: document.documentElement.scrollWidth,
       viewportWidth: window.innerWidth,
+      gridColumns: getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length,
       actionCount: actions.querySelectorAll('button').length,
       actionsLeft: actionsBox.left,
       actionsRight: actionsBox.right,
-      rowLeft: rowBox.left,
-      rowRight: rowBox.right,
+      cardLeft: cardBox.left,
+      cardRight: cardBox.right,
       providerIconCount: providerIcons.length,
+      providerIconsLarge: providerIcons.every(
+        (providerIcon) => providerIcon.getBoundingClientRect().width >= 48
+      ),
       providerIconsContained: providerIcons.every((providerIcon) => {
         const iconBox = providerIcon.getBoundingClientRect();
         const markBox = providerIcon.closest('.provider-mark').getBoundingClientRect();
@@ -651,8 +679,11 @@ async page => {
           iconBox.bottom <= markBox.bottom
         );
       }),
-      guideOnlyRowsHaveOneAction: guideOnlyRows.every((guideOnlyRow) => {
-        const guideOnlyActions = guideOnlyRow.querySelector('.row-actions');
+      summariesVisible: [...document.querySelectorAll('.provider-summary')].every(
+        (summary) => summary.getBoundingClientRect().height > 0
+      ),
+      guideOnlyCardsHaveOneAction: guideOnlyCards.every((guideOnlyCard) => {
+        const guideOnlyActions = guideOnlyCard.querySelector('.provider-actions');
         return (
           guideOnlyActions.querySelectorAll('button').length === 1 &&
           guideOnlyActions.querySelectorAll('[data-route="guide"]').length === 1 &&
@@ -663,19 +694,22 @@ async page => {
   });
   assert(
     mobileNetflixCatalog.documentWidth <= mobileNetflixCatalog.viewportWidth &&
+      mobileNetflixCatalog.gridColumns === 1 &&
       mobileNetflixCatalog.actionCount === 2 &&
-      mobileNetflixCatalog.actionsLeft >= mobileNetflixCatalog.rowLeft &&
-      mobileNetflixCatalog.actionsRight <= mobileNetflixCatalog.rowRight,
-    'mobile Netflix catalog entry must contain guide and workspace actions without overflow'
+      mobileNetflixCatalog.actionsLeft >= mobileNetflixCatalog.cardLeft &&
+      mobileNetflixCatalog.actionsRight <= mobileNetflixCatalog.cardRight,
+    'mobile Netflix provider card must contain guide and workspace actions without overflow'
   );
   assert(
-    mobileNetflixCatalog.guideOnlyRowsHaveOneAction,
-    'mobile guide-only catalog entries must expose one View guide action without a duplicate badge'
+    mobileNetflixCatalog.guideOnlyCardsHaveOneAction &&
+      mobileNetflixCatalog.summariesVisible,
+    'mobile guide-only provider cards must keep their summary and one View guide action'
   );
   assert(
     mobileNetflixCatalog.providerIconCount === 11 &&
+      mobileNetflixCatalog.providerIconsLarge &&
       mobileNetflixCatalog.providerIconsContained,
-    'mobile provider icons must remain present and contained in their catalog marks'
+    'mobile provider cards must retain large contained product logos'
   );
 
   await route('#guide/netflix', '#netflix');
