@@ -3,7 +3,7 @@ PLAYWRIGHT_CLI_VERSION ?= 0.1.17
 TYPESCRIPT_VERSION ?= 5.9.2
 CGO_ENABLED ?= 1
 RELEASE_TOOL_DIR := $(abspath $(CURDIR)/scripts/release)
-override PAGES_URL := https://marcopoloresearchlab.github.io/download_your_data/
+override PAGES_URL := https://dyd.mprlab.com/
 
 export CGO_ENABLED
 

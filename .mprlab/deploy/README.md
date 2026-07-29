@@ -28,7 +28,9 @@ downloads them again to verify their hashes.
 
 `make deploy` downloads the published manifest and Pages payload, verifies them
 against the prepared manifest and remote tag, replaces `gh-pages`, configures
-branch-based GitHub Pages, and verifies the public source marker.
+branch-based GitHub Pages with the sealed custom domain and enforced HTTPS,
+waits for that configuration to converge, and verifies the public source
+marker.
 
 `make deploy-dry-run` is non-publishing validation for repository and gateway
 work. It never pushes a branch, creates a release, configures Pages, or changes
@@ -37,10 +39,12 @@ production.
 ## Production profile
 
 - Frontend origin:
-  `https://marcopoloresearchlab.github.io/download_your_data/`
+  `https://dyd.mprlab.com/`
 - Frontend owner: GitHub Pages branch publishing from `gh-pages:/`
-- DNS owner: GitHub's default organization Pages domain; there is no custom
-  application hostname or `CNAME`
+- DNS owner: the MPR DNS `dyd.mprlab.com` CNAME points directly to
+  `marcopoloresearchlab.github.io`; the release artifact owns the matching
+  newline-terminated `CNAME` file
+- TLS owner: GitHub Pages with HTTPS enforcement
 - Backend/API origin: none
 - Origin topology: one static public documentation surface; the product API is
   not deployed

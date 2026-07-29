@@ -101,6 +101,10 @@ PLAYWRIGHT_CLI_VERSION="${PLAYWRIGHT_CLI_VERSION:?PLAYWRIGHT_CLI_VERSION is requ
   "${repository_root}/scripts/browser-smoke.sh" "${binary_path}"
 
 tar -xzf "${first_assets}/pages.tar.gz" -C "${pages_extract_directory}"
+[[ "$(<"${pages_extract_directory}/CNAME")" == "dyd.mprlab.com" ]] || {
+  echo "error: Pages artifact does not own the canonical dyd.mprlab.com CNAME" >&2
+  exit 1
+}
 python3 - \
   "${pages_extract_directory}/.mprlab-release.json" \
   "${version}" \

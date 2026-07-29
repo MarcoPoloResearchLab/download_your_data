@@ -56,7 +56,11 @@ make deploy
 
 `make publish` publishes that exact commit, tag, manifest, application archive, checksum, and static-site archive as a non-draft GitHub Release. It does not rebuild.
 
-`make deploy` activates the published static download and documentation page through branch-based GitHub Pages. The deployed page has no application API, authentication, runtime secret, or personal-data upload path; the released application itself remains loopback-only.
+`make deploy` activates the published static download and documentation page at
+`https://dyd.mprlab.com/` through branch-based GitHub Pages, configures the
+sealed custom domain, and enforces HTTPS. The deployed page has no application
+API, authentication, runtime secret, or personal-data upload path; the released
+application itself remains loopback-only.
 
 See [the first-run guide](docs/first-run.md) for artifact verification, LM Studio setup, local data operations, backup, replacement, deletion, and troubleshooting. The app-owned deployment topology and gateway manifest live under `.mprlab/deploy/`.
 

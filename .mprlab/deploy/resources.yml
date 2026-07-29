@@ -15,5 +15,5 @@ mprlab_resources:
     - type: github_pages
       name: download-your-data
       target: pages-deploy
-      url: https://marcopoloresearchlab.github.io/download_your_data/
+      url: https://dyd.mprlab.com/
       source_marker_path: /.mprlab-release.json

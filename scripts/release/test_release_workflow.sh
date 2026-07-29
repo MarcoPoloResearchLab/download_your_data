@@ -19,6 +19,8 @@ fixture_repository="${temporary_root}/repository"
 fixture_remote="${temporary_root}/remote.git"
 fake_binary_directory="${temporary_root}/bin"
 published_pages_directory="${temporary_root}/published-pages"
+pages_state="${temporary_root}/pages-state.json"
+pages_api_log="${temporary_root}/pages-api.log"
 
 cleanup() {
   rm -rf "${temporary_root}"
@@ -86,6 +88,7 @@ with tarfile.open(asset_directory / "pages.tar.gz", "w:gz") as archive:
     for name, contents in {
         ".mprlab-release.json": json.dumps(marker, sort_keys=True) + "\n",
         ".nojekyll": "",
+        "CNAME": "release.example.invalid\n",
         "index.html": "<!doctype html><title>fixture</title>\n",
     }.items():
         encoded = contents.encode("utf-8")
@@ -173,12 +176,53 @@ if [[ "$1" == "release" && "$2" == "download" ]]; then
   exit 0
 fi
 
-if [[ "$1" == "api" ]]; then
-  exit 0
+if [[ "$1" != "api" ]]; then
+  echo "unexpected fake gh command: $*" >&2
+  exit 2
 fi
 
-echo "unexpected fake gh command: $*" >&2
-exit 2
+shift
+method="GET"
+endpoint=""
+arguments="$*"
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --method) method="$2"; shift 2 ;;
+    -f|-F|-H) shift 2 ;;
+    repos/*) endpoint="$1"; shift ;;
+    *) shift ;;
+  esac
+done
+printf '%s %s %s\n' "${method}" "${endpoint}" "${arguments}" \
+  >>"${FAKE_PAGES_API_LOG}"
+case "${method}:${endpoint}" in
+  "GET:repos/{owner}/{repo}/pages")
+    if [[ ! -f "${FAKE_PAGES_STATE}" ]]; then
+      echo "gh: Not Found (HTTP 404)" >&2
+      exit 1
+    fi
+    cat "${FAKE_PAGES_STATE}"
+    ;;
+  "POST:repos/{owner}/{repo}/pages")
+    printf '%s\n' \
+      "{\"source\":{\"branch\":\"${FAKE_PAGES_BRANCH}\",\"path\":\"/\"},\"cname\":null,\"https_enforced\":false,\"https_certificate\":{\"state\":\"approved\"}}" \
+      >"${FAKE_PAGES_STATE}"
+    ;;
+  "PUT:repos/{owner}/{repo}/pages")
+    case " ${arguments} " in
+      *" https_enforced=true "*) https_enforced="true" ;;
+      *) https_enforced="false" ;;
+    esac
+    printf '%s\n' \
+      "{\"source\":{\"branch\":\"${FAKE_PAGES_BRANCH}\",\"path\":\"/\"},\"cname\":\"${FAKE_PAGES_DOMAIN}\",\"https_enforced\":${https_enforced},\"https_certificate\":{\"state\":\"approved\"}}" \
+      >"${FAKE_PAGES_STATE}"
+    ;;
+  "POST:repos/{owner}/{repo}/pages/builds") ;;
+  *)
+    echo "unexpected fake gh api call: ${method} ${endpoint}" >&2
+    exit 2
+    ;;
+esac
 FAKE_GH
 
 cat >"${fake_binary_directory}/curl" <<'FAKE_CURL'
@@ -226,17 +270,57 @@ tar -xzf \
   "${release_artifact_directory}/payloads/release-assets/pages.tar.gz" \
   -C "${published_pages_directory}"
 
-(
+: >"${pages_api_log}"
+dry_run_output="$(
+  cd "${fixture_repository}"
+  PATH="${fake_binary_directory}:${PATH}" \
+  FAKE_RELEASE_ARTIFACT_DIR="${release_artifact_directory}" \
+  FAKE_PAGES_API_LOG="${pages_api_log}" \
+    /bin/bash \
+    ./scripts/release/deploy_pages_artifact.sh \
+    --branch gh-pages \
+    --url https://release.example.invalid/ \
+    --dry-run
+)"
+[[ "${dry_run_output}" == *"Pages release ${first_release_tag} preflight passed for release.example.invalid; GitHub state was not changed."* ]] || {
+  echo "error: Pages dry run did not report the sealed custom domain" >&2
+  exit 1
+}
+[[ ! -s "${pages_api_log}" ]] || {
+  echo "error: Pages dry run contacted the Pages configuration API" >&2
+  exit 1
+}
+if git --git-dir="${fixture_remote}" show-ref --verify --quiet refs/heads/gh-pages; then
+  echo "error: Pages dry run created the deployment branch" >&2
+  exit 1
+fi
+
+deploy_output="$(
   cd "${fixture_repository}"
   PATH="${fake_binary_directory}:${PATH}" \
   FAKE_RELEASE_ARTIFACT_DIR="${release_artifact_directory}" \
   FAKE_PAGES_MARKER="${published_pages_directory}/.mprlab-release.json" \
+  FAKE_PAGES_STATE="${pages_state}" \
+  FAKE_PAGES_API_LOG="${pages_api_log}" \
+  FAKE_PAGES_BRANCH="gh-pages" \
+  FAKE_PAGES_DOMAIN="release.example.invalid" \
+  PAGES_CONFIGURE_ATTEMPTS=1 \
+  PAGES_CONFIGURE_DELAY_SECONDS=0 \
   PAGES_VERIFY_ATTEMPTS=1 \
+  PAGES_VERIFY_DELAY_SECONDS=0 \
     /bin/bash \
     ./scripts/release/deploy_pages_artifact.sh \
     --branch gh-pages \
     --url https://release.example.invalid/
-)
+)"
+[[ "${deploy_output}" == *"Configured GitHub Pages from gh-pages:/ with release.example.invalid and enforced HTTPS."* ]] || {
+  echo "error: Pages deployment did not converge the custom domain and HTTPS" >&2
+  exit 1
+}
+[[ "${deploy_output}" == *"Verified https://release.example.invalid/ at source "* ]] || {
+  echo "error: Pages deployment did not verify the public source marker" >&2
+  exit 1
+}
 
 git --git-dir="${fixture_remote}" show \
   refs/heads/gh-pages:.mprlab-release.json \
@@ -244,6 +328,58 @@ git --git-dir="${fixture_remote}" show \
 cmp \
   "${published_pages_directory}/.mprlab-release.json" \
   "${temporary_root}/deployed-marker.json"
+[[ "$(
+  git --git-dir="${fixture_remote}" show refs/heads/gh-pages:CNAME
+)" == "release.example.invalid" ]] || {
+  echo "error: deployed Pages branch does not own the sealed CNAME" >&2
+  exit 1
+}
+python3 - "${pages_state}" <<'PY'
+import json
+import sys
+
+state = json.load(open(sys.argv[1], encoding="utf-8"))
+expected = {
+    "cname": "release.example.invalid",
+    "https_certificate": {"state": "approved"},
+    "https_enforced": True,
+    "source": {"branch": "gh-pages", "path": "/"},
+}
+if state != expected:
+    raise SystemExit(f"Pages API settings did not converge: {state!r}")
+PY
+grep -Fq "POST repos/{owner}/{repo}/pages " "${pages_api_log}"
+grep -Fq "PUT repos/{owner}/{repo}/pages " "${pages_api_log}"
+grep -Fq "cname=release.example.invalid" "${pages_api_log}"
+grep -Fq "https_enforced=true" "${pages_api_log}"
+
+: >"${pages_api_log}"
+idempotent_output="$(
+  cd "${fixture_repository}"
+  PATH="${fake_binary_directory}:${PATH}" \
+  FAKE_RELEASE_ARTIFACT_DIR="${release_artifact_directory}" \
+  FAKE_PAGES_MARKER="${published_pages_directory}/.mprlab-release.json" \
+  FAKE_PAGES_STATE="${pages_state}" \
+  FAKE_PAGES_API_LOG="${pages_api_log}" \
+  FAKE_PAGES_BRANCH="gh-pages" \
+  FAKE_PAGES_DOMAIN="release.example.invalid" \
+  PAGES_CONFIGURE_ATTEMPTS=1 \
+  PAGES_CONFIGURE_DELAY_SECONDS=0 \
+  PAGES_VERIFY_ATTEMPTS=1 \
+  PAGES_VERIFY_DELAY_SECONDS=0 \
+    /bin/bash \
+    ./scripts/release/deploy_pages_artifact.sh \
+    --branch gh-pages \
+    --url https://release.example.invalid/
+)"
+[[ "${idempotent_output}" == *"Pages branch already contains ${first_release_tag}"* ]] || {
+  echo "error: repeated Pages deployment did not report branch convergence" >&2
+  exit 1
+}
+if grep -Eq "^(POST|PUT) " "${pages_api_log}"; then
+  echo "error: repeated Pages deployment mutated converged GitHub settings" >&2
+  exit 1
+fi
 
 /bin/bash -n "${repository_root}/scripts/release/prepare_release.sh"
 /bin/bash -n "${repository_root}/scripts/release/publish_release.sh"

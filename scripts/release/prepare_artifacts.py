@@ -27,12 +27,13 @@ VERSION_PATTERN = re.compile(
 APPLICATION_NAME = "download-your-data"
 APPLICATION_PLATFORM = "darwin"
 APPLICATION_ARCHITECTURE = "arm64"
+PAGES_DOMAIN = "dyd.mprlab.com"
 APPLICATION_DOCUMENTS = {
     "README.md": "README.md",
     "FIRST_RUN.md": "docs/first-run.md",
     "LICENSE": "LICENSE",
 }
-PAGES_FILES = ("index.html", "styles.css")
+PAGES_FILES = ("CNAME", "index.html", "styles.css")
 
 
 class ArtifactError(RuntimeError):
@@ -168,6 +169,7 @@ def build_application(context: ReleaseContext, output_path: Path) -> None:
     environment.update(
         {
             "CGO_ENABLED": "1",
+            "GOCACHE": str(output_path.parent / "go-build-cache"),
             "GOOS": APPLICATION_PLATFORM,
             "GOARCH": APPLICATION_ARCHITECTURE,
         }
@@ -380,6 +382,11 @@ def package_pages(context: ReleaseContext, temporary_root: Path) -> None:
         raise ArtifactError(
             f"Pages source contains {actual_names}; expected {sorted(PAGES_FILES)}"
         )
+    cname_path = pages_root / "CNAME"
+    if cname_path.read_text(encoding="utf-8") != f"{PAGES_DOMAIN}\n":
+        raise ArtifactError(
+            f"Pages CNAME must contain exactly {PAGES_DOMAIN!r} and one newline"
+        )
 
     marker = {
         "schema_version": 1,
@@ -419,6 +426,7 @@ def package_pages(context: ReleaseContext, temporary_root: Path) -> None:
         expected_files={
             ".mprlab-release.json": 0o644,
             ".nojekyll": 0o644,
+            "CNAME": 0o644,
             "index.html": 0o644,
             "styles.css": 0o644,
         },
