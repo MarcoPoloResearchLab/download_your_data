@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="Download Your Data is a private, local-first workspace for personal data exports."
+    >
+    <title>Download Your Data</title>
+    <link rel="canonical" href="https://dyd.mprlab.com/">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">Marco Polo Research Lab</p>
+      <h1>Your exports stay on your Mac.</h1>
+      <p class="summary">
+        Download Your Data is one Apple Silicon application for inspecting
+        personal exports, building a private conversation archive, and
+        exploring Netflix viewing activity. The workspace and API run on
+        loopback; there is no hosted personal-data service.
+      </p>
+      <div class="actions">
+        <a
+          class="primary"
+          href="https://github.com/MarcoPoloResearchLab/download_your_data/releases/latest"
+        >
+          Download the latest release
+        </a>
+        <a
+          href="https://github.com/MarcoPoloResearchLab/download_your_data/blob/master/docs/first-run.md"
+        >
+          Read the first-run guide
+        </a>
+      </div>
+      <section aria-labelledby="release-contract">
+        <h2 id="release-contract">What the release contains</h2>
+        <ul>
+          <li>One macOS arm64 executable with the browser workspace embedded.</li>
+          <li>First-run, LM Studio, backup, replacement, and deletion guidance.</li>
+          <li>A SHA-256 checksum published beside the application archive.</li>
+        </ul>
+      </section>
+      <section aria-labelledby="privacy-contract">
+        <h2 id="privacy-contract">The privacy boundary</h2>
+        <p>
+          Archives, databases, vectors, reports, and caches live only in the
+          owner-selected private data root. Optional TMDB enrichment happens
+          only after explicit initiation and sends derived title queries, not
+          source CSV rows or viewing dates.
+        </p>
+      </section>
+    </main>
+    <footer>
+      <a href="https://github.com/MarcoPoloResearchLab/download_your_data">
+        Source and release history
+      </a>
+    </footer>
+  </body>
+</html>

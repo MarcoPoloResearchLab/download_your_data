@@ -526,6 +526,33 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - `go list -m all` and repository search find no dependency on `github.com/tyemirov/netflix` or the old checkout.
   - `git status --short`
 
+- [x] [M410] (P1) {F005,M404R} Add the canonical release, publication, and deployment lifecycle
+  Goal:
+  Give the local-only product the same fixed repository-owned lifecycle as other MPR applications without introducing a hosted personal-data service.
+
+  Requirements:
+  - Make `make up` the sole local development entrypoint and remove the obsolete `make run` target and documentation.
+  - Make `make release` run the complete CI gate, build a deterministic macOS arm64 executable with embedded version and browser assets, package first-run guidance and the license, produce a checksum, and seal every payload without a remote write.
+  - Make `make publish` publish the exact sealed commit, tag, manifest, application archive, checksum, and Pages archive without rebuilding.
+  - Make user-owned `make deploy` activate only the published static download and documentation page through branch-based GitHub Pages.
+  - Keep the product server loopback-only. Do not deploy an API, personal-data service, container, TAuth tenant, application authentication flow, runtime secret, or browser-side deployment configuration.
+  - Own the complete gateway discovery and deployment contract beneath `.mprlab/deploy/`.
+
+  Deliverables:
+  - Fixed `make up`, `make release`, `make publish`, `make deploy`, and non-publishing `make deploy-dry-run` targets.
+  - Reproducible application and Pages artifacts sealed beneath `.git/mprlab-release`.
+  - App-owned `.mprlab/deploy/resources.yml`, exact production profile, and static Pages source.
+  - Black-box release, repeat-release, publish-plan, local Pages deployment, extracted-application command, and extracted-application browser coverage.
+
+  Validation:
+  - `make deploy-dry-run`
+  - `make ci`
+  - Gateway resource discovery and plan validation against an isolated canonical checkout.
+  - `git diff --check`
+  - `git status --short`
+
+  Resolved 2026-07-29: the repository now owns fixed `make up`, `make release`, `make publish`, and user-owned `make deploy` entrypoints. Release builds and packages the macOS arm64 application twice with an isolated Go build cache, seals its checksum and first-run guidance, and creates only the local release commit and tag; publish uploads that exact sealed release without rebuilding; deploy verifies the published manifest and tag, replaces `gh-pages`, configures branch publishing with the sealed `dyd.mprlab.com` CNAME, waits for the GitHub Pages certificate, enforces HTTPS, and verifies the source marker. Read-only production inspection confirmed `dyd.mprlab.com` points directly to `marcopoloresearchlab.github.io` and the repository is in the expected pre-first-deploy Pages API 404 state. `make deploy-dry-run`, `make ci`, Bash 3.2 syntax checks, deterministic application and Pages artifact checks, extracted command and browser smoke, local publication/deployment/idempotency fixtures, `git diff --check`, and isolated gateway discovery and workflow validation passed; the gateway admitted `download_your_data` as `READY`. No production release, publication, Pages configuration, or deployment command was run.
+
 ## Features
 
 - [ ] [F001] (P1) {I001,I002,I005} Add the OpenAI archive generation lifecycle

@@ -23,7 +23,7 @@ import (
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/store"
 )
 
-const version = "0.2.0"
+var version = "development"
 
 func runCommand(
 	applicationContext context.Context,

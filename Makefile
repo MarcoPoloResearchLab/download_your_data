@@ -2,16 +2,18 @@ GO ?= go
 PLAYWRIGHT_CLI_VERSION ?= 0.1.17
 TYPESCRIPT_VERSION ?= 5.9.2
 CGO_ENABLED ?= 1
+RELEASE_TOOL_DIR := $(abspath $(CURDIR)/scripts/release)
+override PAGES_URL := https://dyd.mprlab.com/
 
 export CGO_ENABLED
 
-.PHONY: build check-frontend ci eval-netflix-matcher fmt fmt-check lint run smoke-command smoke-netflix-command test test-browser validate-instruction-screenshots
+.PHONY: build check-frontend ci deploy deploy-dry-run eval-netflix-matcher fmt fmt-check lint pages-deploy publish publish-release release release-artifacts smoke-command smoke-netflix-command test test-browser test-release-artifact test-release-workflow up validate-instruction-screenshots
 
 build:
 	mkdir -p build
 	$(GO) build -o build/download-your-data .
 
-run:
+up:
 	$(GO) run . serve
 
 fmt:
@@ -39,8 +41,8 @@ test:
 eval-netflix-matcher:
 	$(GO) test ./internal/providers/netflix -run '^TestMatcherEvaluationGate$$' -count=1 -v
 
-test-browser:
-	PLAYWRIGHT_CLI_VERSION=$(PLAYWRIGHT_CLI_VERSION) ./scripts/browser-smoke.sh
+test-browser: build
+	PLAYWRIGHT_CLI_VERSION=$(PLAYWRIGHT_CLI_VERSION) ./scripts/browser-smoke.sh ./build/download-your-data
 	DOWNLOAD_YOUR_DATA_RUN_BROWSER_CONTRACT=1 \
 		PLAYWRIGHT_CLI_VERSION=$(PLAYWRIGHT_CLI_VERSION) \
 		$(GO) test . -run '^TestNetflixBrowserWorkspaceContract$$' -count=1
@@ -54,4 +56,28 @@ smoke-command: build
 smoke-netflix-command:
 	$(GO) test . -run '^TestNetflixOperatorCommandSmokeCoversInspectEnrichmentCacheAndExport$$' -count=1 -v
 
-ci: fmt-check lint check-frontend eval-netflix-matcher test smoke-netflix-command validate-instruction-screenshots test-browser smoke-command
+test-release-workflow:
+	./scripts/release/test_release_workflow.sh
+
+test-release-artifact:
+	PLAYWRIGHT_CLI_VERSION=$(PLAYWRIGHT_CLI_VERSION) ./scripts/release/test_application_artifact.sh
+
+release:
+	@"$(RELEASE_TOOL_DIR)/prepare_release.sh"
+
+release-artifacts:
+	@python3 "$(RELEASE_TOOL_DIR)/prepare_artifacts.py"
+
+publish-release:
+	@"$(RELEASE_TOOL_DIR)/publish_release.sh"
+
+publish: publish-release
+
+pages-deploy:
+	@"$(RELEASE_TOOL_DIR)/deploy_pages_artifact.sh" --branch gh-pages --url "$(PAGES_URL)"
+
+deploy: pages-deploy
+
+deploy-dry-run: test-release-workflow test-release-artifact
+
+ci: fmt-check lint check-frontend eval-netflix-matcher test smoke-netflix-command validate-instruction-screenshots test-browser smoke-command test-release-workflow test-release-artifact

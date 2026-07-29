@@ -1,0 +1,19 @@
+---
+mprlab_resources:
+  schema_version: 1
+  repo:
+    id: download-your-data
+    directory: download_your_data
+    dispatch_target: download-your-data
+  resources:
+    - type: make_workflow
+      name: download-your-data
+      targets:
+        release: release
+        publish: publish
+        deploy: deploy
+    - type: github_pages
+      name: download-your-data
+      target: pages-deploy
+      url: https://dyd.mprlab.com/
+      source_marker_path: /.mprlab-release.json
