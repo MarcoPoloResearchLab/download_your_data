@@ -8,11 +8,12 @@ The repository owns its complete conversation archive engine: OpenAI export insp
 
 - Go 1.26.1 or later
 - Node.js with `npx` for browser validation
+- Git, Python 3, and the GitHub CLI for release publication and Pages deployment
 
 ## Run locally
 
 ```bash
-make run
+make up
 ```
 
 Open `http://127.0.0.1:8787`.
@@ -20,7 +21,7 @@ Open `http://127.0.0.1:8787`.
 The listen address can be changed to another loopback address:
 
 ```bash
-DOWNLOAD_YOUR_DATA_ADDRESS=127.0.0.1:9000 make run
+DOWNLOAD_YOUR_DATA_ADDRESS=127.0.0.1:9000 make up
 ```
 
 Non-loopback bind addresses are rejected because the first canonical release is local-only.
@@ -28,7 +29,7 @@ Non-loopback bind addresses are rejected because the first canonical release is 
 Application state defaults to `~/.download-your-data`. To use another location, provide one absolute owner-only directory:
 
 ```bash
-DOWNLOAD_YOUR_DATA_DATA_DIR=/absolute/private/path make run
+DOWNLOAD_YOUR_DATA_DATA_DIR=/absolute/private/path make up
 ```
 
 The process creates the data root and every application-owned subdirectory with mode `0700`; databases, vectors, reports, caches, and other files use mode `0600`. Relative paths, filesystem roots, the user home itself, permissive existing directories, symbolic-link escapes, and application output paths outside this root are rejected.
@@ -40,6 +41,24 @@ make ci
 ```
 
 The full gate checks formatting, Go static analysis, public HTTP behavior, and the application through a real browser.
+
+## Release, publish, and deploy
+
+The repository owns one fixed three-stage operator lifecycle:
+
+```bash
+make release
+make publish
+make deploy
+```
+
+`make release` runs `make ci`, builds the macOS arm64 executable twice to prove deterministic output, packages the executable with the first-run documentation and license, writes its SHA-256 checksum, prepares the static download site, and seals every payload beneath `.git/mprlab-release`. It creates one CHANGELOG-only release commit and annotated tag but performs no remote write.
+
+`make publish` publishes that exact commit, tag, manifest, application archive, checksum, and static-site archive as a non-draft GitHub Release. It does not rebuild.
+
+`make deploy` activates the published static download and documentation page through branch-based GitHub Pages. The deployed page has no application API, authentication, runtime secret, or personal-data upload path; the released application itself remains loopback-only.
+
+See [the first-run guide](docs/first-run.md) for artifact verification, LM Studio setup, local data operations, backup, replacement, deletion, and troubleshooting. The app-owned deployment topology and gateway manifest live under `.mprlab/deploy/`.
 
 ## Product operator commands
 
@@ -114,7 +133,7 @@ Raw Netflix viewing-activity import and analytics remain local and do not requir
 Configure the server-owned TMDB API Read Access Token before starting the application:
 
 ```bash
-DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN=your-read-access-token make run
+DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN=your-read-access-token make up
 ```
 
 The token is accepted only from `DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN`. It stays in the Go process and is never returned to the browser, placed in a URL, logged, reported, or persisted. Production requests use Bearer authentication against TMDB's fixed official HTTPS API origin. The browser capability payload reports only whether enrichment is configured.
