@@ -62,6 +62,19 @@ async page => {
     'provider catalog must contain eleven canonical providers'
   );
   assert(
+    await page.locator('.provider-row:not([data-provider-id="netflix"])').count() === 10 &&
+      await page.locator(
+        '.provider-row:not([data-provider-id="netflix"]) .row-actions button'
+      ).count() === 10 &&
+      await page.locator(
+        '.provider-row:not([data-provider-id="netflix"]) .row-actions [data-route="guide"]'
+      ).count() === 10 &&
+      await page.locator(
+        '.provider-row:not([data-provider-id="netflix"]) .row-actions .state-chip'
+      ).count() === 0,
+    'each guide-only catalog entry must expose one View guide action without a duplicate badge'
+  );
+  assert(
     await page.locator('[data-provider-id="netflix"]').count() === 1,
     'provider catalog must contain exactly one Netflix identity'
   );
@@ -126,6 +139,10 @@ async page => {
     assert(
       (await page.locator('.guide h1').textContent()).trim() === 'OpenAI (ChatGPT)',
       `${locale} did not preserve the canonical OpenAI identity`
+    );
+    assert(
+      await page.locator('.guide .state-chip').count() === 0,
+      `${locale} guide header must not render a generic guide badge`
     );
     assert(
       (await page.locator('#openai h2').textContent()).trim() ===
@@ -458,6 +475,11 @@ async page => {
   const mobileNetflixCatalog = await page.evaluate(() => {
     const row = document.querySelector('[data-provider-id="netflix"]');
     const actions = row.querySelector('.row-actions');
+    const guideOnlyRows = [
+      ...document.querySelectorAll(
+        '.provider-row:not([data-provider-id="netflix"])'
+      )
+    ];
     const rowBox = row.getBoundingClientRect();
     const actionsBox = actions.getBoundingClientRect();
     return {
@@ -467,7 +489,15 @@ async page => {
       actionsLeft: actionsBox.left,
       actionsRight: actionsBox.right,
       rowLeft: rowBox.left,
-      rowRight: rowBox.right
+      rowRight: rowBox.right,
+      guideOnlyRowsHaveOneAction: guideOnlyRows.every((guideOnlyRow) => {
+        const guideOnlyActions = guideOnlyRow.querySelector('.row-actions');
+        return (
+          guideOnlyActions.querySelectorAll('button').length === 1 &&
+          guideOnlyActions.querySelectorAll('[data-route="guide"]').length === 1 &&
+          guideOnlyActions.querySelector('.state-chip') === null
+        );
+      })
     };
   });
   assert(
@@ -476,6 +506,10 @@ async page => {
       mobileNetflixCatalog.actionsLeft >= mobileNetflixCatalog.rowLeft &&
       mobileNetflixCatalog.actionsRight <= mobileNetflixCatalog.rowRight,
     'mobile Netflix catalog entry must contain guide and workspace actions without overflow'
+  );
+  assert(
+    mobileNetflixCatalog.guideOnlyRowsHaveOneAction,
+    'mobile guide-only catalog entries must expose one View guide action without a duplicate badge'
   );
 
   await route('#guide/netflix', '#netflix');

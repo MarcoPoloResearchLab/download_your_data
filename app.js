@@ -453,7 +453,6 @@ function renderCatalog() {
       );
     } else {
       actions.append(
-        stateChip(ui().guide, 'neutral'),
         actionButton(ui().view_guide, {
           'data-route': 'guide',
           'data-provider': providerDefinition.id
@@ -486,17 +485,17 @@ function renderGuide(providerID) {
     element('h1', {text: provider.title}),
     element('p', {class: 'lede', text: provider.intro})
   );
-  const actions = element('div', {class: 'page-heading-actions'});
-  actions.append(stateChip(ui().guide, 'neutral'));
+  heading.append(copy);
   if (providerID === 'netflix') {
+    const actions = element('div', {class: 'page-heading-actions'});
     actions.append(
       actionButton(ui().open, {
         'data-route': 'netflix',
         class: 'button button-primary'
       })
     );
+    heading.append(actions);
   }
-  heading.append(copy, actions);
 
   const section = element('section', {
     id: provider.id,

@@ -135,6 +135,41 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - `make test-browser`
   - `make ci`
 
+- [x] [B007] (P1) {B004,F009} Remove duplicate guide badges from provider actions
+  Goal:
+  Keep each guide-only catalog action clear, singular, and actionable.
+
+  Requirements:
+  - Render exactly one View guide button in every guide-only provider row.
+  - Remove the adjacent non-actionable Guide badge from catalog rows.
+  - Remove generic Guide badges from guide headings while preserving real Netflix workspace-state chips.
+  - Prove the singular action contract at wide and narrow web viewport widths.
+
+  Deliverables:
+  - Simplified catalog and guide-heading rendering.
+  - Browser regression coverage for all guide-only providers and locales.
+
+  Validation:
+  - `make check-frontend`
+  - `make test-browser`
+  - `make ci`
+
+- [x] [B008] (P1) {B001} Make concurrent local-server cleanup idempotent
+  Goal:
+  Keep the required CI lifecycle gate deterministic when shutdown and wrapper cleanup converge.
+
+  Requirements:
+  - Read the two-line ownership identity through one file descriptor.
+  - Treat a state file removed by the other owner-cleanup path as already cleaned.
+  - Preserve exact process-ID and process-start matching before removing any remaining state.
+
+  Deliverables:
+  - Race-safe ownership-state cleanup in the canonical local lifecycle script.
+
+  Validation:
+  - `make test-local-lifecycle`
+  - `make ci`
+
 ## Improvements
 
 - [x] [I001] (P1) Establish the canonical local server and validation foundation
