@@ -96,6 +96,16 @@
         "id": "facebook-export-entry",
         "src": "images/instructions/facebook-export-entry.png",
         "href": "https://accountscenter.facebook.com/info_and_permissions/dyi/"
+      },
+      {
+        "id": "facebook-help-export-device",
+        "src": "images/instructions/facebook-help-export-device.png",
+        "href": "https://www.facebook.com/help/212802592074644"
+      },
+      {
+        "id": "facebook-help-available-downloads",
+        "src": "images/instructions/facebook-help-available-downloads.png",
+        "href": "https://www.facebook.com/help/212802592074644"
       }
     ],
     "instagram": [
@@ -108,6 +118,16 @@
         "id": "instagram-export-entry",
         "src": "images/instructions/instagram-export-entry.png",
         "href": "https://accountscenter.instagram.com/info_and_permissions/dyi/"
+      },
+      {
+        "id": "instagram-help-export-device",
+        "src": "images/instructions/instagram-help-export-device.png",
+        "href": "https://www.facebook.com/help/181231772500920"
+      },
+      {
+        "id": "instagram-help-available-downloads",
+        "src": "images/instructions/instagram-help-available-downloads.png",
+        "href": "https://www.facebook.com/help/181231772500920"
       }
     ],
     "whatsapp": [
@@ -124,14 +144,9 @@
     ],
     "threads": [
       {
-        "id": "instagram-accounts-center-information",
-        "src": "images/instructions/instagram-accounts-center-information.png",
-        "href": "https://accountscenter.instagram.com/info_and_permissions/"
-      },
-      {
-        "id": "instagram-export-entry",
-        "src": "images/instructions/instagram-export-entry.png",
-        "href": "https://accountscenter.instagram.com/info_and_permissions/dyi/"
+        "id": "threads-help-export-device",
+        "src": "images/instructions/threads-help-export-device.png",
+        "href": "https://www.facebook.com/help/instagram/259803026523198?cms_platform=android-app"
       }
     ],
     "linkedin": [
@@ -478,33 +493,33 @@
             },
             {
               "text": "Open Accounts Center → Your information and permissions → Export your information.",
-              "screenshot_id": "facebook-accounts-center-information",
-              "alt": "Facebook Accounts Center: Your information and permissions"
+              "screenshot_id": "facebook-export-entry",
+              "alt": "Facebook Export your information panel"
             },
             {
               "text": "Click Create export, then select the Facebook profile to export.",
-              "screenshot_id": "facebook-export-entry",
-              "alt": "Facebook Export your information panel"
+              "screenshot_id": "facebook-help-export-device",
+              "alt": "Facebook Help Center device export steps from Create export through Start export"
             },
             {
               "text": "Select Export to device.",
-              "screenshot_id": "facebook-export-entry",
-              "alt": "Facebook Export your information panel"
+              "screenshot_id": "facebook-help-export-device",
+              "alt": "Facebook Help Center device export steps from Create export through Start export"
             },
             {
               "text": "Choose the information, date range, format, notification email, and media quality.",
-              "screenshot_id": "facebook-export-entry",
-              "alt": "Facebook Export your information panel"
+              "screenshot_id": "facebook-help-export-device",
+              "alt": "Facebook Help Center device export steps from Create export through Start export"
             },
             {
-              "text": "Click Start export. Facebook sends an email and notification when the export is ready.",
-              "screenshot_id": "facebook-export-entry",
-              "alt": "Facebook Export your information panel"
+              "text": "Click Start export.",
+              "screenshot_id": "facebook-help-export-device",
+              "alt": "Facebook Help Center device export steps from Create export through Start export"
             },
             {
-              "text": "Return to Available downloads within 4 days. Complete any password or identity verification yourself, then download the ZIP.",
-              "screenshot_id": "facebook-export-entry",
-              "alt": "Facebook Export your information panel"
+              "text": "When Facebook notifies you, use Available downloads within 4 days to retrieve the protected export.",
+              "screenshot_id": "facebook-help-available-downloads",
+              "alt": "Facebook Help Center availability and four-day protected download window"
             }
           ],
           "refs": [
@@ -527,33 +542,33 @@
             },
             {
               "text": "Open Accounts Center → Your information and permissions → Export your information.",
-              "screenshot_id": "instagram-accounts-center-information",
-              "alt": "Instagram Accounts Center: Your information and permissions"
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Instagram Accounts Center Export your information panel"
             },
             {
               "text": "Click Create export, select the Instagram profile, then click Next.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Instagram Accounts Center Export your information panel"
+              "screenshot_id": "instagram-help-export-device",
+              "alt": "Instagram Help Center device export steps from Create export through Start export"
             },
             {
               "text": "Select Export to device.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Instagram Accounts Center Export your information panel"
+              "screenshot_id": "instagram-help-export-device",
+              "alt": "Instagram Help Center device export steps from Create export through Start export"
             },
             {
               "text": "Choose the information, date range, format, notification email, and media quality.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Instagram Accounts Center Export your information panel"
+              "screenshot_id": "instagram-help-export-device",
+              "alt": "Instagram Help Center device export steps from Create export through Start export"
             },
             {
-              "text": "Click Start export. Instagram sends an email and notification when the export is ready.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Instagram Accounts Center Export your information panel"
+              "text": "Click Start export.",
+              "screenshot_id": "instagram-help-export-device",
+              "alt": "Instagram Help Center device export steps from Create export through Start export"
             },
             {
-              "text": "Return to Available downloads within 4 days. Complete any password or identity verification yourself, then download the ZIP.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Instagram Accounts Center Export your information panel"
+              "text": "When Instagram notifies you, use Available downloads within 4 days to retrieve the protected export.",
+              "screenshot_id": "instagram-help-available-downloads",
+              "alt": "Instagram Help Center availability and four-day protected download window"
             }
           ],
           "refs": [
@@ -625,38 +640,38 @@
           "steps": [
             {
               "text": "Open the Instagram app, tap your profile picture, then open the menu in the top right.",
-              "screenshot_id": "instagram-accounts-center-information",
-              "alt": "Instagram Accounts Center: Your information and permissions for a Threads export"
+              "screenshot_id": "threads-help-export-device",
+              "alt": "Instagram Help Center steps for exporting Threads information to a device"
             },
             {
               "text": "Tap Accounts Center → Your information and permissions.",
-              "screenshot_id": "instagram-accounts-center-information",
-              "alt": "Instagram Accounts Center: Your information and permissions for a Threads export"
+              "screenshot_id": "threads-help-export-device",
+              "alt": "Instagram Help Center steps for exporting Threads information to a device"
             },
             {
               "text": "Tap Export your information → Create export.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Instagram Accounts Center Export your information panel for Threads"
+              "screenshot_id": "threads-help-export-device",
+              "alt": "Instagram Help Center steps for exporting Threads information to a device"
             },
             {
               "text": "Select the profile whose Threads information you want, then tap Next.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Instagram Accounts Center Export your information panel for Threads"
+              "screenshot_id": "threads-help-export-device",
+              "alt": "Instagram Help Center steps for exporting Threads information to a device"
             },
             {
               "text": "Select Export to device.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Instagram Accounts Center Export your information panel for Threads"
+              "screenshot_id": "threads-help-export-device",
+              "alt": "Instagram Help Center steps for exporting Threads information to a device"
             },
             {
               "text": "Choose the specific information, date range, format, notification email, and media quality.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Instagram Accounts Center Export your information panel for Threads"
+              "screenshot_id": "threads-help-export-device",
+              "alt": "Instagram Help Center steps for exporting Threads information to a device"
             },
             {
-              "text": "Tap Start export. Meta may take up to 30 days to email the download link.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Instagram Accounts Center Export your information panel for Threads"
+              "text": "Tap Start export.",
+              "screenshot_id": "threads-help-export-device",
+              "alt": "Instagram Help Center steps for exporting Threads information to a device"
             }
           ],
           "refs": [
@@ -665,7 +680,7 @@
               "href": "https://www.facebook.com/help/instagram/259803026523198"
             }
           ],
-          "note": "Threads remains a separate provider guide even though Meta currently starts its export from the Instagram app’s Accounts Center."
+          "note": "Threads remains a separate provider guide even though Meta currently starts its export from the Instagram app’s Accounts Center. Meta may take up to 30 days to email the download link."
         },
         {
           "id": "linkedin",
@@ -1200,33 +1215,33 @@
             },
             {
               "text": "Abre el Centro de cuentas → Tu información y permisos → Exportar tu información.",
-              "screenshot_id": "facebook-accounts-center-information",
-              "alt": "Centro de cuentas de Facebook: Tu información y permisos"
+              "screenshot_id": "facebook-export-entry",
+              "alt": "Panel Exportar tu información de Facebook"
             },
             {
               "text": "Pulsa Crear exportación y selecciona el perfil de Facebook que quieras exportar.",
-              "screenshot_id": "facebook-export-entry",
-              "alt": "Panel Exportar tu información de Facebook"
+              "screenshot_id": "facebook-help-export-device",
+              "alt": "Pasos del Centro de ayuda de Facebook para exportar al dispositivo, desde Crear exportación hasta Iniciar exportación"
             },
             {
               "text": "Selecciona Exportar al dispositivo.",
-              "screenshot_id": "facebook-export-entry",
-              "alt": "Panel Exportar tu información de Facebook"
+              "screenshot_id": "facebook-help-export-device",
+              "alt": "Pasos del Centro de ayuda de Facebook para exportar al dispositivo, desde Crear exportación hasta Iniciar exportación"
             },
             {
               "text": "Elige la información, el intervalo de fechas, el formato, el correo de notificación y la calidad multimedia.",
-              "screenshot_id": "facebook-export-entry",
-              "alt": "Panel Exportar tu información de Facebook"
+              "screenshot_id": "facebook-help-export-device",
+              "alt": "Pasos del Centro de ayuda de Facebook para exportar al dispositivo, desde Crear exportación hasta Iniciar exportación"
             },
             {
-              "text": "Pulsa Iniciar exportación. Facebook te enviará un correo y una notificación cuando esté lista.",
-              "screenshot_id": "facebook-export-entry",
-              "alt": "Panel Exportar tu información de Facebook"
+              "text": "Pulsa Iniciar exportación.",
+              "screenshot_id": "facebook-help-export-device",
+              "alt": "Pasos del Centro de ayuda de Facebook para exportar al dispositivo, desde Crear exportación hasta Iniciar exportación"
             },
             {
-              "text": "Vuelve a Descargas disponibles en un plazo de 4 días. Completa personalmente cualquier verificación de contraseña o identidad y descarga el ZIP.",
-              "screenshot_id": "facebook-export-entry",
-              "alt": "Panel Exportar tu información de Facebook"
+              "text": "Cuando Facebook te avise, usa Descargas disponibles en un plazo de 4 días para obtener la exportación protegida.",
+              "screenshot_id": "facebook-help-available-downloads",
+              "alt": "Centro de ayuda de Facebook con la disponibilidad y el plazo protegido de descarga de cuatro días"
             }
           ],
           "refs": [
@@ -1249,33 +1264,33 @@
             },
             {
               "text": "Abre el Centro de cuentas → Tu información y permisos → Exportar tu información.",
-              "screenshot_id": "instagram-accounts-center-information",
-              "alt": "Centro de cuentas de Instagram: Tu información y permisos"
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Panel Exportar tu información del Centro de cuentas de Instagram"
             },
             {
               "text": "Pulsa Crear exportación, selecciona el perfil de Instagram y pulsa Siguiente.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Panel Exportar tu información del Centro de cuentas de Instagram"
+              "screenshot_id": "instagram-help-export-device",
+              "alt": "Pasos del Centro de ayuda de Instagram para exportar al dispositivo, desde Crear exportación hasta Iniciar exportación"
             },
             {
               "text": "Selecciona Exportar al dispositivo.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Panel Exportar tu información del Centro de cuentas de Instagram"
+              "screenshot_id": "instagram-help-export-device",
+              "alt": "Pasos del Centro de ayuda de Instagram para exportar al dispositivo, desde Crear exportación hasta Iniciar exportación"
             },
             {
               "text": "Elige la información, el intervalo de fechas, el formato, el correo de notificación y la calidad multimedia.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Panel Exportar tu información del Centro de cuentas de Instagram"
+              "screenshot_id": "instagram-help-export-device",
+              "alt": "Pasos del Centro de ayuda de Instagram para exportar al dispositivo, desde Crear exportación hasta Iniciar exportación"
             },
             {
-              "text": "Pulsa Iniciar exportación. Instagram te enviará un correo y una notificación cuando esté lista.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Panel Exportar tu información del Centro de cuentas de Instagram"
+              "text": "Pulsa Iniciar exportación.",
+              "screenshot_id": "instagram-help-export-device",
+              "alt": "Pasos del Centro de ayuda de Instagram para exportar al dispositivo, desde Crear exportación hasta Iniciar exportación"
             },
             {
-              "text": "Vuelve a Descargas disponibles en un plazo de 4 días. Completa personalmente cualquier verificación de contraseña o identidad y descarga el ZIP.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Panel Exportar tu información del Centro de cuentas de Instagram"
+              "text": "Cuando Instagram te avise, usa Descargas disponibles en un plazo de 4 días para obtener la exportación protegida.",
+              "screenshot_id": "instagram-help-available-downloads",
+              "alt": "Centro de ayuda de Instagram con la disponibilidad y el plazo protegido de descarga de cuatro días"
             }
           ],
           "refs": [
@@ -1347,38 +1362,38 @@
           "steps": [
             {
               "text": "Abre la aplicación de Instagram, toca tu foto de perfil y abre el menú de la esquina superior derecha.",
-              "screenshot_id": "instagram-accounts-center-information",
-              "alt": "Centro de cuentas de Instagram: Tu información y permisos para exportar Threads"
+              "screenshot_id": "threads-help-export-device",
+              "alt": "Pasos del Centro de ayuda de Instagram para exportar la información de Threads a un dispositivo"
             },
             {
               "text": "Toca Centro de cuentas → Tu información y permisos.",
-              "screenshot_id": "instagram-accounts-center-information",
-              "alt": "Centro de cuentas de Instagram: Tu información y permisos para exportar Threads"
+              "screenshot_id": "threads-help-export-device",
+              "alt": "Pasos del Centro de ayuda de Instagram para exportar la información de Threads a un dispositivo"
             },
             {
               "text": "Toca Exportar tu información → Crear exportación.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Panel Exportar tu información del Centro de cuentas de Instagram para Threads"
+              "screenshot_id": "threads-help-export-device",
+              "alt": "Pasos del Centro de ayuda de Instagram para exportar la información de Threads a un dispositivo"
             },
             {
               "text": "Selecciona el perfil cuya información de Threads quieras exportar y toca Siguiente.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Panel Exportar tu información del Centro de cuentas de Instagram para Threads"
+              "screenshot_id": "threads-help-export-device",
+              "alt": "Pasos del Centro de ayuda de Instagram para exportar la información de Threads a un dispositivo"
             },
             {
               "text": "Selecciona Exportar al dispositivo.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Panel Exportar tu información del Centro de cuentas de Instagram para Threads"
+              "screenshot_id": "threads-help-export-device",
+              "alt": "Pasos del Centro de ayuda de Instagram para exportar la información de Threads a un dispositivo"
             },
             {
               "text": "Elige la información específica, el intervalo de fechas, el formato, el correo de notificación y la calidad multimedia.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Panel Exportar tu información del Centro de cuentas de Instagram para Threads"
+              "screenshot_id": "threads-help-export-device",
+              "alt": "Pasos del Centro de ayuda de Instagram para exportar la información de Threads a un dispositivo"
             },
             {
-              "text": "Toca Iniciar exportación. Meta puede tardar hasta 30 días en enviarte por correo el enlace de descarga.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Panel Exportar tu información del Centro de cuentas de Instagram para Threads"
+              "text": "Toca Iniciar exportación.",
+              "screenshot_id": "threads-help-export-device",
+              "alt": "Pasos del Centro de ayuda de Instagram para exportar la información de Threads a un dispositivo"
             }
           ],
           "refs": [
@@ -1387,7 +1402,7 @@
               "href": "https://www.facebook.com/help/instagram/259803026523198"
             }
           ],
-          "note": "Threads sigue siendo una guía de proveedor independiente, aunque Meta inicia actualmente su exportación desde el Centro de cuentas de la aplicación de Instagram."
+          "note": "Threads sigue siendo una guía de proveedor independiente, aunque Meta inicia actualmente su exportación desde el Centro de cuentas de la aplicación de Instagram. Meta puede tardar hasta 30 días en enviarte por correo el enlace de descarga."
         },
         {
           "id": "linkedin",
@@ -1922,33 +1937,33 @@
             },
             {
               "text": "Ouvrez l’Espace Comptes → Vos informations et autorisations → Exporter vos informations.",
-              "screenshot_id": "facebook-accounts-center-information",
-              "alt": "Espace Comptes Facebook : Vos informations et autorisations"
+              "screenshot_id": "facebook-export-entry",
+              "alt": "Panneau Exporter vos informations de Facebook"
             },
             {
               "text": "Cliquez sur Créer une exportation, puis sélectionnez le profil Facebook à exporter.",
-              "screenshot_id": "facebook-export-entry",
-              "alt": "Panneau Exporter vos informations de Facebook"
+              "screenshot_id": "facebook-help-export-device",
+              "alt": "Étapes du Centre d’aide Facebook pour exporter vers un appareil, de Créer une exportation à Démarrer l’exportation"
             },
             {
               "text": "Sélectionnez Exporter vers l’appareil.",
-              "screenshot_id": "facebook-export-entry",
-              "alt": "Panneau Exporter vos informations de Facebook"
+              "screenshot_id": "facebook-help-export-device",
+              "alt": "Étapes du Centre d’aide Facebook pour exporter vers un appareil, de Créer une exportation à Démarrer l’exportation"
             },
             {
               "text": "Choisissez les informations, la période, le format, l’adresse e-mail de notification et la qualité des contenus multimédias.",
-              "screenshot_id": "facebook-export-entry",
-              "alt": "Panneau Exporter vos informations de Facebook"
+              "screenshot_id": "facebook-help-export-device",
+              "alt": "Étapes du Centre d’aide Facebook pour exporter vers un appareil, de Créer une exportation à Démarrer l’exportation"
             },
             {
-              "text": "Cliquez sur Démarrer l’exportation. Facebook vous envoie un e-mail et une notification lorsqu’elle est prête.",
-              "screenshot_id": "facebook-export-entry",
-              "alt": "Panneau Exporter vos informations de Facebook"
+              "text": "Cliquez sur Démarrer l’exportation.",
+              "screenshot_id": "facebook-help-export-device",
+              "alt": "Étapes du Centre d’aide Facebook pour exporter vers un appareil, de Créer une exportation à Démarrer l’exportation"
             },
             {
-              "text": "Revenez dans Téléchargements disponibles sous 4 jours. Effectuez vous-même toute vérification du mot de passe ou de l’identité, puis téléchargez le ZIP.",
-              "screenshot_id": "facebook-export-entry",
-              "alt": "Panneau Exporter vos informations de Facebook"
+              "text": "Quand Facebook vous avertit, utilisez Téléchargements disponibles sous 4 jours pour récupérer l’exportation protégée.",
+              "screenshot_id": "facebook-help-available-downloads",
+              "alt": "Centre d’aide Facebook avec la disponibilité et la fenêtre de téléchargement protégée de quatre jours"
             }
           ],
           "refs": [
@@ -1971,33 +1986,33 @@
             },
             {
               "text": "Ouvrez l’Espace Comptes → Vos informations et autorisations → Exporter vos informations.",
-              "screenshot_id": "instagram-accounts-center-information",
-              "alt": "Espace Comptes Instagram : Vos informations et autorisations"
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Panneau Exporter vos informations de l’Espace Comptes Instagram"
             },
             {
               "text": "Cliquez sur Créer une exportation, sélectionnez le profil Instagram, puis cliquez sur Suivant.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Panneau Exporter vos informations de l’Espace Comptes Instagram"
+              "screenshot_id": "instagram-help-export-device",
+              "alt": "Étapes du Centre d’aide Instagram pour exporter vers un appareil, de Créer une exportation à Démarrer l’exportation"
             },
             {
               "text": "Sélectionnez Exporter vers l’appareil.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Panneau Exporter vos informations de l’Espace Comptes Instagram"
+              "screenshot_id": "instagram-help-export-device",
+              "alt": "Étapes du Centre d’aide Instagram pour exporter vers un appareil, de Créer une exportation à Démarrer l’exportation"
             },
             {
               "text": "Choisissez les informations, la période, le format, l’adresse e-mail de notification et la qualité des contenus multimédias.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Panneau Exporter vos informations de l’Espace Comptes Instagram"
+              "screenshot_id": "instagram-help-export-device",
+              "alt": "Étapes du Centre d’aide Instagram pour exporter vers un appareil, de Créer une exportation à Démarrer l’exportation"
             },
             {
-              "text": "Cliquez sur Démarrer l’exportation. Instagram vous envoie un e-mail et une notification lorsqu’elle est prête.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Panneau Exporter vos informations de l’Espace Comptes Instagram"
+              "text": "Cliquez sur Démarrer l’exportation.",
+              "screenshot_id": "instagram-help-export-device",
+              "alt": "Étapes du Centre d’aide Instagram pour exporter vers un appareil, de Créer une exportation à Démarrer l’exportation"
             },
             {
-              "text": "Revenez dans Téléchargements disponibles sous 4 jours. Effectuez vous-même toute vérification du mot de passe ou de l’identité, puis téléchargez le ZIP.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Panneau Exporter vos informations de l’Espace Comptes Instagram"
+              "text": "Quand Instagram vous avertit, utilisez Téléchargements disponibles sous 4 jours pour récupérer l’exportation protégée.",
+              "screenshot_id": "instagram-help-available-downloads",
+              "alt": "Centre d’aide Instagram avec la disponibilité et la fenêtre de téléchargement protégée de quatre jours"
             }
           ],
           "refs": [
@@ -2069,38 +2084,38 @@
           "steps": [
             {
               "text": "Ouvrez l’application Instagram, appuyez sur votre photo de profil, puis ouvrez le menu en haut à droite.",
-              "screenshot_id": "instagram-accounts-center-information",
-              "alt": "Espace Comptes Instagram : Vos informations et autorisations pour une exportation Threads"
+              "screenshot_id": "threads-help-export-device",
+              "alt": "Étapes du Centre d’aide Instagram pour exporter les informations Threads vers un appareil"
             },
             {
               "text": "Appuyez sur Espace Comptes → Vos informations et autorisations.",
-              "screenshot_id": "instagram-accounts-center-information",
-              "alt": "Espace Comptes Instagram : Vos informations et autorisations pour une exportation Threads"
+              "screenshot_id": "threads-help-export-device",
+              "alt": "Étapes du Centre d’aide Instagram pour exporter les informations Threads vers un appareil"
             },
             {
               "text": "Appuyez sur Exporter vos informations → Créer une exportation.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Panneau Exporter vos informations de l’Espace Comptes Instagram pour Threads"
+              "screenshot_id": "threads-help-export-device",
+              "alt": "Étapes du Centre d’aide Instagram pour exporter les informations Threads vers un appareil"
             },
             {
               "text": "Sélectionnez le profil dont vous souhaitez exporter les informations Threads, puis appuyez sur Suivant.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Panneau Exporter vos informations de l’Espace Comptes Instagram pour Threads"
+              "screenshot_id": "threads-help-export-device",
+              "alt": "Étapes du Centre d’aide Instagram pour exporter les informations Threads vers un appareil"
             },
             {
               "text": "Sélectionnez Exporter vers l’appareil.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Panneau Exporter vos informations de l’Espace Comptes Instagram pour Threads"
+              "screenshot_id": "threads-help-export-device",
+              "alt": "Étapes du Centre d’aide Instagram pour exporter les informations Threads vers un appareil"
             },
             {
               "text": "Choisissez les informations précises, la période, le format, l’adresse e-mail de notification et la qualité des contenus multimédias.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Panneau Exporter vos informations de l’Espace Comptes Instagram pour Threads"
+              "screenshot_id": "threads-help-export-device",
+              "alt": "Étapes du Centre d’aide Instagram pour exporter les informations Threads vers un appareil"
             },
             {
-              "text": "Appuyez sur Démarrer l’exportation. Meta peut prendre jusqu’à 30 jours pour envoyer le lien de téléchargement par e-mail.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Panneau Exporter vos informations de l’Espace Comptes Instagram pour Threads"
+              "text": "Appuyez sur Démarrer l’exportation.",
+              "screenshot_id": "threads-help-export-device",
+              "alt": "Étapes du Centre d’aide Instagram pour exporter les informations Threads vers un appareil"
             }
           ],
           "refs": [
@@ -2109,7 +2124,7 @@
               "href": "https://www.facebook.com/help/instagram/259803026523198"
             }
           ],
-          "note": "Threads reste un guide fournisseur distinct, même si Meta démarre actuellement son exportation depuis l’Espace Comptes de l’application Instagram."
+          "note": "Threads reste un guide fournisseur distinct, même si Meta démarre actuellement son exportation depuis l’Espace Comptes de l’application Instagram. Meta peut prendre jusqu’à 30 jours pour envoyer le lien de téléchargement par e-mail."
         },
         {
           "id": "linkedin",
@@ -2644,33 +2659,33 @@
             },
             {
               "text": "Откройте «Центр аккаунтов» → «Ваша информация и разрешения» → «Экспорт вашей информации».",
-              "screenshot_id": "facebook-accounts-center-information",
-              "alt": "Центр аккаунтов Facebook: раздел «Ваша информация и разрешения»"
+              "screenshot_id": "facebook-export-entry",
+              "alt": "Панель Facebook «Экспорт вашей информации»"
             },
             {
               "text": "Нажмите «Создать экспорт», затем выберите профиль Facebook для экспорта.",
-              "screenshot_id": "facebook-export-entry",
-              "alt": "Панель Facebook «Экспорт вашей информации»"
+              "screenshot_id": "facebook-help-export-device",
+              "alt": "Инструкции Справочного центра Facebook по экспорту на устройство: от создания до запуска экспорта"
             },
             {
               "text": "Выберите «Экспорт на устройство».",
-              "screenshot_id": "facebook-export-entry",
-              "alt": "Панель Facebook «Экспорт вашей информации»"
+              "screenshot_id": "facebook-help-export-device",
+              "alt": "Инструкции Справочного центра Facebook по экспорту на устройство: от создания до запуска экспорта"
             },
             {
               "text": "Выберите данные, диапазон дат, формат, адрес электронной почты для уведомлений и качество медиафайлов.",
-              "screenshot_id": "facebook-export-entry",
-              "alt": "Панель Facebook «Экспорт вашей информации»"
+              "screenshot_id": "facebook-help-export-device",
+              "alt": "Инструкции Справочного центра Facebook по экспорту на устройство: от создания до запуска экспорта"
             },
             {
-              "text": "Нажмите «Начать экспорт». Facebook пришлёт письмо и уведомление, когда экспорт будет готов.",
-              "screenshot_id": "facebook-export-entry",
-              "alt": "Панель Facebook «Экспорт вашей информации»"
+              "text": "Нажмите «Начать экспорт».",
+              "screenshot_id": "facebook-help-export-device",
+              "alt": "Инструкции Справочного центра Facebook по экспорту на устройство: от создания до запуска экспорта"
             },
             {
-              "text": "Вернитесь в раздел «Доступные загрузки» в течение 4 дней. Самостоятельно пройдите проверку пароля или личности и скачайте ZIP.",
-              "screenshot_id": "facebook-export-entry",
-              "alt": "Панель Facebook «Экспорт вашей информации»"
+              "text": "Когда Facebook пришлёт уведомление, откройте «Доступные загрузки» в течение 4 дней, чтобы получить защищённый экспорт.",
+              "screenshot_id": "facebook-help-available-downloads",
+              "alt": "Справочный центр Facebook: доступность защищённой загрузки в течение четырёх дней"
             }
           ],
           "refs": [
@@ -2693,33 +2708,33 @@
             },
             {
               "text": "Откройте «Центр аккаунтов» → «Ваша информация и разрешения» → «Экспорт вашей информации».",
-              "screenshot_id": "instagram-accounts-center-information",
-              "alt": "Центр аккаунтов Instagram: раздел «Ваша информация и разрешения»"
+              "screenshot_id": "instagram-export-entry",
+              "alt": "Панель экспорта информации в Центре аккаунтов Instagram"
             },
             {
               "text": "Нажмите «Создать экспорт», выберите профиль Instagram и нажмите «Далее».",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Панель экспорта информации в Центре аккаунтов Instagram"
+              "screenshot_id": "instagram-help-export-device",
+              "alt": "Инструкции Справочного центра Instagram по экспорту на устройство: от создания до запуска экспорта"
             },
             {
               "text": "Выберите «Экспорт на устройство».",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Панель экспорта информации в Центре аккаунтов Instagram"
+              "screenshot_id": "instagram-help-export-device",
+              "alt": "Инструкции Справочного центра Instagram по экспорту на устройство: от создания до запуска экспорта"
             },
             {
               "text": "Выберите данные, диапазон дат, формат, адрес электронной почты для уведомлений и качество медиафайлов.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Панель экспорта информации в Центре аккаунтов Instagram"
+              "screenshot_id": "instagram-help-export-device",
+              "alt": "Инструкции Справочного центра Instagram по экспорту на устройство: от создания до запуска экспорта"
             },
             {
-              "text": "Нажмите «Начать экспорт». Instagram пришлёт письмо и уведомление, когда экспорт будет готов.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Панель экспорта информации в Центре аккаунтов Instagram"
+              "text": "Нажмите «Начать экспорт».",
+              "screenshot_id": "instagram-help-export-device",
+              "alt": "Инструкции Справочного центра Instagram по экспорту на устройство: от создания до запуска экспорта"
             },
             {
-              "text": "Вернитесь в раздел «Доступные загрузки» в течение 4 дней. Самостоятельно пройдите проверку пароля или личности и скачайте ZIP.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Панель экспорта информации в Центре аккаунтов Instagram"
+              "text": "Когда Instagram пришлёт уведомление, откройте «Доступные загрузки» в течение 4 дней, чтобы получить защищённый экспорт.",
+              "screenshot_id": "instagram-help-available-downloads",
+              "alt": "Справочный центр Instagram: доступность защищённой загрузки в течение четырёх дней"
             }
           ],
           "refs": [
@@ -2791,38 +2806,38 @@
           "steps": [
             {
               "text": "Откройте приложение Instagram, нажмите на фото профиля, затем откройте меню в правом верхнем углу.",
-              "screenshot_id": "instagram-accounts-center-information",
-              "alt": "Центр аккаунтов Instagram: раздел «Ваша информация и разрешения» для экспорта данных Threads"
+              "screenshot_id": "threads-help-export-device",
+              "alt": "Инструкции Справочного центра Instagram по экспорту данных Threads на устройство"
             },
             {
               "text": "Выберите «Центр аккаунтов» → «Ваша информация и разрешения».",
-              "screenshot_id": "instagram-accounts-center-information",
-              "alt": "Центр аккаунтов Instagram: раздел «Ваша информация и разрешения» для экспорта данных Threads"
+              "screenshot_id": "threads-help-export-device",
+              "alt": "Инструкции Справочного центра Instagram по экспорту данных Threads на устройство"
             },
             {
               "text": "Выберите «Экспорт вашей информации» → «Создать экспорт».",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Панель экспорта информации в Центре аккаунтов Instagram для Threads"
+              "screenshot_id": "threads-help-export-device",
+              "alt": "Инструкции Справочного центра Instagram по экспорту данных Threads на устройство"
             },
             {
               "text": "Выберите профиль, данные Threads которого хотите экспортировать, затем нажмите «Далее».",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Панель экспорта информации в Центре аккаунтов Instagram для Threads"
+              "screenshot_id": "threads-help-export-device",
+              "alt": "Инструкции Справочного центра Instagram по экспорту данных Threads на устройство"
             },
             {
               "text": "Выберите «Экспорт на устройство».",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Панель экспорта информации в Центре аккаунтов Instagram для Threads"
+              "screenshot_id": "threads-help-export-device",
+              "alt": "Инструкции Справочного центра Instagram по экспорту данных Threads на устройство"
             },
             {
               "text": "Выберите нужные данные, диапазон дат, формат, адрес электронной почты для уведомлений и качество медиафайлов.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Панель экспорта информации в Центре аккаунтов Instagram для Threads"
+              "screenshot_id": "threads-help-export-device",
+              "alt": "Инструкции Справочного центра Instagram по экспорту данных Threads на устройство"
             },
             {
-              "text": "Нажмите «Начать экспорт». Meta может готовить ссылку для скачивания и отправлять её по электронной почте до 30 дней.",
-              "screenshot_id": "instagram-export-entry",
-              "alt": "Панель экспорта информации в Центре аккаунтов Instagram для Threads"
+              "text": "Нажмите «Начать экспорт».",
+              "screenshot_id": "threads-help-export-device",
+              "alt": "Инструкции Справочного центра Instagram по экспорту данных Threads на устройство"
             }
           ],
           "refs": [
@@ -2831,7 +2846,7 @@
               "href": "https://www.facebook.com/help/instagram/259803026523198"
             }
           ],
-          "note": "Threads остаётся отдельным разделом каталога, хотя сейчас Meta запускает экспорт через Центр аккаунтов в приложении Instagram."
+          "note": "Threads остаётся отдельным разделом каталога, хотя сейчас Meta запускает экспорт через Центр аккаунтов в приложении Instagram. Meta может готовить ссылку для скачивания и отправлять её по электронной почте до 30 дней."
         },
         {
           "id": "linkedin",
