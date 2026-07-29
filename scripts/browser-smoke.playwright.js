@@ -58,12 +58,16 @@ async page => {
   await page.goto(baseURL, {waitUntil: 'networkidle'});
   await page.locator('[data-provider-id="netflix"]').waitFor();
   assert(
-    await page.locator('.provider-row[data-provider-id]').count() === 8,
-    'provider catalog must contain eight canonical providers'
+    await page.locator('.provider-row[data-provider-id]').count() === 9,
+    'provider catalog must contain nine canonical providers'
   );
   assert(
     await page.locator('[data-provider-id="netflix"]').count() === 1,
     'provider catalog must contain exactly one Netflix identity'
+  );
+  assert(
+    await page.locator('[data-provider-id="openai"]').count() === 1,
+    'provider catalog must contain exactly one OpenAI identity'
   );
 
   const localeFacebookAlt = {
@@ -72,12 +76,38 @@ async page => {
     fr: 'Espace Comptes Facebook : Vos informations et autorisations',
     ru: 'Центр аккаунтов Facebook: раздел «Ваша информация и разрешения»'
   };
+  const localeOpenAIGuideHeading = {
+    en: 'How to download your data',
+    es: 'Cómo descargar tus datos',
+    fr: 'Comment télécharger vos données',
+    ru: 'Как скачать ваши данные'
+  };
   for (const [locale, expectedAlt] of Object.entries(localeFacebookAlt)) {
     await selectLanguage(locale);
     assert(
       (await page.locator('[data-provider-id="netflix"] .provider-name').textContent()).trim() ===
         'Netflix',
       `${locale} did not preserve the canonical Netflix identity`
+    );
+    await route('#guide/openai', '#openai');
+    assert(
+      (await page.locator('.guide h1').textContent()).trim() === 'OpenAI (ChatGPT)',
+      `${locale} did not preserve the canonical OpenAI identity`
+    );
+    assert(
+      (await page.locator('#openai h2').textContent()).trim() ===
+        localeOpenAIGuideHeading[locale],
+      `${locale} OpenAI guide heading is incorrect`
+    );
+    assert(
+      await page.locator('#openai .instruction-list li').count() === 7,
+      `${locale} OpenAI export instructions are incomplete`
+    );
+    assert(
+      await page.locator(
+        '#openai a[href="https://help.openai.com/en/articles/7260999-how-do-i-export-my-chatgpt-history-and-data"]'
+      ).count() === 1,
+      `${locale} OpenAI official export route is missing`
     );
     await route('#guide/facebook', '#facebook');
     assert(
@@ -104,6 +134,7 @@ async page => {
   await selectLanguage('en');
 
   const screenshotCounts = {
+    openai: 0,
     facebook: 2,
     instagram: 2,
     linkedin: 2,
