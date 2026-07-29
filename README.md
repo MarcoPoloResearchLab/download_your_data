@@ -18,6 +18,17 @@ make up
 
 Open `http://127.0.0.1:8787`.
 
+`make up` remains attached to its terminal and records the exact server process
+owned by this checkout. Stop that process with `Ctrl-C` in the same terminal or,
+from another terminal, run:
+
+```bash
+make down
+```
+
+`make down` is idempotent and refuses to stop a process whose identity does not
+match the server started by `make up`.
+
 The listen address can be changed to another loopback address:
 
 ```bash

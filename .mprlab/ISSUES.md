@@ -52,6 +52,25 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Black-box CLI test proving a ready deterministic inference server completes the same workflow.
   - `make test`
 
+- [x] [B003] (P1) Pair local startup with an ownership-safe shutdown target
+  Goal:
+  Make the repository-owned local orchestration started by `make up` stoppable through the paired `make down` target.
+
+  Requirements:
+  - Keep `make up` attached to its terminal while recording the exact server process identity beneath the checkout's Git state.
+  - Make `make down` idempotent when no managed server is running.
+  - Refuse to signal a reused, malformed, or unrelated process identity.
+  - Keep custom address, data-root, inference, and TMDB environment configuration attached to the server process.
+
+  Deliverables:
+  - Managed local server lifecycle script and paired Make targets.
+  - Public run documentation for same-terminal and second-terminal shutdown.
+  - Black-box coverage for start, health, duplicate start, stop, repeated stop, and unrelated-process rejection.
+
+  Validation:
+  - `make test-local-lifecycle`
+  - `make ci`
+
 ## Improvements
 
 - [x] [I001] (P1) Establish the canonical local server and validation foundation
