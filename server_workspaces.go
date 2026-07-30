@@ -165,7 +165,7 @@ func (registry *netflixWorkspaceRegistry) evictOneIdleLocked() error {
 	var selectedStorageID string
 	var selectedEntry *netflixWorkspaceEntry
 	for storageID, entry := range registry.entries {
-		if entry.inUse != 0 {
+		if entry.inUse != 0 || entry.workspace.HasRunningOperations() {
 			continue
 		}
 		if selectedEntry == nil || entry.lastUse < selectedEntry.lastUse {
