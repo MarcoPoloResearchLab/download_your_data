@@ -203,12 +203,11 @@ If TMDB is not configured, the UI gives the concrete server configuration name a
 
 1. **I007 — Netflix domain incorporation:** target-owned CSV, title identity, aggregation, synthetic fixtures, and behavioral inventory; no network or UI.
 2. **I008 — TMDB boundary and matching quality:** server-only config, injected client, rate/retry/cancellation, cache, match evaluation, attribution contract, and deterministic fake-server tests.
-3. **F006 — Local Netflix generation lifecycle:** private persistence, upload API, raw analytics, progress, atomic activation, replacement-safe storage, cancellation, and deletion.
+3. **F006 — Netflix generation lifecycle:** private persistence, upload API, raw analytics, progress, atomic activation, replacement-safe storage, cancellation, and deletion.
 4. **F007 — TMDB generation and export lifecycle:** explicit consent, enriched replacement, completeness, cache provenance, enriched CSV, restart, and failure behavior.
 5. **F008 — Netflix provider workspace:** catalog entry in all locales, import flow, progress, dashboard, match-quality view, controls, Credits, accessibility, responsive behavior, and exact shared-shell browser-network proof.
-6. **I009 — Single-executable operator parity:** provider-scoped Netflix inspect, enrich, and export commands backed by the same packages and configuration.
-7. **M409 — Standalone checkout retirement:** prove independent target parity and release, resolve any untracked/private data, then request explicit approval before removing `/Users/tyemirov/Development/netflix`.
-8. **F011 — Authenticated user migration:** replace the process-global workspace and packaged local product boundary with the shared TAuth user, user-scoped persistence, static Pages application, and two-user isolation proof.
+6. **M409 — Standalone checkout retirement:** prove independent target parity and release, resolve any untracked/private data, then request explicit approval before removing `/Users/tyemirov/Development/netflix`.
+7. **F011 — Authenticated user migration:** replace the process-global workspace and packaged local product boundary with the shared TAuth user, user-scoped persistence, static Pages application, and two-user isolation proof. The former end-user command surface is retired rather than carried into this boundary.
 
 ## Completion Gate
 

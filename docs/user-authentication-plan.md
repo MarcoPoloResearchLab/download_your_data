@@ -72,9 +72,19 @@ The current `#provider/{provider}` application route is replaced by
 
 The authenticated shell uses the shared `auth-transition` surface. Its
 completion event fires only after the requested provider application has
-hydrated. Startup restoration waits for
-`MPRUI.whenAutoOrchestrationReady()` and reconciles the documented current
-state through `MPRUI.resolveAuthProfileSnapshot(...)`.
+hydrated. A synchronous page bootstrap buffers only the documented
+`mpr-ui:auth:authenticated` and `mpr-ui:auth:unauthenticated` events until the
+application module attaches its listeners. Completion waits for
+`MPRUI.whenAutoOrchestrationReady()`.
+
+The current literal `mpr-ui@latest` bundle does not expose a documented
+authentication-state snapshot helper and can settle a cold signed-out session
+without emitting an initial unauthenticated event. The application therefore
+keeps a requested provider application locked in a pending state until a
+documented lifecycle event arrives. Public guides remain fully available. Cold
+session restoration cannot be called complete until `mpr-ui` supplies a public
+settlement signal; application code must not work around the gap by inspecting
+component internals, cookies, storage, tokens, claims, or TAuth endpoints.
 
 Public guides render independently of authentication settlement. A fresh or
 signed-out browser can read every guide, follow every first-party instruction
@@ -208,14 +218,15 @@ The repository remains the owner of both production surfaces:
    bundle, and browser-facing public configuration.
 2. An app-owned container service publishes the protected Go API and persistent
    user workspaces through the MPR gateway.
-3. The app-owned `.mprlab/deploy/resources.yml` declares the Pages surface,
-   TAuth tenant, container service, Caddy route, health check, and repository
-   lifecycle targets.
-4. Deployment implementation, Compose, Ansible, runtime examples, and operator
+3. The completed app-owned `.mprlab/deploy/resources.yml` will declare the
+   Pages surface, TAuth tenant, container service, Caddy route, health check,
+   and repository lifecycle targets.
+4. Deployment implementation, Compose, Ansible, runtime examples, and runtime
    inventory live only beneath `.mprlab/deploy/`.
 
-The current production profile establishes only the public Pages origin. Before
-implementation, the replacement profile must record exact literals for:
+Repository history establishes only the former public Pages origin. Before
+deployment implementation, the replacement profile must record exact literals
+for:
 
 - frontend origin;
 - backend/API origin;
@@ -271,8 +282,10 @@ a second supported mode.
    `#provider/{provider}` with `#app/{provider}`.
 4. **Integrate the shared shell.**
    Add `/config-ui.yaml`, `mpr-ui-config.js`, the `mpr-ui@latest` bundle marker,
-   `<mpr-user>`, documented auth lifecycle listeners, startup reconciliation,
-   and the shared transition surface.
+   `<mpr-user>`, documented auth lifecycle listeners, synchronous early-event
+   buffering, and the shared transition surface. Complete cold-session
+   reconciliation only through a documented public `mpr-ui` settlement
+   contract.
 5. **Scope persistence by user.**
    Replace the global Netflix workspace and unscoped archive paths with
    user/provider repositories, user-specific leases and caches, bounded
