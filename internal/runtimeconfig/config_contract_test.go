@@ -8,24 +8,24 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/authentication"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/inference"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/product"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix/tmdb"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/runtimeconfig"
 )
 
-func TestLoadBuildsTheCanonicalLocalRuntime(testContext *testing.T) {
-	homeDirectory := testContext.TempDir()
+func TestLoadBuildsTheCanonicalAuthenticatedRuntime(testContext *testing.T) {
+	dataDirectory := privateDataDirectory(testContext)
+	environment := validRuntimeEnvironment(dataDirectory)
 	config, configError := runtimeconfig.Load(
-		func(string) string { return "" },
-		homeDirectory,
+		func(key string) string { return environment[key] },
 		bytes.NewReader(make([]byte, 32)),
 	)
 	if configError != nil {
-		testContext.Fatalf("load default runtime config: %v", configError)
+		testContext.Fatalf("load runtime config: %v", configError)
 	}
-	expectedRoot := filepath.Join(homeDirectory, ".download-your-data")
-	expectedRoot, resolveError := filepath.EvalSymlinks(expectedRoot)
+	expectedRoot, resolveError := filepath.EvalSymlinks(dataDirectory)
 	if resolveError != nil {
 		testContext.Fatalf("resolve expected data root: %v", resolveError)
 	}
@@ -35,17 +35,73 @@ func TestLoadBuildsTheCanonicalLocalRuntime(testContext *testing.T) {
 	if config.DataRoot().Path() != expectedRoot {
 		testContext.Fatalf("data root = %q; want %q", config.DataRoot().Path(), expectedRoot)
 	}
-	if config.ArchiveDatabase().RelativePath() != filepath.FromSlash(product.ArchiveDatabaseRelativePath) {
-		testContext.Fatalf("unexpected archive path %q", config.ArchiveDatabase().RelativePath())
+	authConfig := config.Authentication()
+	if authConfig.PublicOrigin() != environment[runtimeconfig.PublicOriginEnvironment] ||
+		authConfig.APIOrigin() != environment[runtimeconfig.APIOriginEnvironment] ||
+		authConfig.TAuthURL() != environment[runtimeconfig.TAuthURLEnvironment] ||
+		authConfig.TenantID() != environment[runtimeconfig.TAuthTenantIDEnvironment] ||
+		authConfig.SessionCookieName() != environment[runtimeconfig.TAuthSessionCookieEnvironment] ||
+		authConfig.RefreshCookieName() != environment[runtimeconfig.TAuthRefreshCookieEnvironment] ||
+		authConfig.GoogleClientID() != environment[runtimeconfig.GoogleClientIDEnvironment] {
+		testContext.Fatalf("unexpected authentication configuration")
 	}
-	if config.NetflixTMDBCache().RelativePath() != filepath.FromSlash(product.NetflixTMDBCacheRelativePath) {
-		testContext.Fatalf("unexpected Netflix cache path %q", config.NetflixTMDBCache().RelativePath())
+	validatorConfig := authConfig.SessionValidatorConfig()
+	if validatorConfig.Issuer != runtimeconfig.TAuthJWTIssuer ||
+		validatorConfig.CookieName != authConfig.SessionCookieName() ||
+		string(validatorConfig.SigningKey) != environment[runtimeconfig.TAuthJWTSigningKeyEnvironment] {
+		testContext.Fatalf("unexpected server-side session validator configuration")
 	}
-	if config.NetflixLibrary().RelativePath() != filepath.FromSlash(product.NetflixLibraryStateRelativePath) {
-		testContext.Fatalf("unexpected Netflix library path %q", config.NetflixLibrary().RelativePath())
+
+	user, userError := authentication.NewAuthenticatedUser(
+		authConfig.TenantID(),
+		"user-123",
+	)
+	if userError != nil {
+		testContext.Fatalf("create authenticated user: %v", userError)
 	}
-	if config.NetflixLease().RelativePath() != filepath.FromSlash(product.NetflixLibraryLeaseRelativePath) {
-		testContext.Fatalf("unexpected Netflix lease path %q", config.NetflixLease().RelativePath())
+	workspace, workspaceError := config.UserWorkspace(user)
+	if workspaceError != nil {
+		testContext.Fatalf("resolve authenticated workspace: %v", workspaceError)
+	}
+	expectedUserRoot := filepath.Join(expectedRoot, "users", user.StorageID())
+	if workspace.Root().Path() != expectedUserRoot {
+		testContext.Fatalf(
+			"user root = %q; want %q",
+			workspace.Root().Path(),
+			expectedUserRoot,
+		)
+	}
+	if workspace.ArchiveDatabase().RelativePath() != filepath.FromSlash(
+		product.ArchiveDatabaseRelativePath,
+	) {
+		testContext.Fatalf(
+			"unexpected user archive path %q",
+			workspace.ArchiveDatabase().RelativePath(),
+		)
+	}
+	if workspace.NetflixTMDBCache().RelativePath() != filepath.FromSlash(
+		product.NetflixTMDBCacheRelativePath,
+	) {
+		testContext.Fatalf(
+			"unexpected user Netflix cache path %q",
+			workspace.NetflixTMDBCache().RelativePath(),
+		)
+	}
+	if workspace.NetflixLibrary().RelativePath() != filepath.FromSlash(
+		product.NetflixLibraryStateRelativePath,
+	) {
+		testContext.Fatalf(
+			"unexpected user Netflix library path %q",
+			workspace.NetflixLibrary().RelativePath(),
+		)
+	}
+	if workspace.NetflixLease().RelativePath() != filepath.FromSlash(
+		product.NetflixLibraryLeaseRelativePath,
+	) {
+		testContext.Fatalf(
+			"unexpected user Netflix lease path %q",
+			workspace.NetflixLease().RelativePath(),
+		)
 	}
 	if config.TMDBConfigured() {
 		testContext.Fatalf("TMDB must be not configured by default")
@@ -65,16 +121,14 @@ func TestLoadBuildsTheCanonicalLocalRuntime(testContext *testing.T) {
 		testContext.Fatalf("CSRF token length = %d; want 64", len(config.CSRFToken()))
 	}
 	assertMode(testContext, config.DataRoot().Path(), 0o700)
+	assertMode(testContext, workspace.Root().Path(), 0o700)
 }
 
 func TestLoadKeepsTheTMDBReadTokenServerOnly(testContext *testing.T) {
-	environment := map[string]string{
-		runtimeconfig.DataDirectoryEnvironment: privateDataDirectory(testContext),
-		tmdb.ReadTokenEnvironment:              "private-test-read-token",
-	}
+	environment := validRuntimeEnvironment(privateDataDirectory(testContext))
+	environment[tmdb.ReadTokenEnvironment] = "private-test-read-token"
 	config, configError := runtimeconfig.Load(
 		func(key string) string { return environment[key] },
-		testContext.TempDir(),
 		bytes.NewReader(make([]byte, 32)),
 	)
 	if configError != nil {
@@ -89,130 +143,160 @@ func TestLoadKeepsTheTMDBReadTokenServerOnly(testContext *testing.T) {
 	}
 }
 
-func TestLoadAcceptsOnlyExplicitlyAuthorizedRemoteInference(testContext *testing.T) {
-	dataDirectory := privateDataDirectory(testContext)
-	environment := map[string]string{
-		runtimeconfig.DataDirectoryEnvironment:     dataDirectory,
-		inference.BaseURLEnvironment:               "https://inference.example.com/v1/",
-		runtimeconfig.InferenceBoundaryEnvironment: string(runtimeconfig.InferenceBoundaryAuthorizedRemote),
-	}
+func TestLoadAcceptsHostedContainerAndAuthorizedRemoteInference(testContext *testing.T) {
+	environment := validRuntimeEnvironment(privateDataDirectory(testContext))
+	environment[runtimeconfig.AddressEnvironment] = "0.0.0.0:8080"
+	environment[runtimeconfig.PublicOriginEnvironment] = "https://dyd.example"
+	environment[runtimeconfig.APIOriginEnvironment] = "https://dyd-api.example"
+	environment[runtimeconfig.TAuthURLEnvironment] = "https://dyd-api.example"
+	environment[inference.BaseURLEnvironment] = "https://inference.example.com/v1/"
+	environment[runtimeconfig.InferenceBoundaryEnvironment] = string(
+		runtimeconfig.InferenceBoundaryAuthorizedRemote,
+	)
 	config, configError := runtimeconfig.Load(
 		func(key string) string { return environment[key] },
-		testContext.TempDir(),
 		bytes.NewReader(make([]byte, 32)),
 	)
 	if configError != nil {
-		testContext.Fatalf("load authorized remote config: %v", configError)
+		testContext.Fatalf("load hosted runtime config: %v", configError)
 	}
-	if config.InferenceBaseURL().String() != "https://inference.example.com/v1" ||
+	if config.ListenAddress() != "0.0.0.0:8080" ||
+		config.InferenceBaseURL().String() != "https://inference.example.com/v1" ||
 		config.InferenceBoundary() != runtimeconfig.InferenceBoundaryAuthorizedRemote {
-		testContext.Fatalf("unexpected remote inference config")
+		testContext.Fatalf("unexpected hosted runtime config")
 	}
 }
 
 func TestLoadRejectsInvalidStartupConfiguration(testContext *testing.T) {
 	testCases := []struct {
 		name         string
-		environment  map[string]string
-		home         string
+		mutate       func(map[string]string)
 		expectedCode runtimeconfig.ErrorCode
 		expectedText string
 	}{
 		{
-			name: "public listen address",
-			environment: map[string]string{
-				runtimeconfig.AddressEnvironment:       "0.0.0.0:8787",
-				runtimeconfig.DataDirectoryEnvironment: privateDataDirectory(testContext),
+			name: "hostname listen address",
+			mutate: func(environment map[string]string) {
+				environment[runtimeconfig.AddressEnvironment] = "download-your-data:8787"
 			},
-			home:         testContext.TempDir(),
 			expectedCode: runtimeconfig.ErrorInvalidListenAddress,
-			expectedText: "host must be a loopback IP address",
+			expectedText: "host must be an IP address",
 		},
 		{
-			name: "unsafe home data root",
-			environment: func() map[string]string {
-				homeDirectory := testContext.TempDir()
-				return map[string]string{
-					runtimeconfig.DataDirectoryEnvironment: homeDirectory,
-					"test_home":                            homeDirectory,
-				}
-			}(),
+			name: "missing data root",
+			mutate: func(environment map[string]string) {
+				delete(environment, runtimeconfig.DataDirectoryEnvironment)
+			},
 			expectedCode: runtimeconfig.ErrorInvalidDataRoot,
-			expectedText: "user home directory is too broad",
+			expectedText: "value is required",
 		},
 		{
 			name: "relative data root",
-			environment: map[string]string{
-				runtimeconfig.DataDirectoryEnvironment: "relative/data",
+			mutate: func(environment map[string]string) {
+				environment[runtimeconfig.DataDirectoryEnvironment] = "relative/data"
 			},
-			home:         testContext.TempDir(),
 			expectedCode: runtimeconfig.ErrorInvalidDataRoot,
 			expectedText: "path must be absolute",
 		},
 		{
-			name: "remote without authorization",
-			environment: map[string]string{
-				runtimeconfig.DataDirectoryEnvironment: privateDataDirectory(testContext),
-				inference.BaseURLEnvironment:           "https://inference.example.com/v1",
+			name: "missing public origin",
+			mutate: func(environment map[string]string) {
+				delete(environment, runtimeconfig.PublicOriginEnvironment)
 			},
-			home:         testContext.TempDir(),
+			expectedCode: runtimeconfig.ErrorInvalidAuthentication,
+			expectedText: runtimeconfig.PublicOriginEnvironment,
+		},
+		{
+			name: "insecure hosted API origin",
+			mutate: func(environment map[string]string) {
+				environment[runtimeconfig.APIOriginEnvironment] = "http://dyd-api.example"
+			},
+			expectedCode: runtimeconfig.ErrorInvalidAuthentication,
+			expectedText: "hosted origins require HTTPS",
+		},
+		{
+			name: "short signing key",
+			mutate: func(environment map[string]string) {
+				environment[runtimeconfig.TAuthJWTSigningKeyEnvironment] = "short"
+			},
+			expectedCode: runtimeconfig.ErrorInvalidAuthentication,
+			expectedText: "at least 32 bytes",
+		},
+		{
+			name: "shared cookie names",
+			mutate: func(environment map[string]string) {
+				environment[runtimeconfig.TAuthRefreshCookieEnvironment] =
+					environment[runtimeconfig.TAuthSessionCookieEnvironment]
+			},
+			expectedCode: runtimeconfig.ErrorInvalidAuthentication,
+			expectedText: "must differ",
+		},
+		{
+			name: "invalid cookie name",
+			mutate: func(environment map[string]string) {
+				environment[runtimeconfig.TAuthSessionCookieEnvironment] = "invalid cookie"
+			},
+			expectedCode: runtimeconfig.ErrorInvalidAuthentication,
+			expectedText: "HTTP cookie token",
+		},
+		{
+			name: "remote inference without authorization",
+			mutate: func(environment map[string]string) {
+				environment[inference.BaseURLEnvironment] = "https://inference.example.com/v1"
+			},
 			expectedCode: runtimeconfig.ErrorInvalidInferenceBoundary,
 			expectedText: "set DOWNLOAD_YOUR_DATA_INFERENCE_BOUNDARY=authorized-remote",
 		},
 		{
-			name: "remote authorization for loopback",
-			environment: map[string]string{
-				runtimeconfig.DataDirectoryEnvironment:     privateDataDirectory(testContext),
-				runtimeconfig.InferenceBoundaryEnvironment: string(runtimeconfig.InferenceBoundaryAuthorizedRemote),
+			name: "remote authorization for loopback inference",
+			mutate: func(environment map[string]string) {
+				environment[runtimeconfig.InferenceBoundaryEnvironment] = string(
+					runtimeconfig.InferenceBoundaryAuthorizedRemote,
+				)
 			},
-			home:         testContext.TempDir(),
 			expectedCode: runtimeconfig.ErrorInvalidInferenceBoundary,
 			expectedText: "requires a non-loopback inference URL",
 		},
 		{
 			name: "unknown inference boundary",
-			environment: map[string]string{
-				runtimeconfig.DataDirectoryEnvironment:     privateDataDirectory(testContext),
-				runtimeconfig.InferenceBoundaryEnvironment: "sometimes-remote",
+			mutate: func(environment map[string]string) {
+				environment[runtimeconfig.InferenceBoundaryEnvironment] = "sometimes-remote"
 			},
-			home:         testContext.TempDir(),
 			expectedCode: runtimeconfig.ErrorInvalidInferenceBoundary,
 			expectedText: "use loopback or authorized-remote",
 		},
 		{
 			name: "inference credentials",
-			environment: map[string]string{
-				runtimeconfig.DataDirectoryEnvironment: privateDataDirectory(testContext),
-				inference.BaseURLEnvironment:           "http://user:secret@localhost:1234/v1",
+			mutate: func(environment map[string]string) {
+				environment[inference.BaseURLEnvironment] =
+					"http://user:secret@localhost:1234/v1"
 			},
-			home:         testContext.TempDir(),
 			expectedCode: runtimeconfig.ErrorInvalidInferenceURL,
 			expectedText: "credentials are not allowed",
 		},
 		{
 			name: "invalid TMDB token",
-			environment: map[string]string{
-				runtimeconfig.DataDirectoryEnvironment: privateDataDirectory(testContext),
-				tmdb.ReadTokenEnvironment:              " private-token ",
+			mutate: func(environment map[string]string) {
+				environment[tmdb.ReadTokenEnvironment] = " private-token "
 			},
-			home:         testContext.TempDir(),
 			expectedCode: runtimeconfig.ErrorInvalidTMDBToken,
 			expectedText: "trimmed UTF-8",
 		},
 	}
 	for _, testCase := range testCases {
 		testContext.Run(testCase.name, func(testContext *testing.T) {
-			homeDirectory := testCase.home
-			if homeDirectory == "" {
-				homeDirectory = testCase.environment["test_home"]
-			}
+			environment := validRuntimeEnvironment(privateDataDirectory(testContext))
+			testCase.mutate(environment)
 			_, configError := runtimeconfig.Load(
-				func(key string) string { return testCase.environment[key] },
-				homeDirectory,
+				func(key string) string { return environment[key] },
 				bytes.NewReader(make([]byte, 32)),
 			)
 			if configError == nil || !strings.Contains(configError.Error(), testCase.expectedText) {
-				testContext.Fatalf("runtime config error = %v; want text %q", configError, testCase.expectedText)
+				testContext.Fatalf(
+					"runtime config error = %v; want text %q",
+					configError,
+					testCase.expectedText,
+				)
 			}
 			if runtimeconfig.Code(configError) != testCase.expectedCode {
 				testContext.Fatalf(
@@ -225,47 +309,62 @@ func TestLoadRejectsInvalidStartupConfiguration(testContext *testing.T) {
 	}
 }
 
-func TestLoadRejectsAnUnreadableEntropySource(testContext *testing.T) {
-	dataDirectory := privateDataDirectory(testContext)
-	environment := map[string]string{
-		runtimeconfig.DataDirectoryEnvironment: dataDirectory,
+func TestLoadRejectsInvalidInputsBeforeCreatingTheDataRoot(testContext *testing.T) {
+	testCases := []struct {
+		name    string
+		mutate  func(map[string]string)
+		entropy errorReader
+		code    runtimeconfig.ErrorCode
+	}{
+		{
+			name: "authentication",
+			mutate: func(environment map[string]string) {
+				delete(environment, runtimeconfig.TAuthTenantIDEnvironment)
+			},
+			code: runtimeconfig.ErrorInvalidAuthentication,
+		},
+		{
+			name: "remote inference",
+			mutate: func(environment map[string]string) {
+				environment[inference.BaseURLEnvironment] = "https://inference.example.com/v1"
+			},
+			code: runtimeconfig.ErrorInvalidInferenceBoundary,
+		},
+		{
+			name:    "entropy",
+			mutate:  func(map[string]string) {},
+			entropy: errorReader{enabled: true},
+			code:    runtimeconfig.ErrorCSRFEntropyUnavailable,
+		},
 	}
-	_, configError := runtimeconfig.Load(
-		func(key string) string { return environment[key] },
-		testContext.TempDir(),
-		errorReader{},
-	)
-	if configError == nil || !strings.Contains(configError.Error(), "generate process CSRF token") {
-		testContext.Fatalf("unexpected entropy error: %v", configError)
-	}
-	if runtimeconfig.Code(configError) != runtimeconfig.ErrorCSRFEntropyUnavailable {
-		testContext.Fatalf("unexpected entropy error code %q", runtimeconfig.Code(configError))
-	}
-	if _, statError := os.Stat(dataDirectory); !os.IsNotExist(statError) {
-		testContext.Fatalf("invalid runtime configuration created data root %q", dataDirectory)
+	for _, testCase := range testCases {
+		testContext.Run(testCase.name, func(testContext *testing.T) {
+			dataDirectory := privateDataDirectory(testContext)
+			environment := validRuntimeEnvironment(dataDirectory)
+			testCase.mutate(environment)
+			var entropyReader interface {
+				Read([]byte) (int, error)
+			} = bytes.NewReader(make([]byte, 32))
+			if testCase.entropy.enabled {
+				entropyReader = testCase.entropy
+			}
+			_, configError := runtimeconfig.Load(
+				func(key string) string { return environment[key] },
+				entropyReader,
+			)
+			if runtimeconfig.Code(configError) != testCase.code {
+				testContext.Fatalf("unexpected config error: %v", configError)
+			}
+			if _, statError := os.Stat(dataDirectory); !errors.Is(statError, os.ErrNotExist) {
+				testContext.Fatalf("invalid runtime configuration created data root %q", dataDirectory)
+			}
+		})
 	}
 }
 
-func TestLoadRejectsRemoteInferenceBeforeCreatingTheDataRoot(testContext *testing.T) {
-	dataDirectory := privateDataDirectory(testContext)
-	environment := map[string]string{
-		runtimeconfig.DataDirectoryEnvironment: dataDirectory,
-		inference.BaseURLEnvironment:           "https://inference.example.com/v1",
-	}
-	_, configError := runtimeconfig.Load(
-		func(key string) string { return environment[key] },
-		testContext.TempDir(),
-		bytes.NewReader(make([]byte, 32)),
-	)
-	if configError == nil || !strings.Contains(configError.Error(), "authorized-remote") {
-		testContext.Fatalf("unexpected remote inference error: %v", configError)
-	}
-	if _, statError := os.Stat(dataDirectory); !os.IsNotExist(statError) {
-		testContext.Fatalf("invalid runtime configuration created data root %q", dataDirectory)
-	}
+type errorReader struct {
+	enabled bool
 }
-
-type errorReader struct{}
 
 func (errorReader) Read([]byte) (int, error) {
 	return 0, errors.New("entropy unavailable")
@@ -285,4 +384,21 @@ func assertMode(testContext *testing.T, path string, expected os.FileMode) {
 func privateDataDirectory(testContext *testing.T) string {
 	testContext.Helper()
 	return filepath.Join(testContext.TempDir(), "data")
+}
+
+func validRuntimeEnvironment(dataDirectory string) map[string]string {
+	return map[string]string{
+		runtimeconfig.DataDirectoryEnvironment: dataDirectory,
+		runtimeconfig.PublicOriginEnvironment:  "http://127.0.0.1:4173",
+		runtimeconfig.APIOriginEnvironment:     "http://127.0.0.1:8787",
+		runtimeconfig.TAuthURLEnvironment:      "http://127.0.0.1:8787",
+		runtimeconfig.TAuthTenantIDEnvironment: "download-your-data-test",
+		runtimeconfig.TAuthJWTSigningKeyEnvironment: strings.Repeat(
+			"test-signing-key-",
+			2,
+		),
+		runtimeconfig.TAuthSessionCookieEnvironment: "app_session_dyd_test",
+		runtimeconfig.TAuthRefreshCookieEnvironment: "app_refresh_dyd_test",
+		runtimeconfig.GoogleClientIDEnvironment:     "test.apps.googleusercontent.com",
+	}
 }

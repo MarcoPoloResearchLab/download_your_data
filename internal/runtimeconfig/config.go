@@ -1,4 +1,4 @@
-// Package runtimeconfig owns the validated process-wide local application configuration.
+// Package runtimeconfig owns the validated process-wide application configuration.
 package runtimeconfig
 
 import (
@@ -12,9 +12,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/authentication"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/inference"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/privatepath"
-	"github.com/MarcoPoloResearchLab/download_your_data/internal/product"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix/tmdb"
 )
 
@@ -23,7 +23,6 @@ const (
 	DataDirectoryEnvironment     = "DOWNLOAD_YOUR_DATA_DATA_DIR"
 	InferenceBoundaryEnvironment = "DOWNLOAD_YOUR_DATA_INFERENCE_BOUNDARY"
 	DefaultListenAddress         = "127.0.0.1:8787"
-	defaultDataDirectoryName     = ".download-your-data"
 	csrfEntropyBytes             = 32
 )
 
@@ -39,8 +38,7 @@ const (
 	ErrorInvalidInferenceBoundary ErrorCode = "invalid_inference_boundary"
 	ErrorInvalidTMDBToken         ErrorCode = "invalid_tmdb_token"
 	ErrorCSRFEntropyUnavailable   ErrorCode = "csrf_entropy_unavailable"
-	ErrorInvalidArchivePath       ErrorCode = "invalid_archive_path"
-	ErrorInvalidProviderPath      ErrorCode = "invalid_provider_path"
+	ErrorInvalidAuthentication    ErrorCode = "invalid_authentication"
 	ErrorUnknownRuntimeConfig     ErrorCode = "invalid_runtime_configuration"
 )
 
@@ -72,21 +70,17 @@ const (
 type Config struct {
 	listenAddress     string
 	dataRoot          privatepath.Root
-	archiveDatabase   privatepath.File
 	inferenceBaseURL  inference.BaseURL
 	inferenceBoundary InferenceBoundary
 	tmdbReadToken     tmdb.ReadToken
 	tmdbConfigured    bool
-	netflixLibrary    privatepath.File
-	netflixLease      privatepath.File
-	netflixTMDBCache  privatepath.File
 	csrfToken         string
+	authentication    Authentication
 }
 
 // Load validates environment-backed configuration and creates the private data root.
 func Load(
 	lookupEnvironment func(string) string,
-	userHomeDirectory string,
 	entropy io.Reader,
 ) (Config, error) {
 	if lookupEnvironment == nil {
@@ -106,22 +100,18 @@ func Load(
 	if addressError != nil {
 		return Config{}, newConfigurationError(ErrorInvalidListenAddress, addressError)
 	}
-	homeDirectory, homeError := validateHomeDirectory(userHomeDirectory)
-	if homeError != nil {
-		return Config{}, newConfigurationError(ErrorInvalidDataRoot, homeError)
+	authenticationConfig, authenticationError := loadAuthentication(lookupEnvironment)
+	if authenticationError != nil {
+		return Config{}, newConfigurationError(
+			ErrorInvalidAuthentication,
+			authenticationError,
+		)
 	}
 	dataRootPath := strings.TrimSpace(lookupEnvironment(DataDirectoryEnvironment))
 	if dataRootPath == "" {
-		dataRootPath = filepath.Join(homeDirectory, defaultDataDirectoryName)
-	}
-	if filepath.Clean(dataRootPath) == homeDirectory {
 		return Config{}, newConfigurationError(
 			ErrorInvalidDataRoot,
-			fmt.Errorf(
-				"validate %s %q: the user home directory is too broad for application data",
-				DataDirectoryEnvironment,
-				dataRootPath,
-			),
+			fmt.Errorf("validate %s: value is required", DataDirectoryEnvironment),
 		)
 	}
 
@@ -161,53 +151,15 @@ func Load(
 			fmt.Errorf("validate %s: %w", DataDirectoryEnvironment, dataRootError),
 		)
 	}
-	archiveDatabase, databaseError := dataRoot.File(filepath.FromSlash(product.ArchiveDatabaseRelativePath))
-	if databaseError != nil {
-		return Config{}, newConfigurationError(
-			ErrorInvalidArchivePath,
-			fmt.Errorf("resolve archive database: %w", databaseError),
-		)
-	}
-	netflixTMDBCache, cacheError := dataRoot.File(
-		filepath.FromSlash(product.NetflixTMDBCacheRelativePath),
-	)
-	if cacheError != nil {
-		return Config{}, newConfigurationError(
-			ErrorInvalidProviderPath,
-			fmt.Errorf("resolve Netflix TMDB cache: %w", cacheError),
-		)
-	}
-	netflixLibrary, libraryError := dataRoot.File(
-		filepath.FromSlash(product.NetflixLibraryStateRelativePath),
-	)
-	if libraryError != nil {
-		return Config{}, newConfigurationError(
-			ErrorInvalidProviderPath,
-			fmt.Errorf("resolve Netflix library state: %w", libraryError),
-		)
-	}
-	netflixLease, leaseError := dataRoot.File(
-		filepath.FromSlash(product.NetflixLibraryLeaseRelativePath),
-	)
-	if leaseError != nil {
-		return Config{}, newConfigurationError(
-			ErrorInvalidProviderPath,
-			fmt.Errorf("resolve Netflix library lease: %w", leaseError),
-		)
-	}
-
 	return Config{
 		listenAddress:     listenAddress,
 		dataRoot:          dataRoot,
-		archiveDatabase:   archiveDatabase,
 		inferenceBaseURL:  inferenceBaseURL,
 		inferenceBoundary: inferenceBoundary,
 		tmdbReadToken:     tmdbReadToken,
 		tmdbConfigured:    tmdbConfigured,
-		netflixLibrary:    netflixLibrary,
-		netflixLease:      netflixLease,
-		netflixTMDBCache:  netflixTMDBCache,
 		csrfToken:         hex.EncodeToString(tokenHash[:]),
+		authentication:    authenticationConfig,
 	}, nil
 }
 
@@ -224,7 +176,7 @@ func newConfigurationError(code ErrorCode, cause error) error {
 	return &ConfigurationError{code: code, cause: cause}
 }
 
-// ListenAddress returns the validated loopback server address.
+// ListenAddress returns the validated server bind address.
 func (config Config) ListenAddress() string {
 	return config.listenAddress
 }
@@ -232,11 +184,6 @@ func (config Config) ListenAddress() string {
 // DataRoot returns the validated private filesystem root.
 func (config Config) DataRoot() privatepath.Root {
 	return config.dataRoot
-}
-
-// ArchiveDatabase returns the sole private conversation database location.
-func (config Config) ArchiveDatabase() privatepath.File {
-	return config.archiveDatabase
 }
 
 // InferenceBaseURL returns the validated inference server URL.
@@ -259,24 +206,54 @@ func (config Config) TMDBConfigured() bool {
 	return config.tmdbConfigured
 }
 
-// NetflixLibrary returns the sole private provider lifecycle repository.
-func (config Config) NetflixLibrary() privatepath.File {
-	return config.netflixLibrary
-}
-
-// NetflixLease returns the sole private cross-process provider lease.
-func (config Config) NetflixLease() privatepath.File {
-	return config.netflixLease
-}
-
-// NetflixTMDBCache returns the sole private provider cache location.
-func (config Config) NetflixTMDBCache() privatepath.File {
-	return config.netflixTMDBCache
-}
-
 // CSRFToken returns the ephemeral process mutation token.
 func (config Config) CSRFToken() string {
 	return config.csrfToken
+}
+
+// Authentication returns the complete validated TAuth and browser boundary.
+func (config Config) Authentication() Authentication {
+	return config.authentication
+}
+
+// UserWorkspace resolves the sole private workspace for an authenticated user.
+func (config Config) UserWorkspace(
+	user authentication.AuthenticatedUser,
+) (UserWorkspace, error) {
+	if validationError := user.Validate(); validationError != nil {
+		return UserWorkspace{}, fmt.Errorf("resolve user workspace: %w", validationError)
+	}
+	userDirectory, directoryError := config.dataRoot.EnsureDirectory(
+		filepath.Join("users", user.StorageID()),
+	)
+	if directoryError != nil {
+		return UserWorkspace{}, fmt.Errorf("resolve user workspace directory: %w", directoryError)
+	}
+	userRoot, rootError := privatepath.NewRoot(userDirectory.Path())
+	if rootError != nil {
+		return UserWorkspace{}, fmt.Errorf("open user workspace root: %w", rootError)
+	}
+	workspace, workspaceError := newUserWorkspace(userRoot)
+	if workspaceError != nil {
+		return UserWorkspace{}, fmt.Errorf("resolve user workspace paths: %w", workspaceError)
+	}
+	return workspace, nil
+}
+
+// DeleteUserWorkspace removes every application-owned artifact for one
+// authenticated user.
+func (config Config) DeleteUserWorkspace(
+	user authentication.AuthenticatedUser,
+) error {
+	if validationError := user.Validate(); validationError != nil {
+		return fmt.Errorf("delete user workspace: %w", validationError)
+	}
+	if removeError := config.dataRoot.RemoveDirectory(
+		filepath.Join("users", user.StorageID()),
+	); removeError != nil {
+		return fmt.Errorf("delete user workspace: %w", removeError)
+	}
+	return nil
 }
 
 func newListenAddress(configuredAddress string) (string, error) {
@@ -286,28 +263,17 @@ func newListenAddress(configuredAddress string) (string, error) {
 	}
 	host, portText, splitError := net.SplitHostPort(listenAddress)
 	if splitError != nil {
-		return "", fmt.Errorf("validate local application address %s: %w", listenAddress, splitError)
+		return "", fmt.Errorf("validate application address %s: %w", listenAddress, splitError)
 	}
 	hostAddress := net.ParseIP(host)
-	if hostAddress == nil || !hostAddress.IsLoopback() {
-		return "", fmt.Errorf("validate local application address %s: host must be a loopback IP address", listenAddress)
+	if hostAddress == nil {
+		return "", fmt.Errorf("validate application address %s: host must be an IP address", listenAddress)
 	}
 	port, portError := strconv.Atoi(portText)
 	if portError != nil || port < 1 || port > 65535 {
-		return "", fmt.Errorf("validate local application address %s: port must be between 1 and 65535", listenAddress)
+		return "", fmt.Errorf("validate application address %s: port must be between 1 and 65535", listenAddress)
 	}
 	return net.JoinHostPort(hostAddress.String(), strconv.Itoa(port)), nil
-}
-
-func validateHomeDirectory(userHomeDirectory string) (string, error) {
-	homeDirectory := filepath.Clean(strings.TrimSpace(userHomeDirectory))
-	if homeDirectory == "." || !filepath.IsAbs(homeDirectory) {
-		return "", fmt.Errorf("validate user home directory %q: path must be absolute", userHomeDirectory)
-	}
-	if filepath.Dir(homeDirectory) == homeDirectory {
-		return "", fmt.Errorf("validate user home directory %q: filesystem roots are not allowed", userHomeDirectory)
-	}
-	return homeDirectory, nil
 }
 
 func newInferenceBoundary(
