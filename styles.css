@@ -490,6 +490,37 @@ mpr-footer {
   gap: 12px;
 }
 
+.workspace-gate {
+  width: min(720px, 100%);
+  margin: 0 auto;
+}
+
+.workspace-gate-panel {
+  display: grid;
+  gap: 8px;
+  padding: 20px;
+  border-left: 3px solid var(--info);
+}
+
+.workspace-gate-panel[data-tone="warning"] {
+  border-left-color: var(--warning);
+}
+
+.workspace-gate-panel[data-tone="danger"] {
+  border-left-color: var(--danger);
+}
+
+.workspace-gate-panel .eyebrow,
+.workspace-gate-panel h2,
+.workspace-gate-panel .panel-copy {
+  margin: 0;
+}
+
+.workspace-gate-panel .button {
+  justify-self: start;
+  margin-top: 4px;
+}
+
 .page-heading-actions,
 .workspace-header-actions {
   display: flex;
@@ -1068,31 +1099,6 @@ tbody tr:hover {
 
 .openai-prepare {
   min-height: 260px;
-}
-
-.openai-command-intro {
-  margin: 18px 0 7px;
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.openai-command {
-  margin: 0;
-  padding: 12px;
-  overflow: auto;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--bg);
-  color: var(--text);
-  font-size: 11px;
-  line-height: 1.65;
-}
-
-.openai-command code {
-  padding: 0;
-  border: 0;
-  background: transparent;
 }
 
 .openai-search-form {
