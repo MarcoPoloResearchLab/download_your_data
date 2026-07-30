@@ -7,7 +7,20 @@ set -euo pipefail
 }
 
 readonly binary_path="$1"
-readonly address="${DOWNLOAD_YOUR_DATA_BROWSER_TEST_ADDRESS:-127.0.0.1:18787}"
+if [[ -n "${DOWNLOAD_YOUR_DATA_BROWSER_TEST_ADDRESS:-}" ]]; then
+  address="${DOWNLOAD_YOUR_DATA_BROWSER_TEST_ADDRESS}"
+else
+  address="$(
+    python3 - <<'PY'
+import socket
+
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as listener:
+    listener.bind(("127.0.0.1", 0))
+    print(f"127.0.0.1:{listener.getsockname()[1]}")
+PY
+  )"
+fi
+readonly address
 readonly base_url="http://${address}"
 readonly session_name="download-your-data-ci-$$"
 readonly playwright_version="${PLAYWRIGHT_CLI_VERSION:?PLAYWRIGHT_CLI_VERSION is required}"

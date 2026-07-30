@@ -26,7 +26,7 @@ const (
 	healthStatusReady     = "ready"
 	inferenceNotChecked   = "not_checked"
 	csrfHeaderName        = "X-CSRF-Token"
-	contentSecurityPolicy = "default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self'; form-action 'self'; frame-ancestors 'none'; img-src 'self' data:; object-src 'none'; script-src 'self'; style-src 'self'"
+	contentSecurityPolicy = "default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self'; form-action 'self'; frame-ancestors 'none'; img-src 'self' data:; object-src 'none'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'"
 )
 
 //go:embed index.html app.js api.js charts.js styles.css data.json images
@@ -70,6 +70,7 @@ type archiveLimitCapability struct {
 }
 
 type providerCapabilities struct {
+	OpenAI  openAIProviderCapability  `json:"openai"`
 	Netflix netflixProviderCapability `json:"netflix"`
 }
 
@@ -154,6 +155,7 @@ func newApplicationHandlerWithNetflixMetadata(
 	routes := http.NewServeMux()
 	routes.HandleFunc("GET "+healthPath, writeHealth(logger))
 	routes.HandleFunc("GET "+capabilitiesPath, writeCapabilities(config, logger))
+	registerOpenAIRoutes(routes, config, logger)
 	registerNetflixRoutes(routes, netflixWorkspace, logger)
 	routes.Handle("/", http.FileServer(http.FS(staticRoot)))
 	return &applicationHandler{
@@ -197,6 +199,10 @@ func writeCapabilities(config runtimeconfig.Config, logger *slog.Logger) http.Ha
 				InferenceBatchSize:   product.DefaultInferenceBatchSize,
 			},
 			Providers: providerCapabilities{
+				OpenAI: openAIProviderCapability{
+					SemanticSearch: true,
+					BrowserUpload:  false,
+				},
 				Netflix: netflixProviderCapability{
 					TMDB: tmdbCapability{
 						Configured: config.TMDBConfigured(),

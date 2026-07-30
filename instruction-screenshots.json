@@ -1,11 +1,11 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "capture_contract": {
-    "scope": "authenticated_web",
+    "scope": "per_step_first_party_visuals",
     "mobile_follow_up_issue": "I011",
-    "route_review_date": "2026-07-28",
-    "desktop": {
-      "browser": "Chrome",
+    "route_review_date": "2026-07-29",
+    "web": {
+      "browser": "Chrome or Codex In-app Browser",
       "viewport": {
         "width": 1440,
         "height": 1000,
@@ -34,6 +34,174 @@
   },
   "screenshots": [
     {
+      "platform": "netflix",
+      "id": "netflix-viewing-activity-help",
+      "purpose": "Show Netflix’s official viewing-activity path, Show More action, and Download all instruction.",
+      "expected_visible_labels": [
+        "How to see viewing history and device activity",
+        "Viewing activity",
+        "Show More",
+        "Download all"
+      ],
+      "official_source": "https://help.netflix.com/en/node/101917",
+      "direct_route": "https://help.netflix.com/en/node/101917",
+      "surface": "first_party_help_web",
+      "operator_checkpoint": "The public Netflix Help Center article is visible without account access.",
+      "forbidden_final_action": "Do not sign in, open a private profile, or download account data during capture.",
+      "output_path": "images/instructions/netflix-viewing-activity-help.png",
+      "viewport": {
+        "width": 1264,
+        "height": 712,
+        "device_scale_factor": 1
+      },
+      "pixel_dimensions": {
+        "width": 910,
+        "height": 470
+      },
+      "capture_date": "2026-07-29",
+      "review_status": "approved",
+      "provenance": {
+        "capture_source": "Official public Netflix Help Center",
+        "interface_owner": "Netflix, Inc.",
+        "rights_source": "https://help.netflix.com/legal/termsofuse",
+        "publication_compatibility": "first_party_help_excerpt_for_instructional_reference",
+        "attribution": "Netflix and the Netflix Help Center are trademarks and content of Netflix, Inc.; shown accurately for independent instructional reference without affiliation, sponsorship, or endorsement."
+      }
+    },
+    {
+      "platform": "openai",
+      "id": "openai-signed-in",
+      "purpose": "Show the signed-in ChatGPT surface before opening account settings.",
+      "expected_visible_labels": [
+        "Ask ChatGPT"
+      ],
+      "official_source": "https://help.openai.com/en/articles/7260999-how-do-i-export-my-chatgpt-history-and-data",
+      "direct_route": "https://chatgpt.com/",
+      "surface": "authenticated_web",
+      "operator_checkpoint": "The operator is signed in and the crop excludes identity, conversations, projects, and account details.",
+      "forbidden_final_action": "Do not open conversation content, inspect account data, or submit an export.",
+      "output_path": "images/instructions/openai-signed-in.png",
+      "viewport": {
+        "width": 1230,
+        "height": 1037,
+        "device_scale_factor": 1
+      },
+      "pixel_dimensions": {
+        "width": 760,
+        "height": 520
+      },
+      "capture_date": "2026-07-29",
+      "review_status": "approved",
+      "provenance": {
+        "capture_source": "Official authenticated ChatGPT interface",
+        "interface_owner": "OpenAI, L.L.C.",
+        "rights_source": "https://openai.com/brand/",
+        "publication_compatibility": "reviewed_for_accurate_instructional_reference",
+        "attribution": "ChatGPT and the ChatGPT interface are trademarks and interface content of OpenAI, L.L.C.; shown accurately for independent instructional reference without affiliation, sponsorship, or endorsement."
+      }
+    },
+    {
+      "platform": "openai",
+      "id": "openai-settings",
+      "purpose": "Show ChatGPT Settings with Data controls in the navigation.",
+      "expected_visible_labels": [
+        "General",
+        "Data controls"
+      ],
+      "official_source": "https://help.openai.com/en/articles/7260999-how-do-i-export-my-chatgpt-history-and-data",
+      "direct_route": "https://chatgpt.com/",
+      "surface": "authenticated_web",
+      "operator_checkpoint": "The Settings dialog is visible and the crop excludes account identity and conversation content.",
+      "forbidden_final_action": "Do not change a setting, inspect private account data, or submit an export.",
+      "output_path": "images/instructions/openai-settings.png",
+      "viewport": {
+        "width": 1230,
+        "height": 1037,
+        "device_scale_factor": 1
+      },
+      "pixel_dimensions": {
+        "width": 760,
+        "height": 900
+      },
+      "capture_date": "2026-07-29",
+      "review_status": "approved",
+      "provenance": {
+        "capture_source": "Official authenticated ChatGPT interface",
+        "interface_owner": "OpenAI, L.L.C.",
+        "rights_source": "https://openai.com/brand/",
+        "publication_compatibility": "reviewed_for_accurate_instructional_reference",
+        "attribution": "ChatGPT and the ChatGPT interface are trademarks and interface content of OpenAI, L.L.C.; shown accurately for independent instructional reference without affiliation, sponsorship, or endorsement."
+      }
+    },
+    {
+      "platform": "openai",
+      "id": "openai-data-controls",
+      "purpose": "Show the Export data control in ChatGPT Data controls.",
+      "expected_visible_labels": [
+        "Data controls",
+        "Export data",
+        "Export"
+      ],
+      "official_source": "https://help.openai.com/en/articles/7260999-how-do-i-export-my-chatgpt-history-and-data",
+      "direct_route": "https://chatgpt.com/",
+      "surface": "authenticated_web",
+      "operator_checkpoint": "The Data controls panel is visible before opening the confirmation dialog.",
+      "forbidden_final_action": "Do not confirm an export or change any data-control setting.",
+      "output_path": "images/instructions/openai-data-controls.png",
+      "viewport": {
+        "width": 1230,
+        "height": 1037,
+        "device_scale_factor": 1
+      },
+      "pixel_dimensions": {
+        "width": 760,
+        "height": 900
+      },
+      "capture_date": "2026-07-29",
+      "review_status": "approved",
+      "provenance": {
+        "capture_source": "Official authenticated ChatGPT interface",
+        "interface_owner": "OpenAI, L.L.C.",
+        "rights_source": "https://openai.com/brand/",
+        "publication_compatibility": "reviewed_for_accurate_instructional_reference",
+        "attribution": "ChatGPT and the ChatGPT interface are trademarks and interface content of OpenAI, L.L.C.; shown accurately for independent instructional reference without affiliation, sponsorship, or endorsement."
+      }
+    },
+    {
+      "platform": "openai",
+      "id": "openai-export-confirmation",
+      "purpose": "Show the ChatGPT export confirmation, email delivery, processing, and link-expiration details before submission.",
+      "expected_visible_labels": [
+        "Request data export - are you sure?",
+        "Confirm export",
+        "download link will expire 24 hours"
+      ],
+      "official_source": "https://help.openai.com/en/articles/7260999-how-do-i-export-my-chatgpt-history-and-data",
+      "direct_route": "https://chatgpt.com/",
+      "surface": "authenticated_web",
+      "operator_checkpoint": "The confirmation dialog is visible with no export request submitted.",
+      "forbidden_final_action": "Do not click Confirm export.",
+      "output_path": "images/instructions/openai-export-confirmation.png",
+      "viewport": {
+        "width": 1230,
+        "height": 1037,
+        "device_scale_factor": 1
+      },
+      "pixel_dimensions": {
+        "width": 560,
+        "height": 420
+      },
+      "capture_date": "2026-07-29",
+      "review_status": "approved",
+      "provenance": {
+        "capture_source": "Official authenticated ChatGPT interface",
+        "interface_owner": "OpenAI, L.L.C.",
+        "rights_source": "https://openai.com/brand/",
+        "publication_compatibility": "reviewed_for_accurate_instructional_reference",
+        "attribution": "ChatGPT and the ChatGPT interface are trademarks and interface content of OpenAI, L.L.C.; shown accurately for independent instructional reference without affiliation, sponsorship, or endorsement."
+      }
+    },
+    {
       "platform": "facebook",
       "id": "facebook-accounts-center-information",
       "purpose": "Locate the Accounts Center information and permissions area used to begin a Facebook export.",
@@ -44,7 +212,7 @@
       ],
       "official_source": "https://www.facebook.com/help/212802592074644",
       "direct_route": "https://accountscenter.facebook.com/info_and_permissions/",
-      "surface": "authenticated_desktop_chrome",
+      "surface": "authenticated_web",
       "operator_checkpoint": "The operator has signed in to Facebook and selected the intended Facebook account if Accounts Center requests an account choice.",
       "forbidden_final_action": "Do not click Create export, select a profile, or continue into any password or identity-verification prompt.",
       "output_path": "images/instructions/facebook-accounts-center-information.png",
@@ -77,7 +245,7 @@
       ],
       "official_source": "https://www.facebook.com/help/212802592074644",
       "direct_route": "https://accountscenter.facebook.com/info_and_permissions/dyi/",
-      "surface": "authenticated_desktop_chrome",
+      "surface": "authenticated_web",
       "operator_checkpoint": "The operator has signed in to Facebook and the Export your information landing panel is available without an identity-verification prompt.",
       "forbidden_final_action": "Do not click Create export, select a profile, or enter any identity-verification flow.",
       "output_path": "images/instructions/facebook-export-entry.png",
@@ -111,7 +279,7 @@
       ],
       "official_source": "https://www.facebook.com/help/181231772500920",
       "direct_route": "https://accountscenter.instagram.com/info_and_permissions/",
-      "surface": "authenticated_desktop_chrome",
+      "surface": "authenticated_web",
       "operator_checkpoint": "The operator has signed in to Instagram and selected the intended Instagram account if Accounts Center requests an account choice.",
       "forbidden_final_action": "Do not click Create export, select a profile, or continue into any password or identity-verification prompt.",
       "output_path": "images/instructions/instagram-accounts-center-information.png",
@@ -135,6 +303,74 @@
       }
     },
     {
+      "platform": "facebook",
+      "id": "facebook-help-export-device",
+      "purpose": "Show the official Facebook Help Center sequence from creating an export through starting a device export.",
+      "expected_visible_labels": [
+        "Create export",
+        "Export to device",
+        "Start export"
+      ],
+      "official_source": "https://www.facebook.com/help/212802592074644",
+      "direct_route": "https://www.facebook.com/help/212802592074644",
+      "surface": "first_party_help_web",
+      "operator_checkpoint": "The public Facebook Help Center device-export instructions are visible.",
+      "forbidden_final_action": "Do not select a profile, start an export, enter a password, or open an identity-verification flow.",
+      "output_path": "images/instructions/facebook-help-export-device.png",
+      "viewport": {
+        "width": 1280,
+        "height": 720,
+        "device_scale_factor": 1
+      },
+      "pixel_dimensions": {
+        "width": 736,
+        "height": 370
+      },
+      "capture_date": "2026-07-29",
+      "review_status": "approved",
+      "provenance": {
+        "capture_source": "Official public Facebook Help Center",
+        "interface_owner": "Meta Platforms, Inc.",
+        "rights_source": "https://www.meta.com/brand/resources/facebook/logo/",
+        "publication_compatibility": "first_party_help_excerpt_for_instructional_reference",
+        "attribution": "Facebook and the Facebook Help Center are trademarks and content of Meta Platforms, Inc.; shown accurately for independent instructional reference without affiliation, sponsorship, or endorsement."
+      }
+    },
+    {
+      "platform": "facebook",
+      "id": "facebook-help-available-downloads",
+      "purpose": "Show the official Facebook Help Center availability notice, four-day download window, and protected-download boundary.",
+      "expected_visible_labels": [
+        "Available downloads",
+        "4 days",
+        "password-protected"
+      ],
+      "official_source": "https://www.facebook.com/help/212802592074644",
+      "direct_route": "https://www.facebook.com/help/212802592074644",
+      "surface": "first_party_help_web",
+      "operator_checkpoint": "The public Facebook Help Center availability instructions are visible.",
+      "forbidden_final_action": "Do not open a private export, download an archive, enter a password, or open an identity-verification flow.",
+      "output_path": "images/instructions/facebook-help-available-downloads.png",
+      "viewport": {
+        "width": 1280,
+        "height": 720,
+        "device_scale_factor": 1
+      },
+      "pixel_dimensions": {
+        "width": 730,
+        "height": 228
+      },
+      "capture_date": "2026-07-29",
+      "review_status": "approved",
+      "provenance": {
+        "capture_source": "Official public Facebook Help Center",
+        "interface_owner": "Meta Platforms, Inc.",
+        "rights_source": "https://www.meta.com/brand/resources/facebook/logo/",
+        "publication_compatibility": "first_party_help_excerpt_for_instructional_reference",
+        "attribution": "Facebook and the Facebook Help Center are trademarks and content of Meta Platforms, Inc.; shown accurately for independent instructional reference without affiliation, sponsorship, or endorsement."
+      }
+    },
+    {
       "platform": "instagram",
       "id": "instagram-export-entry",
       "purpose": "Show the Instagram Export your information landing panel before profile selection or export creation.",
@@ -144,7 +380,7 @@
       ],
       "official_source": "https://www.facebook.com/help/181231772500920",
       "direct_route": "https://accountscenter.instagram.com/info_and_permissions/dyi/",
-      "surface": "authenticated_desktop_chrome",
+      "surface": "authenticated_web",
       "operator_checkpoint": "The operator has signed in to Instagram and the Export your information landing panel is available without an identity-verification prompt.",
       "forbidden_final_action": "Do not click Create export, select a profile, or enter any identity-verification flow.",
       "output_path": "images/instructions/instagram-export-entry.png",
@@ -168,6 +404,178 @@
       }
     },
     {
+      "platform": "instagram",
+      "id": "instagram-help-export-device",
+      "purpose": "Show the official Instagram Help Center sequence from creating an export through starting a device export.",
+      "expected_visible_labels": [
+        "Create export",
+        "Export to device",
+        "Start export"
+      ],
+      "official_source": "https://www.facebook.com/help/181231772500920",
+      "direct_route": "https://www.facebook.com/help/181231772500920",
+      "surface": "first_party_help_web",
+      "operator_checkpoint": "The public Instagram Help Center device-export instructions are visible.",
+      "forbidden_final_action": "Do not select a profile, start an export, enter a password, or open an identity-verification flow.",
+      "output_path": "images/instructions/instagram-help-export-device.png",
+      "viewport": {
+        "width": 1280,
+        "height": 720,
+        "device_scale_factor": 1
+      },
+      "pixel_dimensions": {
+        "width": 736,
+        "height": 335
+      },
+      "capture_date": "2026-07-29",
+      "review_status": "approved",
+      "provenance": {
+        "capture_source": "Official public Instagram Help Center",
+        "interface_owner": "Meta Platforms, Inc.",
+        "rights_source": "https://www.meta.com/brand/resources/instagram/instagram-brand/",
+        "publication_compatibility": "first_party_help_excerpt_for_instructional_reference",
+        "attribution": "Instagram and the Instagram Help Center are trademarks and content of Meta Platforms, Inc.; shown accurately for independent instructional reference without affiliation, sponsorship, or endorsement."
+      }
+    },
+    {
+      "platform": "instagram",
+      "id": "instagram-help-available-downloads",
+      "purpose": "Show the official Instagram Help Center availability notice, four-day download window, and protected-download boundary.",
+      "expected_visible_labels": [
+        "Available downloads",
+        "4 days",
+        "password-protected"
+      ],
+      "official_source": "https://www.facebook.com/help/181231772500920",
+      "direct_route": "https://www.facebook.com/help/181231772500920",
+      "surface": "first_party_help_web",
+      "operator_checkpoint": "The public Instagram Help Center availability instructions are visible.",
+      "forbidden_final_action": "Do not open a private export, download an archive, enter a password, or open an identity-verification flow.",
+      "output_path": "images/instructions/instagram-help-available-downloads.png",
+      "viewport": {
+        "width": 1280,
+        "height": 720,
+        "device_scale_factor": 1
+      },
+      "pixel_dimensions": {
+        "width": 730,
+        "height": 224
+      },
+      "capture_date": "2026-07-29",
+      "review_status": "approved",
+      "provenance": {
+        "capture_source": "Official public Instagram Help Center",
+        "interface_owner": "Meta Platforms, Inc.",
+        "rights_source": "https://www.meta.com/brand/resources/instagram/instagram-brand/",
+        "publication_compatibility": "first_party_help_excerpt_for_instructional_reference",
+        "attribution": "Instagram and the Instagram Help Center are trademarks and content of Meta Platforms, Inc.; shown accurately for independent instructional reference without affiliation, sponsorship, or endorsement."
+      }
+    },
+    {
+      "platform": "threads",
+      "id": "threads-help-export-device",
+      "purpose": "Show the official Threads mobile export sequence through Instagram Accounts Center.",
+      "expected_visible_labels": [
+        "Accounts Center",
+        "Export your information",
+        "Export to device",
+        "Start export"
+      ],
+      "official_source": "https://www.facebook.com/help/instagram/259803026523198",
+      "direct_route": "https://www.facebook.com/help/instagram/259803026523198?cms_platform=android-app",
+      "surface": "first_party_help_web",
+      "operator_checkpoint": "The public Instagram Help Center Android instructions for exporting Threads information are expanded.",
+      "forbidden_final_action": "Do not open Instagram, select a profile, start an export, enter a password, or open an identity-verification flow.",
+      "output_path": "images/instructions/threads-help-export-device.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1200,
+        "device_scale_factor": 1
+      },
+      "pixel_dimensions": {
+        "width": 720,
+        "height": 269
+      },
+      "capture_date": "2026-07-29",
+      "review_status": "approved",
+      "provenance": {
+        "capture_source": "Official public Instagram Help Center",
+        "interface_owner": "Meta Platforms, Inc.",
+        "rights_source": "https://about.meta.com/brand/resources/threads/threads-brand/",
+        "publication_compatibility": "first_party_help_excerpt_for_instructional_reference",
+        "attribution": "Threads and the Instagram Help Center are trademarks and content of Meta Platforms, Inc.; shown accurately for independent instructional reference without affiliation, sponsorship, or endorsement."
+      }
+    },
+    {
+      "platform": "whatsapp",
+      "id": "whatsapp-account-info-help",
+      "purpose": "Show WhatsApp’s official account-information report scope, request path, and expected preparation time.",
+      "expected_visible_labels": [
+        "How to request account information",
+        "Request report",
+        "Request account info"
+      ],
+      "official_source": "https://faq.whatsapp.com/526463418847093/",
+      "direct_route": "https://faq.whatsapp.com/526463418847093/",
+      "surface": "first_party_help_web",
+      "operator_checkpoint": "The public WhatsApp Help Center article is visible.",
+      "forbidden_final_action": "Do not link a WhatsApp account, request a report, or expose chat or account content.",
+      "output_path": "images/instructions/whatsapp-account-info-help.png",
+      "viewport": {
+        "width": 1264,
+        "height": 712,
+        "device_scale_factor": 1
+      },
+      "pixel_dimensions": {
+        "width": 830,
+        "height": 480
+      },
+      "capture_date": "2026-07-29",
+      "review_status": "approved",
+      "provenance": {
+        "capture_source": "Official public WhatsApp Help Center",
+        "interface_owner": "WhatsApp LLC",
+        "rights_source": "https://about.meta.com/brand/resources/whatsapp/whatsapp-brand/",
+        "publication_compatibility": "first_party_help_excerpt_for_instructional_reference",
+        "attribution": "WhatsApp and the WhatsApp Help Center are trademarks and content of WhatsApp LLC; shown accurately for independent instructional reference without affiliation, sponsorship, or endorsement."
+      }
+    },
+    {
+      "platform": "whatsapp",
+      "id": "whatsapp-chat-export-help",
+      "purpose": "Show WhatsApp’s official per-chat export path, media choices, and non-restorable text-file warning.",
+      "expected_visible_labels": [
+        "How to export your chat history",
+        "Export chat",
+        "Without media",
+        "Include media"
+      ],
+      "official_source": "https://faq.whatsapp.com/1180414079177245/",
+      "direct_route": "https://faq.whatsapp.com/1180414079177245/",
+      "surface": "first_party_help_web",
+      "operator_checkpoint": "The public WhatsApp Help Center article is visible.",
+      "forbidden_final_action": "Do not open a private chat, export messages, or select a destination.",
+      "output_path": "images/instructions/whatsapp-chat-export-help.png",
+      "viewport": {
+        "width": 1264,
+        "height": 712,
+        "device_scale_factor": 1
+      },
+      "pixel_dimensions": {
+        "width": 830,
+        "height": 500
+      },
+      "capture_date": "2026-07-29",
+      "review_status": "approved",
+      "provenance": {
+        "capture_source": "Official public WhatsApp Help Center",
+        "interface_owner": "WhatsApp LLC",
+        "rights_source": "https://about.meta.com/brand/resources/whatsapp/whatsapp-brand/",
+        "publication_compatibility": "first_party_help_excerpt_for_instructional_reference",
+        "attribution": "WhatsApp and the WhatsApp Help Center are trademarks and content of WhatsApp LLC; shown accurately for independent instructional reference without affiliation, sponsorship, or endorsement."
+      }
+    },
+    {
       "platform": "linkedin",
       "id": "linkedin-data-privacy-navigation",
       "purpose": "Show the LinkedIn Settings & Privacy navigation path to the data-download area.",
@@ -177,7 +585,7 @@
       ],
       "official_source": "https://www.linkedin.com/help/linkedin/answer/a1339364/downloading-your-account-data",
       "direct_route": "https://www.linkedin.com/mypreferences/d/categories/privacy",
-      "surface": "authenticated_desktop_chrome",
+      "surface": "authenticated_web",
       "operator_checkpoint": "The operator has signed in to LinkedIn and the Settings & Privacy page is available without an identity-verification prompt.",
       "forbidden_final_action": "Do not request an archive, enter a password, or continue into identity verification.",
       "output_path": "images/instructions/linkedin-data-privacy-navigation.png",
@@ -212,7 +620,7 @@
       ],
       "official_source": "https://www.linkedin.com/help/linkedin/answer/a1339364/downloading-your-account-data",
       "direct_route": "https://www.linkedin.com/mypreferences/d/download-my-data",
-      "surface": "authenticated_desktop_chrome",
+      "surface": "authenticated_web",
       "operator_checkpoint": "The operator has signed in and stopped on the archive-scope panel before requesting an archive.",
       "forbidden_final_action": "Do not click Request archive or any equivalent submission control.",
       "output_path": "images/instructions/linkedin-download-data-options.png",
@@ -236,6 +644,77 @@
       }
     },
     {
+      "platform": "tiktok",
+      "id": "tiktok-request-data-help",
+      "purpose": "Show TikTok’s official request path through Profile, Settings and privacy, Account, and Download your data.",
+      "expected_visible_labels": [
+        "Requesting your data",
+        "Profile",
+        "Settings and privacy",
+        "Download your data",
+        "Request data"
+      ],
+      "official_source": "https://support.tiktok.com/en/account-and-privacy/personalized-ads-and-data/requesting-your-data",
+      "direct_route": "https://support.tiktok.com/en/account-and-privacy/personalized-ads-and-data/requesting-your-data",
+      "surface": "first_party_help_web",
+      "operator_checkpoint": "The public TikTok Support article is visible.",
+      "forbidden_final_action": "Do not sign in, request data, inspect a private profile, or download an archive.",
+      "output_path": "images/instructions/tiktok-request-data-help.png",
+      "viewport": {
+        "width": 1264,
+        "height": 712,
+        "device_scale_factor": 1
+      },
+      "pixel_dimensions": {
+        "width": 880,
+        "height": 630
+      },
+      "capture_date": "2026-07-29",
+      "review_status": "approved",
+      "provenance": {
+        "capture_source": "Official public TikTok Support",
+        "interface_owner": "TikTok Pte. Ltd.",
+        "rights_source": "https://www.tiktok.com/legal/page/global/copyright-policy/en",
+        "publication_compatibility": "first_party_help_excerpt_for_instructional_reference",
+        "attribution": "TikTok and TikTok Support are trademarks and content of TikTok Pte. Ltd.; shown accurately for independent instructional reference without affiliation, sponsorship, or endorsement."
+      }
+    },
+    {
+      "platform": "tiktok",
+      "id": "tiktok-download-data-help",
+      "purpose": "Show TikTok’s official readiness, Download data, Download, and four-day availability instructions.",
+      "expected_visible_labels": [
+        "To download your TikTok data",
+        "Download data",
+        "Download",
+        "4 days"
+      ],
+      "official_source": "https://support.tiktok.com/en/account-and-privacy/personalized-ads-and-data/requesting-your-data",
+      "direct_route": "https://support.tiktok.com/en/account-and-privacy/personalized-ads-and-data/requesting-your-data",
+      "surface": "first_party_help_web",
+      "operator_checkpoint": "The public TikTok Support article is visible.",
+      "forbidden_final_action": "Do not sign in, request data, inspect a private profile, or download an archive.",
+      "output_path": "images/instructions/tiktok-download-data-help.png",
+      "viewport": {
+        "width": 1264,
+        "height": 712,
+        "device_scale_factor": 1
+      },
+      "pixel_dimensions": {
+        "width": 880,
+        "height": 400
+      },
+      "capture_date": "2026-07-29",
+      "review_status": "approved",
+      "provenance": {
+        "capture_source": "Official public TikTok Support",
+        "interface_owner": "TikTok Pte. Ltd.",
+        "rights_source": "https://www.tiktok.com/legal/page/global/copyright-policy/en",
+        "publication_compatibility": "first_party_help_excerpt_for_instructional_reference",
+        "attribution": "TikTok and TikTok Support are trademarks and content of TikTok Pte. Ltd.; shown accurately for independent instructional reference without affiliation, sponsorship, or endorsement."
+      }
+    },
+    {
       "platform": "x",
       "id": "x-your-account-navigation",
       "purpose": "Show the X Settings and privacy navigation path to Your account.",
@@ -246,7 +725,7 @@
       ],
       "official_source": "https://help.x.com/en/managing-your-account/how-to-download-your-x-archive",
       "direct_route": "https://x.com/settings/account",
-      "surface": "authenticated_desktop_chrome",
+      "surface": "authenticated_web",
       "operator_checkpoint": "The operator has signed in to X and the account settings page is available without an identity-verification prompt.",
       "forbidden_final_action": "Do not enter a password, request a verification code, or request an archive.",
       "output_path": "images/instructions/x-your-account-navigation.png",
@@ -280,7 +759,7 @@
       ],
       "official_source": "https://help.x.com/en/managing-your-account/how-to-download-your-x-archive",
       "direct_route": "https://x.com/settings/download_your_data",
-      "surface": "authenticated_desktop_chrome",
+      "surface": "authenticated_web",
       "operator_checkpoint": "The operator is signed in; the empty password form may be documented without entering credentials or continuing.",
       "forbidden_final_action": "Do not enter a password, click Next, request a verification code, request data, or download an archive.",
       "output_path": "images/instructions/x-password-verification.png",
@@ -313,7 +792,7 @@
       ],
       "official_source": "https://support.google.com/accounts/answer/3024190",
       "direct_route": "https://takeout.google.com/settings/takeout/custom/youtube?hl=en",
-      "surface": "authenticated_desktop_chrome",
+      "surface": "authenticated_web",
       "operator_checkpoint": "The operator has signed in to the intended Google account and confirmed that the Takeout page may be shown without exposing account-specific content.",
       "forbidden_final_action": "Do not create an export, connect an external destination, or download any archive.",
       "output_path": "images/instructions/youtube-takeout-selection.png",
@@ -348,7 +827,7 @@
       ],
       "official_source": "https://support.google.com/accounts/answer/3024190",
       "direct_route": "https://takeout.google.com/settings/takeout/custom/youtube?hl=en",
-      "surface": "authenticated_desktop_chrome",
+      "surface": "authenticated_web",
       "operator_checkpoint": "The operator has signed in to the intended Google account; the agent may use Next step only to reach the options panel and must stop before Create export.",
       "forbidden_final_action": "Do not click Create export, link an external destination, or download any archive.",
       "output_path": "images/instructions/youtube-takeout-export-options.png",
@@ -381,7 +860,7 @@
       ],
       "official_source": "https://support.google.com/accounts/answer/3024190",
       "direct_route": "https://takeout.google.com/?hl=en",
-      "surface": "authenticated_desktop_chrome",
+      "surface": "authenticated_web",
       "operator_checkpoint": "The operator has signed in to the intended Google account and confirmed that the Takeout page may be shown without exposing account-specific content.",
       "forbidden_final_action": "Do not create an export, connect an external destination, or download any archive.",
       "output_path": "images/instructions/google-takeout-service-selection.png",
@@ -416,7 +895,7 @@
       ],
       "official_source": "https://support.google.com/accounts/answer/3024190",
       "direct_route": "https://takeout.google.com/?hl=en",
-      "surface": "authenticated_desktop_chrome",
+      "surface": "authenticated_web",
       "operator_checkpoint": "The operator has signed in to the intended Google account; the agent may use Next step only to reach the options panel and must stop before Create export.",
       "forbidden_final_action": "Do not click Create export, link an external destination, or download any archive.",
       "output_path": "images/instructions/google-takeout-export-options.png",

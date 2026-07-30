@@ -1,6 +1,10 @@
 async page => {
   const baseURL = '__BASE_URL__';
   const viewingCSV = '__VIEWING_CSV__';
+  const sharedShellURLs = new Set([
+    'https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.css',
+    'https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.js'
+  ]);
   const browserErrors = [];
   const requests = [];
   page.on('console', (message) => {
@@ -111,6 +115,14 @@ Another Film,2/3/26
 
   await page.setViewportSize({width: 1440, height: 1000});
   await page.goto(baseURL, {waitUntil: 'networkidle'});
+  await page.waitForFunction(
+    () => customElements.get('mpr-header') && customElements.get('mpr-footer')
+  );
+  assert(
+    await page.locator('mpr-header header[role="banner"]').count() === 1 &&
+      await page.locator('mpr-footer footer[role="contentinfo"]').count() === 1,
+    'configured workflow must retain the mpr-ui header and footer'
+  );
   await page.locator('[data-provider-id="netflix"]').waitFor();
 
   for (const locale of ['en', 'es', 'fr', 'ru']) {
@@ -525,11 +537,18 @@ Another Film,2/3/26
     (request) =>
       !request.url.startsWith('about:') &&
       request.url !== baseURL &&
-      !request.url.startsWith(`${baseURL}/`)
+      !request.url.startsWith(`${baseURL}/`) &&
+      !sharedShellURLs.has(request.url)
   );
   assert(
     externalRequests.length === 0,
     `browser made external requests: ${externalRequests.map((request) => request.url).join(', ')}`
+  );
+  assert(
+    [...sharedShellURLs].every((url) =>
+      requests.some((request) => request.url === url)
+    ),
+    'configured workflow did not load both mpr-ui shell assets'
   );
   assert(browserErrors.length === 0, `browser errors: ${browserErrors.join(' | ')}`);
 }

@@ -9,6 +9,7 @@ The repository owns its complete conversation archive engine: OpenAI export insp
 - Go 1.26.1 or later
 - Node.js with `npx` for browser validation
 - Git, Python 3, and the GitHub CLI for release publication and Pages deployment
+- Network access to `cdn.jsdelivr.net` for the shared MPR header and footer
 
 ## Run locally
 
@@ -36,6 +37,13 @@ DOWNLOAD_YOUR_DATA_ADDRESS=127.0.0.1:9000 make up
 ```
 
 Non-loopback bind addresses are rejected because the first canonical release is local-only.
+
+The page loads `mpr-ui@latest` from jsDelivr to render the shared MPR Lab header
+and footer. Those asset requests carry ordinary browser request metadata but no
+imported files, provider records, search queries, screenshots, charts, or other
+personal data. The application has no authentication surface, so it uses
+`mpr-ui` only as declarative shell chrome and does not fabricate TAuth
+configuration or a sign-in control.
 
 Application state defaults to `~/.download-your-data`. To use another location, provide one absolute owner-only directory:
 
@@ -110,6 +118,19 @@ The browser cannot override the configured inference URL. The local HTTP server 
 
 Conversation databases use the sole first-release identity `download_your_data/1` and schema contract `openai-conversation-archive-1`. A brand-new empty database is initialized with that exact minimized schema. Any nonempty database with a different identity, version, contract, or incomplete object set is rejected with an archive-and-reimport instruction; the application does not read, migrate, or repair another persisted shape.
 
+## OpenAI conversation analysis
+
+The OpenAI catalog card has a top-right **Data analysis** action in addition to
+its permanent export guide. The action opens a local workspace backed by the
+same private archive database, complete ready index, retrieval engine, query
+cache, and inference configuration as the operator commands.
+
+With a ready index, the workspace supports hybrid, semantic, and exact-term
+conversation search, an archived-conversation filter, bounded result counts,
+and supporting excerpts. Without a ready archive and index, it displays the
+exact import and indexing commands. Browser ZIP upload is not part of this
+surface; import and index construction remain explicit operator operations.
+
 ## Netflix viewing activity
 
 The Netflix provider accepts only the current per-profile Viewing activity CSV with the exact `Title,Date` column set in either order. It does not accept the full Netflix personal-information archive. A local import uses these canonical routes:
@@ -127,7 +148,7 @@ The server accepts at most one building generation, keeps the existing ready gen
 
 Provider state uses the sole current `netflix-generation-library-v1` contract at `<data-root>/providers/netflix/library.json`. Immutable ready records and analytics use `netflix-generation-records-v1` and `netflix-generation-analytics-v1` below `<data-root>/providers/netflix/generations/{generationID}`; record cursors use `netflix-record-cursor-v3`. The provider holds an operating-system lease for its entire lifetime, and every directory and file remains owner-only.
 
-The browser opens Netflix as the first workspace-capable provider in the compact catalog. Its Overview, Catalog, and Match quality views share the same server-owned filters and expose import, enrichment, retry, cancellation, replacement, enriched export, and complete deletion as separate actions. Run `make test-browser` for both the unconfigured real-server path and the deterministic configured fake-TMDB lifecycle.
+The browser exposes both a permanent visual Netflix download guide and the first workspace-capable provider in the compact catalog. The guide remains reachable from the catalog and workspace regardless of provider state. Its Overview, Catalog, and Match quality views share the same server-owned filters and expose import, enrichment, retry, cancellation, replacement, enriched export, and complete deletion as separate actions. Run `make test-browser` for both the unconfigured real-server path and the deterministic configured fake-TMDB lifecycle.
 
 The single product executable also exposes the same provider library to an operator. Stop the local server first so the command can acquire the provider lease, and import a Viewing activity CSV through the browser before enriching:
 

@@ -19,6 +19,7 @@ type frontendDataContract struct {
 type frontendProviderDefinition struct {
 	ID      string `json:"id"`
 	Surface string `json:"surface"`
+	IconSrc string `json:"icon_src"`
 }
 
 type frontendLocalizedContract struct {
@@ -28,14 +29,19 @@ type frontendLocalizedContract struct {
 }
 
 type frontendLocalizedProvider struct {
-	ID     string              `json:"id"`
-	Nav    string              `json:"nav"`
-	Title  string              `json:"title"`
-	Intro  string              `json:"intro"`
-	Steps  []string            `json:"steps"`
-	Refs   []frontendReference `json:"refs"`
-	Images []json.RawMessage   `json:"images"`
-	Note   *string             `json:"note"`
+	ID    string              `json:"id"`
+	Nav   string              `json:"nav"`
+	Title string              `json:"title"`
+	Intro string              `json:"intro"`
+	Steps []frontendStep      `json:"steps"`
+	Refs  []frontendReference `json:"refs"`
+	Note  *string             `json:"note"`
+}
+
+type frontendStep struct {
+	Text         string `json:"text"`
+	ScreenshotID string `json:"screenshot_id"`
+	Alt          string `json:"alt"`
 }
 
 type frontendReference struct {
@@ -56,15 +62,17 @@ func TestFrontendProviderWorkspaceContract(testContext *testing.T) {
 	}
 
 	expectedRegistry := []frontendProviderDefinition{
-		{ID: "netflix", Surface: "workspace"},
-		{ID: "openai", Surface: "guide"},
-		{ID: "facebook", Surface: "guide"},
-		{ID: "instagram", Surface: "guide"},
-		{ID: "linkedin", Surface: "guide"},
-		{ID: "tiktok", Surface: "guide"},
-		{ID: "x", Surface: "guide"},
-		{ID: "youtube", Surface: "guide"},
-		{ID: "google", Surface: "guide"},
+		{ID: "netflix", Surface: "workspace", IconSrc: "images/providers/netflix.png"},
+		{ID: "openai", Surface: "workspace", IconSrc: "images/providers/openai.png"},
+		{ID: "facebook", Surface: "guide", IconSrc: "images/providers/facebook.png"},
+		{ID: "instagram", Surface: "guide", IconSrc: "images/providers/instagram.png"},
+		{ID: "whatsapp", Surface: "guide", IconSrc: "images/providers/whatsapp.png"},
+		{ID: "threads", Surface: "guide", IconSrc: "images/providers/threads.png"},
+		{ID: "linkedin", Surface: "guide", IconSrc: "images/providers/linkedin.png"},
+		{ID: "tiktok", Surface: "guide", IconSrc: "images/providers/tiktok.png"},
+		{ID: "x", Surface: "guide", IconSrc: "images/providers/x.png"},
+		{ID: "youtube", Surface: "guide", IconSrc: "images/providers/youtube.png"},
+		{ID: "google", Surface: "guide", IconSrc: "images/providers/google.png"},
 	}
 	if !reflect.DeepEqual(data.ProviderRegistry, expectedRegistry) {
 		testContext.Fatalf("provider registry = %#v; want %#v", data.ProviderRegistry, expectedRegistry)
@@ -124,12 +132,58 @@ func TestFrontendProviderWorkspaceContract(testContext *testing.T) {
 					expectedRegistry[providerIndex].ID,
 				)
 			}
+			assets := data.InstructionScreenshots[provider.ID]
+			if len(assets) == 0 {
+				testContext.Fatalf("locale %q provider %q has no screenshots", localeID, provider.ID)
+			}
+			assetIDs := make(map[string]struct{}, len(assets))
+			for _, asset := range assets {
+				if strings.TrimSpace(asset.Href) == "" {
+					testContext.Fatalf(
+						"locale %q provider %q screenshot %q has no action link",
+						localeID,
+						provider.ID,
+						asset.ID,
+					)
+				}
+				assetIDs[asset.ID] = struct{}{}
+			}
+			usedAssetIDs := make(map[string]struct{}, len(assets))
+			for stepIndex, step := range provider.Steps {
+				if strings.TrimSpace(step.Text) == "" ||
+					strings.TrimSpace(step.Alt) == "" ||
+					strings.TrimSpace(step.ScreenshotID) == "" {
+					testContext.Fatalf(
+						"locale %q provider %q step %d is incomplete: %+v",
+						localeID,
+						provider.ID,
+						stepIndex,
+						step,
+					)
+				}
+				if _, exists := assetIDs[step.ScreenshotID]; !exists {
+					testContext.Fatalf(
+						"locale %q provider %q step %d references unknown screenshot %q",
+						localeID,
+						provider.ID,
+						stepIndex,
+						step.ScreenshotID,
+					)
+				}
+				usedAssetIDs[step.ScreenshotID] = struct{}{}
+			}
+			if len(usedAssetIDs) != len(assetIDs) {
+				testContext.Fatalf(
+					"locale %q provider %q leaves screenshots unused",
+					localeID,
+					provider.ID,
+				)
+			}
 		}
 		netflix := locale.Platforms[0]
 		if netflix.Title != "Netflix" ||
 			strings.TrimSpace(netflix.Intro) == "" ||
 			len(netflix.Steps) < 5 ||
-			len(netflix.Images) != 0 ||
 			len(netflix.Refs) != 1 ||
 			netflix.Refs[0].Href != "https://help.netflix.com/en/node/101917" {
 			testContext.Fatalf("locale %q has an incomplete Netflix contract: %+v", localeID, netflix)
@@ -138,7 +192,6 @@ func TestFrontendProviderWorkspaceContract(testContext *testing.T) {
 		if openAI.Title != "OpenAI (ChatGPT)" ||
 			strings.TrimSpace(openAI.Intro) == "" ||
 			len(openAI.Steps) != 7 ||
-			len(openAI.Images) != 0 ||
 			len(openAI.Refs) != 1 ||
 			openAI.Refs[0].Href !=
 				"https://help.openai.com/en/articles/7260999-how-do-i-export-my-chatgpt-history-and-data" ||
@@ -146,20 +199,56 @@ func TestFrontendProviderWorkspaceContract(testContext *testing.T) {
 			strings.TrimSpace(*openAI.Note) == "" {
 			testContext.Fatalf("locale %q has an incomplete OpenAI guide contract: %+v", localeID, openAI)
 		}
+		whatsApp := locale.Platforms[4]
+		if whatsApp.Title != "WhatsApp" ||
+			strings.TrimSpace(whatsApp.Intro) == "" ||
+			len(whatsApp.Steps) != 7 ||
+			len(whatsApp.Refs) != 2 ||
+			whatsApp.Refs[0].Href != "https://faq.whatsapp.com/526463418847093/" ||
+			whatsApp.Refs[1].Href != "https://faq.whatsapp.com/1180414079177245/" ||
+			whatsApp.Note == nil ||
+			strings.TrimSpace(*whatsApp.Note) == "" {
+			testContext.Fatalf("locale %q has an incomplete WhatsApp guide contract: %+v", localeID, whatsApp)
+		}
+		threads := locale.Platforms[5]
+		if threads.Title != "Threads" ||
+			strings.TrimSpace(threads.Intro) == "" ||
+			len(threads.Steps) != 7 ||
+			len(threads.Refs) != 1 ||
+			threads.Refs[0].Href != "https://www.facebook.com/help/instagram/259803026523198" ||
+			threads.Note == nil ||
+			strings.TrimSpace(*threads.Note) == "" {
+			testContext.Fatalf("locale %q has an incomplete Threads guide contract: %+v", localeID, threads)
+		}
 	}
 	if len(canonicalUIKeys) < 120 {
 		testContext.Fatalf("localized UI key count = %d; want at least 120", len(canonicalUIKeys))
 	}
 }
 
-func TestFrontendAssetsAreSelfOwnedModules(testContext *testing.T) {
+func TestFrontendAssetsUseCurrentMPRShell(testContext *testing.T) {
 	index := readFrontendAsset(testContext, "index.html")
+	const sharedStylesheet = "https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.css"
+	const sharedScript = "https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.js"
 	if !strings.Contains(index, `<script type="module" src="app.js"></script>`) ||
 		!strings.Contains(index, `<link rel="stylesheet" href="styles.css">`) ||
+		!strings.Contains(index, `href="`+sharedStylesheet+`"`) ||
+		!strings.Contains(index, `src="`+sharedScript+`"`) ||
+		!strings.Contains(index, `<mpr-header`) ||
+		!strings.Contains(index, `<mpr-footer`) ||
+		!strings.Contains(index, `slot="brand"`) ||
+		!strings.Contains(index, `slot="nav-left"`) ||
+		!strings.Contains(index, `slot="aux"`) ||
+		!strings.Contains(index, `slot="legal"`) ||
+		strings.Count(index, "mpr-ui@latest") != 2 ||
+		strings.Contains(index, "mpr-ui@v") ||
+		strings.Contains(index, "mpr-ui-config.js") ||
+		strings.Contains(index, "config-ui.yaml") ||
+		strings.Contains(index, `<header class="app-bar"`) ||
+		strings.Contains(index, `<footer class="app-footer"`) ||
 		strings.Contains(index, "http://") ||
-		strings.Contains(index, "https://") ||
 		strings.Contains(strings.ToLower(index), "bootstrap") {
-		testContext.Fatalf("index.html is not the canonical self-owned module shell")
+		testContext.Fatalf("index.html is not the canonical shell-only mpr-ui integration")
 	}
 	appScript := readFrontendAsset(testContext, "app.js")
 	apiScript := readFrontendAsset(testContext, "api.js")
@@ -175,7 +264,7 @@ func TestFrontendAssetsAreSelfOwnedModules(testContext *testing.T) {
 			strings.Contains(content, "https://") ||
 			strings.Contains(content, "innerHTML") ||
 			strings.Contains(content, "style=") {
-			testContext.Fatalf("%s contains a forbidden external or unchecked frontend boundary", path)
+			testContext.Fatalf("%s contains a forbidden external or unchecked application boundary", path)
 		}
 		if strings.HasSuffix(path, ".js") &&
 			!strings.HasPrefix(content, "// @ts-check\n") {
@@ -188,11 +277,10 @@ func TestFrontendAssetsAreSelfOwnedModules(testContext *testing.T) {
 		strings.Contains(styles, "@import") {
 		testContext.Fatalf("frontend module or MPR style contract is incomplete")
 	}
-	if strings.Contains(contentSecurityPolicy, "unsafe-inline") ||
-		strings.Contains(contentSecurityPolicy, "https:") ||
-		!strings.Contains(contentSecurityPolicy, "script-src 'self'") ||
-		!strings.Contains(contentSecurityPolicy, "style-src 'self'") {
-		testContext.Fatalf("content security policy is not self-owned: %s", contentSecurityPolicy)
+	const expectedContentSecurityPolicy = "default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self'; form-action 'self'; frame-ancestors 'none'; img-src 'self' data:; object-src 'none'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'"
+	if contentSecurityPolicy != expectedContentSecurityPolicy ||
+		strings.Contains(contentSecurityPolicy, "unsafe-eval") {
+		testContext.Fatalf("content security policy does not isolate the shared shell: %s", contentSecurityPolicy)
 	}
 }
 

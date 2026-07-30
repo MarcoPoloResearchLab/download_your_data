@@ -90,6 +90,24 @@ The aliases are resolved by the configured inference server. API keys are option
 
 Conversation indexing uses `search_document: ` and query embedding uses `search_query: `. A synthetic, non-user readiness request validates the loaded model and dimensions before a search index row is created. Query vectors are cached by model, effective endpoint, query prefix, and normalized query.
 
+## Browser projection
+
+The local browser workspace is a projection of the same archive and retrieval
+engine used by the operator commands. `GET /api/providers/openai` reports only
+the archive counts, complete ready-index identity, supported search modes,
+limits, and configured inference boundary. It never returns conversation text.
+
+`POST /api/providers/openai/search` accepts one validated query, retrieval mode,
+result limit, excerpt limit, and archive filter. Hybrid, semantic, and lexical
+requests call the same `internal/retrieval` engine and ready index selected by
+the product command. Search text and returned excerpts exist only in the
+same-origin response and current document; they are not written to logs or
+browser persistence.
+
+The browser does not accept an OpenAI export ZIP. Import and index construction
+remain explicit operator commands, and the workspace reports those exact
+preparation commands until both the archive and a complete ready index exist.
+
 ## Persistence boundary
 
 The conversation database has one first-release schema identity: owner `download_your_data`, version `1`, contract `openai-conversation-archive-1`. It lives only at `<data-root>/openai/archive.db`. Opening an empty database creates the complete minimized schema in one transaction. Opening a nonempty database validates the owner, version, contract, and every required table and index before any archive operation begins.

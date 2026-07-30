@@ -76,8 +76,12 @@ remove_owned_state() {
   local current_start
 
   [[ -f "${state_file}" ]] || return 0
-  current_pid="$(sed -n '1p' "${state_file}")"
-  current_start="$(sed -n '2p' "${state_file}")"
+  if ! {
+    IFS= read -r current_pid
+    IFS= read -r current_start
+  } <"${state_file}" 2>/dev/null; then
+    return 0
+  fi
   if [[ "${current_pid}" == "$1" && "${current_start}" == "$2" ]]; then
     rm -f "${state_file}"
   fi

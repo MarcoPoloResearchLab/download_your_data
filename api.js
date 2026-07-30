@@ -20,6 +20,8 @@ const GENERATION_STATES = new Set([
 
 const ANALYSIS_LEVELS = new Set(['local', 'tmdb']);
 const MATCH_STATUSES = new Set(['matched', 'review', 'unmatched']);
+const OPENAI_STATES = new Set(['empty', 'index_required', 'ready']);
+const OPENAI_SEARCH_MODES = new Set(['hybrid', 'semantic', 'lexical']);
 
 let csrfToken = '';
 
@@ -47,6 +49,15 @@ export async function initializeAPI(signal) {
     throw new Error('capabilities.csrf_token is required');
   }
   assertObject(capabilities.providers, 'capabilities.providers');
+  assertObject(capabilities.providers.openai, 'capabilities.providers.openai');
+  assertBoolean(
+    capabilities.providers.openai.semantic_search,
+    'capabilities.providers.openai.semantic_search'
+  );
+  assertBoolean(
+    capabilities.providers.openai.browser_upload,
+    'capabilities.providers.openai.browser_upload'
+  );
   assertObject(capabilities.providers.netflix, 'capabilities.providers.netflix');
   assertObject(capabilities.providers.netflix.tmdb, 'capabilities.providers.netflix.tmdb');
   assertBoolean(
@@ -60,6 +71,28 @@ export async function initializeAPI(signal) {
 export async function getNetflixProvider(signal) {
   const snapshot = await requestJSON('/api/providers/netflix', {signal});
   return validateSnapshot(snapshot);
+}
+
+export async function getOpenAIProvider(signal) {
+  const snapshot = await requestJSON('/api/providers/openai', {signal});
+  return validateOpenAISnapshot(snapshot);
+}
+
+export async function searchOpenAI(search, signal) {
+  assertObject(search, 'OpenAI search');
+  const payload = await mutateJSON(
+    '/api/providers/openai/search',
+    'POST',
+    {
+      query: search.query,
+      mode: search.mode,
+      limit: search.limit,
+      excerpts: search.excerpts,
+      include_archived: search.includeArchived
+    },
+    signal
+  );
+  return validateOpenAISearchResponse(payload);
 }
 
 export async function createLocalGeneration(signal) {
@@ -313,6 +346,113 @@ function validateSnapshot(snapshot) {
   return snapshot;
 }
 
+function validateOpenAISnapshot(snapshot) {
+  assertObject(snapshot, 'OpenAI snapshot');
+  if (snapshot.provider !== 'openai') {
+    throw new Error('OpenAI snapshot.provider must be openai');
+  }
+  if (!OPENAI_STATES.has(snapshot.state)) {
+    throw new Error(`OpenAI snapshot.state is invalid: ${String(snapshot.state)}`);
+  }
+  assertObject(snapshot.statistics, 'OpenAI snapshot.statistics');
+  for (const key of ['imports', 'conversations', 'messages']) {
+    assertInteger(snapshot.statistics[key], `OpenAI snapshot.statistics.${key}`);
+  }
+  assertObject(snapshot.capabilities, 'OpenAI snapshot.capabilities');
+  assertBoolean(snapshot.capabilities.browser_upload, 'OpenAI capabilities.browser_upload');
+  assertArray(snapshot.capabilities.search_modes, 'OpenAI capabilities.search_modes');
+  if (
+    snapshot.capabilities.search_modes.length !== OPENAI_SEARCH_MODES.size ||
+    snapshot.capabilities.search_modes.some((mode) => !OPENAI_SEARCH_MODES.has(mode))
+  ) {
+    throw new Error('OpenAI capabilities.search_modes are invalid');
+  }
+  for (const key of ['max_query_bytes', 'max_results', 'max_excerpts']) {
+    assertInteger(snapshot.capabilities[key], `OpenAI capabilities.${key}`);
+    if (snapshot.capabilities[key] < 1) {
+      throw new Error(`OpenAI capabilities.${key} must be positive`);
+    }
+  }
+  assertString(
+    snapshot.capabilities.inference_boundary,
+    'OpenAI capabilities.inference_boundary'
+  );
+  if (snapshot.search_index !== undefined) {
+    assertObject(snapshot.search_index, 'OpenAI snapshot.search_index');
+    for (const key of [
+      'id',
+      'dimensions',
+      'document_count',
+      'eligible_document_count',
+      'conversation_count',
+      'eligible_conversation_count'
+    ]) {
+      assertInteger(snapshot.search_index[key], `OpenAI search_index.${key}`);
+    }
+    assertString(snapshot.search_index.name, 'OpenAI search_index.name');
+    assertString(snapshot.search_index.model, 'OpenAI search_index.model');
+  }
+  if (
+    (snapshot.state === 'ready' && snapshot.search_index === undefined) ||
+    (snapshot.state !== 'ready' && snapshot.search_index !== undefined)
+  ) {
+    throw new Error('OpenAI snapshot state and search index disagree');
+  }
+  return snapshot;
+}
+
+function validateOpenAISearchResponse(payload) {
+  assertObject(payload, 'OpenAI search response');
+  assertArray(payload.results, 'OpenAI search response.results');
+  assertBoolean(
+    payload.query_embedding_cached,
+    'OpenAI search response.query_embedding_cached'
+  );
+  payload.results.forEach((result, resultIndex) => {
+    assertObject(result, `OpenAI search result ${resultIndex}`);
+    assertString(result.conversation_id, `OpenAI search result ${resultIndex}.conversation_id`);
+    assertString(
+      result.conversation_title,
+      `OpenAI search result ${resultIndex}.conversation_title`
+    );
+    assertFiniteNumber(result.score, `OpenAI search result ${resultIndex}.score`);
+    assertFiniteNumber(
+      result.semantic_score,
+      `OpenAI search result ${resultIndex}.semantic_score`
+    );
+    assertFiniteNumber(
+      result.lexical_score,
+      `OpenAI search result ${resultIndex}.lexical_score`
+    );
+    assertArray(result.excerpts, `OpenAI search result ${resultIndex}.excerpts`);
+    result.excerpts.forEach((excerpt, excerptIndex) => {
+      assertObject(excerpt, `OpenAI result ${resultIndex} excerpt ${excerptIndex}`);
+      for (const key of ['message_id', 'role', 'text']) {
+        assertString(
+          excerpt[key],
+          `OpenAI result ${resultIndex} excerpt ${excerptIndex}.${key}`
+        );
+      }
+      assertFiniteNumber(
+        excerpt.semantic_score,
+        `OpenAI result ${resultIndex} excerpt ${excerptIndex}.semantic_score`
+      );
+      assertFiniteNumber(
+        excerpt.lexical_score,
+        `OpenAI result ${resultIndex} excerpt ${excerptIndex}.lexical_score`
+      );
+      assertArray(
+        excerpt.detection_methods,
+        `OpenAI result ${resultIndex} excerpt ${excerptIndex}.detection_methods`
+      );
+      excerpt.detection_methods.forEach((method) => {
+        assertString(method, 'OpenAI excerpt detection method');
+      });
+    });
+  });
+  return payload;
+}
+
 function validateGeneration(generation) {
   assertObject(generation, 'generation');
   requireGenerationID(generation.id);
@@ -445,5 +585,11 @@ function assertBoolean(value, path) {
 function assertInteger(value, path) {
   if (!Number.isSafeInteger(value) || value < 0) {
     throw new Error(`${path} must be a non-negative integer`);
+  }
+}
+
+function assertFiniteNumber(value, path) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    throw new Error(`${path} must be a finite number`);
   }
 }

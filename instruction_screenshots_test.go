@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"image/png"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -21,9 +22,12 @@ const (
 )
 
 var instructionScreenshotPlatformIDs = []string{
+	"netflix",
 	"openai",
 	"facebook",
 	"instagram",
+	"whatsapp",
+	"threads",
 	"linkedin",
 	"tiktok",
 	"x",
@@ -33,6 +37,36 @@ var instructionScreenshotPlatformIDs = []string{
 
 var instructionScreenshotLocaleIDs = []string{"en", "es", "fr", "ru"}
 
+var instructionScreenshotExpectedMetaStepIDs = map[string][]string{
+	"facebook": {
+		"facebook-accounts-center-information",
+		"facebook-export-entry",
+		"facebook-help-export-device",
+		"facebook-help-export-device",
+		"facebook-help-export-device",
+		"facebook-help-export-device",
+		"facebook-help-available-downloads",
+	},
+	"instagram": {
+		"instagram-accounts-center-information",
+		"instagram-export-entry",
+		"instagram-help-export-device",
+		"instagram-help-export-device",
+		"instagram-help-export-device",
+		"instagram-help-export-device",
+		"instagram-help-available-downloads",
+	},
+	"threads": {
+		"threads-help-export-device",
+		"threads-help-export-device",
+		"threads-help-export-device",
+		"threads-help-export-device",
+		"threads-help-export-device",
+		"threads-help-export-device",
+		"threads-help-export-device",
+	},
+}
+
 type instructionScreenshotManifest struct {
 	Screenshots []instructionScreenshotEntry `json:"screenshots"`
 }
@@ -41,6 +75,7 @@ type instructionScreenshotEntry struct {
 	Platform              string                    `json:"platform"`
 	ID                    string                    `json:"id"`
 	ExpectedVisibleLabels []string                  `json:"expected_visible_labels"`
+	DirectRoute           string                    `json:"direct_route"`
 	Surface               string                    `json:"surface"`
 	OutputPath            string                    `json:"output_path"`
 	PixelDimensions       instructionScreenshotSize `json:"pixel_dimensions"`
@@ -59,8 +94,9 @@ type instructionScreenshotData struct {
 }
 
 type instructionScreenshotAsset struct {
-	ID  string `json:"id"`
-	Src string `json:"src"`
+	ID   string `json:"id"`
+	Src  string `json:"src"`
+	Href string `json:"href"`
 }
 
 type instructionScreenshotLocale struct {
@@ -68,13 +104,14 @@ type instructionScreenshotLocale struct {
 }
 
 type instructionScreenshotLocalizedPlatform struct {
-	ID     string                                      `json:"id"`
-	Images []instructionScreenshotLocalizedAlternative `json:"images"`
+	ID    string                               `json:"id"`
+	Steps []instructionScreenshotLocalizedStep `json:"steps"`
 }
 
-type instructionScreenshotLocalizedAlternative struct {
-	Alt string  `json:"alt"`
-	Src *string `json:"src"`
+type instructionScreenshotLocalizedStep struct {
+	Text         string `json:"text"`
+	ScreenshotID string `json:"screenshot_id"`
+	Alt          string `json:"alt"`
 }
 
 func TestInstructionScreenshotContract(testContext *testing.T) {
@@ -87,7 +124,7 @@ func TestInstructionScreenshotContract(testContext *testing.T) {
 		instructionScreenshotDataPath,
 	)
 
-	const expectedScreenshotCount = 12
+	const expectedScreenshotCount = 26
 	if len(manifest.Screenshots) != expectedScreenshotCount {
 		testContext.Fatalf(
 			"manifest screenshot count = %d; want %d",
@@ -96,23 +133,27 @@ func TestInstructionScreenshotContract(testContext *testing.T) {
 		)
 	}
 
-	expectedWebCounts := map[string]int{
-		"openai":    0,
-		"facebook":  2,
-		"instagram": 2,
+	expectedPlatformCounts := map[string]int{
+		"netflix":   1,
+		"openai":    4,
+		"facebook":  4,
+		"instagram": 4,
+		"threads":   1,
+		"whatsapp":  2,
 		"linkedin":  2,
-		"tiktok":    0,
+		"tiktok":    2,
 		"x":         2,
 		"youtube":   2,
 		"google":    2,
 	}
-	manifestByPlatform := make(map[string][]instructionScreenshotEntry, len(expectedWebCounts))
+	manifestByPlatform := make(map[string][]instructionScreenshotEntry, len(expectedPlatformCounts))
+	manifestByID := make(map[string]instructionScreenshotEntry, expectedScreenshotCount)
 	seenIDs := make(map[string]struct{}, expectedScreenshotCount)
 	seenPaths := make(map[string]struct{}, expectedScreenshotCount)
 
 	for _, screenshot := range manifest.Screenshots {
-		if expectedWebCounts[screenshot.Platform] != 2 {
-			testContext.Fatalf("manifest contains unsupported web platform %q", screenshot.Platform)
+		if _, exists := expectedPlatformCounts[screenshot.Platform]; !exists {
+			testContext.Fatalf("manifest contains unsupported platform %q", screenshot.Platform)
 		}
 		if screenshot.ID == "" {
 			testContext.Fatal("manifest contains an empty screenshot id")
@@ -121,12 +162,14 @@ func TestInstructionScreenshotContract(testContext *testing.T) {
 			testContext.Fatalf("manifest contains duplicate screenshot id %q", screenshot.ID)
 		}
 		seenIDs[screenshot.ID] = struct{}{}
+		manifestByID[screenshot.ID] = screenshot
 		if len(screenshot.ExpectedVisibleLabels) == 0 {
 			testContext.Fatalf("screenshot %q has no expected visible labels", screenshot.ID)
 		}
-		if screenshot.Surface != "authenticated_desktop_chrome" {
+		if screenshot.Surface != "authenticated_web" &&
+			screenshot.Surface != "first_party_help_web" {
 			testContext.Fatalf(
-				"screenshot %q surface = %q; want authenticated_desktop_chrome",
+				"screenshot %q has unsupported surface %q",
 				screenshot.ID,
 				screenshot.Surface,
 			)
@@ -146,7 +189,7 @@ func TestInstructionScreenshotContract(testContext *testing.T) {
 		manifestByPlatform[screenshot.Platform] = append(manifestByPlatform[screenshot.Platform], screenshot)
 	}
 
-	for platformID, expectedCount := range expectedWebCounts {
+	for platformID, expectedCount := range expectedPlatformCounts {
 		if actualCount := len(manifestByPlatform[platformID]); actualCount != expectedCount {
 			testContext.Fatalf(
 				"manifest %s screenshot count = %d; want %d",
@@ -178,7 +221,7 @@ func TestInstructionScreenshotContract(testContext *testing.T) {
 		}
 	}
 
-	validateInstructionScreenshotRegistry(testContext, data, manifestByPlatform)
+	validateInstructionScreenshotRegistry(testContext, data, manifestByID)
 	validateInstructionScreenshotLocales(testContext, data)
 }
 
@@ -240,7 +283,7 @@ func validateInstructionScreenshotPNG(
 		testContext.Fatalf("screenshot %q is too small at %dx%d", screenshot.ID, config.Width, config.Height)
 	}
 
-	chunkTypes, chunkError := instructionScreenshotPNGChunkTypes(content)
+	chunkTypes, chunkError := pngChunkTypes(content)
 	if chunkError != nil {
 		testContext.Fatalf("inspect screenshot %q PNG chunks: %v", screenshot.ID, chunkError)
 	}
@@ -257,7 +300,7 @@ func validateInstructionScreenshotPNG(
 	}
 }
 
-func instructionScreenshotPNGChunkTypes(content []byte) ([]string, error) {
+func pngChunkTypes(content []byte) ([]string, error) {
 	const pngSignatureLength = 8
 	expectedSignature := []byte{0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n'}
 	if len(content) < pngSignatureLength || !bytes.Equal(content[:pngSignatureLength], expectedSignature) {
@@ -295,7 +338,7 @@ func instructionScreenshotPNGChunkTypes(content []byte) ([]string, error) {
 func validateInstructionScreenshotRegistry(
 	testContext *testing.T,
 	data instructionScreenshotData,
-	manifestByPlatform map[string][]instructionScreenshotEntry,
+	manifestByID map[string]instructionScreenshotEntry,
 ) {
 	testContext.Helper()
 	if len(data.InstructionScreenshots) != len(instructionScreenshotPlatformIDs) {
@@ -305,34 +348,61 @@ func validateInstructionScreenshotRegistry(
 			len(instructionScreenshotPlatformIDs),
 		)
 	}
+	referencedManifestIDs := make(map[string]struct{}, len(manifestByID))
 	for _, platformID := range instructionScreenshotPlatformIDs {
 		assets, exists := data.InstructionScreenshots[platformID]
 		if !exists {
 			testContext.Fatalf("screenshot registry is missing %q", platformID)
 		}
-		manifestScreenshots := manifestByPlatform[platformID]
-		if len(assets) != len(manifestScreenshots) {
-			testContext.Fatalf(
-				"screenshot registry %s count = %d; manifest count = %d",
-				platformID,
-				len(assets),
-				len(manifestScreenshots),
-			)
+		if len(assets) == 0 {
+			testContext.Fatalf("screenshot registry %s is empty", platformID)
 		}
-		for index, asset := range assets {
-			manifestScreenshot := manifestScreenshots[index]
-			if asset.ID != manifestScreenshot.ID || asset.Src != manifestScreenshot.OutputPath {
+		seenAssetIDs := make(map[string]struct{}, len(assets))
+		for _, asset := range assets {
+			if _, exists := seenAssetIDs[asset.ID]; exists {
+				testContext.Fatalf("screenshot registry %s repeats %q", platformID, asset.ID)
+			}
+			seenAssetIDs[asset.ID] = struct{}{}
+			manifestScreenshot, exists := manifestByID[asset.ID]
+			if !exists || asset.Src != manifestScreenshot.OutputPath {
 				testContext.Fatalf(
-					"screenshot registry %s entry %d = %q %q; manifest = %q %q",
+					"screenshot registry %s entry = %q %q; manifest entry = %q",
 					platformID,
-					index,
 					asset.ID,
 					asset.Src,
-					manifestScreenshot.ID,
 					manifestScreenshot.OutputPath,
 				)
 			}
+			if asset.Href != manifestScreenshot.DirectRoute {
+				testContext.Fatalf(
+					"screenshot registry %s entry %q link = %q; manifest direct route = %q",
+					platformID,
+					asset.ID,
+					asset.Href,
+					manifestScreenshot.DirectRoute,
+				)
+			}
+			target, parseError := url.Parse(asset.Href)
+			if parseError != nil ||
+				target.Scheme != "https" ||
+				target.Hostname() == "" ||
+				target.User != nil {
+				testContext.Fatalf(
+					"screenshot registry %s entry %q has invalid action link %q",
+					platformID,
+					asset.ID,
+					asset.Href,
+				)
+			}
+			referencedManifestIDs[asset.ID] = struct{}{}
 		}
+	}
+	if len(referencedManifestIDs) != len(manifestByID) {
+		testContext.Fatalf(
+			"screenshot registry references %d manifest entries; want %d",
+			len(referencedManifestIDs),
+			len(manifestByID),
+		)
 	}
 }
 
@@ -353,18 +423,17 @@ func validateInstructionScreenshotLocales(
 		if !exists {
 			testContext.Fatalf("localized strings are missing %q", localeID)
 		}
-		if len(locale.Platforms) != len(instructionScreenshotPlatformIDs)+1 {
+		if len(locale.Platforms) != len(instructionScreenshotPlatformIDs) {
 			testContext.Fatalf(
 				"locale %q platform count = %d; want %d",
 				localeID,
 				len(locale.Platforms),
-				len(instructionScreenshotPlatformIDs)+1,
+				len(instructionScreenshotPlatformIDs),
 			)
 		}
-		if locale.Platforms[0].ID != "netflix" ||
-			len(locale.Platforms[0].Images) != 0 {
+		if locale.Platforms[0].ID != "netflix" {
 			testContext.Fatalf(
-				"locale %q must start with the screenshot-free Netflix workspace",
+				"locale %q must start with the Netflix workspace",
 				localeID,
 			)
 		}
@@ -389,32 +458,65 @@ func validateInstructionScreenshotLocales(
 				)
 			}
 			sharedAssets := data.InstructionScreenshots[platform.ID]
-			if len(platform.Images) != len(sharedAssets) {
+			if len(platform.Steps) == 0 {
+				testContext.Fatalf("locale %q %s has no instruction steps", localeID, platform.ID)
+			}
+			if expectedStepIDs, mustMatch := instructionScreenshotExpectedMetaStepIDs[platform.ID]; mustMatch {
+				if len(platform.Steps) != len(expectedStepIDs) {
+					testContext.Fatalf(
+						"locale %q %s step count = %d; want %d",
+						localeID,
+						platform.ID,
+						len(platform.Steps),
+						len(expectedStepIDs),
+					)
+				}
+				for stepIndex, expectedScreenshotID := range expectedStepIDs {
+					if platform.Steps[stepIndex].ScreenshotID != expectedScreenshotID {
+						testContext.Fatalf(
+							"locale %q %s step %d screenshot = %q; want %q",
+							localeID,
+							platform.ID,
+							stepIndex+1,
+							platform.Steps[stepIndex].ScreenshotID,
+							expectedScreenshotID,
+						)
+					}
+				}
+			}
+			assetIDs := make(map[string]struct{}, len(sharedAssets))
+			for _, asset := range sharedAssets {
+				assetIDs[asset.ID] = struct{}{}
+			}
+			usedAssetIDs := make(map[string]struct{}, len(sharedAssets))
+			for stepIndex, step := range platform.Steps {
+				if strings.TrimSpace(step.Text) == "" ||
+					strings.TrimSpace(step.Alt) == "" ||
+					strings.TrimSpace(step.ScreenshotID) == "" {
+					testContext.Fatalf(
+						"locale %q %s step %d is incomplete",
+						localeID,
+						platform.ID,
+						stepIndex,
+					)
+				}
+				if _, exists := assetIDs[step.ScreenshotID]; !exists {
+					testContext.Fatalf(
+						"locale %q %s step %d references unknown screenshot %q",
+						localeID,
+						platform.ID,
+						stepIndex,
+						step.ScreenshotID,
+					)
+				}
+				usedAssetIDs[step.ScreenshotID] = struct{}{}
+			}
+			if len(usedAssetIDs) != len(assetIDs) {
 				testContext.Fatalf(
-					"locale %q %s image count = %d; want %d",
+					"locale %q %s leaves screenshots unused",
 					localeID,
 					platform.ID,
-					len(platform.Images),
-					len(sharedAssets),
 				)
-			}
-			for imageIndex, alternative := range platform.Images {
-				if strings.TrimSpace(alternative.Alt) == "" {
-					testContext.Fatalf(
-						"locale %q %s image %d has an empty alternative",
-						localeID,
-						platform.ID,
-						imageIndex,
-					)
-				}
-				if alternative.Src != nil {
-					testContext.Fatalf(
-						"locale %q %s image %d owns a screenshot path",
-						localeID,
-						platform.ID,
-						imageIndex,
-					)
-				}
 			}
 		}
 	}

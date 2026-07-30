@@ -7,7 +7,7 @@ override PAGES_URL := https://dyd.mprlab.com/
 
 export CGO_ENABLED
 
-.PHONY: build check-frontend ci deploy deploy-dry-run down eval-netflix-matcher fmt fmt-check lint pages-deploy publish publish-release release release-artifacts smoke-command smoke-netflix-command test test-browser test-local-lifecycle test-release-artifact test-release-workflow up validate-instruction-screenshots
+.PHONY: build check-frontend ci deploy deploy-dry-run down eval-netflix-matcher fmt fmt-check lint pages-deploy publish publish-release release release-artifacts smoke-command smoke-netflix-command test test-browser test-local-lifecycle test-release-artifact test-release-workflow up validate-instruction-screenshots validate-provider-icons
 
 build:
 	@mkdir -p build
@@ -56,6 +56,9 @@ test-browser: build
 validate-instruction-screenshots:
 	$(GO) test . -run '^TestInstructionScreenshotContract$$' -count=1
 
+validate-provider-icons:
+	$(GO) test . -run '^TestProviderIconContract$$' -count=1
+
 smoke-command: build
 	./scripts/command-smoke.sh ./build/download-your-data
 
@@ -86,4 +89,4 @@ deploy: pages-deploy
 
 deploy-dry-run: test-release-workflow test-release-artifact
 
-ci: fmt-check lint check-frontend eval-netflix-matcher test test-local-lifecycle smoke-netflix-command validate-instruction-screenshots test-browser smoke-command test-release-workflow test-release-artifact
+ci: fmt-check lint check-frontend eval-netflix-matcher test test-local-lifecycle smoke-netflix-command validate-instruction-screenshots validate-provider-icons test-browser smoke-command test-release-workflow test-release-artifact
