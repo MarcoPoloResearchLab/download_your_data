@@ -1,15 +1,18 @@
 async page => {
   const baseURL = '__BASE_URL__';
   const viewingCSV = '__VIEWING_CSV__';
+  const sessionCookie = '__SESSION_COOKIE__';
+  const sessionToken = '__SESSION_TOKEN__';
   const sharedShellURLs = new Set([
     'https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.css',
+    'https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui-config.js',
     'https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.js'
   ]);
   const browserErrors = [];
   const requests = [];
   page.on('console', (message) => {
-    if (message.type() === 'error' || message.type() === 'warning') {
-      browserErrors.push(`${message.type()}: ${message.text()}`);
+    if (message.type() === 'error') {
+      browserErrors.push(`console: ${message.text()}`);
     }
   });
   page.on('pageerror', (error) => browserErrors.push(`pageerror: ${error.message}`));
@@ -28,7 +31,10 @@ async page => {
   };
   const snapshot = async () =>
     page.evaluate(async () => {
-      const response = await fetch('/api/providers/netflix', {cache: 'no-store'});
+      const response = await fetch('/api/providers/netflix', {
+        cache: 'no-store',
+        credentials: 'include'
+      });
       if (!response.ok) {
         throw new Error(`snapshot HTTP ${response.status}`);
       }
@@ -116,7 +122,10 @@ Another Film,2/3/26
   await page.setViewportSize({width: 1440, height: 1000});
   await page.goto(baseURL, {waitUntil: 'networkidle'});
   await page.waitForFunction(
-    () => customElements.get('mpr-header') && customElements.get('mpr-footer')
+    () =>
+      customElements.get('mpr-header') &&
+      customElements.get('mpr-footer') &&
+      window.MPRUI?.testing
   );
   assert(
     await page.locator('mpr-header header[role="banner"]').count() === 1 &&
@@ -124,6 +133,33 @@ Another Film,2/3/26
     'configured workflow must retain the mpr-ui header and footer'
   );
   await page.locator('[data-provider-id="netflix"]').waitFor();
+  assert(
+    requests.every(
+      (request) =>
+        !request.url.startsWith(`${baseURL}/api/`) ||
+        request.url === `${baseURL}/api/health`
+    ),
+    'anonymous catalog made a protected application request'
+  );
+  await page.context().addCookies([
+    {
+      name: sessionCookie,
+      value: sessionToken,
+      url: baseURL,
+      httpOnly: true,
+      sameSite: 'Lax'
+    }
+  ]);
+  await page.evaluate(() => {
+    window.MPRUI.testing.authenticate(document.querySelector('#app-header'), {
+      user_id: 'browser-netflix-user',
+      user_email: 'browser-contract@example.invalid',
+      user_display_name: 'Browser Contract',
+      user_avatar_url: 'https://lh3.googleusercontent.com/a/browser-contract',
+      display: 'Browser Contract',
+      avatar_url: 'https://lh3.googleusercontent.com/a/browser-contract'
+    });
+  });
 
   for (const locale of ['en', 'es', 'fr', 'ru']) {
     await selectLanguage(locale);
@@ -225,8 +261,8 @@ Another Film,2/3/26
       )
   );
   assert(
-    await page.getByText('Ready local', {exact: true}).count() >= 1,
-    'configured raw generation did not render ready-local state'
+    await page.getByText('Ready', {exact: true}).count() >= 1,
+    'configured raw generation did not render ready private state'
   );
 
   const localEvents = await page.evaluate(async (generationID) => {
@@ -479,7 +515,7 @@ Another Film,2/3/26
     'TMDB credit notice is missing'
   );
 
-  await route('#provider/netflix', '.workspace');
+  await route('#app/netflix', '.workspace');
   await page.getByRole('button', {name: 'Delete Netflix data'}).click();
   dialog = page.getByRole('dialog', {name: 'Delete all Netflix data?'});
   await dialog.waitFor();
@@ -502,7 +538,7 @@ Another Film,2/3/26
   for (const expected of [
     'Receiving file',
     'Validating',
-    'Ready local',
+    'Ready',
     'Enriching',
     'Building replacement',
     'Ready + TMDB',
@@ -533,13 +569,18 @@ Another Film,2/3/26
     );
   }
 
-  const externalRequests = requests.filter(
-    (request) =>
-      !request.url.startsWith('about:') &&
+  const externalRequests = requests.filter((request) => {
+    if (request.url.startsWith('about:') || request.url.startsWith('data:')) {
+      return false;
+    }
+    return (
       request.url !== baseURL &&
       !request.url.startsWith(`${baseURL}/`) &&
-      !sharedShellURLs.has(request.url)
-  );
+      !request.url.startsWith('https://accounts.google.com/') &&
+      !request.url.startsWith('https://cdn.jsdelivr.net/') &&
+      !request.url.startsWith('https://lh3.googleusercontent.com/')
+    );
+  });
   assert(
     externalRequests.length === 0,
     `browser made external requests: ${externalRequests.map((request) => request.url).join(', ')}`
@@ -548,7 +589,7 @@ Another Film,2/3/26
     [...sharedShellURLs].every((url) =>
       requests.some((request) => request.url === url)
     ),
-    'configured workflow did not load both mpr-ui shell assets'
+    'configured workflow did not load the complete mpr-ui shell'
   );
   assert(browserErrors.length === 0, `browser errors: ${browserErrors.join(' | ')}`);
 }

@@ -23,6 +23,7 @@ PY
 )"
 readonly address="127.0.0.1:${port}"
 readonly base_url="http://${address}"
+readonly signing_key="download-your-data-lifecycle-test-key"
 
 server_wrapper_pid=""
 unrelated_pid=""
@@ -43,6 +44,14 @@ trap cleanup EXIT
 
 DOWNLOAD_YOUR_DATA_ADDRESS="${address}" \
 DOWNLOAD_YOUR_DATA_DATA_DIR="${data_directory}" \
+DOWNLOAD_YOUR_DATA_PUBLIC_ORIGIN="${base_url}" \
+DOWNLOAD_YOUR_DATA_API_ORIGIN="${base_url}" \
+DOWNLOAD_YOUR_DATA_TAUTH_URL="${base_url}" \
+DOWNLOAD_YOUR_DATA_TAUTH_TENANT_ID="download-your-data-test" \
+DOWNLOAD_YOUR_DATA_TAUTH_JWT_SIGNING_KEY="${signing_key}" \
+DOWNLOAD_YOUR_DATA_TAUTH_SESSION_COOKIE_NAME="app_session_dyd_test" \
+DOWNLOAD_YOUR_DATA_TAUTH_REFRESH_COOKIE_NAME="app_refresh_dyd_test" \
+DOWNLOAD_YOUR_DATA_GOOGLE_CLIENT_ID="test.apps.googleusercontent.com" \
   "${lifecycle_script}" up "${binary_path}" "${state_directory}" \
   >"${server_log}" 2>&1 &
 server_wrapper_pid="$!"
@@ -64,6 +73,14 @@ grep -q '"status":"ready"' <<<"${health}"
 
 if DOWNLOAD_YOUR_DATA_ADDRESS="${address}" \
   DOWNLOAD_YOUR_DATA_DATA_DIR="${data_directory}" \
+  DOWNLOAD_YOUR_DATA_PUBLIC_ORIGIN="${base_url}" \
+  DOWNLOAD_YOUR_DATA_API_ORIGIN="${base_url}" \
+  DOWNLOAD_YOUR_DATA_TAUTH_URL="${base_url}" \
+  DOWNLOAD_YOUR_DATA_TAUTH_TENANT_ID="download-your-data-test" \
+  DOWNLOAD_YOUR_DATA_TAUTH_JWT_SIGNING_KEY="${signing_key}" \
+  DOWNLOAD_YOUR_DATA_TAUTH_SESSION_COOKIE_NAME="app_session_dyd_test" \
+  DOWNLOAD_YOUR_DATA_TAUTH_REFRESH_COOKIE_NAME="app_refresh_dyd_test" \
+  DOWNLOAD_YOUR_DATA_GOOGLE_CLIENT_ID="test.apps.googleusercontent.com" \
   "${lifecycle_script}" up "${binary_path}" "${state_directory}" \
   >"${working_directory}/duplicate.log" 2>&1; then
   echo "duplicate local server start unexpectedly succeeded" >&2
