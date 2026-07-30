@@ -18,6 +18,15 @@ import {
   uploadViewingActivity
 } from './api.js';
 import {countChart, seriesChart} from './charts.js';
+import {element} from './dom.js';
+import {instructionLinkURL} from './provider-links.js';
+import {
+  GUIDE_ONLY_PROVIDER_IDS,
+  isWorkspaceRoute,
+  navigate,
+  parseRoute,
+  WORKSPACE_PROVIDER_IDS
+} from './routing.js';
 
 const STORAGE_KEYS = Object.freeze({
   language: 'download-your-data.language',
@@ -25,31 +34,6 @@ const STORAGE_KEYS = Object.freeze({
 });
 
 const LOCALES = Object.freeze(['en', 'es', 'fr', 'ru']);
-const WORKSPACE_PROVIDER_IDS = Object.freeze(['netflix', 'openai']);
-const GUIDE_ONLY_PROVIDER_IDS = Object.freeze([
-  'facebook',
-  'instagram',
-  'whatsapp',
-  'threads',
-  'linkedin',
-  'tiktok',
-  'x',
-  'youtube',
-  'google'
-]);
-const INSTRUCTION_LINK_HOSTS = Object.freeze({
-  netflix: Object.freeze(['help.netflix.com']),
-  openai: Object.freeze(['chatgpt.com']),
-  facebook: Object.freeze(['accountscenter.facebook.com', 'www.facebook.com']),
-  instagram: Object.freeze(['accountscenter.instagram.com', 'www.facebook.com']),
-  whatsapp: Object.freeze(['faq.whatsapp.com']),
-  threads: Object.freeze(['www.facebook.com']),
-  linkedin: Object.freeze(['www.linkedin.com']),
-  tiktok: Object.freeze(['support.tiktok.com']),
-  x: Object.freeze(['x.com']),
-  youtube: Object.freeze(['takeout.google.com']),
-  google: Object.freeze(['takeout.google.com'])
-});
 const VIEWS = Object.freeze(['overview', 'catalog', 'match_quality']);
 const MATCH_STATUSES = Object.freeze(['matched', 'review', 'unmatched']);
 const LOCALE_TO_TMDB = Object.freeze({
@@ -285,7 +269,7 @@ async function boot() {
   initializeTheme();
   state.route = parseRoute();
   const initialController = new AbortController();
-  const data = await fetchJSON('data.json', initialController.signal);
+  const data = await fetchJSON('content/application.json', initialController.signal);
   state.data = validateAppData(data);
   state.locale = initialLocale();
   document.documentElement.lang = state.locale;
@@ -2280,45 +2264,6 @@ function progressBar(generation) {
   return wrapper;
 }
 
-function parseRoute() {
-  const raw = window.location.hash.replace(/^#/, '');
-  if (raw.startsWith('app/')) {
-    const provider = raw.slice('app/'.length);
-    if (WORKSPACE_PROVIDER_IDS.includes(provider)) {
-      return {name: provider};
-    }
-  }
-  if (raw === 'credits') {
-    return {name: 'credits'};
-  }
-  if (raw.startsWith('guide/')) {
-    const provider = raw.slice('guide/'.length);
-    if (
-      WORKSPACE_PROVIDER_IDS.includes(provider) ||
-      GUIDE_ONLY_PROVIDER_IDS.includes(provider)
-    ) {
-      return {name: 'guide', provider};
-    }
-  }
-  return {name: 'catalog'};
-}
-
-function navigate(route, provider = '') {
-  if (WORKSPACE_PROVIDER_IDS.includes(route)) {
-    window.location.hash = `app/${route}`;
-  } else if (route === 'guide') {
-    window.location.hash = `guide/${provider}`;
-  } else if (route === 'credits') {
-    window.location.hash = 'credits';
-  } else {
-    window.location.hash = 'catalog';
-  }
-}
-
-function isWorkspaceRoute(route) {
-  return WORKSPACE_PROVIDER_IDS.includes(route.name);
-}
-
 function updateChrome() {
   const strings = localized();
   document.title = strings.site_title;
@@ -2398,29 +2343,8 @@ function providerDefinition(providerID) {
   return state.data.provider_registry.find((provider) => provider.id === providerID);
 }
 
-function instructionLinkURL(providerID, href) {
-  assertString(href, `${providerID} instruction link`);
-  let target;
-  try {
-    target = new URL(href);
-  } catch {
-    throw new Error(`${providerID} instruction link must be an absolute URL`);
-  }
-  const allowedHosts = INSTRUCTION_LINK_HOSTS[providerID];
-  if (
-    target.protocol !== 'https:' ||
-    target.username ||
-    target.password ||
-    !allowedHosts ||
-    !allowedHosts.includes(target.hostname)
-  ) {
-    throw new Error(`${providerID} instruction link must use an approved first-party HTTPS host`);
-  }
-  return target;
-}
-
 function validateAppData(data) {
-  assertObject(data, 'data.json');
+  assertObject(data, 'content/application.json');
   assertObject(data.credits, 'credits');
   assertObject(data.credits.tmdb, 'credits.tmdb');
   assertString(data.credits.tmdb.notice, 'credits.tmdb.notice');
@@ -2838,23 +2762,6 @@ function confirmDialog({title, body, confirmLabel, danger = false}) {
     dialog.showModal();
     dialog.querySelector('button[value="cancel"]').focus();
   });
-}
-
-function element(tagName, attributes = {}, ...children) {
-  const node = document.createElement(tagName);
-  for (const [name, value] of Object.entries(attributes)) {
-    if (name === 'class') {
-      node.className = value;
-    } else if (name === 'text') {
-      node.textContent = value;
-    } else if (['disabled', 'selected', 'checked'].includes(name)) {
-      node[name] = Boolean(value);
-    } else if (value !== undefined && value !== null) {
-      node.setAttribute(name, String(value));
-    }
-  }
-  node.append(...children.flat().filter((child) => child !== undefined && child !== null));
-  return node;
 }
 
 function assertObject(value, path) {

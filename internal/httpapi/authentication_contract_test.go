@@ -1,4 +1,4 @@
-package main
+package httpapi
 
 import (
 	"context"
@@ -453,7 +453,7 @@ func seedOpenAIArchiveForUser(
 	}
 	defer openedStore.Close()
 	importer := ingest.Importer{Store: openedStore}
-	sourcePath := filepath.Join("testdata", "synthetic-openai-export.zip")
+	sourcePath := filepath.Join("..", "..", "testdata", "synthetic-openai-export.zip")
 	if _, importError := importer.Import(
 		context.Background(),
 		sourcePath,

@@ -1,8 +1,7 @@
-package main
+package httpapi
 
 import (
 	"bytes"
-	"embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,6 +11,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/MarcoPoloResearchLab/download_your_data/frontend"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/authentication"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/inference"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/product"
@@ -27,11 +27,7 @@ const (
 	healthStatusReady   = "ready"
 	inferenceNotChecked = "not_checked"
 	csrfHeaderName      = "X-CSRF-Token"
-	apiOriginMarker     = "__DOWNLOAD_YOUR_DATA_API_ORIGIN__"
 )
-
-//go:embed index.html auth-lifecycle.js app.js api.js charts.js styles.css data.json images
-var applicationAssets embed.FS
 
 type healthResponse struct {
 	Status string `json:"status"`
@@ -94,6 +90,21 @@ type requestErrorPayload struct {
 type applicationHandler struct {
 	handler           http.Handler
 	workspaceRegistry *netflixWorkspaceRegistry
+}
+
+// Handler is the complete application HTTP boundary and owns any resources
+// that must be closed when the server stops.
+type Handler interface {
+	http.Handler
+	Close() error
+}
+
+// NewHandler constructs the authenticated Download Your Data HTTP boundary.
+func NewHandler(
+	config runtimeconfig.Config,
+	logger *slog.Logger,
+) (Handler, error) {
+	return newApplicationHandler(config, logger)
 }
 
 func (handler *applicationHandler) ServeHTTP(
@@ -163,10 +174,7 @@ func newApplicationHandlerWithNetflixMetadata(
 	if boundaryError != nil {
 		return nil, boundaryError
 	}
-	staticRoot, staticRootError := fs.Sub(applicationAssets, ".")
-	if staticRootError != nil {
-		return nil, fmt.Errorf("open embedded application assets: %w", staticRootError)
-	}
+	staticRoot := frontend.Assets()
 	indexDocument, indexError := buildApplicationIndex(config)
 	if indexError != nil {
 		return nil, indexError
@@ -213,16 +221,16 @@ func newApplicationHandlerWithNetflixMetadata(
 }
 
 func buildApplicationIndex(config runtimeconfig.Config) ([]byte, error) {
-	indexSource, readError := applicationAssets.ReadFile("index.html")
+	indexSource, readError := fs.ReadFile(frontend.Assets(), "index.html")
 	if readError != nil {
 		return nil, fmt.Errorf("read embedded application index: %w", readError)
 	}
-	if bytes.Count(indexSource, []byte(apiOriginMarker)) != 1 {
+	if bytes.Count(indexSource, []byte(frontend.APIOriginMarker)) != 1 {
 		return nil, errors.New("render application index: API origin marker must appear exactly once")
 	}
 	return bytes.Replace(
 		indexSource,
-		[]byte(apiOriginMarker),
+		[]byte(frontend.APIOriginMarker),
 		[]byte(html.EscapeString(config.Authentication().APIOrigin())),
 		1,
 	), nil

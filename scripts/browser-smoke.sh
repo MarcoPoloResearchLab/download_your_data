@@ -35,6 +35,7 @@ readonly user_id="browser-smoke-user"
 readonly session_cookie="app_session_dyd_browser"
 readonly refresh_cookie="app_refresh_dyd_browser"
 readonly signing_key="download-your-data-browser-test-key"
+readonly playwright_directory="$(mktemp -d -t download-your-data-playwright.XXXXXX)"
 readonly session_token="$(
   go run "${repository_directory}/scripts/test-session-token" \
     --signing-key "${signing_key}" \
@@ -50,8 +51,11 @@ readonly session_token="$(
 server_pid=""
 
 run_playwright() {
-  npx --yes --package "@playwright/cli@${playwright_version}" \
-    playwright-cli "-s=${session_name}" "$@"
+  (
+    cd "${playwright_directory}"
+    npx --yes --package "@playwright/cli@${playwright_version}" \
+      playwright-cli "-s=${session_name}" "$@"
+  )
 }
 
 cleanup() {
@@ -62,6 +66,7 @@ cleanup() {
   fi
   rm -f "${server_log}"
   rm -rf "${data_directory}"
+  rm -rf "${playwright_directory}"
 }
 trap cleanup EXIT
 

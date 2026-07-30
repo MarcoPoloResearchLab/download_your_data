@@ -1,4 +1,4 @@
-package main
+package httpapi
 
 import (
 	"bytes"
@@ -77,7 +77,7 @@ func TestNetflixBrowserWorkspaceContract(testContext *testing.T) {
 	command := exec.CommandContext(
 		commandContext,
 		"bash",
-		filepath.Join("scripts", "netflix-browser-workspace.sh"),
+		filepath.Join("..", "..", "scripts", "netflix-browser-workspace.sh"),
 	)
 	command.Env = append(
 		os.Environ(),

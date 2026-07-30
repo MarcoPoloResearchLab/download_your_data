@@ -13,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/httpapi"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/runtimeconfig"
 )
 
@@ -57,7 +58,7 @@ func runServer(
 	config runtimeconfig.Config,
 	logger *slog.Logger,
 ) (runError error) {
-	handler, handlerError := newApplicationHandler(config, logger)
+	handler, handlerError := httpapi.NewHandler(config, logger)
 	if handlerError != nil {
 		return handlerError
 	}

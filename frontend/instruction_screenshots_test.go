@@ -1,4 +1,4 @@
-package main
+package frontend
 
 import (
 	"bytes"
@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	instructionScreenshotManifestPath = "instruction-screenshots.json"
-	instructionScreenshotDataPath     = "data.json"
+	instructionScreenshotManifestPath = "manifests/instruction-screenshots.json"
+	instructionScreenshotDataPath     = "content/application.json"
 	instructionScreenshotDirectory    = "images/instructions"
 	instructionScreenshotPathPrefix   = instructionScreenshotDirectory + "/"
 )

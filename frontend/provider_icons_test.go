@@ -1,4 +1,4 @@
-package main
+package frontend
 
 import (
 	"bytes"
@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	providerIconManifestPath = "provider-icons.json"
-	providerIconDataPath     = "data.json"
+	providerIconManifestPath = "manifests/provider-icons.json"
+	providerIconDataPath     = "content/application.json"
 	providerIconDirectory    = "images/providers"
 	providerIconPathPrefix   = providerIconDirectory + "/"
 )

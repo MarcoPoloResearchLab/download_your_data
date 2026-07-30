@@ -89,6 +89,26 @@ make down
 refuses to stop a process that is not the exact server recorded by this
 checkout.
 
+## Source layout
+
+The repository root contains only project-wide entrypoints and governance.
+Application ownership is explicit:
+
+```text
+cmd/download-your-data/  executable bootstrap
+internal/httpapi/        authenticated HTTP and provider adapters
+internal/                provider domains, storage, inference, and retrieval
+frontend/                browser entrypoint, modules, content, manifests, and images
+scripts/                 repository-owned development and validation commands
+testdata/                fixtures shared by multiple packages
+```
+
+Generated executables and browser-run state are not source. Remove them with:
+
+```bash
+make clean
+```
+
 ## API boundary
 
 `GET /api/health` is public and contains no user data. `/config-ui.yaml` and

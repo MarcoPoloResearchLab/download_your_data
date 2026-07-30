@@ -1,4 +1,4 @@
-package main
+package httpapi
 
 import (
 	"bytes"
@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/MarcoPoloResearchLab/download_your_data/frontend"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/authentication"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix/tmdb"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/runtimeconfig"
@@ -122,7 +123,7 @@ func TestApplicationHTTPContract(testContext *testing.T) {
 			string(body),
 			`data-api-origin="`+config.Authentication().APIOrigin()+`"`,
 		) ||
-			strings.Contains(string(body), apiOriginMarker) {
+			strings.Contains(string(body), frontend.APIOriginMarker) {
 			testContext.Fatalf(
 				"application shell does not contain the configured API origin",
 			)
@@ -311,6 +312,21 @@ func TestRequestBoundaryEnforcesExactCORSOriginAndCSRF(testContext *testing.T) {
 			preflightResponse.Code,
 			preflightResponse.Header(),
 			preflightResponse.Body.String(),
+		)
+	}
+}
+
+func TestContentSecurityPolicyIsolatesTheSharedShell(testContext *testing.T) {
+	config := testRuntimeConfig(testContext)
+	securityPolicy := buildContentSecurityPolicy(config)
+	if !strings.Contains(securityPolicy, "default-src 'self'") ||
+		!strings.Contains(securityPolicy, config.Authentication().APIOrigin()) ||
+		!strings.Contains(securityPolicy, config.Authentication().TAuthURL()) ||
+		!strings.Contains(securityPolicy, "frame-ancestors 'none'") ||
+		strings.Contains(securityPolicy, "unsafe-eval") {
+		testContext.Fatalf(
+			"content security policy does not isolate the shared shell: %s",
+			securityPolicy,
 		)
 	}
 }

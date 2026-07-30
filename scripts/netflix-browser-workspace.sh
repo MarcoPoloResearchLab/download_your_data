@@ -8,14 +8,19 @@ readonly session_token="${DOWNLOAD_YOUR_DATA_BROWSER_SESSION_TOKEN:?DOWNLOAD_YOU
 readonly playwright_version="${PLAYWRIGHT_CLI_VERSION:?PLAYWRIGHT_CLI_VERSION is required}"
 readonly session_name="download-your-data-netflix-$$"
 readonly script_directory="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly playwright_directory="$(mktemp -d -t download-your-data-playwright.XXXXXX)"
 
 run_playwright() {
-  npx --yes --package "@playwright/cli@${playwright_version}" \
-    playwright-cli "-s=${session_name}" "$@"
+  (
+    cd "${playwright_directory}"
+    npx --yes --package "@playwright/cli@${playwright_version}" \
+      playwright-cli "-s=${session_name}" "$@"
+  )
 }
 
 cleanup() {
   run_playwright close >/dev/null 2>&1 || true
+  rm -rf "${playwright_directory}"
 }
 trap cleanup EXIT
 

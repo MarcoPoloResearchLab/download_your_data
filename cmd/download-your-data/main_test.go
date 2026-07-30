@@ -120,3 +120,17 @@ func replacementEnvironment(current []string, replacements map[string]string) []
 	}
 	return environment
 }
+
+func testRuntimeEnvironment(dataDirectory string) map[string]string {
+	return map[string]string{
+		runtimeconfig.DataDirectoryEnvironment:      dataDirectory,
+		runtimeconfig.PublicOriginEnvironment:       "http://127.0.0.1:4173",
+		runtimeconfig.APIOriginEnvironment:          "http://127.0.0.1:8787",
+		runtimeconfig.TAuthURLEnvironment:           "http://127.0.0.1:8787",
+		runtimeconfig.TAuthTenantIDEnvironment:      "download-your-data-test",
+		runtimeconfig.TAuthJWTSigningKeyEnvironment: strings.Repeat("test-signing-key-", 2),
+		runtimeconfig.TAuthSessionCookieEnvironment: "app_session_dyd_test",
+		runtimeconfig.TAuthRefreshCookieEnvironment: "app_refresh_dyd_test",
+		runtimeconfig.GoogleClientIDEnvironment:     "test.apps.googleusercontent.com",
+	}
+}

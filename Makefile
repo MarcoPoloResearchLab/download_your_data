@@ -5,11 +5,14 @@ CGO_ENABLED ?= 1
 
 export CGO_ENABLED
 
-.PHONY: build check-frontend ci deploy deploy-dry-run down eval-netflix-matcher fmt fmt-check lint publish release test test-browser test-local-lifecycle up validate-instruction-screenshots validate-provider-icons
+.PHONY: build check-frontend ci clean deploy deploy-dry-run down eval-netflix-matcher fmt fmt-check lint publish release test test-browser test-local-lifecycle up validate-instruction-screenshots validate-provider-icons
 
 build:
 	@mkdir -p build
-	@$(GO) build -o build/download-your-data .
+	@$(GO) build -o build/download-your-data ./cmd/download-your-data
+
+clean:
+	@./scripts/clean-generated.sh "$(CURDIR)"
 
 up: build
 	@./scripts/local-server.sh up "$(abspath build/download-your-data)"
@@ -18,10 +21,14 @@ down:
 	@./scripts/local-server.sh down "$(abspath build/download-your-data)"
 
 fmt:
-	gofmt -w $$(find . -name '*.go' -not -path './build/*')
+	gofmt -w $$(find . -name '*.go' \
+		-not -path './build/*' \
+		-not -path './.tidy-folder-snapshots/*')
 
 fmt-check:
-	@test -z "$$(gofmt -l $$(find . -name '*.go' -not -path './build/*'))" || \
+	@test -z "$$(gofmt -l $$(find . -name '*.go' \
+		-not -path './build/*' \
+		-not -path './.tidy-folder-snapshots/*'))" || \
 		{ echo "Go files require formatting; run make fmt"; exit 1; }
 
 lint:
@@ -33,7 +40,13 @@ check-frontend:
 	npx --yes --package "typescript@$(TYPESCRIPT_VERSION)" tsc \
 		--allowJs --checkJs --noEmit --target ES2023 --module ES2022 \
 		--moduleResolution bundler --lib ES2023,DOM \
-		auth-lifecycle.js app.js api.js charts.js
+		frontend/application/auth-lifecycle.js \
+		frontend/application/app.js \
+		frontend/application/api.js \
+		frontend/application/charts.js \
+		frontend/application/dom.js \
+		frontend/application/provider-links.js \
+		frontend/application/routing.js
 	node --check scripts/browser-smoke.playwright.js
 	node --check scripts/netflix-browser-workspace.playwright.js
 
@@ -50,13 +63,13 @@ test-browser: build
 	PLAYWRIGHT_CLI_VERSION=$(PLAYWRIGHT_CLI_VERSION) ./scripts/browser-smoke.sh ./build/download-your-data
 	DOWNLOAD_YOUR_DATA_RUN_BROWSER_CONTRACT=1 \
 		PLAYWRIGHT_CLI_VERSION=$(PLAYWRIGHT_CLI_VERSION) \
-		$(GO) test . -run '^TestNetflixBrowserWorkspaceContract$$' -count=1
+		$(GO) test ./internal/httpapi -run '^TestNetflixBrowserWorkspaceContract$$' -count=1
 
 validate-instruction-screenshots:
-	$(GO) test . -run '^TestInstructionScreenshotContract$$' -count=1
+	$(GO) test ./frontend -run '^TestInstructionScreenshotContract$$' -count=1
 
 validate-provider-icons:
-	$(GO) test . -run '^TestProviderIconContract$$' -count=1
+	$(GO) test ./frontend -run '^TestProviderIconContract$$' -count=1
 
 release publish deploy deploy-dry-run:
 	@echo "blocked: freeze the exact authenticated web production profile before $@" >&2

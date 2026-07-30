@@ -1,4 +1,4 @@
-package main
+package frontend
 
 import (
 	"bytes"
@@ -60,9 +60,9 @@ type frontendReference struct {
 }
 
 func TestFrontendProviderWorkspaceContract(testContext *testing.T) {
-	content, readError := os.ReadFile("data.json")
+	content, readError := os.ReadFile("content/application.json")
 	if readError != nil {
-		testContext.Fatalf("read data.json: %v", readError)
+		testContext.Fatalf("read content/application.json: %v", readError)
 	}
 	var data frontendDataContract
 	decoder := json.NewDecoder(bytes.NewReader(content))
@@ -246,9 +246,9 @@ func TestFrontendAssetsUseCurrentMPRShell(testContext *testing.T) {
 	const sharedStylesheet = "https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.css"
 	const sharedConfigScript = "https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui-config.js"
 	const sharedBundleScript = "https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.js"
-	if !strings.Contains(index, `<script type="module" src="app.js"></script>`) ||
-		!strings.Contains(index, `<script src="auth-lifecycle.js"></script>`) ||
-		!strings.Contains(index, `<link rel="stylesheet" href="styles.css">`) ||
+	if !strings.Contains(index, `<script type="module" src="application/app.js"></script>`) ||
+		!strings.Contains(index, `<script src="application/auth-lifecycle.js"></script>`) ||
+		!strings.Contains(index, `<link rel="stylesheet" href="styles/application.css">`) ||
 		!strings.Contains(index, `href="`+sharedStylesheet+`"`) ||
 		!strings.Contains(index, `src="https://accounts.google.com/gsi/client" async defer`) ||
 		!strings.Contains(index, `src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"`) ||
@@ -256,7 +256,7 @@ func TestFrontendAssetsUseCurrentMPRShell(testContext *testing.T) {
 		!strings.Contains(index, `data-mpr-ui-bundle-src="`+sharedBundleScript+`"`) ||
 		!strings.Contains(index, `<mpr-header`) ||
 		!strings.Contains(index, `data-config-url="/config-ui.yaml"`) ||
-		!strings.Contains(index, `data-api-origin="`+apiOriginMarker+`"`) ||
+		!strings.Contains(index, `data-api-origin="`+APIOriginMarker+`"`) ||
 		!strings.Contains(index, `completionEvent`) ||
 		!strings.Contains(index, `<mpr-user`) ||
 		!strings.Contains(index, `<mpr-footer`) ||
@@ -277,25 +277,31 @@ func TestFrontendAssetsUseCurrentMPRShell(testContext *testing.T) {
 		strings.Contains(strings.ToLower(index), "bootstrap") {
 		testContext.Fatalf("index.html is not the canonical authenticated mpr-ui integration")
 	}
-	if strings.Index(index, `<script type="module" src="app.js"></script>`) >
+	if strings.Index(index, `<script type="module" src="application/app.js"></script>`) >
 		strings.Index(index, `src="`+sharedConfigScript+`"`) {
 		testContext.Fatalf("app lifecycle listeners are registered after mpr-ui startup")
 	}
-	if strings.Index(index, `<script src="auth-lifecycle.js"></script>`) >
+	if strings.Index(index, `<script src="application/auth-lifecycle.js"></script>`) >
 		strings.Index(index, `src="`+sharedConfigScript+`"`) {
 		testContext.Fatalf("auth lifecycle buffer is registered after mpr-ui startup")
 	}
-	authLifecycleScript := readFrontendAsset(testContext, "auth-lifecycle.js")
-	appScript := readFrontendAsset(testContext, "app.js")
-	apiScript := readFrontendAsset(testContext, "api.js")
-	chartsScript := readFrontendAsset(testContext, "charts.js")
-	styles := readFrontendAsset(testContext, "styles.css")
+	authLifecycleScript := readFrontendAsset(testContext, "application/auth-lifecycle.js")
+	appScript := readFrontendAsset(testContext, "application/app.js")
+	apiScript := readFrontendAsset(testContext, "application/api.js")
+	chartsScript := readFrontendAsset(testContext, "application/charts.js")
+	domScript := readFrontendAsset(testContext, "application/dom.js")
+	providerLinksScript := readFrontendAsset(testContext, "application/provider-links.js")
+	routingScript := readFrontendAsset(testContext, "application/routing.js")
+	styles := readFrontendAsset(testContext, "styles/application.css")
 	for path, content := range map[string]string{
-		"auth-lifecycle.js": authLifecycleScript,
-		"app.js":            appScript,
-		"api.js":            apiScript,
-		"charts.js":         chartsScript,
-		"styles.css":        styles,
+		"application/auth-lifecycle.js": authLifecycleScript,
+		"application/app.js":            appScript,
+		"application/api.js":            apiScript,
+		"application/charts.js":         chartsScript,
+		"application/dom.js":            domScript,
+		"application/provider-links.js": providerLinksScript,
+		"application/routing.js":        routingScript,
+		"styles/application.css":        styles,
 	} {
 		if strings.Contains(content, "http://") ||
 			strings.Contains(content, "https://") ||
@@ -310,6 +316,9 @@ func TestFrontendAssetsUseCurrentMPRShell(testContext *testing.T) {
 	}
 	if !strings.Contains(appScript, "from './api.js'") ||
 		!strings.Contains(appScript, "from './charts.js'") ||
+		!strings.Contains(appScript, "from './dom.js'") ||
+		!strings.Contains(appScript, "from './provider-links.js'") ||
+		!strings.Contains(appScript, "from './routing.js'") ||
 		!strings.Contains(authLifecycleScript, "mpr-ui:auth:authenticated") ||
 		!strings.Contains(authLifecycleScript, "mpr-ui:auth:unauthenticated") ||
 		strings.Contains(authLifecycleScript, "document.cookie") ||
@@ -327,18 +336,6 @@ func TestFrontendAssetsUseCurrentMPRShell(testContext *testing.T) {
 		strings.Contains(styles, "gradient(") ||
 		strings.Contains(styles, "@import") {
 		testContext.Fatalf("frontend module or MPR style contract is incomplete")
-	}
-	config := testRuntimeConfig(testContext)
-	securityPolicy := buildContentSecurityPolicy(config)
-	if !strings.Contains(securityPolicy, "default-src 'self'") ||
-		!strings.Contains(securityPolicy, config.Authentication().APIOrigin()) ||
-		!strings.Contains(securityPolicy, config.Authentication().TAuthURL()) ||
-		!strings.Contains(securityPolicy, "frame-ancestors 'none'") ||
-		strings.Contains(securityPolicy, "unsafe-eval") {
-		testContext.Fatalf(
-			"content security policy does not isolate the shared shell: %s",
-			securityPolicy,
-		)
 	}
 }
 

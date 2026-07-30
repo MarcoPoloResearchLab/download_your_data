@@ -651,7 +651,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Remove web placeholders when the complete 12-shot set is accepted. TikTok remains text-only until `I011` supplies its separate mobile set.
 
   Deliverables:
-  - Twelve reviewed, metadata-free local assets beneath `images/instructions/`.
+  - Twelve reviewed, metadata-free local assets beneath `frontend/images/instructions/`.
   - Current provider instructions, official references, capture runbook, and shared screenshot manifest.
   - Shared asset wiring with localized alternative text for all four locales.
   - Repository-native screenshot validation and browser coverage.
@@ -960,6 +960,31 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - `git status --short`
 
   Resolved 2026-07-29: the repository now owns fixed `make up`, `make release`, `make publish`, and user-owned `make deploy` entrypoints. Release builds and packages the macOS arm64 application twice with an isolated Go build cache, seals its checksum and first-run guidance, and creates only the local release commit and tag; publish uploads that exact sealed release without rebuilding; deploy verifies the published manifest and tag, replaces `gh-pages`, configures branch publishing with the sealed `dyd.mprlab.com` CNAME, waits for the GitHub Pages certificate, enforces HTTPS, and verifies the source marker. Read-only production inspection confirmed `dyd.mprlab.com` points directly to `marcopoloresearchlab.github.io` and the repository is in the expected pre-first-deploy Pages API 404 state. `make deploy-dry-run`, `make ci`, Bash 3.2 syntax checks, deterministic application and Pages artifact checks, extracted command and browser smoke, local publication/deployment/idempotency fixtures, `git diff --check`, and isolated gateway discovery and workflow validation passed; the gateway admitted `download_your_data` as `READY`. No production release, publication, Pages configuration, or deployment command was run.
+
+- [x] [M411] (P1) Align the repository layout with executable, API, and frontend ownership
+  Goal:
+  Make the repository root a concise project entrypoint while giving the executable bootstrap, protected HTTP API, and browser application separate canonical homes.
+
+  Requirements:
+  - Keep only project-wide governance, module, build, license, changelog, and operator documentation files at the repository root.
+  - Place the sole executable bootstrap under `cmd/download-your-data`.
+  - Place HTTP, authentication, user-workspace, Netflix, and OpenAI adapters with their contract tests under `internal/httpapi`.
+  - Place the browser entrypoint, checked modules, styles, localized content, provenance manifests, and visual files under one `frontend` tree.
+  - Remove obsolete duplicate fixtures and configuration instead of retaining aliases or parallel sources.
+  - Keep generated builds and Playwright state out of the source tree through one ownership-safe cleanup command and temporary browser-test directories.
+
+  Deliverables:
+  - Canonical source tree with all build, test, documentation, and embedded-file paths updated.
+  - Reversible pre-change file-placement snapshot and move ledger.
+  - Repository-native cleanup and full validation.
+
+  Validation:
+  - Root inventory contains no application source or frontend payload files.
+  - `make clean`
+  - `make ci`
+  - `git diff --check`
+
+  Resolved 2026-07-30: the root now contains only project-wide entrypoint files; the executable lives under `cmd/download-your-data`, the protected transport layer and its contracts live under `internal/httpapi`, and the complete static application lives under `frontend`. The redundant JSON configuration and raw conversation fixture were removed from the canonical source tree, browser harnesses use temporary Playwright directories, and `make clean` owns generated-output cleanup. Tidy Folder snapshot `20260730_191146_171118` preserves the pre-change inventory, removed inputs, and scoped move ledger. Byte-for-byte visual-asset verification, duplicate-fixture verification, `make clean`, `make ci`, and `git diff --check` passed.
 
 ## Features
 
