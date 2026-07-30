@@ -1,0 +1,23 @@
+server:
+  listen_addr: "${TAUTH_LISTEN_ADDR}"
+  database_url: "${TAUTH_DATABASE_URL}"
+  enable_cors: "${TAUTH_ENABLE_CORS}"
+  cors_allowed_origins:
+    - "${TAUTH_PUBLIC_ORIGIN}"
+  cors_allowed_origin_exceptions: []
+  enable_tenant_header_override: false
+
+tenants:
+  - id: "${TAUTH_TENANT_ID}"
+    display_name: "Download Your Data local"
+    tenant_origins:
+      - "${TAUTH_PUBLIC_ORIGIN}"
+    google_web_client_id: "${TAUTH_GOOGLE_WEB_CLIENT_ID}"
+    jwt_signing_key: "${TAUTH_JWT_SIGNING_KEY}"
+    cookie_domain: ""
+    session_cookie_name: "${TAUTH_SESSION_COOKIE_NAME}"
+    refresh_cookie_name: "${TAUTH_REFRESH_COOKIE_NAME}"
+    session_ttl: "30m"
+    refresh_ttl: "720h"
+    nonce_ttl: "10m"
+    allow_insecure_http: true

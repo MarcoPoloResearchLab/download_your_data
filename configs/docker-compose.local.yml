@@ -1,0 +1,43 @@
+services:
+  tauth:
+    image: ghcr.io/tyemirov/tauth:latest
+    pull_policy: always
+    environment:
+      TAUTH_CONFIG_FILE: /config/tauth.local.yml
+      TAUTH_LISTEN_ADDR: ":8080"
+      TAUTH_DATABASE_URL: sqlite:///data/tauth.db
+      TAUTH_ENABLE_CORS: "false"
+      TAUTH_PUBLIC_ORIGIN: "${DOWNLOAD_YOUR_DATA_PUBLIC_ORIGIN-}"
+      TAUTH_TENANT_ID: "${DOWNLOAD_YOUR_DATA_TAUTH_TENANT_ID-}"
+      TAUTH_GOOGLE_WEB_CLIENT_ID: "${DOWNLOAD_YOUR_DATA_GOOGLE_CLIENT_ID-}"
+      TAUTH_JWT_SIGNING_KEY: "${DOWNLOAD_YOUR_DATA_TAUTH_JWT_SIGNING_KEY-}"
+      TAUTH_SESSION_COOKIE_NAME: "${DOWNLOAD_YOUR_DATA_TAUTH_SESSION_COOKIE_NAME-}"
+      TAUTH_REFRESH_COOKIE_NAME: "${DOWNLOAD_YOUR_DATA_TAUTH_REFRESH_COOKIE_NAME-}"
+    volumes:
+      - ./tauth.local.yml:/config/tauth.local.yml:ro
+      - tauth_local_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "grep -q ':1F90' /proc/net/tcp /proc/net/tcp6"]
+      interval: 1s
+      timeout: 1s
+      retries: 60
+      start_period: 2s
+
+  gateway:
+    image: ghcr.io/tyemirov/ghttp:latest
+    pull_policy: always
+    depends_on:
+      tauth:
+        condition: service_healthy
+    environment:
+      GHTTP_SERVE_PORT: "8080"
+      GHTTP_SERVE_BIND_ADDRESS: "0.0.0.0"
+      GHTTP_SERVE_DIRECTORY: "/tmp"
+      GHTTP_SERVE_PROXIES: "/auth=http://tauth:8080,/me=http://tauth:8080,/api/me=http://tauth:8080,/=${DOWNLOAD_YOUR_DATA_LOCAL_APP_UPSTREAM-}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:8080:8080"
+
+volumes:
+  tauth_local_data:
