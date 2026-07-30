@@ -1,0 +1,122 @@
+<!doctype html>
+<html
+  lang="en"
+  data-theme="dark"
+  data-mpr-theme="dark"
+  data-api-origin="__DOWNLOAD_YOUR_DATA_API_ORIGIN__"
+>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Data Export Guides &amp; Private Analysis | Download Your Data</title>
+  <meta
+    name="description"
+    content="Follow current provider export guides, then use a private authenticated workspace for supported Netflix and OpenAI data analysis."
+  >
+  <link rel="canonical" href="__DOWNLOAD_YOUR_DATA_PUBLIC_ORIGIN__/">
+  <meta property="og:title" content="Data Export Guides &amp; Private Analysis | Download Your Data">
+  <meta
+    property="og:description"
+    content="Follow current provider export guides, then use a private authenticated workspace for supported Netflix and OpenAI data analysis."
+  >
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="__DOWNLOAD_YOUR_DATA_PUBLIC_ORIGIN__/">
+  <meta property="og:site_name" content="Download Your Data">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Data Export Guides &amp; Private Analysis | Download Your Data">
+  <meta
+    name="twitter:description"
+    content="Follow current provider export guides, then use a private authenticated workspace for supported Netflix and OpenAI data analysis."
+  >
+  <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="images/favicon.png" sizes="32x32" type="image/png">
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.css"
+  >
+  <link rel="stylesheet" href="styles/application.css">
+  <script src="application/auth-lifecycle.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+  <script type="module" src="application/app.js"></script>
+  <script
+    defer
+    src="https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui-config.js"
+  ></script>
+  <script
+    id="mpr-ui-bundle"
+    type="application/json"
+    data-mpr-ui-bundle-src="https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.js"
+  ></script>
+</head>
+<body>
+  <a class="skip-link" href="#app">Skip to content</a>
+  <mpr-header
+    id="app-header"
+    data-config-url="/config-ui.yaml"
+    brand-label="Download Your Data"
+    brand-href="#catalog"
+    auth-transition='{"title":"Opening Download Your Data","message":"Loading your private workspace.","completionEvent":"download-your-data:app-ready"}'
+    settings="false"
+  >
+    <a
+      class="app-brand"
+      slot="brand"
+      href="#catalog"
+      id="brand"
+      aria-label="Download Your Data"
+    >
+      <span class="brand-mark" aria-hidden="true">DYD</span>
+      <span id="brand-label">Download Your Data</span>
+    </a>
+    <span class="header-context" slot="nav-left" id="header-context">Provider catalog</span>
+    <div class="header-actions" slot="aux">
+      <button class="button button-quiet" type="button" data-route="credits" id="credits-button">
+        Credits
+      </button>
+      <div class="segmented" id="language-switcher" aria-label="Language">
+        <button type="button" data-language="en" aria-pressed="false">EN</button>
+        <button type="button" data-language="es" aria-pressed="false">ES</button>
+        <button type="button" data-language="fr" aria-pressed="false">FR</button>
+        <button type="button" data-language="ru" aria-pressed="false">RU</button>
+      </div>
+      <button class="icon-button" id="theme-toggle" type="button" aria-label="Use light theme">
+        <span aria-hidden="true">◐</span>
+      </button>
+      <mpr-user
+        display-mode="avatar"
+        logout-url="#catalog"
+        logout-label="Sign out"
+      ></mpr-user>
+    </div>
+  </mpr-header>
+
+  <div class="sr-only" id="app-announcer" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <main class="app-main" id="app" tabindex="-1">
+    <section class="panel loading-block" aria-label="Loading"></section>
+  </main>
+
+  <mpr-footer
+    id="app-footer"
+    sticky="false"
+    size="small"
+    privacy-link-hidden="true"
+  >
+    <div class="footer-copy" slot="legal">
+      <span class="footer-links">
+        <a href="/resources/">Resources</a>
+        <a href="https://mprlab.com/" target="_blank" rel="noopener noreferrer">MPR Lab</a>
+        <a
+          href="https://github.com/MarcoPoloResearchLab/download_your_data"
+          target="_blank"
+          rel="noopener noreferrer"
+        >GitHub</a>
+      </span>
+      <span id="footer-local">Private workspace</span>
+      <span id="footer-privacy">Your imported files stay in your authenticated workspace.</span>
+    </div>
+  </mpr-footer>
+</body>
+</html>

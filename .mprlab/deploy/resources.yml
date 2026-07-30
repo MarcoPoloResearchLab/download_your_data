@@ -1,0 +1,14 @@
+---
+mprlab_resources:
+  schema_version: 1
+  repo:
+    id: download-your-data
+    directory: download_your_data
+    dispatch_target: download-your-data
+  resources:
+    - type: make_workflow
+      name: download-your-data
+      targets:
+        release: release
+        publish: publish
+        deploy: deploy

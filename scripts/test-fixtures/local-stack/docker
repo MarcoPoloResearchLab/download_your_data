@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+printf '%s\n' "$*" >>"${DOWNLOAD_YOUR_DATA_TEST_DOCKER_LOG}"
+
+if [[ "$*" == "compose version" || "$1" == "info" ]]; then
+  exit 0
+fi
+
+if [[ " $* " == *" config --quiet "* ]]; then
+  exit 0
+fi
+
+if [[ " $* " == *" up "* && " $* " == *" tauth "* ]]; then
+  exit 0
+fi
+
+if [[ " $* " == *" up "* && " $* " == *" gateway "* ]]; then
+  if [[ -f "${DOWNLOAD_YOUR_DATA_TEST_GATEWAY_PID_FILE}" ]]; then
+    exit 0
+  fi
+  python3 \
+    "${DOWNLOAD_YOUR_DATA_TEST_GATEWAY_SCRIPT}" \
+    "${DOWNLOAD_YOUR_DATA_TEST_GATEWAY_ADDRESS}" \
+    "${DOWNLOAD_YOUR_DATA_TEST_APP_ORIGIN}" \
+    >"${DOWNLOAD_YOUR_DATA_TEST_GATEWAY_LOG}" 2>&1 &
+  printf '%s\n' "$!" >"${DOWNLOAD_YOUR_DATA_TEST_GATEWAY_PID_FILE}"
+  exit 0
+fi
+
+if [[ " $* " == *" down "* ]]; then
+  if [[ -f "${DOWNLOAD_YOUR_DATA_TEST_GATEWAY_PID_FILE}" ]]; then
+    gateway_pid="$(sed -n '1p' "${DOWNLOAD_YOUR_DATA_TEST_GATEWAY_PID_FILE}")"
+    if [[ "${gateway_pid}" =~ ^[1-9][0-9]*$ ]]; then
+      kill "${gateway_pid}" >/dev/null 2>&1 || true
+      for _ in $(seq 1 50); do
+        if ! kill -0 "${gateway_pid}" >/dev/null 2>&1; then
+          break
+        fi
+        sleep 0.02
+      done
+    fi
+    rm -f "${DOWNLOAD_YOUR_DATA_TEST_GATEWAY_PID_FILE}"
+  fi
+  exit 0
+fi
+
+echo "unexpected fake Docker invocation: $*" >&2
+exit 1

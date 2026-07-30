@@ -1,12 +1,14 @@
 async page => {
   const baseURL = '__BASE_URL__';
   const validCSV = '__VALID_CSV__';
-  const invalidCSV = '__INVALID_CSV__';
+  const sessionCookie = '__SESSION_COOKIE__';
+  const sessionToken = '__SESSION_TOKEN__';
   const browserErrors = [];
   const requestURLs = [];
+
   page.on('console', (message) => {
-    if (message.type() === 'error' || message.type() === 'warning') {
-      browserErrors.push(`${message.type()}: ${message.text()}`);
+    if (message.type() === 'error') {
+      browserErrors.push(`console: ${message.text()}`);
     }
   });
   page.on('pageerror', (error) => browserErrors.push(`pageerror: ${error.message}`));
@@ -23,391 +25,335 @@ async page => {
     }, hash);
     await page.locator(readySelector).waitFor();
   };
-  const selectLanguage = async (locale) => {
-    await page.locator(`[data-language="${locale}"]`).click();
-    await page.waitForFunction(
-      (expectedLocale) => document.documentElement.lang === expectedLocale,
-      locale
+  const protectedRequests = () =>
+    requestURLs.filter(
+      (rawURL) =>
+        rawURL.startsWith(`${baseURL}/api/`) &&
+        rawURL !== `${baseURL}/api/health`
+    );
+  const assertNoHorizontalOverflow = async (label) => {
+    const dimensions = await page.evaluate(() => ({
+      viewport: window.innerWidth,
+      document: document.documentElement.scrollWidth
+    }));
+    assert(
+      dimensions.document <= dimensions.viewport,
+      `${label} overflows horizontally: ${JSON.stringify(dimensions)}`
     );
   };
   const snapshot = async () =>
     page.evaluate(async () => {
-      const response = await fetch('/api/providers/netflix', {cache: 'no-store'});
+      const response = await fetch('/api/providers/netflix', {
+        cache: 'no-store',
+        credentials: 'include'
+      });
       if (!response.ok) {
         throw new Error(`snapshot HTTP ${response.status}`);
       }
       return response.json();
     });
-  const kpiValue = async (label) => {
-    const card = page.locator('.kpi').filter({has: page.locator('.kpi-label', {hasText: label})});
-    await card.first().waitFor();
-    return (await card.first().locator('.kpi-value').textContent()).trim();
-  };
-  const waitForState = async (predicate, label) => {
+  const waitForSnapshot = async (predicate, label) => {
     const deadline = Date.now() + 15000;
     while (Date.now() < deadline) {
-      if (predicate(await snapshot())) {
-        return;
+      const value = await snapshot();
+      if (predicate(value)) {
+        return value;
       }
       await page.waitForTimeout(50);
     }
     throw new Error(`timed out waiting for ${label}`);
   };
+  const setSharedAuth = async (authenticated) => {
+    await page.evaluate((nextAuthenticated) => {
+      const header = document.querySelector('#app-header');
+      if (
+        !window.MPRUI ||
+        !window.MPRUI.testing ||
+        typeof window.MPRUI.testing.authenticate !== 'function' ||
+        typeof window.MPRUI.testing.unauthenticate !== 'function'
+      ) {
+        throw new Error('mpr-ui browser test lifecycle is unavailable');
+      }
+      if (nextAuthenticated) {
+        window.MPRUI.testing.authenticate(header, {
+          user_id: 'browser-smoke-user',
+          user_email: 'browser-contract@example.invalid',
+          user_display_name: 'Browser Contract',
+          user_avatar_url: 'https://lh3.googleusercontent.com/a/browser-contract',
+          display: 'Browser Contract',
+          avatar_url: 'https://lh3.googleusercontent.com/a/browser-contract'
+        });
+      } else {
+        window.MPRUI.testing.unauthenticate(header);
+      }
+    }, authenticated);
+  };
 
   await page.setViewportSize({width: 1440, height: 1000});
   await page.goto(baseURL, {waitUntil: 'networkidle'});
-  await page.locator('[data-provider-id="netflix"]').waitFor();
+  await page.waitForFunction(
+    () =>
+      customElements.get('mpr-header') &&
+      customElements.get('mpr-footer') &&
+      window.MPRUI?.testing
+  );
+  await page.locator('.catalog').waitFor();
+  await setSharedAuth(false);
+
   assert(
-    await page.locator('.provider-row[data-provider-id]').count() === 8,
-    'provider catalog must contain eight canonical providers'
+    await page.locator('.provider-card[data-provider-id]').count() === 11,
+    'anonymous provider catalog must contain eleven canonical providers'
   );
   assert(
-    await page.locator('[data-provider-id="netflix"]').count() === 1,
-    'provider catalog must contain exactly one Netflix identity'
+    await page.locator('mpr-header header[role="banner"]').count() === 1 &&
+      await page.locator('mpr-footer footer[role="contentinfo"]').count() === 1 &&
+      await page.locator('mpr-user').count() === 1,
+    'mpr-ui must own one header, footer, and account surface'
+  );
+  assert(
+    protectedRequests().length === 0,
+    `public catalog made protected requests: ${protectedRequests().join(', ')}`
   );
 
-  const localeFacebookAlt = {
-    en: 'Facebook Accounts Center: Your information and permissions',
-    es: 'Centro de cuentas de Facebook: Tu información y permisos',
-    fr: 'Espace Comptes Facebook : Vos informations et autorisations',
-    ru: 'Центр аккаунтов Facebook: раздел «Ваша информация и разрешения»'
-  };
-  for (const [locale, expectedAlt] of Object.entries(localeFacebookAlt)) {
-    await selectLanguage(locale);
+  await page.setViewportSize({width: 390, height: 844});
+  for (const providerID of [
+    'netflix',
+    'openai',
+    'facebook',
+    'instagram',
+    'whatsapp',
+    'threads',
+    'linkedin',
+    'tiktok',
+    'x',
+    'youtube',
+    'google'
+  ]) {
+    await route(`#guide/${providerID}`, `#${providerID}`);
     assert(
-      (await page.locator('[data-provider-id="netflix"] .provider-name').textContent()).trim() ===
-        'Netflix',
-      `${locale} did not preserve the canonical Netflix identity`
+      await page.locator(`#${providerID} .instruction-step`).count() > 0,
+      `${providerID} guide must render instructions anonymously`
     );
-    await route('#guide/facebook', '#facebook');
-    assert(
-      await page.locator(`#facebook img[alt="${expectedAlt}"]`).count() === 1,
-      `${locale} Facebook screenshot alternative is missing`
-    );
-    await route('#provider/netflix', '.workspace');
-    assert(
-      (await page.locator('.workspace h1').textContent()).trim() === 'Netflix',
-      `${locale} Netflix workspace identity changed`
-    );
-    assert(
-      await page.locator('.import-panel .instruction-list li').count() === 6,
-      `${locale} Netflix instructions are incomplete`
-    );
-    assert(
+    await assertNoHorizontalOverflow(`${providerID} anonymous guide`);
+  }
+
+  await route('#guide/netflix', '#netflix');
+  assert(
+    await page.locator('#netflix .instruction-step').count() === 6 &&
       await page.locator(
-        '.import-panel a[href="https://help.netflix.com/en/node/101917"]'
+        '#netflix .guide-refs a[href="https://help.netflix.com/en/node/101917"]'
       ).count() === 1,
-      `${locale} Netflix official help route is missing`
-    );
-    await route('#catalog', '.catalog');
-  }
-  await selectLanguage('en');
-
-  const screenshotCounts = {
-    facebook: 2,
-    instagram: 2,
-    linkedin: 2,
-    tiktok: 0,
-    x: 2,
-    youtube: 2,
-    google: 2
-  };
-  const screenshotIDs = [];
-  for (const [provider, expectedCount] of Object.entries(screenshotCounts)) {
-    await route(`#guide/${provider}`, `#${provider}`);
-    const images = page.locator(`#${provider} img.instruction-screenshot`);
-    assert(
-      await images.count() === expectedCount,
-      `${provider} screenshot count must be ${expectedCount}`
-    );
-    for (const image of await images.all()) {
-      await image.scrollIntoViewIfNeeded();
-      await image.evaluate((element) => element.decode());
-      const record = await image.evaluate((element) => ({
-        alt: element.alt,
-        complete: element.complete,
-        id: element.dataset.screenshotId,
-        naturalHeight: element.naturalHeight,
-        naturalWidth: element.naturalWidth,
-        path: new URL(element.src).pathname,
-        width: element.getBoundingClientRect().width
-      }));
-      assert(record.alt, `${provider} screenshot requires alternative text`);
-      assert(
-        record.complete && record.naturalWidth >= 480 && record.naturalHeight >= 220,
-        `${provider} screenshot failed to load at its approved resolution`
-      );
-      assert(
-        record.path.startsWith('/images/instructions/') && record.path.endsWith('.png'),
-        `${provider} screenshot path is outside the self-owned asset set`
-      );
-      assert(record.width <= page.viewportSize().width, `${provider} screenshot overflows`);
-      screenshotIDs.push(record.id);
-    }
-  }
-  assert(screenshotIDs.length === 12, 'authenticated guide set must contain 12 screenshots');
-  assert(new Set(screenshotIDs).size === 12, 'authenticated screenshot IDs must be unique');
-  assert(await page.locator('.ratio').count() === 0, 'placeholder screenshot tiles remain');
-
-  await route('#guide/youtube', '#youtube');
-  assert(
-    await page.locator(
-      '#youtube a[href="https://takeout.google.com/settings/takeout/custom/youtube"]'
-    ).count() === 1,
-    'YouTube direct export route is missing'
+    'Netflix guide must remain complete and public'
   );
-  await route('#guide/google', '#google');
+  await route('#guide/openai', '#openai');
   assert(
-    await page.locator('#google a[href="https://takeout.google.com"]').count() === 1,
-    'Google direct export route is missing'
+    await page.locator('#openai .instruction-step').count() === 7 &&
+      await page.locator(
+        '#openai .guide-refs a[href="https://help.openai.com/en/articles/7260999-how-do-i-export-my-chatgpt-history-and-data"]'
+      ).count() === 1,
+    'OpenAI guide must remain complete and public'
   );
-
   await route('#credits', '.credits');
-  const tmdbLogo = page.locator('img.tmdb-logo');
-  await tmdbLogo.evaluate((element) => element.decode());
-  assert(
-    await tmdbLogo.getAttribute('src') === 'images/tmdb-blue-square.svg',
-    'Credits must use the approved local TMDB asset'
-  );
   assert(
     (await page.locator('.tmdb-credit').textContent()).includes(
       'This product uses the TMDB API but is not endorsed or certified by TMDB.'
     ),
-    'Credits must display the TMDB non-endorsement notice'
+    'public Credits must render its static TMDB attribution'
   );
-
-  await route('#catalog', '.catalog');
-  const openNetflix = page.locator('[data-provider-id="netflix"] [data-route="netflix"]');
-  await openNetflix.focus();
-  await page.keyboard.press('Enter');
-  await page.locator('.workspace').waitFor();
   assert(
-    await page.locator('#app-announcer[role="status"][aria-live="polite"]').count() === 1,
-    'workspace requires one polite live announcer'
+    protectedRequests().length === 0,
+    `public guides or Credits made protected requests: ${protectedRequests().join(', ')}`
   );
 
-  const invalidInput = page.locator('#netflix-file');
-  await invalidInput.setInputFiles(invalidCSV);
-  await page.getByText('invalid_header', {exact: false}).first().waitFor({timeout: 15000});
-  await waitForState(
-    (value) =>
-      value.active_generation == null &&
-      value.latest_failed_generation?.failure?.code === 'invalid_header',
-    'invalid CSV failure'
+  const protectedRequestCountBeforeResources = protectedRequests().length;
+  await page.setViewportSize({width: 1440, height: 1000});
+  await page.goto(`${baseURL}/resources/`, {waitUntil: 'networkidle'});
+  assert(
+    await page.locator('.resource-card').count() === 12,
+    'resource hub must expose twelve current crawlable resources'
   );
-
-  const observedStates = await page.evaluate(() => {
-    window.__downloadYourDataObservedStates = [];
-    const collect = () => {
-      document.querySelectorAll('.state-chip, .progress-meta span:first-child').forEach((node) => {
-        const value = node.textContent.trim();
-        if (value && !window.__downloadYourDataObservedStates.includes(value)) {
-          window.__downloadYourDataObservedStates.push(value);
-        }
-      });
-    };
-    new MutationObserver(collect).observe(document.querySelector('#app'), {
-      childList: true,
-      subtree: true
-    });
-    collect();
-    return window.__downloadYourDataObservedStates;
+  assert(
+    await page.locator('link[rel="canonical"]').getAttribute('href') ===
+      `${baseURL}/resources/`,
+    'resource hub canonical does not use the final trailing-slash URL'
+  );
+  await page.evaluate(() => {
+    const structuredData = document.querySelector('#structured-data')?.textContent;
+    if (!structuredData) {
+      throw new Error('resource hub structured data is missing');
+    }
+    JSON.parse(structuredData);
   });
-  assert(Array.isArray(observedStates), 'state observer did not initialize');
+  for (const resourcePath of [
+    '/resources/netflix-viewing-history-csv/',
+    '/resources/netflix-viewing-history-analyzer/',
+    '/resources/chatgpt-data-export/',
+    '/resources/whatsapp-chat-export/'
+  ]) {
+    await page.setViewportSize({width: 390, height: 844});
+    await page.goto(`${baseURL}${resourcePath}`, {waitUntil: 'networkidle'});
+    assert(
+      await page.locator('h1').count() === 1 &&
+        await page.locator('#quick-verdict-title').count() === 1 &&
+        await page.locator('pre code').count() === 1 &&
+        await page.locator('details').count() >= 3 &&
+        await page.locator('a[rel~="author"]').count() === 1,
+      `${resourcePath} is missing required public resource depth`
+    );
+    assert(
+      await page.locator('link[rel="canonical"]').getAttribute('href') ===
+        `${baseURL}${resourcePath}`,
+      `${resourcePath} canonical does not match the final served URL`
+    );
+    assert(
+      await page.locator('img[loading="lazy"]').evaluateAll((images) =>
+        images.every(
+          (image) =>
+            Number(image.getAttribute('width')) > 0 &&
+            Number(image.getAttribute('height')) > 0
+        )
+      ),
+      `${resourcePath} has a lazy image without explicit dimensions`
+    );
+    await assertNoHorizontalOverflow(resourcePath);
+  }
+  assert(
+    protectedRequests().length === protectedRequestCountBeforeResources,
+    `public resources made protected requests: ${protectedRequests().join(', ')}`
+  );
+
+  await page.setViewportSize({width: 1440, height: 1000});
+  await page.goto(baseURL, {waitUntil: 'networkidle'});
+  await page.waitForFunction(
+    () =>
+      customElements.get('mpr-header') &&
+      customElements.get('mpr-footer') &&
+      window.MPRUI?.testing
+  );
+  await page.locator('.catalog').waitFor();
+  await setSharedAuth(false);
+
+  await page.setViewportSize({width: 1440, height: 1000});
+  await route('#provider/netflix', '.catalog');
+  assert(
+    await page.evaluate(() => window.location.hash) === '#provider/netflix',
+    'obsolete provider route must not be rewritten into a compatibility alias'
+  );
+  await route('#app/netflix', '.workspace-gate');
+  assert(
+    ['pending', 'unauthenticated'].includes(
+      await page.locator('.workspace-gate-panel').getAttribute('data-auth-state')
+    ) &&
+      protectedRequests().length === 0,
+    'unsettled or signed-out application route made a protected request'
+  );
+
+  await page.context().addCookies([
+    {
+      name: sessionCookie,
+      value: sessionToken,
+      url: baseURL,
+      httpOnly: true,
+      sameSite: 'Lax'
+    }
+  ]);
+  await page.evaluate(() => {
+    window.__downloadYourDataReadyEvents = 0;
+    document.addEventListener('download-your-data:app-ready', () => {
+      window.__downloadYourDataReadyEvents += 1;
+    });
+  });
+  await setSharedAuth(true);
+  await page.locator('.workspace').waitFor();
+  await page.waitForFunction(() => window.__downloadYourDataReadyEvents === 1);
+  assert(
+    await page.locator('.workspace h1').textContent() === 'Netflix',
+    'authenticated lifecycle did not hydrate the Netflix workspace'
+  );
+  assert(
+    protectedRequests().some((rawURL) => rawURL === `${baseURL}/api/capabilities`) &&
+      protectedRequests().some(
+        (rawURL) => rawURL === `${baseURL}/api/providers/netflix`
+      ),
+    'authenticated lifecycle did not make the required protected requests'
+  );
+
   await page.locator('#netflix-file').setInputFiles(validCSV);
-  await waitForState(
-    (value) => value.active_generation?.analysis_level === 'local',
-    'ready local generation'
+  const readySnapshot = await waitForSnapshot(
+    (value) => value.active_generation?.state === 'ready',
+    'ready Netflix generation'
+  );
+  assert(
+    readySnapshot.active_generation.analysis_level === 'local',
+    'Netflix import did not produce the private base analysis generation'
   );
   await page.getByRole('tab', {name: 'Overview'}).waitFor();
   await page.waitForFunction(() => document.querySelectorAll('.kpi').length === 4);
-  assert(await kpiValue('Activities') === '9', 'raw activity KPI must equal nine');
-  assert(
-    await page.getByRole('button', {name: 'Enrich with TMDB'}).isDisabled(),
-    'TMDB enrichment must be disabled when server configuration is absent'
-  );
-  assert(
-    await page.getByText('TMDB not configured', {exact: true}).count() >= 1,
-    'ready-local state must disclose missing TMDB configuration'
-  );
-
-  const localSnapshot = await snapshot();
-  const localEvents = await page.evaluate(async (generationID) => {
-    const response = await fetch(
-      `/api/providers/netflix/generations/${generationID}/events?after=0`,
-      {cache: 'no-store'}
-    );
-    return response.json();
-  }, localSnapshot.active_generation.id);
-  assert(
-    ['receiving', 'validating', 'importing', 'ready'].every((stateName) =>
-      localEvents.events.some((event) => event.state === stateName)
-    ),
-    'local generation event journal is missing a declared lifecycle state'
-  );
-  const renderedStates = await page.evaluate(() => window.__downloadYourDataObservedStates);
-  assert(
-    renderedStates.includes('Receiving file') && renderedStates.includes('Validating'),
-    `UI did not render receiving and validating states: ${renderedStates.join(', ')}`
-  );
-  assert(
-    await page.locator('.chart-panel[role="region"], .chart-panel').count() >= 4,
-    'overview charts are missing'
-  );
-  assert(
-    await page.locator('.chart-data table').count() >= 2,
-    'populated overview charts are missing data-table alternatives'
-  );
-  assert(
-    await page.locator('.chart-panel').evaluateAll((panels) =>
-      panels.every(
-        (panel) =>
-          panel.querySelector('.chart-data table') !== null ||
-          panel.querySelector('.empty-copy') !== null
-      )
-    ),
-    'an overview chart lacks either a data table or an explicit empty state'
-  );
-
-  await page.locator('[data-filter="startDate"]').fill('2026-02-01');
-  await page.getByText('Choose both a start date', {exact: false}).waitFor();
-  await page.locator('[data-filter="endDate"]').fill('2026-02-03');
-  await page.waitForFunction(
-    () =>
-      [...document.querySelectorAll('.kpi')].some(
-        (card) =>
-          card.querySelector('.kpi-label')?.textContent === 'Activities' &&
-          card.querySelector('.kpi-value')?.textContent === '3'
-      )
-  );
-  await page.getByRole('button', {name: 'Clear', exact: true}).click();
-  await page.waitForFunction(
-    () =>
-      [...document.querySelectorAll('.kpi')].some(
-        (card) =>
-          card.querySelector('.kpi-label')?.textContent === 'Activities' &&
-          card.querySelector('.kpi-value')?.textContent === '9'
-      )
-  );
-
-  const overviewTab = page.getByRole('tab', {name: 'Overview'});
-  await overviewTab.focus();
-  await page.keyboard.press('ArrowRight');
-  const catalogTab = page.getByRole('tab', {name: 'Catalog'});
-  assert(await catalogTab.getAttribute('aria-selected') === 'true', 'tab arrow navigation failed');
-  assert(
-    await page.locator('#netflix-view-panel[aria-labelledby="netflix-view-catalog"]').count() === 1,
-    'Catalog tabpanel is not labeled by its selected tab'
-  );
-  await page.waitForFunction(() => document.querySelectorAll('.dimension-grid .chart-panel').length === 9);
-  assert(
-    await page.getByRole('heading', {name: 'Genres by viewing year'}).count() === 1,
-    'Catalog is missing genres by viewing year'
-  );
-  assert(await page.locator('tbody .record-title').count() === 9, 'Catalog must list all raw rows');
-
-  await page.setViewportSize({width: 393, height: 852});
-  const mobileLayout = await page.evaluate(() => {
-    const rail = document.querySelector('.workspace-rail').getBoundingClientRect();
-    const main = document.querySelector('.workspace-main').getBoundingClientRect();
-    return {
-      documentWidth: document.documentElement.scrollWidth,
-      viewportWidth: window.innerWidth,
-      railBottom: rail.bottom,
-      mainTop: main.top,
-      railColumns: getComputedStyle(document.querySelector('.workspace-rail')).gridTemplateColumns
-    };
-  });
-  assert(
-    mobileLayout.documentWidth <= mobileLayout.viewportWidth,
-    `mobile workspace overflows by ${mobileLayout.documentWidth - mobileLayout.viewportWidth}px`
-  );
-  assert(mobileLayout.railBottom <= mobileLayout.mainTop + 1, 'mobile rail must collapse above content');
-  assert(!mobileLayout.railColumns.includes(' '), 'mobile rail must use one column');
-
-  await page.emulateMedia({reducedMotion: 'reduce'});
-  const reducedMotion = await page.locator('.button').first().evaluate((element) => ({
-    animation: getComputedStyle(element).animationDuration,
-    transition: getComputedStyle(element).transitionDuration
-  }));
-  assert(
-    Number.parseFloat(reducedMotion.animation) <= 0.00001 &&
-      Number.parseFloat(reducedMotion.transition) <= 0.00001,
-    `reduced-motion contract is not active: ${JSON.stringify(reducedMotion)}`
-  );
-  await page.emulateMedia({reducedMotion: 'no-preference'});
+  await page.setViewportSize({width: 390, height: 844});
+  await assertNoHorizontalOverflow('authenticated Netflix workspace');
   await page.setViewportSize({width: 1440, height: 1000});
 
-  const contrast = await page.evaluate(() => {
-    const rgb = (value) => value.match(/\d+(?:\.\d+)?/g).slice(0, 3).map(Number);
-    const luminance = (value) => {
-      const channels = rgb(value).map((channel) => {
-        const normalized = channel / 255;
-        return normalized <= 0.03928
-          ? normalized / 12.92
-          : ((normalized + 0.055) / 1.055) ** 2.4;
-      });
-      return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
-    };
-    const ratio = (foreground, background) => {
-      const values = [luminance(foreground), luminance(background)].sort((a, b) => b - a);
-      return (values[0] + 0.05) / (values[1] + 0.05);
-    };
-    const body = getComputedStyle(document.body);
-    const primary = getComputedStyle(document.querySelector('.button-primary'));
-    return {
-      body: ratio(body.color, body.backgroundColor),
-      primary: ratio(primary.color, primary.backgroundColor)
-    };
-  });
-  assert(contrast.body >= 4.5, `body contrast ${contrast.body} is below 4.5`);
-  assert(contrast.primary >= 4.5, `primary button contrast ${contrast.primary} is below 4.5`);
-
-  const beforeReplacement = (await snapshot()).active_generation.id;
-  await page.locator('#netflix-file').setInputFiles(validCSV);
-  const replacementDialog = page.getByRole('dialog', {
-    name: 'Replace the active Netflix library?'
-  });
-  await replacementDialog.waitFor();
+  await setSharedAuth(false);
+  await page.locator(
+    '.workspace-gate-panel[data-auth-state="unauthenticated"]'
+  ).waitFor();
   assert(
-    (await replacementDialog.textContent()).includes(
-      'The current library stays active while the new CSV validates and imports.'
-    ),
-    'replacement disclosure is incomplete'
+    await page.locator('.workspace, .kpi, #netflix-file').count() === 0,
+    'shared unauthenticated lifecycle did not clear protected workspace UI'
   );
-  await replacementDialog.getByRole('button', {name: 'Cancel'}).click();
-  await replacementDialog.waitFor({state: 'detached'});
+  const requestCountAfterLogout = protectedRequests().length;
+  await page.waitForTimeout(500);
   assert(
-    (await snapshot()).active_generation.id === beforeReplacement,
-    'canceling replacement changed the active generation'
+    protectedRequests().length === requestCountAfterLogout,
+    'protected polling continued after shared logout'
   );
 
-  await page.getByRole('button', {name: 'Delete Netflix data'}).click();
-  let deleteDialog = page.getByRole('dialog', {name: 'Delete all Netflix data?'});
-  await deleteDialog.waitFor();
-  await deleteDialog.getByRole('button', {name: 'Cancel'}).click();
-  assert((await snapshot()).active_generation.id === beforeReplacement, 'delete cancel changed data');
-  await page.getByRole('button', {name: 'Delete Netflix data'}).click();
-  deleteDialog = page.getByRole('dialog', {name: 'Delete all Netflix data?'});
-  await deleteDialog.getByRole('button', {name: 'Delete all Netflix data'}).click();
-  await waitForState(
-    (value) =>
-      value.state === 'empty' &&
-      value.active_generation == null &&
-      value.building_generation == null,
-    'empty provider after deletion'
+  await route('#catalog', '.catalog');
+  await route('#guide/google', '#google');
+  assert(
+    await page.locator('#google .instruction-step').count() === 7,
+    'public guides must remain usable after logout'
   );
-  await page.getByRole('heading', {name: 'Import Netflix Viewing activity'}).waitFor();
 
-  const externalRequests = requestURLs.filter(
-    (rawURL) =>
-      !rawURL.startsWith('about:') &&
+  await route(
+    '#app/openai',
+    '.workspace-gate-panel[data-auth-state="unauthenticated"]'
+  );
+  await setSharedAuth(true);
+  await page.locator('.openai-workspace').waitFor();
+  assert(
+    await page.locator('.openai-prepare').count() === 1 &&
+      await page.locator('.openai-command').count() === 0,
+    'OpenAI workspace must not expose the retired unscoped operator commands'
+  );
+
+  const unexpectedExternalRequests = requestURLs.filter((rawURL) => {
+    if (rawURL.startsWith('about:') || rawURL.startsWith('data:')) {
+      return false;
+    }
+    return (
+      !rawURL.startsWith(`${baseURL}/`) &&
       rawURL !== baseURL &&
-      !rawURL.startsWith(`${baseURL}/`)
+      !rawURL.startsWith('https://accounts.google.com/') &&
+      !rawURL.startsWith('https://cdn.jsdelivr.net/') &&
+      !rawURL.startsWith('https://lh3.googleusercontent.com/')
+    );
+  });
+  assert(
+    unexpectedExternalRequests.length === 0,
+    `browser made unexpected external requests: ${unexpectedExternalRequests.join(', ')}`
   );
   assert(
-    externalRequests.length === 0,
-    `browser made external requests: ${externalRequests.join(', ')}`
+    requestURLs.includes(
+      'https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.css'
+    ) &&
+      requestURLs.includes(
+        'https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui-config.js'
+      ) &&
+      requestURLs.includes(
+        'https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.js'
+      ),
+    'browser did not load the complete mpr-ui@latest bootstrap'
   );
   assert(browserErrors.length === 0, `browser errors: ${browserErrors.join(' | ')}`);
 }

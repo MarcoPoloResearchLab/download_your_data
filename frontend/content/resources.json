@@ -1,0 +1,648 @@
+{
+  "schema_version": 1,
+  "significant_update": "2026-07-30",
+  "author": {
+    "name": "Vadym Tyemirov",
+    "url": "https://github.com/tyemirov"
+  },
+  "hub": {
+    "meta_title": "Data Export Guides and Analysis | Download Your Data",
+    "meta_description": "Step-by-step guides for exporting data from Netflix, ChatGPT, Meta, Google, TikTok, LinkedIn, X, and more, plus private analysis.",
+    "h1": "Data export guides and private analysis resources",
+    "intro": "Choose a provider-specific workflow to request the right archive, understand its limits, and move from a first-party export to a supported Download Your Data guide or workspace.",
+    "quick_verdict": "Start with the provider that owns your data. Each resource uses the current first-party route, names the exact export to request, and explains what Download Your Data can and cannot do with it."
+  },
+  "resources": [
+    {
+      "slug": "netflix-viewing-history-csv",
+      "provider_id": "netflix",
+      "kind": "provider-export",
+      "meta_title": "Netflix Viewing History CSV Guide | Download Your Data",
+      "meta_description": "Download the per-profile Netflix viewing history CSV, avoid the full account archive, and prepare the exact Title and Date file used for analysis.",
+      "h1": "How to Download Your Netflix Viewing History CSV",
+      "primary_keyword": "Netflix viewing history CSV",
+      "intro": "A Netflix viewing history CSV is the smallest useful export for reviewing what one profile watched and when. Netflix provides it from Viewing activity, not from the separate full-account information archive.",
+      "verdict": {
+        "best_for": "People who need a dated viewing list for one Netflix profile",
+        "required_input": "Access to the Netflix profile and its Viewing activity page",
+        "product_fit": "The downloaded Title and Date CSV is the supported Netflix workspace input"
+      },
+      "problem": "Netflix offers more than one data-download path. The Download Your Data workspace intentionally accepts only the per-profile Viewing activity CSV, so choosing the full personal-information archive creates the wrong input and adds unnecessary sensitive data.",
+      "coverage": [
+        "A Title column containing the displayed movie, series, season, or episode name",
+        "A Date column for each viewing-activity row",
+        "One profile at a time, matching the profile selected before opening Viewing activity"
+      ],
+      "limitations": [
+        "The file is not the full Netflix personal-information archive.",
+        "Profiles must be downloaded separately when you need more than one profile.",
+        "The base CSV does not include TMDB genres, runtimes, ratings, or production metadata."
+      ],
+      "workflow_steps": [],
+      "snippet": {
+        "label": "Current in-product visual guide route",
+        "content": "#guide/netflix",
+        "source_path": "frontend/application/routing.js"
+      },
+      "faqs": [
+        {
+          "question": "Which Netflix file does Download Your Data accept?",
+          "answer": "It accepts the per-profile Viewing activity CSV downloaded with Download all. It does not accept the separate full-account personal-information archive as the same input."
+        },
+        {
+          "question": "Does the Netflix CSV include every profile?",
+          "answer": "No. The workflow starts from a selected profile, so download each profile's Viewing activity separately when you need multiple histories."
+        },
+        {
+          "question": "What columns should the Netflix viewing history CSV contain?",
+          "answer": "The current supported file has the header Title,Date and one viewing-activity row beneath it for each displayed title and date."
+        }
+      ],
+      "related_slugs": [
+        "netflix-viewing-history-analyzer",
+        "google-takeout",
+        "chatgpt-data-export"
+      ],
+      "cta_label": "Open the visual Netflix export guide"
+    },
+    {
+      "slug": "netflix-viewing-history-analyzer",
+      "provider_id": "netflix",
+      "kind": "netflix-analysis",
+      "meta_title": "Netflix Viewing History Analyzer | Download Your Data",
+      "meta_description": "Import a Netflix Title and Date CSV into a private workspace for viewing counts, date patterns, title review, and optional consent-based TMDB enrichment.",
+      "h1": "Analyze a Netflix Viewing History CSV Privately",
+      "primary_keyword": "Netflix viewing history analyzer",
+      "intro": "The Download Your Data Netflix viewing history analyzer turns a per-profile Title and Date CSV into a private activity library with raw analytics, records, replacement, export, and deletion controls.",
+      "verdict": {
+        "best_for": "Reviewing viewing volume and patterns without uploading a full Netflix archive",
+        "required_input": "A per-profile Netflix Viewing activity CSV with Title and Date columns",
+        "product_fit": "Private authenticated analysis works without TMDB; enrichment is optional"
+      },
+      "problem": "A raw Netflix CSV is easy to download but awkward to inspect over months or years. This workspace validates the exact CSV at the boundary, builds raw analytics first, and keeps optional metadata enrichment separate so a missing TMDB configuration never blocks the base analysis.",
+      "coverage": [
+        "Activity count, unique titles, date range, monthly activity, weekday rhythm, and top raw titles",
+        "Paged viewing records and a replacement flow that keeps the current library active until the new import completes",
+        "Optional TMDB matching, enriched CSV export, provider deletion, and complete workspace deletion"
+      ],
+      "limitations": [
+        "The workspace rejects the separate full Netflix account archive.",
+        "TMDB enrichment requires server-side configuration and explicit user consent.",
+        "When enrichment runs, only unique derived title queries and the selected locale are sent; dates, profile data, raw CSV bytes, and complete activity rows are not sent."
+      ],
+      "workflow_steps": [
+        "Download the per-profile Viewing activity CSV from Netflix.",
+        "Sign in to the shared Download Your Data workspace and open Netflix Data analysis.",
+        "Choose the CSV and let the workspace validate and import it into a private user-owned generation.",
+        "Review raw overview metrics, activity trends, weekday rhythm, top titles, and paged records.",
+        "Optionally start TMDB enrichment after reviewing the disclosure when the server reports TMDB configured.",
+        "Export the enriched CSV when needed, replace the active library safely, or delete the Netflix or complete workspace data."
+      ],
+      "snippet": {
+        "label": "Supported CSV shape from the repository fixture",
+        "content": "Title,Date\nThe Clockmaker,1/2/26",
+        "source_path": "internal/providers/netflix/testdata/viewing_activity.csv"
+      },
+      "faqs": [
+        {
+          "question": "Can the Netflix analyzer work without TMDB?",
+          "answer": "Yes. Raw import and analytics do not require TMDB. The workspace reports TMDB as a separate configured or not-configured capability."
+        },
+        {
+          "question": "What does TMDB enrichment send?",
+          "answer": "After explicit consent, the server sends only unique derived title queries and the selected locale. It does not send viewing dates, profile data, raw CSV bytes, or complete activity rows."
+        },
+        {
+          "question": "What happens when I replace a Netflix CSV?",
+          "answer": "The current ready library remains active while the replacement validates and imports. It is replaced only after the new generation completes."
+        }
+      ],
+      "related_slugs": [
+        "netflix-viewing-history-csv",
+        "google-takeout",
+        "chatgpt-data-export"
+      ],
+      "cta_label": "Open Netflix Data analysis"
+    },
+    {
+      "slug": "chatgpt-data-export",
+      "provider_id": "openai",
+      "kind": "provider-export",
+      "meta_title": "ChatGPT Data Export and Download Guide | Download Your Data",
+      "meta_description": "Request your ChatGPT data export from Data controls, confirm the export, and save the ZIP before the signed-in download link expires.",
+      "h1": "How to Export Your ChatGPT Data",
+      "primary_keyword": "ChatGPT data export",
+      "intro": "A ChatGPT data export is requested from the signed-in product's Data controls. OpenAI prepares a ZIP containing conversation history and other account data, then sends a time-limited download link.",
+      "verdict": {
+        "best_for": "Saving a copy of ChatGPT history and account data",
+        "required_input": "An eligible signed-in ChatGPT account",
+        "product_fit": "The public guide is available now; browser ZIP import is not yet available"
+      },
+      "problem": "The export is asynchronous and the final link is short-lived. Requesting the archive is only the first half of the workflow: you must return while signed in to the same account and save the ZIP before the link expires.",
+      "coverage": [
+        "The current Settings to Data controls to Export data path",
+        "The separate confirmation step that starts archive preparation",
+        "The signed-in download step after OpenAI sends the export email or SMS"
+      ],
+      "limitations": [
+        "OpenAI says archive preparation can take up to seven days.",
+        "The download link expires after 24 hours.",
+        "Download Your Data does not yet accept the OpenAI ZIP through the browser workspace."
+      ],
+      "workflow_steps": [],
+      "snippet": {
+        "label": "Current in-product visual guide route",
+        "content": "#guide/openai",
+        "source_path": "frontend/application/routing.js"
+      },
+      "faqs": [
+        {
+          "question": "Where is Export data in ChatGPT?",
+          "answer": "Open the profile menu, choose Settings, select Data controls, and use Export under Export data."
+        },
+        {
+          "question": "How long can a ChatGPT data export take?",
+          "answer": "The current first-party flow says preparation can take up to seven days."
+        },
+        {
+          "question": "Can I import the ChatGPT ZIP into Download Your Data?",
+          "answer": "Not through the browser yet. The current public resource covers requesting and saving the export without presenting browser import as available."
+        }
+      ],
+      "related_slugs": [
+        "google-takeout",
+        "netflix-viewing-history-csv",
+        "linkedin-data-export"
+      ],
+      "cta_label": "Open the visual ChatGPT export guide"
+    },
+    {
+      "slug": "whatsapp-chat-export",
+      "provider_id": "whatsapp",
+      "kind": "provider-export",
+      "meta_title": "WhatsApp Chat and Account Export | Download Your Data",
+      "meta_description": "Choose the correct WhatsApp export: request account information for metadata or export an individual chat with or without media from the mobile app.",
+      "h1": "How to Export a WhatsApp Chat or Account Report",
+      "primary_keyword": "WhatsApp chat export",
+      "intro": "A WhatsApp chat export and a WhatsApp account-information report are different files. Use the account report for account metadata, or export each individual or group chat when you need message history.",
+      "verdict": {
+        "best_for": "Separating account metadata from the specific conversations you need",
+        "required_input": "The WhatsApp mobile app on your primary device",
+        "product_fit": "Download Your Data provides the public workflow but no WhatsApp analysis workspace"
+      },
+      "problem": "Request account info does not include personal messages, while Export chat does not create a restorable WhatsApp backup. Choosing the correct workflow before you start prevents an incomplete or unusable result.",
+      "coverage": [
+        "Requesting the account-information report from Settings and Account",
+        "Downloading and privately storing the report when WhatsApp marks it ready",
+        "Exporting one individual or group chat with or without media"
+      ],
+      "limitations": [
+        "The account-information report does not include personal messages.",
+        "Chats are exported individually rather than as one account-wide message archive.",
+        "The exported text file is not a WhatsApp backup and cannot be re-imported."
+      ],
+      "workflow_steps": [],
+      "snippet": {
+        "label": "Current in-product visual guide route",
+        "content": "#guide/whatsapp",
+        "source_path": "frontend/application/routing.js"
+      },
+      "faqs": [
+        {
+          "question": "Does the WhatsApp account report include messages?",
+          "answer": "No. Request account info covers account information and settings, not personal messages."
+        },
+        {
+          "question": "Can I export every WhatsApp chat at once?",
+          "answer": "The current guide exports the individual or group chat you open. Repeat the workflow for each chat you need."
+        },
+        {
+          "question": "Can a WhatsApp chat export be restored into WhatsApp?",
+          "answer": "No. The exported text file is a saved copy, not a WhatsApp backup and not a re-import format."
+        }
+      ],
+      "related_slugs": [
+        "facebook-data-export",
+        "instagram-data-export",
+        "threads-data-export"
+      ],
+      "cta_label": "Open the visual WhatsApp export guide"
+    },
+    {
+      "slug": "google-takeout",
+      "provider_id": "google",
+      "kind": "provider-export",
+      "meta_title": "Google Takeout Data Export Guide | Download Your Data",
+      "meta_description": "Use Google Takeout to select account products, choose one-time delivery and file options, create the export, and store split archives securely.",
+      "h1": "How to Export Account Data with Google Takeout",
+      "primary_keyword": "Google Takeout",
+      "intro": "Google Takeout lets you export data from the Google products you use, including Gmail, Drive, Photos, Maps, and YouTube. You control the included products, delivery method, frequency, file type, and archive size.",
+      "verdict": {
+        "best_for": "Creating one configurable export across multiple Google products",
+        "required_input": "A signed-in Google account and enough secure storage for the archive",
+        "product_fit": "Download Your Data provides the public export guide but no general Takeout importer"
+      },
+      "problem": "A broad Takeout archive can be much larger and more sensitive than expected. Review the selected products, choose a private delivery method, and set a practical split size before creating the export.",
+      "coverage": [
+        "Selecting or removing Google products before export",
+        "Choosing email delivery, one-time frequency, file type, and maximum archive size",
+        "Creating the export and waiting for Google's completion email"
+      ],
+      "limitations": [
+        "Large exports can be split into multiple archives.",
+        "Creating a Takeout archive does not delete the original data.",
+        "The resulting ZIPs can contain sensitive information and need secure storage."
+      ],
+      "workflow_steps": [],
+      "snippet": {
+        "label": "Current in-product visual guide route",
+        "content": "#guide/google",
+        "source_path": "frontend/application/routing.js"
+      },
+      "faqs": [
+        {
+          "question": "Does Google Takeout export every Google product?",
+          "answer": "Products you use and that hold your data are selected automatically, but you can uncheck products or refine supported product options before continuing."
+        },
+        {
+          "question": "Why did Google split my Takeout export?",
+          "answer": "Google splits an export when it exceeds the maximum archive size you selected."
+        },
+        {
+          "question": "Does creating a Google Takeout export delete my data?",
+          "answer": "No. Creating the archive makes a copy and does not delete the original data."
+        }
+      ],
+      "related_slugs": [
+        "youtube-data-export",
+        "chatgpt-data-export",
+        "netflix-viewing-history-csv"
+      ],
+      "cta_label": "Open the visual Google Takeout guide"
+    },
+    {
+      "slug": "youtube-data-export",
+      "provider_id": "youtube",
+      "kind": "provider-export",
+      "meta_title": "YouTube Data Export with Takeout | Download Your Data",
+      "meta_description": "Export YouTube and YouTube Music through the focused Google Takeout flow, refine included data, and choose one-time delivery and archive options.",
+      "h1": "How to Export YouTube Data with Google Takeout",
+      "primary_keyword": "YouTube data export",
+      "intro": "A YouTube data export uses Google Takeout with YouTube and YouTube Music selected. The focused workflow avoids starting with an account-wide archive and still lets you refine the YouTube data included.",
+      "verdict": {
+        "best_for": "Saving YouTube and YouTube Music data without exporting every Google product",
+        "required_input": "A signed-in Google account with YouTube data",
+        "product_fit": "Download Your Data provides the focused public guide but no YouTube importer"
+      },
+      "problem": "General Google Takeout starts with many products selected. The focused YouTube route narrows the first decision, then lets you review YouTube-specific options before choosing delivery and archive settings.",
+      "coverage": [
+        "Opening the Takeout flow with YouTube and YouTube Music selected",
+        "Refining the included YouTube data before continuing",
+        "Choosing one-time delivery, file type, archive size, and creating the export"
+      ],
+      "limitations": [
+        "YouTube exports are delivered through Google Takeout rather than a separate YouTube archive tool.",
+        "Large exports can be split across multiple archive files.",
+        "Download Your Data does not currently provide a YouTube analysis workspace."
+      ],
+      "workflow_steps": [],
+      "snippet": {
+        "label": "Current in-product visual guide route",
+        "content": "#guide/youtube",
+        "source_path": "frontend/application/routing.js"
+      },
+      "faqs": [
+        {
+          "question": "Is a YouTube data export the same as a full Google Takeout?",
+          "answer": "It uses Google Takeout, but the focused route starts with YouTube and YouTube Music selected instead of requiring an account-wide export."
+        },
+        {
+          "question": "Can I choose which YouTube data to include?",
+          "answer": "Yes. Use the YouTube and YouTube Music data-options control before moving to the delivery step."
+        },
+        {
+          "question": "Where does Google send the YouTube archive?",
+          "answer": "You choose the delivery method. The guide highlights email delivery because it avoids connecting an additional external destination."
+        }
+      ],
+      "related_slugs": [
+        "google-takeout",
+        "tiktok-data-export",
+        "x-data-archive"
+      ],
+      "cta_label": "Open the visual YouTube export guide"
+    },
+    {
+      "slug": "x-data-archive",
+      "provider_id": "x",
+      "kind": "provider-export",
+      "meta_title": "X Data Archive Download Guide | Download Your Data",
+      "meta_description": "Request your X data archive from account settings, complete password and email or phone verification, then download the ZIP while signed in.",
+      "h1": "How to Download Your X Data Archive",
+      "primary_keyword": "X data archive",
+      "intro": "An X data archive can include posts, media, direct messages, and profile information. The request begins in Your account settings and requires password plus email or phone verification.",
+      "verdict": {
+        "best_for": "Saving a signed-in copy of X account history and media",
+        "required_input": "Your X password and access to the account's email address or phone",
+        "product_fit": "Download Your Data provides the public request guide but no X archive importer"
+      },
+      "problem": "X separates the archive request from the eventual download and requires identity checks before the request begins. Make sure the account's password and verification destination are available before starting.",
+      "coverage": [
+        "Finding Download an archive of your data under Your account",
+        "Confirming the password and entering the email or phone verification code",
+        "Returning while signed in after the email or push notification arrives"
+      ],
+      "limitations": [
+        "Archive preparation may take a few days.",
+        "The final download requires a signed-in X session.",
+        "Download Your Data does not currently analyze the X archive."
+      ],
+      "workflow_steps": [],
+      "snippet": {
+        "label": "Current in-product visual guide route",
+        "content": "#guide/x",
+        "source_path": "frontend/application/routing.js"
+      },
+      "faqs": [
+        {
+          "question": "Where do I request an X data archive?",
+          "answer": "Open Settings and privacy, choose Your account, then select Download an archive of your data."
+        },
+        {
+          "question": "Why does X ask for a password and code?",
+          "answer": "The current request flow verifies the password and then sends a code to the email address or phone number on the account."
+        },
+        {
+          "question": "How do I know the X archive is ready?",
+          "answer": "X sends an email or push notification. Return to the archive page while signed in and use Download data."
+        }
+      ],
+      "related_slugs": [
+        "linkedin-data-export",
+        "tiktok-data-export",
+        "facebook-data-export"
+      ],
+      "cta_label": "Open the visual X archive guide"
+    },
+    {
+      "slug": "tiktok-data-export",
+      "provider_id": "tiktok",
+      "kind": "provider-export",
+      "meta_title": "TikTok Account Data Export Guide | Download Your Data",
+      "meta_description": "Request TikTok account data from the mobile app, choose the information and format, wait for the notification, and download within four days.",
+      "h1": "How to Request and Download Your TikTok Data",
+      "primary_keyword": "TikTok data export",
+      "intro": "A TikTok data export starts in the mobile app under Settings and privacy, Account, and Download your data. You choose the included information and format before submitting the request.",
+      "verdict": {
+        "best_for": "Requesting a TikTok account ZIP from the primary mobile workflow",
+        "required_input": "The signed-in TikTok mobile app",
+        "product_fit": "Download Your Data provides the public workflow but no TikTok analysis workspace"
+      },
+      "problem": "TikTok separates requesting data from downloading the prepared file. The archive may take several days, and the completed file remains available only for a limited window.",
+      "coverage": [
+        "Finding Download your data from the TikTok mobile account settings",
+        "Choosing the information to include and the output format",
+        "Returning after the in-app notification to download the prepared archive"
+      ],
+      "limitations": [
+        "Preparation may take a few days.",
+        "The completed file remains available for up to four days.",
+        "Download Your Data does not currently import or analyze TikTok archives."
+      ],
+      "workflow_steps": [],
+      "snippet": {
+        "label": "Current in-product visual guide route",
+        "content": "#guide/tiktok",
+        "source_path": "frontend/application/routing.js"
+      },
+      "faqs": [
+        {
+          "question": "Can I request TikTok data from the web?",
+          "answer": "This current guide follows TikTok's mobile app path through Profile, Menu, Settings and privacy, Account, and Download your data."
+        },
+        {
+          "question": "How long does a TikTok data export take?",
+          "answer": "TikTok says preparation may take a few days and sends an in-app notification when the file is ready."
+        },
+        {
+          "question": "How long is the TikTok download available?",
+          "answer": "The prepared file remains available for up to four days, so download it promptly after the notification."
+        }
+      ],
+      "related_slugs": [
+        "instagram-data-export",
+        "youtube-data-export",
+        "x-data-archive"
+      ],
+      "cta_label": "Open the visual TikTok export guide"
+    },
+    {
+      "slug": "linkedin-data-export",
+      "provider_id": "linkedin",
+      "kind": "provider-export",
+      "meta_title": "LinkedIn Account Data Export Guide | Download Your Data",
+      "meta_description": "Choose specific LinkedIn data categories or the larger archive, request the export from Data Privacy, and use the emailed link within 72 hours.",
+      "h1": "How to Download Your LinkedIn Account Data",
+      "primary_keyword": "LinkedIn data export",
+      "intro": "A LinkedIn data export can contain selected categories such as connections or messages, or the larger account archive. Both options start under Data Privacy and Get a copy of your data.",
+      "verdict": {
+        "best_for": "Choosing between a quick category export and the larger LinkedIn archive",
+        "required_input": "A signed-in LinkedIn account on the web",
+        "product_fit": "Download Your Data provides the public request guide but no LinkedIn importer"
+      },
+      "problem": "LinkedIn's delivery time depends on the scope you select. Specific categories can arrive quickly, while the larger archive takes longer, so choose only the data needed for the task.",
+      "coverage": [
+        "Opening Get a copy of your data from Data Privacy",
+        "Choosing specific categories or the larger data archive",
+        "Requesting the archive and using the emailed download link"
+      ],
+      "limitations": [
+        "Specific categories may arrive within minutes, while the larger archive can take up to 24 hours.",
+        "The emailed download link is available for 72 hours.",
+        "Download Your Data does not currently analyze LinkedIn archives."
+      ],
+      "workflow_steps": [],
+      "snippet": {
+        "label": "Current in-product visual guide route",
+        "content": "#guide/linkedin",
+        "source_path": "frontend/application/routing.js"
+      },
+      "faqs": [
+        {
+          "question": "Can I download only LinkedIn connections or messages?",
+          "answer": "Yes. The current Download my data screen lets you choose specific categories instead of requesting the larger archive."
+        },
+        {
+          "question": "How long does a LinkedIn data export take?",
+          "answer": "LinkedIn says specific categories can arrive within minutes and the larger archive within 24 hours."
+        },
+        {
+          "question": "How long does the LinkedIn download link work?",
+          "answer": "The current guide says to use the emailed archive link within 72 hours."
+        }
+      ],
+      "related_slugs": [
+        "x-data-archive",
+        "facebook-data-export",
+        "chatgpt-data-export"
+      ],
+      "cta_label": "Open the visual LinkedIn export guide"
+    },
+    {
+      "slug": "facebook-data-export",
+      "provider_id": "facebook",
+      "kind": "provider-export",
+      "meta_title": "Facebook Data and Information Export | Download Your Data",
+      "meta_description": "Create a Facebook information export in Accounts Center, choose the profile, data, range, format, and media quality, then download within four days.",
+      "h1": "How to Export Your Facebook Information",
+      "primary_keyword": "Facebook data export",
+      "intro": "A Facebook data export begins in Accounts Center under Your information and permissions. You choose the Facebook profile, included information, date range, format, notification email, and media quality.",
+      "verdict": {
+        "best_for": "Creating a scoped copy of Facebook posts, photos, messages, and profile data",
+        "required_input": "A signed-in Facebook profile with access to Accounts Center",
+        "product_fit": "Download Your Data provides the public export guide but no Facebook importer"
+      },
+      "problem": "Accounts Center supports multiple profiles and many export options. Confirm the Facebook profile and scope before starting so the completed archive contains the intended information without unnecessary data.",
+      "coverage": [
+        "Opening Export your information from Accounts Center",
+        "Selecting the Facebook profile and Export to device",
+        "Choosing information, date range, format, email, and media quality before starting"
+      ],
+      "limitations": [
+        "Archive preparation is asynchronous.",
+        "The completed export is available under Available downloads for four days.",
+        "Download Your Data does not currently analyze Facebook archives."
+      ],
+      "workflow_steps": [],
+      "snippet": {
+        "label": "Current in-product visual guide route",
+        "content": "#guide/facebook",
+        "source_path": "frontend/application/routing.js"
+      },
+      "faqs": [
+        {
+          "question": "Where is Facebook Export your information?",
+          "answer": "Open Accounts Center, choose Your information and permissions, then select Export your information."
+        },
+        {
+          "question": "Can I choose what goes into the Facebook export?",
+          "answer": "Yes. The current flow lets you choose the profile, information, date range, format, notification email, and media quality."
+        },
+        {
+          "question": "How long is a Facebook export available to download?",
+          "answer": "Facebook places the completed export under Available downloads for four days."
+        }
+      ],
+      "related_slugs": [
+        "instagram-data-export",
+        "threads-data-export",
+        "whatsapp-chat-export"
+      ],
+      "cta_label": "Open the visual Facebook export guide"
+    },
+    {
+      "slug": "instagram-data-export",
+      "provider_id": "instagram",
+      "kind": "provider-export",
+      "meta_title": "Instagram Data and Information Export | Download Your Data",
+      "meta_description": "Create an Instagram information export in Accounts Center, select the profile and scope, then retrieve the protected download within four days.",
+      "h1": "How to Export Your Instagram Information",
+      "primary_keyword": "Instagram data export",
+      "intro": "An Instagram data export starts from the web product's Settings and Accounts Center. The export can include photos, comments, profile information, and other selected data for the Instagram profile you choose.",
+      "verdict": {
+        "best_for": "Saving a scoped copy of one Instagram profile's information",
+        "required_input": "A signed-in Instagram profile with access to Accounts Center",
+        "product_fit": "Download Your Data provides the public export guide but no Instagram importer"
+      },
+      "problem": "Meta's Accounts Center can manage more than one profile and product. Select the intended Instagram profile, then review the information scope and delivery settings before starting the export.",
+      "coverage": [
+        "Opening Accounts Center from Instagram Settings on the web",
+        "Selecting the Instagram profile and Export to device",
+        "Choosing information, date range, format, email, and media quality before starting"
+      ],
+      "limitations": [
+        "Instagram prepares the archive asynchronously and sends a notification.",
+        "The completed protected export is available for four days.",
+        "Download Your Data does not currently analyze Instagram archives."
+      ],
+      "workflow_steps": [],
+      "snippet": {
+        "label": "Current in-product visual guide route",
+        "content": "#guide/instagram",
+        "source_path": "frontend/application/routing.js"
+      },
+      "faqs": [
+        {
+          "question": "Where do I request an Instagram data export?",
+          "answer": "On Instagram on the web, open More, Settings, Accounts Center, Your information and permissions, then Export your information."
+        },
+        {
+          "question": "Can I export only part of my Instagram information?",
+          "answer": "Yes. The current flow lets you choose the information, date range, format, notification email, and media quality."
+        },
+        {
+          "question": "How long is the Instagram download available?",
+          "answer": "The completed export remains under Available downloads for four days."
+        }
+      ],
+      "related_slugs": [
+        "facebook-data-export",
+        "threads-data-export",
+        "tiktok-data-export"
+      ],
+      "cta_label": "Open the visual Instagram export guide"
+    },
+    {
+      "slug": "threads-data-export",
+      "provider_id": "threads",
+      "kind": "provider-export",
+      "meta_title": "Threads Data and Information Export | Download Your Data",
+      "meta_description": "Export Threads posts and activity through the Instagram app's Accounts Center, choose the profile and scope, and wait for Meta's download email.",
+      "h1": "How to Export Your Threads Information",
+      "primary_keyword": "Threads data export",
+      "intro": "A Threads data export currently begins in the Instagram mobile app's Accounts Center. You select the profile whose Threads information you want, then choose the included data and device-export settings.",
+      "verdict": {
+        "best_for": "Saving Threads posts, activity, and profile-related information",
+        "required_input": "The Instagram mobile app and access to the connected Accounts Center profile",
+        "product_fit": "Download Your Data provides the public export guide but no Threads importer"
+      },
+      "problem": "Threads does not start this workflow from a separate download page in the current guide. The route passes through the Instagram app and Accounts Center, so choosing the correct connected profile is the key step.",
+      "coverage": [
+        "Opening Your information and permissions from Instagram Accounts Center",
+        "Selecting the profile whose Threads information should be exported",
+        "Choosing information, date range, format, email, media quality, and starting the export"
+      ],
+      "limitations": [
+        "The current export path begins in the Instagram mobile app.",
+        "Meta may take up to 30 days to email the download link.",
+        "Download Your Data does not currently analyze Threads archives."
+      ],
+      "workflow_steps": [],
+      "snippet": {
+        "label": "Current in-product visual guide route",
+        "content": "#guide/threads",
+        "source_path": "frontend/application/routing.js"
+      },
+      "faqs": [
+        {
+          "question": "Why does the Threads export start in Instagram?",
+          "answer": "The current first-party workflow uses the Instagram app's Accounts Center to reach Your information and permissions for the connected profile."
+        },
+        {
+          "question": "Can I choose which Threads information to export?",
+          "answer": "Yes. The flow lets you choose the specific information, date range, format, notification email, and media quality."
+        },
+        {
+          "question": "How long can a Threads data export take?",
+          "answer": "Meta may take up to 30 days to email the download link."
+        }
+      ],
+      "related_slugs": [
+        "instagram-data-export",
+        "facebook-data-export",
+        "whatsapp-chat-export"
+      ],
+      "cta_label": "Open the visual Threads export guide"
+    }
+  ]
+}

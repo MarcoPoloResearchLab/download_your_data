@@ -1,6 +1,8 @@
 # Conversation Archive Engine Architecture
 
-This engine is owned by `download_your_data`. It has no external module, service, repository, subprocess, or filesystem boundary. The product-owned operator command and the local web backend consume the same packages and persisted contracts.
+This engine is owned by `download_your_data`. It has no external module,
+repository, subprocess, or filesystem dependency. The authenticated web API
+and its server-owned jobs consume the same packages and persisted contracts.
 
 ## Data flow
 
@@ -24,7 +26,7 @@ normalized conversation graph
         +--> visible branch-aware user/assistant documents
                     |
                     v
-       search_document local embeddings
+       server-owned search_document embeddings
                     |
                     v
        exact vector scan + filtered FTS5
@@ -79,24 +81,54 @@ Conversation-search documents use a separate deterministic builder. Every visibl
 
 ## Inference boundary
 
-Both inference operations use OpenAI-compatible HTTP shapes but default to the loopback server at `http://127.0.0.1:1234/v1`:
+Both inference operations use OpenAI-compatible HTTP shapes. Loopback is the
+development default; the hosted endpoint and its authorization boundary must
+come from the exact deployment profile:
 
 - embeddings use `/v1/embeddings`, provider label `lmstudio`, model alias `download-your-data-embedding`, and 768 dimensions
 - optional verification uses `/v1/chat/completions`, model alias `download-your-data-verifier`, and strict JSON Schema output
 
 The aliases are resolved by the configured inference server. API keys are optional and are read only from an explicitly named environment variable. A non-loopback endpoint must be supplied in process configuration, paired with the closed `authorized-remote` boundary, and reported as remote before text is sent.
 
-`DOWNLOAD_YOUR_DATA_INFERENCE_BASE_URL` is the sole endpoint override shared by the server and every operator command. The value is smart-constructed at startup as a normalized HTTP or HTTPS base URL without credentials, query strings, fragments, encoded paths, or backslash paths. Loopback inference is the default. A non-loopback URL is rejected unless `DOWNLOAD_YOUR_DATA_INFERENCE_BOUNDARY=authorized-remote`; an HTTP request cannot supply or override either value.
+`DOWNLOAD_YOUR_DATA_INFERENCE_BASE_URL` is the sole server endpoint
+configuration. The value is smart-constructed at startup as a normalized HTTP
+or HTTPS base URL without credentials, query strings, fragments, encoded
+paths, or backslash paths. A non-loopback URL is rejected unless
+`DOWNLOAD_YOUR_DATA_INFERENCE_BOUNDARY=authorized-remote`; an HTTP request
+cannot supply or override either value.
 
 Conversation indexing uses `search_document: ` and query embedding uses `search_query: `. A synthetic, non-user readiness request validates the loaded model and dimensions before a search index row is created. Query vectors are cached by model, effective endpoint, query prefix, and normalized query.
 
+## Browser projection
+
+The authenticated browser workspace is a user-scoped projection of the archive
+and retrieval engine. `GET /api/providers/openai` reports only that user's
+archive counts, complete ready-index identity, supported search modes, limits,
+and configured inference boundary. It never returns conversation text.
+
+`POST /api/providers/openai/search` accepts one validated query, retrieval mode,
+result limit, excerpt limit, and archive filter. Hybrid, semantic, and lexical
+requests call the same `internal/retrieval` engine and current ready index.
+Search text and returned excerpts exist only in the credentialed response and
+current document; they are not written to logs or browser persistence.
+
+The browser does not yet accept an OpenAI export ZIP. No unscoped command path
+exists. Authenticated archive upload and index construction require the current
+user-owned job lifecycle before this surface can launch.
+
 ## Persistence boundary
 
-The conversation database has one first-release schema identity: owner `download_your_data`, version `1`, contract `openai-conversation-archive-1`. It lives only at `<data-root>/openai/archive.db`. Opening an empty database creates the complete minimized schema in one transaction. Opening a nonempty database validates the owner, version, contract, and every required table and index before any archive operation begins.
+The conversation database has one current schema identity: owner
+`download_your_data`, version `1`, contract
+`openai-conversation-archive-1`. Each database lives only at
+`<data-root>/users/<opaque-user-digest>/openai/archive.db`. Opening an empty
+database creates the complete minimized schema in one transaction. Opening a
+nonempty database validates the owner, version, contract, and every required
+table and index before any archive operation begins.
 
 A database with another identity, version, or incomplete current shape is rejected with an instruction to archive it and re-import the original OpenAI export into a new database. There are no automatic migrations, compatibility reads, or schema-repair writes.
 
-The configured data root is an absolute, non-root, owner-only directory. All application-owned directories use mode `0700`, and databases, vectors, reports, caches, and generated files use mode `0600`. Stored paths are relative identities resolved through the private-root abstraction; absolute paths, traversal, symbolic links, and permissive existing paths are rejected. Operator report paths are likewise relative to the data root.
+The configured data root is an absolute, non-root, owner-only directory. All application-owned directories use mode `0700`, and databases, vectors, reports, caches, and generated files use mode `0600`. Stored paths are relative identities resolved through the private-root abstraction; absolute paths, traversal, symbolic links, and permissive existing paths are rejected.
 
 ## Vector consistency
 
@@ -118,13 +150,13 @@ Configurations have a two-state lifecycle. `building` means a pass was interrupt
 
 Vectors are appended and flushed before their rows are committed to SQLite. At startup, bytes after the highest committed row are truncated. A vector file shorter than committed metadata is treated as corruption.
 
-Normal embedding runs fill missing rows. `--refresh-stale` also rebuilds the contextual search text, compares its hash with the stored row, and appends a replacement vector only when the prepared input changed.
+Normal embedding jobs fill missing rows. A deliberate stale refresh also rebuilds the contextual search text, compares its hash with the stored row, and appends a replacement vector only when the prepared input changed.
 
 Conversation retrieval uses the current schema's separate `search_indexes`, `search_documents`, `search_documents_fts`, and `query_embedding_cache` tables. Its index identity contains both asymmetric prefixes, provider, model, dimensions, endpoint, builder version, and corpus policy. This prevents classification vectors from being selected for retrieval.
 
 Search document hashes cover prepared text and filter-relevant metadata. Index rebuilds append replacements only for changed documents, delete documents that are no longer eligible, and become ready only after stored and desired document counts reconcile.
 
-An explicit `index build --rebuild` preflights the requested model before atomically deleting the named index's database state and removing its old vector file. This is the canonical path for an intentional retrieval-identity change; incompatible vectors are never mixed.
+An explicit authenticated rebuild job must preflight the requested model before atomically deleting the named index's database state and removing its old vector file. This is the canonical path for an intentional retrieval-identity change; incompatible vectors are never mixed.
 
 ## Retrieval policy
 

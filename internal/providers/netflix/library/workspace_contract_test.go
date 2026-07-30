@@ -302,6 +302,44 @@ func TestFailedReplacementNeverDisplacesActiveOrRetainsSource(
 	assertNoStagedSource(testContext, fixture.root, futureDated.ID)
 }
 
+func TestUploadCancellationOnTheFinalReadFailsAndRemovesTheStagedSource(
+	testContext *testing.T,
+) {
+	fixture := newWorkspaceFixture(testContext)
+	workspace := fixture.open(testContext, workspaceOptions{
+		now:     fixture.clock,
+		entropy: testEntropy(0x39),
+	})
+	defer workspace.Close()
+
+	generation, createError := workspace.CreateLocalGeneration()
+	if createError != nil {
+		testContext.Fatalf("create cancelable upload generation: %v", createError)
+	}
+	uploadContext, cancelUpload := context.WithCancel(context.Background())
+	_, uploadError := workspace.UploadViewingActivity(
+		uploadContext,
+		generation.ID,
+		&cancelingFinalReader{
+			contents: []byte(syntheticViewingCSV),
+			cancel:   cancelUpload,
+		},
+	)
+	if errorCode(uploadError) != ErrorCanceled {
+		testContext.Fatalf("final-read cancellation error = %v", uploadError)
+	}
+	failed := waitForGenerationState(
+		testContext,
+		workspace,
+		generation.ID,
+		GenerationStateFailed,
+	)
+	if failed.Failure == nil || failed.Failure.Code != ErrorCanceled {
+		testContext.Fatalf("final-read cancellation failure = %+v", failed.Failure)
+	}
+	assertNoStagedSource(testContext, fixture.root, generation.ID)
+}
+
 func TestWorkspaceLeaseAndNonterminalCheckpointResume(
 	testContext *testing.T,
 ) {
@@ -707,6 +745,22 @@ func (zeroReader) Read(destination []byte) (int, error) {
 		destination[byteIndex] = 0
 	}
 	return len(destination), nil
+}
+
+type cancelingFinalReader struct {
+	contents []byte
+	cancel   context.CancelFunc
+	read     bool
+}
+
+func (reader *cancelingFinalReader) Read(destination []byte) (int, error) {
+	if reader.read {
+		return 0, io.EOF
+	}
+	reader.read = true
+	readBytes := copy(destination, reader.contents)
+	reader.cancel()
+	return readBytes, io.EOF
 }
 
 type blockingReadCloser struct {

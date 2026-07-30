@@ -1,69 +1,72 @@
-# Authenticated instruction screenshot capture
+# Per-step instruction screenshot capture
 
-This runbook is the only capture contract for the authenticated web screenshots listed in `instruction-screenshots.json`. It permits an agent to prepare provider-interface screenshots from the operator's existing Chrome session without receiving credentials, changing account state, requesting an archive, or retaining personal information. Authenticated TikTok mobile capture is independently owned by `I011`.
+This runbook is the canonical capture contract for every provider visual listed in `frontend/manifests/instruction-screenshots.json`. Every localized instruction step must reference one approved, self-owned screenshot whose registry asset carries the manifest’s exact first-party direct route. The application does not support text-only or linkless steps, provider-level screenshot galleries, placeholders, mocks, unofficial tutorials, or third-party search-result images.
+
+The same approved image may support multiple adjacent steps when it accurately shows the shared panel or first-party instructions. English, Spanish, French, and Russian reuse the same image files with localized alternative text.
+
+## Allowed visual sources
+
+A published visual must be one of:
+
+- a privacy-reviewed crop of the operator’s existing authenticated provider interface; or
+- a privacy-reviewed crop of the provider’s current first-party help surface when the workflow is app-only or the next provider screen would require credentials, identity verification, private account/profile selection, or an export request.
+
+The manifest records the exact surface, official source, route, capture date, visible labels, provenance, and stop boundary. A first-party help capture must be labeled as such; it must never be presented as an authenticated app screen.
 
 ## Roles and stop conditions
 
 The operator performs every sign-in, password, passcode, MFA, CAPTCHA, account or profile selection, and identity-verification submission. The agent may document an empty verification form when the manifest names that form as the capture boundary, but must not focus, fill, inspect, or submit it.
 
-The agent may open only the manifest's official source and direct route, navigate among the documented read-only panels, normalize the visual state, add opaque capture-time masks, and capture the smallest useful panel. The agent must not:
+The agent may open only the manifest’s official source and direct route, navigate among documented read-only panels, normalize the visual state, and capture the smallest useful panel. The agent must not:
 
 - create, request, cancel, transfer, or download an export;
 - select an account or profile;
 - enter or inspect credentials, codes, cookies, local storage, or browser session state;
 - connect an external destination, grant a permission, or change a provider setting;
-- use an unofficial web flow, mock, third-party guide, or search-result image as a substitute;
-- save a browser authentication state or reusable credential-bearing profile.
+- use a mock, third-party guide, unofficial route, or search-result image;
+- save browser authentication state or a reusable credential-bearing profile.
 
-If the required authenticated web surface cannot be reached without crossing a forbidden boundary, mark that manifest entry `blocked`, record the exact boundary in `review_note`, and stop. A partial web screenshot set is not publishable.
+If a required authenticated screen cannot be reached without crossing a forbidden boundary, use the current first-party help surface only when it contains the exact labels and instructions needed by the step. Otherwise mark the manifest entry `blocked` and stop; do not publish a fabricated substitute.
 
 ## Required capture order
 
-1. Reconcile the manifest's labels, instructions, source, and route against the current official provider help page.
-2. Confirm the provider's current brand, copyright, and terms guidance permits the proposed independent instructional use and record any attribution requirement in the manifest.
-3. Confirm the entry's authenticated surface is already available; stop for operator input if authentication is requested.
-4. Set desktop Chrome to English, a 1440×1000 CSS-pixel viewport, 100% zoom, and device scale factor 1. Preserve the provider's current authenticated appearance instead of changing an account-level theme preference for capture.
-5. Navigate only to the entry's allowlisted panel and stop before its forbidden action.
+1. Reconcile every instruction, label, source, and route against the current official provider help contract.
+2. Confirm the provider’s current brand, copyright, and terms guidance permits the proposed independent instructional use and record any attribution requirement.
+3. Confirm the declared surface is available without crossing its forbidden boundary.
+4. For authenticated web captures, use English at a consistent wide browser viewport and preserve the provider’s current appearance.
+5. Navigate only to the allowlisted panel and stop before the forbidden action.
 6. Hide animation, focus carets, transient notifications, browser chrome, and unrelated account content.
-7. Cover every personal identifier with an opaque capture-time mask or exclude it through cropping. Blur is not acceptable.
+7. Exclude every personal identifier through cropping or a flat opaque capture-time mask. Blur is not acceptable.
 8. Capture into an owner-only temporary directory outside the repository.
-9. Review the capture at full resolution, strip metadata, and publish the approved derivative at the manifest path.
-10. Re-open the published derivative at full resolution and approve it only after both privacy and provenance checks pass.
-11. Delete the temporary capture directory after all approved derivatives are present.
-
-## Private temporary storage
-
-Create one private directory per capture run:
-
-```bash
-capture_root="$(mktemp -d -t download-your-data-i007.XXXXXX)"
-chmod 700 "${capture_root}"
-```
-
-Do not place raw captures, browser profiles, authentication state, cookies, downloads, or personal archives anywhere in this repository. Do not commit the temporary path because it may reveal operator-local details.
+9. Review at full resolution, publish only the approved derivative, then normalize it with `go run ./scripts/normalize-instruction-pngs <path>`.
+10. Re-open the published derivative at full resolution and verify privacy, provenance, current labels, and legibility.
+11. Delete the temporary capture directory after the approved derivatives are present.
 
 ## Privacy review
 
-At full resolution, reject a derivative containing any of the following:
+Reject a derivative containing names, handles, email addresses, phone numbers, avatars, organizations, locations, account identifiers, notifications, private counts, selected account/profile details, archive history, credentials, verification material, browser tabs, address bars, extensions, bookmarks, or downloads.
 
-- names, handles, emails, phone numbers, avatars, organizations, locations, or account identifiers;
-- notifications, private counts, selected account/profile details, or archive history;
-- passwords, filled credential fields, verification codes, CAPTCHA content, account recovery details, or other secret identity-verification material;
-- browser tabs, address bar, extensions, bookmarks, downloads, or browser chrome;
-- image metadata beyond the structural PNG chunks required to decode the image.
+Published PNGs may contain only the structural `IHDR`, `IDAT`, and `IEND` chunks. Crops must retain enough provider context and exact labels to teach the mapped step.
 
-Masks must be flat opaque shapes that do not preserve readable edges. Crops must retain enough provider navigation context and visible labels to teach the manifest purpose.
+Provider-specific constraints:
 
-Provider-specific publication rules narrow that general masking rule:
-
-- Google allows unaltered static product screenshots for educational materials. Exclude the account header by cropping and do not mask or otherwise change product-interface pixels.
-- LinkedIn allows screenshots for instructive, educational, or illustrative purposes when their appearance is unchanged and no other member is identifiable. Exclude the account header and any member content by cropping; do not superimpose a mask on LinkedIn interface pixels.
-- Instagram does not require a permission request for this non-broadcast, non-radio, non-out-of-home, standard-size digital instructional use, but the interface and brand must remain accurate and must not imply endorsement.
-- Facebook and X captures must remain accurate, descriptive, subordinate to the product instructions, and visibly unaffiliated.
-- TikTok mobile publication is outside this web set and remains owned by `I011`.
+- Google and LinkedIn interface pixels remain unaltered; exclude account headers and member content by cropping.
+- OpenAI, Facebook, Instagram, X, Netflix, WhatsApp, and TikTok captures remain accurate, descriptive, subordinate to the instructions, and visibly unaffiliated.
+- Facebook and Instagram authenticated captures stop before profile selection; later device-export and availability steps use the matching public Meta Help Center instructions.
+- WhatsApp and TikTok first-party help captures are public help surfaces, not substitutes presented as authenticated mobile app screens.
+- Threads uses Meta’s public Android help sequence because the export starts in the Instagram app and crosses a private profile-selection boundary.
 
 ## Acceptance
 
-The web set is accepted only when all twelve entries are `approved`, all twelve metadata-free PNGs exist beneath `images/instructions/`, every locale maps the six web platforms to the same two screenshot IDs, and the repository validator plus desktop and mobile application browser coverage pass. TikTok remains text-only until `I011`; it must not render an empty image placeholder.
+The set is accepted only when:
 
-The screenshots are independent instructional references. Provider names, trademarks, and interfaces remain the property of their respective owners; publication does not imply affiliation or endorsement. The manifest records the official capture source, rights-review source, capture date, and required attribution for every image.
+- every provider has at least one approved screenshot;
+- every instruction step in every locale contains non-empty text, one valid screenshot ID, localized alternative text, and a visible link to that screenshot asset’s approved first-party direct route;
+- every registry action link is an absolute first-party HTTPS URL exactly matching the screenshot manifest’s `direct_route`;
+- every provider screenshot is used by at least one step and every manifest screenshot is referenced;
+- no provider-level screenshot gallery, text-only exception, placeholder, mock, or locale-specific duplicate survives;
+- every metadata-free PNG exists beneath `frontend/images/instructions/`;
+- wide and narrow browser coverage proves each step renders its visual and actionable link beside the instruction without overflow;
+- `make validate-instruction-screenshots`, `make test-browser`, and `make ci` pass.
+
+Provider names, trademarks, help content, and interfaces remain the property of their respective owners. Publication is an independent instructional reference and does not imply affiliation or endorsement.

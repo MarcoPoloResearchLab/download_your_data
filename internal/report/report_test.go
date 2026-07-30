@@ -21,7 +21,7 @@ func TestWriteAuditIncludesReproducibleInferenceMetadata(testContext *testing.T)
 		Until:              time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC),
 		Timezone:           "America/Los_Angeles",
 		IncludeArchived:    true,
-		IntentConfigPath:   "configs/definition_request.json",
+		IntentConfigPath:   "built-in:definition_request",
 		IntentConfig: intent.DefinitionConfig{
 			Name:              "definition_request",
 			SemanticThreshold: 0.7,

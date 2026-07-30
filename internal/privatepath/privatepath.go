@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -137,6 +138,88 @@ func (root Root) EnsureDirectory(relativePath string) (Directory, error) {
 		}
 	}
 	return Directory{path: currentPath}, nil
+}
+
+// RemoveDirectory validates and recursively removes one exact owner-only
+// directory beneath the root. It never removes the root itself and rejects
+// symbolic links and foreign filesystem object types before deletion.
+func (root Root) RemoveDirectory(relativePath string) error {
+	resolvedPath, cleanedRelativePath, resolveError := root.resolve(relativePath)
+	if resolveError != nil {
+		return resolveError
+	}
+	if validationError := root.validateExistingComponents(
+		cleanedRelativePath,
+		true,
+	); validationError != nil {
+		return validationError
+	}
+	pathInfo, statError := os.Lstat(resolvedPath)
+	if errors.Is(statError, os.ErrNotExist) {
+		return nil
+	}
+	if statError != nil {
+		return fmt.Errorf("inspect private directory %q: %w", resolvedPath, statError)
+	}
+	if validationError := validatePrivateDirectory(resolvedPath, pathInfo); validationError != nil {
+		return validationError
+	}
+	walkError := filepath.WalkDir(
+		resolvedPath,
+		func(path string, entry fs.DirEntry, receivedError error) error {
+			if receivedError != nil {
+				return receivedError
+			}
+			entryInfo, infoError := entry.Info()
+			if infoError != nil {
+				return infoError
+			}
+			switch {
+			case entryInfo.Mode()&os.ModeSymlink != 0:
+				return fmt.Errorf("validate private deletion path %q: symbolic links are not allowed", path)
+			case entryInfo.IsDir():
+				if entryInfo.Mode().Perm() != privateDirectoryMode {
+					return fmt.Errorf(
+						"validate private deletion directory %q: permissions must be 0700, received %04o",
+						path,
+						entryInfo.Mode().Perm(),
+					)
+				}
+			case entryInfo.Mode().IsRegular():
+				if entryInfo.Mode().Perm() != privateFileMode {
+					return fmt.Errorf(
+						"validate private deletion file %q: permissions must be 0600, received %04o",
+						path,
+						entryInfo.Mode().Perm(),
+					)
+				}
+			default:
+				return fmt.Errorf(
+					"validate private deletion path %q: only regular files and directories are allowed",
+					path,
+				)
+			}
+			return nil
+		},
+	)
+	if walkError != nil {
+		return fmt.Errorf("validate private directory deletion %q: %w", resolvedPath, walkError)
+	}
+	if removeError := os.RemoveAll(resolvedPath); removeError != nil {
+		return fmt.Errorf("remove private directory %q: %w", resolvedPath, removeError)
+	}
+	parentHandle, openError := os.Open(filepath.Dir(resolvedPath))
+	if openError != nil {
+		return fmt.Errorf("open private deletion parent %q: %w", filepath.Dir(resolvedPath), openError)
+	}
+	if syncError := parentHandle.Sync(); syncError != nil {
+		_ = parentHandle.Close()
+		return fmt.Errorf("sync private deletion parent %q: %w", filepath.Dir(resolvedPath), syncError)
+	}
+	if closeError := parentHandle.Close(); closeError != nil {
+		return fmt.Errorf("close private deletion parent %q: %w", filepath.Dir(resolvedPath), closeError)
+	}
+	return nil
 }
 
 // Path returns the canonical absolute directory path.

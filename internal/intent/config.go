@@ -1,11 +1,5 @@
 package intent
 
-import (
-	"encoding/json"
-	"fmt"
-	"os"
-)
-
 type LexicalRule struct {
 	Name      string  `json:"name"`
 	Pattern   string  `json:"pattern"`
@@ -24,24 +18,6 @@ type DefinitionConfig struct {
 	SemanticMargin     float64       `json:"semantic_margin"`
 	ReviewThreshold    float64       `json:"review_threshold"`
 	LexicalReviewScore float64       `json:"lexical_review_score"`
-}
-
-func LoadDefinitionConfig(path string) (DefinitionConfig, error) {
-	if path == "" {
-		return DefaultDefinitionConfig(), nil
-	}
-	encodedConfig, readError := os.ReadFile(path)
-	if readError != nil {
-		return DefinitionConfig{}, fmt.Errorf("read intent config: %w", readError)
-	}
-	var config DefinitionConfig
-	if unmarshalError := json.Unmarshal(encodedConfig, &config); unmarshalError != nil {
-		return config, fmt.Errorf("decode intent config JSON: %w", unmarshalError)
-	}
-	if validationError := validateDefinitionConfig(config); validationError != nil {
-		return config, validationError
-	}
-	return config, nil
 }
 
 func DefaultDefinitionConfig() DefinitionConfig {
@@ -87,17 +63,4 @@ func DefaultDefinitionConfig() DefinitionConfig {
 		ReviewThreshold:    0.35,
 		LexicalReviewScore: 0.55,
 	}
-}
-
-func validateDefinitionConfig(config DefinitionConfig) error {
-	if config.Name == "" {
-		return fmt.Errorf("intent config name must not be empty")
-	}
-	if len(config.PositiveExamples) == 0 {
-		return fmt.Errorf("intent config requires positive examples")
-	}
-	if config.SemanticThreshold <= 0 || config.SemanticThreshold >= 1 {
-		return fmt.Errorf("semantic_threshold must be between 0 and 1")
-	}
-	return nil
 }

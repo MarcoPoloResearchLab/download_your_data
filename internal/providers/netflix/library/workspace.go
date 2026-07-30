@@ -193,6 +193,17 @@ func (workspace *Workspace) Close() error {
 	return nil
 }
 
+// HasRunningOperations reports whether closing this workspace would interrupt
+// an upload, import, or enrichment operation.
+func (workspace *Workspace) HasRunningOperations() bool {
+	if workspace == nil {
+		return false
+	}
+	workspace.mutex.Lock()
+	defer workspace.mutex.Unlock()
+	return len(workspace.jobs) != 0 || len(workspace.uploads) != 0
+}
+
 // Snapshot returns the current provider-owned workspace state.
 func (workspace *Workspace) Snapshot() Snapshot {
 	workspace.mutex.Lock()
@@ -531,6 +542,19 @@ func (workspace *Workspace) UploadViewingActivity(
 			generationID,
 			0,
 			context.Canceled,
+		)
+	}
+	if requestError := ctx.Err(); requestError != nil {
+		workspace.mutex.Unlock()
+		canceledError := newLibraryError(
+			ErrorCanceled,
+			generationID,
+			0,
+			requestError,
+		)
+		return Generation{}, errors.Join(
+			canceledError,
+			workspace.failGeneration(generationID, canceledError),
 		)
 	}
 	nowMilliseconds := workspace.now().UTC().UnixMilli()

@@ -5,20 +5,30 @@ CGO_ENABLED ?= 1
 
 export CGO_ENABLED
 
-.PHONY: build check-frontend ci eval-netflix-matcher fmt fmt-check lint run smoke-command smoke-netflix-command test test-browser validate-instruction-screenshots
+.PHONY: build check-frontend ci clean deploy deploy-dry-run down eval-netflix-matcher fmt fmt-check lint publish release test test-browser test-local-lifecycle up validate-instruction-screenshots validate-provider-icons
 
 build:
-	mkdir -p build
-	$(GO) build -o build/download-your-data .
+	@mkdir -p build
+	@$(GO) build -o build/download-your-data ./cmd/download-your-data
 
-run:
-	$(GO) run . serve
+clean:
+	@./scripts/clean-generated.sh "$(CURDIR)"
+
+up: build
+	@./scripts/local-server.sh up "$(abspath build/download-your-data)"
+
+down:
+	@./scripts/local-server.sh down "$(abspath build/download-your-data)"
 
 fmt:
-	gofmt -w $$(find . -name '*.go' -not -path './build/*')
+	gofmt -w $$(find . -name '*.go' \
+		-not -path './build/*' \
+		-not -path './.tidy-folder-snapshots/*')
 
 fmt-check:
-	@test -z "$$(gofmt -l $$(find . -name '*.go' -not -path './build/*'))" || \
+	@test -z "$$(gofmt -l $$(find . -name '*.go' \
+		-not -path './build/*' \
+		-not -path './.tidy-folder-snapshots/*'))" || \
 		{ echo "Go files require formatting; run make fmt"; exit 1; }
 
 lint:
@@ -29,29 +39,40 @@ lint:
 check-frontend:
 	npx --yes --package "typescript@$(TYPESCRIPT_VERSION)" tsc \
 		--allowJs --checkJs --noEmit --target ES2023 --module ES2022 \
-		--moduleResolution bundler --lib ES2023,DOM app.js api.js charts.js
+		--moduleResolution bundler --lib ES2023,DOM \
+		frontend/application/auth-lifecycle.js \
+		frontend/application/app.js \
+		frontend/application/api.js \
+		frontend/application/charts.js \
+		frontend/application/dom.js \
+		frontend/application/provider-links.js \
+		frontend/application/routing.js
 	node --check scripts/browser-smoke.playwright.js
 	node --check scripts/netflix-browser-workspace.playwright.js
 
 test:
 	$(GO) test ./...
 
+test-local-lifecycle: build
+	./scripts/test-local-lifecycle.sh ./scripts/local-server.sh "$(abspath build/download-your-data)"
+
 eval-netflix-matcher:
 	$(GO) test ./internal/providers/netflix -run '^TestMatcherEvaluationGate$$' -count=1 -v
 
-test-browser:
-	PLAYWRIGHT_CLI_VERSION=$(PLAYWRIGHT_CLI_VERSION) ./scripts/browser-smoke.sh
+test-browser: build
+	PLAYWRIGHT_CLI_VERSION=$(PLAYWRIGHT_CLI_VERSION) ./scripts/browser-smoke.sh ./build/download-your-data
 	DOWNLOAD_YOUR_DATA_RUN_BROWSER_CONTRACT=1 \
 		PLAYWRIGHT_CLI_VERSION=$(PLAYWRIGHT_CLI_VERSION) \
-		$(GO) test . -run '^TestNetflixBrowserWorkspaceContract$$' -count=1
+		$(GO) test ./internal/httpapi -run '^TestNetflixBrowserWorkspaceContract$$' -count=1
 
 validate-instruction-screenshots:
-	$(GO) test . -run '^TestInstructionScreenshotContract$$' -count=1
+	$(GO) test ./frontend -run '^TestInstructionScreenshotContract$$' -count=1
 
-smoke-command: build
-	./scripts/command-smoke.sh ./build/download-your-data
+validate-provider-icons:
+	$(GO) test ./frontend -run '^TestProviderIconContract$$' -count=1
 
-smoke-netflix-command:
-	$(GO) test . -run '^TestNetflixOperatorCommandSmokeCoversInspectEnrichmentCacheAndExport$$' -count=1 -v
+release publish deploy deploy-dry-run:
+	@echo "blocked: freeze the exact authenticated web production profile before $@" >&2
+	@exit 1
 
-ci: fmt-check lint check-frontend eval-netflix-matcher test smoke-netflix-command validate-instruction-screenshots test-browser smoke-command
+ci: fmt-check lint check-frontend eval-netflix-matcher test test-local-lifecycle validate-instruction-screenshots validate-provider-icons test-browser

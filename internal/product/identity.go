@@ -1,4 +1,4 @@
-// Package product owns canonical application identity values shared across commands and packages.
+// Package product owns canonical application identity values shared across the service packages.
 package product
 
 const (

@@ -287,6 +287,9 @@ func (service *Service) runRemoteJobs(
 	if firstError != nil {
 		return nil, firstError
 	}
+	if contextError := ctx.Err(); contextError != nil {
+		return nil, newError(ErrorCanceled, "", contextError)
+	}
 	if len(completed) != len(jobs) {
 		return nil, newError(
 			ErrorIncomplete,
