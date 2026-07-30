@@ -31,6 +31,22 @@ repository does not hard-code the unresolved production host. See the
 [SEO resource library contract](docs/seo-resource-library.md) for the page
 inventory, evidence model, indexing rules, and publication boundary.
 
+## Supported platforms
+
+| Platform | Surface Type | Primary Input / Scope | Capabilities & Status |
+| --- | --- | --- | --- |
+| **Netflix** | Interactive Workspace & Guide | Viewing activity CSV (`Title`, `Date`) | **Live Workspace (`#app/netflix`) & Guide (`#guide/netflix`)** — Per-profile CSV import, raw activity analytics, date/weekday filtering, paged records, optional TMDB enrichment, enriched CSV export, and provider data deletion. |
+| **OpenAI** | Interactive Workspace & Guide | ChatGPT Data Export ZIP (`conversations.json`) | **Live Guide (`#guide/openai`) & Workspace in Progress (`#app/openai`)** — Step-by-step export guide live; user-owned archive ingest, indexing, and hybrid semantic search engine contract in active development. |
+| **Facebook** | Visual Export Guide | Meta Accounts Center Information Archive | **Live Guide (`#guide/facebook`)** — Product-specific visual export walkthrough, Accounts Center navigation, file format/media options, and first-party help links. |
+| **Instagram** | Visual Export Guide | Meta Accounts Center Information Archive | **Live Guide (`#guide/instagram`)** — Product-specific visual export walkthrough, Accounts Center download steps, data type selection, and first-party help links. |
+| **WhatsApp** | Visual Export Guide | Chat Export & Account Information Archive | **Live Guide (`#guide/whatsapp`)** — Product-specific visual export walkthrough for account info reports and individual chat history exports (`.txt`/media). |
+| **Threads** | Visual Export Guide | Meta Accounts Center Export Archive | **Live Guide (`#guide/threads`)** — Product-specific visual export walkthrough explaining Threads export scope via Instagram Accounts Center. |
+| **LinkedIn** | Visual Export Guide | LinkedIn Data Privacy Archive | **Live Guide (`#guide/linkedin`)** — Visual export guide for requesting account data archives (messages, connections, profile, activity) from Data Privacy settings. |
+| **TikTok** | Visual Export Guide | TikTok Request Data Archive | **Live Guide (`#guide/tiktok`)** — Visual export guide for requesting and downloading personal account archives (profile, activity, comments, history) in TXT/JSON. |
+| **X (Twitter)** | Visual Export Guide | Download Your Archive (ZIP) | **Live Guide (`#guide/x`)** — Visual export guide for requesting X account archive, password verification, and downloading personal ZIP data. |
+| **YouTube** | Visual Export Guide | Google Takeout YouTube Archive | **Live Guide (`#guide/youtube`)** — Visual export guide for selecting YouTube & YouTube Music data, configuring delivery options, and downloading Takeout archives. |
+| **Google** | Visual Export Guide | Google Takeout Multi-Service Archive | **Live Guide (`#guide/google`)** — Visual export guide for configuring Google Takeout multi-service exports, export frequencies, file sizes, and destination options. |
+
 ## Authentication boundary
 
 The browser loads the literal `mpr-ui@latest` bootstrap and uses app-owned
