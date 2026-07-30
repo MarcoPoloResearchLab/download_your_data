@@ -27,26 +27,24 @@ func main() {
 	defer stopSignals()
 
 	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
-	homeDirectory, homeError := os.UserHomeDir()
-	if homeError != nil {
-		logger.Error("application configuration failed", "error_type", "user_home_unavailable")
-		os.Exit(1)
-	}
-	config, configError := runtimeconfig.Load(os.Getenv, homeDirectory, rand.Reader)
+	config, configError := runtimeconfig.Load(os.Getenv, rand.Reader)
 	if configError != nil {
 		logger.Error("application configuration failed", "error_type", runtimeconfig.Code(configError))
 		os.Exit(1)
 	}
-	if runError := runCommand(
-		applicationContext,
-		os.Args[1:],
-		config,
-		logger,
-	); runError != nil {
+	if len(os.Args) != 2 || os.Args[1] != "serve" {
 		logger.Error(
-			"application command failed",
+			"application invocation failed",
 			"error_type",
-			"command_failed",
+			"serve_command_required",
+		)
+		os.Exit(2)
+	}
+	if runError := runServer(applicationContext, config, logger); runError != nil {
+		logger.Error(
+			"application server failed",
+			"error_type",
+			"server_failed",
 			"error",
 			runError,
 		)
@@ -78,7 +76,7 @@ func runServer(
 		config.ListenAddress(),
 	)
 	if listenError != nil {
-		return fmt.Errorf("listen on local application address %s: %w", config.ListenAddress(), listenError)
+		return fmt.Errorf("listen on application address %s: %w", config.ListenAddress(), listenError)
 	}
 
 	server := &http.Server{
@@ -91,22 +89,22 @@ func runServer(
 		serveResult <- server.Serve(listener)
 	}()
 
-	logger.Info("local application ready", "url", "http://"+config.ListenAddress())
+	logger.Info("application service ready", "address", config.ListenAddress())
 	select {
 	case serveError := <-serveResult:
 		if errors.Is(serveError, http.ErrServerClosed) {
 			return nil
 		}
-		return fmt.Errorf("serve local application: %w", serveError)
+		return fmt.Errorf("serve application: %w", serveError)
 	case <-applicationContext.Done():
 		shutdownContext, cancelShutdown := context.WithTimeout(context.Background(), shutdownTimeout)
 		defer cancelShutdown()
 		if shutdownError := server.Shutdown(shutdownContext); shutdownError != nil {
-			return fmt.Errorf("shut down local application: %w", shutdownError)
+			return fmt.Errorf("shut down application: %w", shutdownError)
 		}
 		serveError := <-serveResult
 		if serveError != nil && !errors.Is(serveError, http.ErrServerClosed) {
-			return fmt.Errorf("serve local application during shutdown: %w", serveError)
+			return fmt.Errorf("serve application during shutdown: %w", serveError)
 		}
 		return nil
 	}
