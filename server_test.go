@@ -118,6 +118,15 @@ func TestApplicationHTTPContract(testContext *testing.T) {
 		if !strings.Contains(string(body), "Download Your Data") {
 			testContext.Fatalf("application shell is missing the product title")
 		}
+		if !strings.Contains(
+			string(body),
+			`data-api-origin="`+config.Authentication().APIOrigin()+`"`,
+		) ||
+			strings.Contains(string(body), apiOriginMarker) {
+			testContext.Fatalf(
+				"application shell does not contain the configured API origin",
+			)
+		}
 		if response.Header.Get("Content-Security-Policy") != buildContentSecurityPolicy(config) {
 			testContext.Fatalf("application response is missing the canonical content security policy")
 		}
