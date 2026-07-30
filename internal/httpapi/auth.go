@@ -257,7 +257,7 @@ func validPreflightHeaders(rawHeaders string) bool {
 
 func buildContentSecurityPolicy(config runtimeconfig.Config) string {
 	return fmt.Sprintf(
-		"default-src 'self'; base-uri 'self'; connect-src 'self' %s %s https://accounts.google.com; font-src 'self'; form-action 'self' %s; frame-ancestors 'none'; frame-src https://accounts.google.com; img-src 'self' data: https://lh3.googleusercontent.com; object-src 'none'; script-src 'self' https://cdn.jsdelivr.net https://accounts.google.com; style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'",
+		"default-src 'self'; base-uri 'self'; connect-src 'self' %s %s https://accounts.google.com; font-src 'self'; form-action 'self' %s; frame-ancestors 'none'; frame-src https://accounts.google.com; img-src 'self' data: https://lh3.googleusercontent.com; object-src 'none'; script-src 'self' https://cdn.jsdelivr.net https://accounts.google.com; style-src 'self' https://cdn.jsdelivr.net https://accounts.google.com 'unsafe-inline'",
 		config.Authentication().APIOrigin(),
 		config.Authentication().TAuthURL(),
 		config.Authentication().TAuthURL(),

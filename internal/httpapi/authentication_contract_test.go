@@ -38,7 +38,14 @@ func TestProtectedRoutesRequireOneValidTAuthSession(testContext *testing.T) {
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
-	for _, publicPath := range []string{healthPath, uiConfigPath, "/#guide/netflix"} {
+	for _, publicPath := range []string{
+		healthPath,
+		uiConfigPath,
+		"/#guide/netflix",
+		"/resources/",
+		"/sitemap.xml",
+		"/robots.txt",
+	} {
 		response, requestError := http.Get(server.URL + publicPath)
 		if requestError != nil {
 			testContext.Fatalf("request public route %s: %v", publicPath, requestError)
