@@ -256,6 +256,7 @@ func TestFrontendAssetsUseCurrentMPRShell(testContext *testing.T) {
 		!strings.Contains(index, `data-mpr-ui-bundle-src="`+sharedBundleScript+`"`) ||
 		!strings.Contains(index, `<mpr-header`) ||
 		!strings.Contains(index, `data-config-url="/config-ui.yaml"`) ||
+		!strings.Contains(index, `data-api-origin="`+apiOriginMarker+`"`) ||
 		!strings.Contains(index, `completionEvent`) ||
 		!strings.Contains(index, `<mpr-user`) ||
 		!strings.Contains(index, `<mpr-footer`) ||
@@ -322,6 +323,7 @@ func TestFrontendAssetsUseCurrentMPRShell(testContext *testing.T) {
 		strings.Contains(appScript, "localStorage.getItem('token") ||
 		!strings.Contains(apiScript, "credentials: 'include'") ||
 		!strings.Contains(apiScript, "data-api-origin") ||
+		strings.Contains(apiScript, "window.location.origin") ||
 		strings.Contains(styles, "gradient(") ||
 		strings.Contains(styles, "@import") {
 		testContext.Fatalf("frontend module or MPR style contract is incomplete")
