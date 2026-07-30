@@ -1,6 +1,6 @@
 # Per-step instruction screenshot capture
 
-This runbook is the canonical capture contract for every provider visual listed in `instruction-screenshots.json`. Every localized instruction step must reference one approved, self-owned screenshot whose registry asset carries the manifest’s exact first-party direct route. The application does not support text-only or linkless steps, provider-level screenshot galleries, placeholders, mocks, unofficial tutorials, or third-party search-result images.
+This runbook is the canonical capture contract for every provider visual listed in `frontend/manifests/instruction-screenshots.json`. Every localized instruction step must reference one approved, self-owned screenshot whose registry asset carries the manifest’s exact first-party direct route. The application does not support text-only or linkless steps, provider-level screenshot galleries, placeholders, mocks, unofficial tutorials, or third-party search-result images.
 
 The same approved image may support multiple adjacent steps when it accurately shows the shared panel or first-party instructions. English, Spanish, French, and Russian reuse the same image files with localized alternative text.
 
@@ -65,7 +65,7 @@ The set is accepted only when:
 - every registry action link is an absolute first-party HTTPS URL exactly matching the screenshot manifest’s `direct_route`;
 - every provider screenshot is used by at least one step and every manifest screenshot is referenced;
 - no provider-level screenshot gallery, text-only exception, placeholder, mock, or locale-specific duplicate survives;
-- every metadata-free PNG exists beneath `images/instructions/`;
+- every metadata-free PNG exists beneath `frontend/images/instructions/`;
 - wide and narrow browser coverage proves each step renders its visual and actionable link beside the instruction without overflow;
 - `make validate-instruction-screenshots`, `make test-browser`, and `make ci` pass.
 
