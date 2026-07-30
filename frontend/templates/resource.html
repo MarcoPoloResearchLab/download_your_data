@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>{{.MetaTitle}}</title>
+  <meta name="description" content="{{.MetaDescription}}">
+  <link rel="canonical" href="{{.CanonicalURL}}">
+  <meta property="og:title" content="{{.MetaTitle}}">
+  <meta property="og:description" content="{{.MetaDescription}}">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="{{.CanonicalURL}}">
+  <meta property="og:site_name" content="Download Your Data">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="{{.MetaTitle}}">
+  <meta name="twitter:description" content="{{.MetaDescription}}">
+  <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/images/favicon.png" sizes="32x32" type="image/png">
+  <link rel="stylesheet" href="/styles/resources.css">
+  <script id="structured-data" type="application/ld+json">{{.StructuredData}}</script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <header class="site-header">
+    <a class="site-brand" href="/" aria-label="Download Your Data home">
+      <span class="brand-mark" aria-hidden="true">DYD</span>
+      <span>Download Your Data</span>
+    </a>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a href="/#catalog">Provider catalog</a>
+      <a href="/resources/" aria-current="page">Resources</a>
+      <a href="https://github.com/MarcoPoloResearchLab/download_your_data" rel="noopener noreferrer">GitHub</a>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">Home</a></li>
+        <li><a href="/resources/">Resources</a></li>
+        <li aria-current="page">{{.ProviderName}}</li>
+      </ol>
+    </nav>
+
+    <article>
+      <header class="resource-hero">
+        <div class="resource-hero-copy">
+          <p class="eyebrow">{{.ProviderName}} resource</p>
+          <h1>{{.H1}}</h1>
+          <p class="lede">{{.Intro}}</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="{{.CTAURL}}">{{.CTALabel}}</a>
+            <a class="button" href="#export-steps">See the workflow</a>
+          </div>
+        </div>
+        <aside class="quick-verdict" aria-labelledby="quick-verdict-title">
+          <h2 id="quick-verdict-title">Quick verdict</h2>
+          <dl>
+            <div>
+              <dt>Best for</dt>
+              <dd>{{.BestFor}}</dd>
+            </div>
+            <div>
+              <dt>Required input</dt>
+              <dd>{{.RequiredInput}}</dd>
+            </div>
+            <div>
+              <dt>Product fit</dt>
+              <dd>{{.ProductFit}}</dd>
+            </div>
+          </dl>
+        </aside>
+      </header>
+
+      <section class="resource-section" aria-labelledby="problem-title">
+        <p class="eyebrow">The decision that matters</p>
+        <h2 id="problem-title">Choose the right export before you start</h2>
+        <p>{{.Problem}}</p>
+      </section>
+
+      <section class="resource-section" id="export-steps" aria-labelledby="steps-title">
+        <p class="eyebrow">Current workflow</p>
+        <h2 id="steps-title">{{.StepsTitle}}</h2>
+        <ol class="steps">
+          {{range .Steps}}
+          <li>
+            <span class="step-number" aria-hidden="true">{{.Number}}</span>
+            <p>{{.Text}}</p>
+            {{if .ActionURL}}<a href="{{.ActionURL}}" rel="noopener noreferrer">Open the first-party step <span aria-hidden="true">↗</span></a>{{end}}
+          </li>
+          {{end}}
+        </ol>
+      </section>
+
+      {{if .Visuals}}
+      <section class="resource-section" aria-labelledby="visuals-title">
+        <p class="eyebrow">Reviewed visual references</p>
+        <h2 id="visuals-title">Match the current first-party screens</h2>
+        <div class="visual-grid">
+          {{range .Visuals}}
+          <figure>
+            <a href="{{.ActionURL}}" rel="noopener noreferrer">
+              <img
+                src="{{.ImageURL}}"
+                alt="{{.Alt}}"
+                width="{{.Width}}"
+                height="{{.Height}}"
+                loading="lazy"
+                decoding="async"
+              >
+            </a>
+            <figcaption>{{.Attribution}}</figcaption>
+          </figure>
+          {{end}}
+        </div>
+      </section>
+      {{end}}
+
+      <div class="two-column-sections">
+        <section class="resource-section" aria-labelledby="coverage-title">
+          <p class="eyebrow">What this workflow covers</p>
+          <h2 id="coverage-title">Useful output and next steps</h2>
+          <ul class="check-list">
+            {{range .Coverage}}<li>{{.}}</li>{{end}}
+          </ul>
+        </section>
+
+        <section class="resource-section" aria-labelledby="limits-title">
+          <p class="eyebrow">Objections and limits</p>
+          <h2 id="limits-title">What this resource does not promise</h2>
+          <ul class="limit-list">
+            {{range .Limitations}}<li>{{.}}</li>{{end}}
+          </ul>
+        </section>
+      </div>
+
+      <section class="resource-section evidence-section" aria-labelledby="evidence-title">
+        <p class="eyebrow">Repository evidence</p>
+        <h2 id="evidence-title">{{.SnippetLabel}}</h2>
+        <pre><code>{{.SnippetContent}}</code></pre>
+        <p>This exact route or input shape is maintained in <a href="{{.SnippetSourceURL}}" rel="noopener noreferrer">{{.SnippetSourcePath}}</a>.</p>
+      </section>
+
+      {{if .OfficialReferences}}
+      <section class="resource-section" aria-labelledby="sources-title">
+        <p class="eyebrow">First-party sources</p>
+        <h2 id="sources-title">Verify the provider workflow</h2>
+        <ul class="source-list">
+          {{range .OfficialReferences}}
+          <li><a href="{{.URL}}" rel="noopener noreferrer">{{.Label}} <span aria-hidden="true">↗</span></a></li>
+          {{end}}
+        </ul>
+        {{if .ProviderNote}}<p class="callout">{{.ProviderNote}}</p>{{end}}
+      </section>
+      {{end}}
+
+      <section class="resource-section" aria-labelledby="faq-title">
+        <p class="eyebrow">Questions before you export</p>
+        <h2 id="faq-title">Frequently asked questions</h2>
+        <div class="faq-list">
+          {{range .FAQs}}
+          <details>
+            <summary>{{.Question}}</summary>
+            <p>{{.Answer}}</p>
+          </details>
+          {{end}}
+        </div>
+      </section>
+
+      <section class="resource-section" aria-labelledby="related-title">
+        <p class="eyebrow">Continue with the right provider</p>
+        <h2 id="related-title">Related data export resources</h2>
+        <div class="related-grid">
+          {{range .RelatedResources}}
+          <a href="{{.Path}}">
+            <span>{{.ProviderName}}</span>
+            <strong>{{.H1}}</strong>
+          </a>
+          {{end}}
+        </div>
+      </section>
+
+      <footer class="article-footer">
+        <p>
+          Written and reviewed by
+          <a href="{{.AuthorURL}}" rel="author noopener noreferrer">{{.AuthorName}}</a>.
+          Published and verified against the repository on
+          <time datetime="{{.SignificantUpdate}}">{{.SignificantUpdateDisplay}}</time>.
+        </p>
+        <a class="button button-primary" href="{{.CTAURL}}">{{.CTALabel}}</a>
+      </footer>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <p>Provider exports can contain sensitive information. Keep downloaded archives in a secure location.</p>
+    <nav aria-label="Footer navigation">
+      <a href="/">Download Your Data</a>
+      <a href="/resources/">Resources</a>
+      <a href="https://mprlab.com/" rel="noopener noreferrer">MPR Lab</a>
+      <a href="https://github.com/MarcoPoloResearchLab/download_your_data" rel="noopener noreferrer">Source</a>
+    </nav>
+  </footer>
+</body>
+</html>
