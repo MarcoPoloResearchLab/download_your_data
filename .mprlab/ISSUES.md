@@ -999,8 +999,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Search confirms the target has no runtime, build, test, or documentation dependency on the old path or repository.
   - `git status --short`
 
-- [ ] [M409] (P1) {F005,F011} Retire the abandoned standalone Netflix checkout
-  Goal:
+- [!] [M409] (P1) {F005,F008,I009,F011} Retire the abandoned standalone Netflix checkout  Goal:
   Remove the obsolete Netflix project boundary after the authenticated target release proves complete browser parity.
 
   Requirements:
@@ -1020,6 +1019,8 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Run target `make ci` and artifact smoke with the standalone path unavailable.
   - `go list -m all` and repository search find no dependency on `github.com/tyemirov/netflix` or the old checkout.
   - `git status --short`
+
+  Blocked: F005 has not produced the required target-owned release; the tracked nonempty source cache has no operator disposition, and destructive checkout removal has not received explicit approval.
 
 - [x] [M410] (P1) {F005,M404R} Add the canonical release, publication, and deployment lifecycle
   Goal:

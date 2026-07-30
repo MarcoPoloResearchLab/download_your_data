@@ -89,7 +89,7 @@ Creation persists `receiving`; a complete staged upload advances through `valida
 | Standalone web server | Delete at the target boundary. Its routes, temp-file cookies, templates, CDN dependencies, and second listen address are not incorporated. |
 | Standalone Bootstrap/Chart.js dashboard | Recompose as checked ES modules with self-owned application assets inside the shared `mpr-ui@latest` header and footer. |
 | `tmdbenrich` CLI | The incorporation is complete. The authenticated web release does not preserve a current end-user CLI or second binary. |
-| Tracked SQLite cache | Do not import it. The source database is empty, is a generated runtime shape, and is not a product artifact. |
+| Tracked SQLite cache | Do not import it. At source revision `e4079718730533aa15141b567fa378def66b1265`, the generated runtime database is nonempty despite being tracked; its row contents were not inspected or copied. The target owns a different current cache contract, and the old file requires explicit operator disposition before checkout retirement. |
 
 ## Provider Domain
 
@@ -208,6 +208,14 @@ If TMDB is not configured, the UI gives the concrete server configuration name a
 5. **F008 — Netflix provider workspace:** catalog entry in all locales, import flow, progress, dashboard, match-quality view, controls, Credits, accessibility, responsive behavior, and exact shared-shell browser-network proof.
 6. **M409 — Standalone checkout retirement:** prove independent target parity and release, resolve any untracked/private data, then request explicit approval before removing `/Users/tyemirov/Development/netflix`.
 7. **F011 — Authenticated user migration:** replace the process-global workspace and packaged local product boundary with the shared TAuth user, user-scoped persistence, static Pages application, and two-user isolation proof. The former end-user command surface is retired rather than carried into this boundary.
+
+## Standalone Retirement Audit
+
+The 2026-07-28 audit is tied to source revision `e4079718730533aa15141b567fa378def66b1265`. The standalone `master` checkout was clean and matched `origin/master`, with no untracked or ignored files. Its tracked `netflix_cache.sqlite` was 258,048 bytes and contained 466 cached rows. No cached title, metadata, or other row content was printed, read for migration, or copied into this repository.
+
+The target's complete `make ci` gate passed. `go list -m all`, target dependency enumeration, active-runtime source search, and the built executable contain no source module or checkout reference. The built-product smoke and deterministic fake-TMDB operator smoke also passed inside a macOS sandbox that denied all reads and writes beneath the standalone checkout. A second sandboxed full `make ci` reached the browser phase after all Go, matcher, frontend type, screenshot, and operator checks passed; the Playwright browser launcher itself cannot start inside that outer macOS sandbox, so this is not recorded as a second complete CI pass.
+
+Retirement remains blocked on the first target-owned release, explicit disposition of the tracked nonempty cache, and explicit approval for destructive checkout removal. The cache is not a migration source and must not be imported into the target.
 
 ## Completion Gate
 
