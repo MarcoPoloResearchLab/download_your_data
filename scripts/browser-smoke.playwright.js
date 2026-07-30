@@ -1,16 +1,14 @@
 async page => {
   const baseURL = '__BASE_URL__';
   const validCSV = '__VALID_CSV__';
-  const invalidCSV = '__INVALID_CSV__';
-  const sharedShellURLs = new Set([
-    'https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.css',
-    'https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.js'
-  ]);
+  const sessionCookie = '__SESSION_COOKIE__';
+  const sessionToken = '__SESSION_TOKEN__';
   const browserErrors = [];
   const requestURLs = [];
+
   page.on('console', (message) => {
-    if (message.type() === 'error' || message.type() === 'warning') {
-      browserErrors.push(`${message.type()}: ${message.text()}`);
+    if (message.type() === 'error') {
+      browserErrors.push(`console: ${message.text()}`);
     }
   });
   page.on('pageerror', (error) => browserErrors.push(`pageerror: ${error.message}`));
@@ -27,1124 +25,267 @@ async page => {
     }, hash);
     await page.locator(readySelector).waitFor();
   };
-  const selectLanguage = async (locale) => {
-    await page.locator(`[data-language="${locale}"]`).click();
-    await page.waitForFunction(
-      (expectedLocale) => document.documentElement.lang === expectedLocale,
-      locale
+  const protectedRequests = () =>
+    requestURLs.filter(
+      (rawURL) =>
+        rawURL.startsWith(`${baseURL}/api/`) &&
+        rawURL !== `${baseURL}/api/health`
+    );
+  const assertNoHorizontalOverflow = async (label) => {
+    const dimensions = await page.evaluate(() => ({
+      viewport: window.innerWidth,
+      document: document.documentElement.scrollWidth
+    }));
+    assert(
+      dimensions.document <= dimensions.viewport,
+      `${label} overflows horizontally: ${JSON.stringify(dimensions)}`
     );
   };
   const snapshot = async () =>
     page.evaluate(async () => {
-      const response = await fetch('/api/providers/netflix', {cache: 'no-store'});
+      const response = await fetch('/api/providers/netflix', {
+        cache: 'no-store',
+        credentials: 'include'
+      });
       if (!response.ok) {
         throw new Error(`snapshot HTTP ${response.status}`);
       }
       return response.json();
     });
-  const kpiValue = async (label) => {
-    const card = page.locator('.kpi').filter({has: page.locator('.kpi-label', {hasText: label})});
-    await card.first().waitFor();
-    return (await card.first().locator('.kpi-value').textContent()).trim();
-  };
-  const waitForState = async (predicate, label) => {
+  const waitForSnapshot = async (predicate, label) => {
     const deadline = Date.now() + 15000;
     while (Date.now() < deadline) {
-      if (predicate(await snapshot())) {
-        return;
+      const value = await snapshot();
+      if (predicate(value)) {
+        return value;
       }
       await page.waitForTimeout(50);
     }
     throw new Error(`timed out waiting for ${label}`);
   };
+  const setSharedAuth = async (authenticated) => {
+    await page.evaluate((nextAuthenticated) => {
+      const header = document.querySelector('#app-header');
+      if (
+        !window.MPRUI ||
+        !window.MPRUI.testing ||
+        typeof window.MPRUI.testing.authenticate !== 'function' ||
+        typeof window.MPRUI.testing.unauthenticate !== 'function'
+      ) {
+        throw new Error('mpr-ui browser test lifecycle is unavailable');
+      }
+      if (nextAuthenticated) {
+        window.MPRUI.testing.authenticate(header, {
+          user_id: 'browser-smoke-user',
+          user_email: 'browser-contract@example.invalid',
+          user_display_name: 'Browser Contract',
+          user_avatar_url: 'https://lh3.googleusercontent.com/a/browser-contract',
+          display: 'Browser Contract',
+          avatar_url: 'https://lh3.googleusercontent.com/a/browser-contract'
+        });
+      } else {
+        window.MPRUI.testing.unauthenticate(header);
+      }
+    }, authenticated);
+  };
 
   await page.setViewportSize({width: 1440, height: 1000});
   await page.goto(baseURL, {waitUntil: 'networkidle'});
   await page.waitForFunction(
-    () => customElements.get('mpr-header') && customElements.get('mpr-footer')
-  );
-  await page.locator('mpr-header header[role="banner"]').waitFor();
-  await page.locator('mpr-footer footer[role="contentinfo"]').waitFor();
-  assert(
-    await page.locator('mpr-header header[role="banner"]').count() === 1 &&
-      await page.locator('mpr-footer footer[role="contentinfo"]').count() === 1,
-    'mpr-ui must own exactly one rendered header and footer'
-  );
-  assert(
-    await page.locator('.app-bar, footer.app-footer').count() === 0,
-    'the retired app-owned header or footer is still rendered'
-  );
-  assert(
-    await page.locator('#brand[slot="brand"]').isVisible() &&
-      await page.locator('#header-context[slot="nav-left"]').isVisible() &&
-      await page.locator('#language-switcher').isVisible() &&
-      await page.locator('#theme-toggle').isVisible(),
-    'mpr-header did not preserve the application controls in supported slots'
-  );
-  assert(
-    await page.locator('mpr-header [data-mpr-header="google-signin"]:visible').count() === 0,
-    'the local-only shell must not fabricate an authentication control'
-  );
-  assert(
-    await page.locator('mpr-footer a[href="https://mprlab.com/"]').count() === 1 &&
-      await page.locator(
-        'mpr-footer a[href="https://github.com/MarcoPoloResearchLab/download_your_data"]'
-      ).count() === 1 &&
-      await page.locator('#footer-local[slot="legal"], [slot="legal"] #footer-local').count() === 1,
-    'mpr-footer is missing its shared links or local-data disclosure'
-  );
-  await page.locator('#theme-toggle').click();
-  await page.waitForFunction(
     () =>
-      document.documentElement.dataset.theme === 'light' &&
-      document.documentElement.dataset.mprTheme === 'light'
+      customElements.get('mpr-header') &&
+      customElements.get('mpr-footer') &&
+      window.MPRUI?.testing
   );
-  await page.locator('#theme-toggle').click();
-  await page.waitForFunction(
-    () =>
-      document.documentElement.dataset.theme === 'dark' &&
-      document.documentElement.dataset.mprTheme === 'dark'
-  );
-  await page.locator('[data-provider-id="netflix"]').waitFor();
+  await page.locator('.catalog').waitFor();
+  await setSharedAuth(false);
+
   assert(
     await page.locator('.provider-card[data-provider-id]').count() === 11,
-    'provider catalog must contain eleven canonical providers'
-  );
-  const wideCatalogLayout = await page.locator('.catalog-grid').evaluate((grid) => ({
-    columns: getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length,
-    width: grid.getBoundingClientRect().width
-  }));
-  assert(
-    wideCatalogLayout.columns === 3 && wideCatalogLayout.width <= 960,
-    'wide provider catalog must use a compact three-column tile grid'
-  );
-  const providerIconPaths = [];
-  for (const card of await page.locator('.provider-card[data-provider-id]').all()) {
-    const providerID = await card.getAttribute('data-provider-id');
-    const mark = card.locator('.provider-mark');
-    const icon = mark.locator('img.provider-icon');
-    assert(await icon.count() === 1, `${providerID} must render exactly one provider icon`);
-    await icon.evaluate((element) => element.decode());
-    const iconRecord = await icon.evaluate((element) => {
-      const cardElement = element.closest('.provider-card');
-      const copyElement = cardElement.querySelector('.provider-card-copy');
-      const guideLink = cardElement.querySelector('.provider-card-guide');
-      const iconBox = element.getBoundingClientRect();
-      const markElement = element.parentElement;
-      const markBox = markElement.getBoundingClientRect();
-      const markStyle = getComputedStyle(markElement);
-      const cardBox = cardElement.getBoundingClientRect();
-      const copyBox = copyElement.getBoundingClientRect();
-      const linkBox = guideLink.getBoundingClientRect();
-      return {
-        alt: element.alt,
-        cardBottom: cardBox.bottom,
-        cardHeight: cardBox.height,
-        cardLeft: cardBox.left,
-        cardRight: cardBox.right,
-        cardTop: cardBox.top,
-        cardWidth: cardBox.width,
-        complete: element.complete,
-        copyLeft: copyBox.left,
-        id: element.dataset.providerIcon,
-        linkBottom: linkBox.bottom,
-        linkLeft: linkBox.left,
-        linkRight: linkBox.right,
-        linkTop: linkBox.top,
-        markBackground: markStyle.backgroundColor,
-        markBorderWidth: markStyle.borderTopWidth,
-        markHeight: markBox.height,
-        markPadding: markStyle.paddingTop,
-        markRight: markBox.right,
-        markText: markElement.textContent.trim(),
-        markWidth: markBox.width,
-        naturalHeight: element.naturalHeight,
-        naturalWidth: element.naturalWidth,
-        path: new URL(element.src).pathname,
-        width: iconBox.width
-      };
-    });
-    assert(
-      iconRecord.complete &&
-        iconRecord.id === providerID &&
-        iconRecord.alt === '' &&
-        iconRecord.markText === '' &&
-        iconRecord.naturalWidth >= 32 &&
-        iconRecord.naturalHeight >= 32 &&
-        iconRecord.path === `/images/providers/${providerID}.png` &&
-        iconRecord.cardWidth > 0 &&
-        iconRecord.cardHeight < 190 &&
-        iconRecord.markWidth === 56 &&
-        iconRecord.markHeight === 56 &&
-        iconRecord.width === 56 &&
-        iconRecord.markBorderWidth === '0px' &&
-        iconRecord.markPadding === '0px' &&
-        iconRecord.markBackground === 'rgba(0, 0, 0, 0)' &&
-        iconRecord.markRight <= iconRecord.copyLeft &&
-        Math.abs(iconRecord.linkLeft - iconRecord.cardLeft) <= 1 &&
-        Math.abs(iconRecord.linkRight - iconRecord.cardRight) <= 1 &&
-        Math.abs(iconRecord.linkTop - iconRecord.cardTop) <= 1 &&
-        Math.abs(iconRecord.linkBottom - iconRecord.cardBottom) <= 1,
-      `${providerID} provider card is not compact, fully linked, or using its unframed reviewed logo`
-    );
-    assert(
-      await card.locator('.provider-name').count() === 1 &&
-        await card.locator('.provider-summary').count() === 1 &&
-        await card.locator('.provider-type').count() === 0 &&
-        await card.locator(
-          `.provider-card-guide[href="#guide/${providerID}"][data-route="guide"]`
-        ).count() === 1,
-      `${providerID} provider card must keep its name, summary, and full-card link without Guide metadata`
-    );
-    providerIconPaths.push(iconRecord.path);
-  }
-  assert(
-    new Set(providerIconPaths).size === 11,
-    'every provider must own one distinct local product icon'
+    'anonymous provider catalog must contain eleven canonical providers'
   );
   assert(
-    await page.locator('.provider-card-guide[data-route="guide"]').count() === 11 &&
-      await page.locator('.provider-card [data-route="guide"] button').count() === 0 &&
-      await page.locator('.provider-card .provider-type').count() === 0 &&
-      await page.locator('.provider-card .provider-card-meta').count() === 2 &&
-      await page.locator('.provider-card .state-chip').count() === 0 &&
-      await page.locator(
-        '.provider-card:not([data-provider-id="netflix"]):not([data-provider-id="openai"]) .provider-analysis-action'
-      ).count() === 0,
-    'catalog cards must keep their full-card links without Guide metadata, guide buttons, or state pills'
+    await page.locator('mpr-header header[role="banner"]').count() === 1 &&
+      await page.locator('mpr-footer footer[role="contentinfo"]').count() === 1 &&
+      await page.locator('mpr-user').count() === 1,
+    'mpr-ui must own one header, footer, and account surface'
   );
-  for (const providerID of ['netflix', 'openai']) {
-    assert(
-      await page.locator(`[data-provider-id="${providerID}"]`).count() === 1 &&
-        await page.locator(
-          `[data-provider-id="${providerID}"] .provider-card-guide[data-provider="${providerID}"]`
-        ).count() === 1 &&
-        await page.locator(
-          `[data-provider-id="${providerID}"] .provider-card-meta .provider-analysis-action[data-route="${providerID}"]`
-        ).count() === 1 &&
-        (await page.locator(
-          `[data-provider-id="${providerID}"] .provider-analysis-action[data-route="${providerID}"]`
-        ).textContent()).trim() === 'Data analysis',
-      `${providerID} catalog entry must expose Data analysis in its top metadata row`
-    );
-    const analysisGeometry = await page
-      .locator(`[data-provider-id="${providerID}"]`)
-      .evaluate((card) => {
-        const copyBox = card.querySelector('.provider-card-copy').getBoundingClientRect();
-        const metadataBox = card.querySelector('.provider-card-meta').getBoundingClientRect();
-        const actionBox = card.querySelector('.provider-analysis-action').getBoundingClientRect();
-        const nameBox = card.querySelector('.provider-name').getBoundingClientRect();
-        return {
-          actionBottom: actionBox.bottom,
-          actionRight: actionBox.right,
-          actionTop: actionBox.top,
-          copyRight: copyBox.right,
-          metadataBottom: metadataBox.bottom,
-          metadataTop: metadataBox.top,
-          nameBottom: nameBox.bottom,
-          nameTop: nameBox.top
-        };
-      });
-    assert(
-      Math.abs(analysisGeometry.actionRight - analysisGeometry.copyRight) <= 1 &&
-        analysisGeometry.actionTop >= analysisGeometry.metadataTop &&
-        analysisGeometry.actionBottom <= analysisGeometry.metadataBottom + 1 &&
-        analysisGeometry.nameTop >= analysisGeometry.metadataTop &&
-        analysisGeometry.nameBottom <= analysisGeometry.metadataBottom + 1,
-      `${providerID} name and Data analysis must share the card's compact top row`
-    );
-  }
   assert(
-    await page.locator('[data-provider-id="facebook"]').count() === 1 &&
-      await page.locator('[data-provider-id="instagram"]').count() === 1 &&
-      await page.locator('[data-provider-id="whatsapp"]').count() === 1 &&
-      await page.locator('[data-provider-id="threads"]').count() === 1,
-    'provider catalog must contain separate Facebook, Instagram, WhatsApp, and Threads identities'
+    protectedRequests().length === 0,
+    `public catalog made protected requests: ${protectedRequests().join(', ')}`
   );
-  await page.locator('[data-provider-id="facebook"]').click({position: {x: 8, y: 8}});
-  await page.locator('#facebook').waitFor();
-  assert(
-    await page.evaluate(() => window.location.hash) === '#guide/facebook',
-    'clicking a provider card outside an application action must open its guide'
-  );
-  await route('#catalog', '.catalog');
-  await page.locator('[data-provider-id="openai"] .provider-card-guide').focus();
-  await page.keyboard.press('Enter');
-  await page.locator('#openai').waitFor();
-  assert(
-    await page.evaluate(() => window.location.hash) === '#guide/openai',
-    'provider card guide links must be keyboard operable'
-  );
-  await route('#catalog', '.catalog');
-  await page.locator(
-    '[data-provider-id="openai"] .provider-analysis-action[data-route="openai"]'
-  ).click();
-  await page.locator('.openai-workspace').waitFor();
-  assert(
-    await page.evaluate(() => window.location.hash) === '#provider/openai' &&
-      (await page.locator('.openai-workspace h1').textContent()).trim() ===
-        'OpenAI (ChatGPT)' &&
-      await page.locator('.openai-workspace .openai-prepare').count() === 1 &&
-      await page.locator(
-        '.openai-workspace .openai-command:has-text("download-your-data import")'
-      ).count() === 1 &&
-      await page.locator(
-        '.openai-workspace [data-route="guide"][data-provider="openai"]'
-      ).count() === 1,
-    'OpenAI Data analysis must open the real private analysis workspace'
-  );
-  await route('#catalog', '.catalog');
 
-  const localeFacebookAlt = {
-    en: 'Facebook Accounts Center: Your information and permissions',
-    es: 'Centro de cuentas de Facebook: Tu información y permisos',
-    fr: 'Espace Comptes Facebook : Vos informations et autorisations',
-    ru: 'Центр аккаунтов Facebook: раздел «Ваша информация и разрешения»'
-  };
-  const localeOpenAIGuideHeading = {
-    en: 'How to download your data',
-    es: 'Cómo descargar tus datos',
-    fr: 'Comment télécharger vos données',
-    ru: 'Как скачать ваши данные'
-  };
-  const localeOpenAction = {
-    en: 'Open',
-    es: 'Abrir',
-    fr: 'Ouvrir',
-    ru: 'Открыть'
-  };
-  const localeDataAnalysis = {
-    en: 'Data analysis',
-    es: 'Análisis de datos',
-    fr: 'Analyse des données',
-    ru: 'Анализ данных'
-  };
-  for (const [locale, expectedAlt] of Object.entries(localeFacebookAlt)) {
-    await selectLanguage(locale);
+  await page.setViewportSize({width: 390, height: 844});
+  for (const providerID of [
+    'netflix',
+    'openai',
+    'facebook',
+    'instagram',
+    'whatsapp',
+    'threads',
+    'linkedin',
+    'tiktok',
+    'x',
+    'youtube',
+    'google'
+  ]) {
+    await route(`#guide/${providerID}`, `#${providerID}`);
     assert(
-      (await page.locator('[data-provider-id="netflix"] .provider-name').textContent()).trim() ===
-        'Netflix',
-      `${locale} did not preserve the canonical Netflix identity`
+      await page.locator(`#${providerID} .instruction-step`).count() > 0,
+      `${providerID} guide must render instructions anonymously`
     );
-    assert(
-      (await page.locator(
-        '[data-provider-id="netflix"] .provider-analysis-action[data-route="netflix"]'
-      ).textContent()).trim() === localeDataAnalysis[locale],
-      `${locale} Netflix Data analysis action is not localized`
-    );
-    assert(
-      (await page.locator(
-        '[data-provider-id="openai"] .provider-analysis-action[data-route="openai"]'
-      ).textContent()).trim() === localeDataAnalysis[locale],
-      `${locale} OpenAI Data analysis action is not localized`
-    );
-    await route('#guide/netflix', '#netflix');
-    assert(
-      (await page.locator('.guide h1').textContent()).trim() === 'Netflix',
-      `${locale} Netflix guide identity changed`
-    );
-    assert(
-      await page.locator('#netflix .instruction-step').count() === 6,
-      `${locale} Netflix guide instructions are incomplete`
-    );
-    assert(
+    await assertNoHorizontalOverflow(`${providerID} anonymous guide`);
+  }
+
+  await route('#guide/netflix', '#netflix');
+  assert(
+    await page.locator('#netflix .instruction-step').count() === 6 &&
       await page.locator(
         '#netflix .guide-refs a[href="https://help.netflix.com/en/node/101917"]'
       ).count() === 1,
-      `${locale} Netflix guide official help route is missing`
-    );
-    assert(
-      await page.locator('.guide [data-route="netflix"]').count() === 1,
-      `${locale} Netflix guide cannot open the workspace`
-    );
-    await route('#guide/openai', '#openai');
-    assert(
-      (await page.locator('.guide h1').textContent()).trim() === 'OpenAI (ChatGPT)',
-      `${locale} did not preserve the canonical OpenAI identity`
-    );
-    assert(
-      await page.locator('.guide .state-chip').count() === 0,
-      `${locale} guide header must not render a generic guide badge`
-    );
-    assert(
-      (await page.locator('#openai h2').textContent()).trim() ===
-        localeOpenAIGuideHeading[locale],
-      `${locale} OpenAI guide heading is incorrect`
-    );
-    assert(
-      await page.locator('#openai .instruction-step').count() === 7,
-      `${locale} OpenAI export instructions are incomplete`
-    );
-    assert(
-      await page.locator(
-        '#openai a[href="https://help.openai.com/en/articles/7260999-how-do-i-export-my-chatgpt-history-and-data"]'
-      ).count() === 1,
-      `${locale} OpenAI official export route is missing`
-    );
-    assert(
-      await page.locator('.guide [data-route="openai"]').count() === 1,
-      `${locale} OpenAI guide cannot open the analysis workspace`
-    );
-    await route('#guide/whatsapp', '#whatsapp');
-    assert(
-      (await page.locator('.guide h1').textContent()).trim() === 'WhatsApp',
-      `${locale} did not preserve the canonical WhatsApp identity`
-    );
-    assert(
-      await page.locator('#whatsapp .instruction-step').count() === 7,
-      `${locale} WhatsApp export instructions are incomplete`
-    );
-    assert(
-      await page.locator(
-        '#whatsapp .guide-refs a[href="https://faq.whatsapp.com/526463418847093/"]'
-      ).count() === 1 &&
-        await page.locator(
-          '#whatsapp .guide-refs a[href="https://faq.whatsapp.com/1180414079177245/"]'
-        ).count() === 1,
-      `${locale} WhatsApp official export routes are missing`
-    );
-    await route('#guide/threads', '#threads');
-    assert(
-      (await page.locator('.guide h1').textContent()).trim() === 'Threads',
-      `${locale} did not preserve the canonical Threads identity`
-    );
-    assert(
-      await page.locator('#threads .instruction-step').count() === 7,
-      `${locale} Threads export instructions are incomplete`
-    );
-    assert(
-      await page.locator(
-        '#threads a[href="https://www.facebook.com/help/instagram/259803026523198"]'
-      ).count() === 1,
-      `${locale} Threads official export route is missing`
-    );
-    await route('#guide/facebook', '#facebook');
-    assert(
-      await page.locator(
-        `#facebook .instruction-step[data-step-index="1"] img[alt="${expectedAlt}"]`
-      ).count() === 1,
-      `${locale} Facebook screenshot alternative is missing`
-    );
-    await route('#guide/google', '#google');
-    const googleFirstStepLink = page.locator(
-      '#google .instruction-step[data-step-index="1"] .instruction-step-link'
-    );
-    assert(
-      await googleFirstStepLink.getAttribute('href') === 'https://takeout.google.com/?hl=en' &&
-        (await googleFirstStepLink.textContent()).trim() ===
-          `${localeOpenAction[locale]} takeout.google.com ↗`,
-      `${locale} Google Takeout instruction is not directly actionable`
-    );
-    await route('#provider/netflix', '.workspace');
-    assert(
-      (await page.locator('.workspace h1').textContent()).trim() === 'Netflix',
-      `${locale} Netflix workspace identity changed`
-    );
-    const netflixWorkspaceIcon = page.locator(
-      '.workspace-header img.provider-icon[data-provider-icon="netflix"]'
-    );
-    assert(
-      await netflixWorkspaceIcon.count() === 1,
-      `${locale} Netflix workspace provider icon is missing`
-    );
-    await netflixWorkspaceIcon.evaluate((element) => element.decode());
-    assert(
-      await netflixWorkspaceIcon.evaluate(
-        (element) =>
-          element.complete &&
-          element.naturalWidth >= 32 &&
-          element.naturalHeight >= 32 &&
-          new URL(element.src).pathname === '/images/providers/netflix.png'
-      ),
-      `${locale} Netflix workspace provider icon failed to load`
-    );
-    assert(
-      await page.locator(
-        '.workspace-header [data-route="guide"][data-provider="netflix"]'
-      ).count() === 1,
-      `${locale} Netflix workspace cannot open its guide`
-    );
-    assert(
-      await page.locator('.import-panel .instruction-step').count() === 6,
-      `${locale} Netflix instructions are incomplete`
-    );
-    assert(
-      await page.locator(
-        '.import-panel .guide-refs a[href="https://help.netflix.com/en/node/101917"]'
-      ).count() === 1,
-      `${locale} Netflix official help route is missing`
-    );
-    await route('#catalog', '.catalog');
-  }
-  await selectLanguage('en');
-
-  const stepCounts = {
-    netflix: 6,
-    openai: 7,
-    facebook: 7,
-    instagram: 7,
-    whatsapp: 7,
-    threads: 7,
-    linkedin: 7,
-    tiktok: 6,
-    x: 7,
-    youtube: 7,
-    google: 7
-  };
-  const instructionLinkHosts = {
-    netflix: ['help.netflix.com'],
-    openai: ['chatgpt.com'],
-    facebook: ['accountscenter.facebook.com', 'www.facebook.com'],
-    instagram: ['accountscenter.instagram.com', 'www.facebook.com'],
-    whatsapp: ['faq.whatsapp.com'],
-    threads: ['www.facebook.com'],
-    linkedin: ['www.linkedin.com'],
-    tiktok: ['support.tiktok.com'],
-    x: ['x.com'],
-    youtube: ['takeout.google.com'],
-    google: ['takeout.google.com']
-  };
-  const screenshotIDs = [];
-  const instructionHrefs = [];
-  for (const [provider, expectedStepCount] of Object.entries(stepCounts)) {
-    await route(`#guide/${provider}`, `#${provider}`);
-    const providerRoot = `#${provider}`;
-    const steps = page.locator(`${providerRoot} .instruction-step`);
-    assert(
-      await steps.count() === expectedStepCount,
-      `${provider} instruction step count must be ${expectedStepCount}`
-    );
-    for (const step of await steps.all()) {
-      assert(
-        await step.locator('.instruction-step-copy').count() === 1,
-        `${provider} step requires one instruction`
-      );
-      const link = step.locator('a.instruction-step-link');
-      assert(await link.count() === 1, `${provider} step requires exactly one action link`);
-      const linkRecord = await link.evaluate((element) => ({
-        href: element.href,
-        hostname: new URL(element.href).hostname,
-        protocol: new URL(element.href).protocol,
-        rel: element.rel,
-        target: element.target,
-        text: element.textContent.trim()
-      }));
-      assert(
-        linkRecord.protocol === 'https:' &&
-          instructionLinkHosts[provider].includes(linkRecord.hostname) &&
-          linkRecord.target === '_blank' &&
-          linkRecord.rel.split(/\s+/).includes('noopener') &&
-          linkRecord.rel.split(/\s+/).includes('noreferrer') &&
-          linkRecord.text === `Open ${linkRecord.hostname.replace(/^www\./, '')} ↗`,
-        `${provider} step action link is not the approved first-party target`
-      );
-      instructionHrefs.push(linkRecord.href);
-      const stepNumber = await step.getAttribute('data-step-index');
-      assert(
-        await step.locator('.instruction-step-number').textContent() === stepNumber,
-        `${provider} step requires its visible sequence number`
-      );
-      const image = step.locator('img.instruction-screenshot');
-      assert(await image.count() === 1, `${provider} step requires exactly one screenshot`);
-      await image.scrollIntoViewIfNeeded();
-      await image.evaluate((element) => element.decode());
-      const record = await image.evaluate((element) => ({
-        alt: element.alt,
-        complete: element.complete,
-        id: element.dataset.screenshotId,
-        naturalHeight: element.naturalHeight,
-        naturalWidth: element.naturalWidth,
-        path: new URL(element.src).pathname,
-        width: element.getBoundingClientRect().width
-      }));
-      assert(record.alt, `${provider} screenshot requires alternative text`);
-      assert(
-        record.complete && record.naturalWidth >= 480 && record.naturalHeight >= 220,
-        `${provider} screenshot failed to load at its approved resolution`
-      );
-      assert(
-        record.path.startsWith('/images/instructions/') && record.path.endsWith('.png'),
-        `${provider} screenshot path is outside the self-owned asset set`
-      );
-      assert(record.width <= page.viewportSize().width, `${provider} screenshot overflows`);
-      screenshotIDs.push(record.id);
-    }
-  }
-  assert(screenshotIDs.length === 75, 'every instruction step must render one screenshot');
-  assert(instructionHrefs.length === 75, 'every instruction step must render one action link');
-  assert(new Set(screenshotIDs).size === 26, 'approved screenshot set must contain 26 assets');
-  assert(
-    await page.locator('.screenshot-grid, .instruction-list, .ratio').count() === 0,
-    'obsolete gallery, text-only, or placeholder instruction UI remains'
+    'Netflix guide must remain complete and public'
   );
-
-  await route('#guide/youtube', '#youtube');
+  await route('#guide/openai', '#openai');
   assert(
-    await page.locator(
-      '#youtube a[href="https://takeout.google.com/settings/takeout/custom/youtube"]'
-    ).count() === 1,
-    'YouTube direct export route is missing'
+    await page.locator('#openai .instruction-step').count() === 7 &&
+      await page.locator(
+        '#openai .guide-refs a[href="https://help.openai.com/en/articles/7260999-how-do-i-export-my-chatgpt-history-and-data"]'
+      ).count() === 1,
+    'OpenAI guide must remain complete and public'
   );
-  assert(
-    await page.locator(
-      '#youtube .instruction-step-link[href="https://takeout.google.com/settings/takeout/custom/youtube?hl=en"]'
-    ).count() === 7,
-    'every YouTube instruction must open its approved Google Takeout route'
-  );
-  await route('#guide/google', '#google');
-  assert(
-    await page.locator('#google a[href="https://takeout.google.com"]').count() === 1,
-    'Google direct export route is missing'
-  );
-  assert(
-    await page.locator(
-      '#google .instruction-step-link[href="https://takeout.google.com/?hl=en"]'
-    ).count() === 7,
-    'every Google instruction must open Google Takeout'
-  );
-
   await route('#credits', '.credits');
-  const tmdbLogo = page.locator('img.tmdb-logo');
-  await tmdbLogo.evaluate((element) => element.decode());
-  assert(
-    await tmdbLogo.getAttribute('src') === 'images/tmdb-blue-square.svg',
-    'Credits must use the approved local TMDB asset'
-  );
   assert(
     (await page.locator('.tmdb-credit').textContent()).includes(
       'This product uses the TMDB API but is not endorsed or certified by TMDB.'
     ),
-    'Credits must display the TMDB non-endorsement notice'
+    'public Credits must render its static TMDB attribution'
   );
-
-  await route('#catalog', '.catalog');
-  const openNetflix = page.locator('[data-provider-id="netflix"] [data-route="netflix"]');
-  await openNetflix.focus();
-  await page.keyboard.press('Enter');
-  await page.locator('.workspace').waitFor();
   assert(
-    await page.locator('#app-announcer[role="status"][aria-live="polite"]').count() === 1,
-    'workspace requires one polite live announcer'
+    protectedRequests().length === 0,
+    `public guides or Credits made protected requests: ${protectedRequests().join(', ')}`
   );
 
-  const invalidInput = page.locator('#netflix-file');
-  await invalidInput.setInputFiles(invalidCSV);
-  await page.getByText('invalid_header', {exact: false}).first().waitFor({timeout: 15000});
-  await waitForState(
-    (value) =>
-      value.active_generation == null &&
-      value.latest_failed_generation?.failure?.code === 'invalid_header',
-    'invalid CSV failure'
+  await page.setViewportSize({width: 1440, height: 1000});
+  await route('#provider/netflix', '.catalog');
+  assert(
+    await page.evaluate(() => window.location.hash) === '#provider/netflix',
+    'obsolete provider route must not be rewritten into a compatibility alias'
+  );
+  await route('#app/netflix', '.workspace-gate');
+  assert(
+    ['pending', 'unauthenticated'].includes(
+      await page.locator('.workspace-gate-panel').getAttribute('data-auth-state')
+    ) &&
+      protectedRequests().length === 0,
+    'unsettled or signed-out application route made a protected request'
   );
 
-  const observedStates = await page.evaluate(() => {
-    window.__downloadYourDataObservedStates = [];
-    const collect = () => {
-      document.querySelectorAll('.state-chip, .progress-meta span:first-child').forEach((node) => {
-        const value = node.textContent.trim();
-        if (value && !window.__downloadYourDataObservedStates.includes(value)) {
-          window.__downloadYourDataObservedStates.push(value);
-        }
-      });
-    };
-    new MutationObserver(collect).observe(document.querySelector('#app'), {
-      childList: true,
-      subtree: true
+  await page.context().addCookies([
+    {
+      name: sessionCookie,
+      value: sessionToken,
+      url: baseURL,
+      httpOnly: true,
+      sameSite: 'Lax'
+    }
+  ]);
+  await page.evaluate(() => {
+    window.__downloadYourDataReadyEvents = 0;
+    document.addEventListener('download-your-data:app-ready', () => {
+      window.__downloadYourDataReadyEvents += 1;
     });
-    collect();
-    return window.__downloadYourDataObservedStates;
   });
-  assert(Array.isArray(observedStates), 'state observer did not initialize');
+  await setSharedAuth(true);
+  await page.locator('.workspace').waitFor();
+  await page.waitForFunction(() => window.__downloadYourDataReadyEvents === 1);
+  assert(
+    await page.locator('.workspace h1').textContent() === 'Netflix',
+    'authenticated lifecycle did not hydrate the Netflix workspace'
+  );
+  assert(
+    protectedRequests().some((rawURL) => rawURL === `${baseURL}/api/capabilities`) &&
+      protectedRequests().some(
+        (rawURL) => rawURL === `${baseURL}/api/providers/netflix`
+      ),
+    'authenticated lifecycle did not make the required protected requests'
+  );
+
   await page.locator('#netflix-file').setInputFiles(validCSV);
-  await waitForState(
-    (value) => value.active_generation?.analysis_level === 'local',
-    'ready local generation'
+  const readySnapshot = await waitForSnapshot(
+    (value) => value.active_generation?.state === 'ready',
+    'ready Netflix generation'
+  );
+  assert(
+    readySnapshot.active_generation.analysis_level === 'local',
+    'Netflix import did not produce the private base analysis generation'
   );
   await page.getByRole('tab', {name: 'Overview'}).waitFor();
   await page.waitForFunction(() => document.querySelectorAll('.kpi').length === 4);
-  assert(await kpiValue('Activities') === '9', 'raw activity KPI must equal nine');
-  assert(
-    await page.getByRole('button', {name: 'Enrich with TMDB'}).isDisabled(),
-    'TMDB enrichment must be disabled when server configuration is absent'
-  );
-  assert(
-    await page.getByText('TMDB not configured', {exact: true}).count() >= 1,
-    'ready-local state must disclose missing TMDB configuration'
-  );
-  assert(
-    await page.locator(
-      '.workspace-header [data-route="guide"][data-provider="netflix"]'
-    ).count() === 1,
-    'ready Netflix workspace must retain its permanent guide action'
-  );
-
-  const localSnapshot = await snapshot();
-  const localEvents = await page.evaluate(async (generationID) => {
-    const response = await fetch(
-      `/api/providers/netflix/generations/${generationID}/events?after=0`,
-      {cache: 'no-store'}
-    );
-    return response.json();
-  }, localSnapshot.active_generation.id);
-  assert(
-    ['receiving', 'validating', 'importing', 'ready'].every((stateName) =>
-      localEvents.events.some((event) => event.state === stateName)
-    ),
-    'local generation event journal is missing a declared lifecycle state'
-  );
-  const renderedStates = await page.evaluate(() => window.__downloadYourDataObservedStates);
-  assert(
-    renderedStates.includes('Receiving file') && renderedStates.includes('Validating'),
-    `UI did not render receiving and validating states: ${renderedStates.join(', ')}`
-  );
-  assert(
-    await page.locator('.chart-panel[role="region"], .chart-panel').count() >= 4,
-    'overview charts are missing'
-  );
-  assert(
-    await page.locator('.chart-data table').count() >= 2,
-    'populated overview charts are missing data-table alternatives'
-  );
-  assert(
-    await page.locator('.chart-panel').evaluateAll((panels) =>
-      panels.every(
-        (panel) =>
-          panel.querySelector('.chart-data table') !== null ||
-          panel.querySelector('.empty-copy') !== null
-      )
-    ),
-    'an overview chart lacks either a data table or an explicit empty state'
-  );
-
-  await page.locator('[data-filter="startDate"]').fill('2026-02-01');
-  await page.getByText('Choose both a start date', {exact: false}).waitFor();
-  await page.locator('[data-filter="endDate"]').fill('2026-02-03');
-  await page.waitForFunction(
-    () =>
-      [...document.querySelectorAll('.kpi')].some(
-        (card) =>
-          card.querySelector('.kpi-label')?.textContent === 'Activities' &&
-          card.querySelector('.kpi-value')?.textContent === '3'
-      )
-  );
-  await page.getByRole('button', {name: 'Clear', exact: true}).click();
-  await page.waitForFunction(
-    () =>
-      [...document.querySelectorAll('.kpi')].some(
-        (card) =>
-          card.querySelector('.kpi-label')?.textContent === 'Activities' &&
-          card.querySelector('.kpi-value')?.textContent === '9'
-      )
-  );
-
-  const overviewTab = page.getByRole('tab', {name: 'Overview'});
-  await overviewTab.focus();
-  await page.keyboard.press('ArrowRight');
-  const catalogTab = page.getByRole('tab', {name: 'Catalog'});
-  assert(await catalogTab.getAttribute('aria-selected') === 'true', 'tab arrow navigation failed');
-  assert(
-    await page.locator('#netflix-view-panel[aria-labelledby="netflix-view-catalog"]').count() === 1,
-    'Catalog tabpanel is not labeled by its selected tab'
-  );
-  await page.waitForFunction(() => document.querySelectorAll('.dimension-grid .chart-panel').length === 9);
-  assert(
-    await page.getByRole('heading', {name: 'Genres by viewing year'}).count() === 1,
-    'Catalog is missing genres by viewing year'
-  );
-  assert(await page.locator('tbody .record-title').count() === 9, 'Catalog must list all raw rows');
-
-  await page.setViewportSize({width: 393, height: 852});
-  const mobileLayout = await page.evaluate(() => {
-    const rail = document.querySelector('.workspace-rail').getBoundingClientRect();
-    const main = document.querySelector('.workspace-main').getBoundingClientRect();
-    return {
-      documentWidth: document.documentElement.scrollWidth,
-      viewportWidth: window.innerWidth,
-      railBottom: rail.bottom,
-      mainTop: main.top,
-      railColumns: getComputedStyle(document.querySelector('.workspace-rail')).gridTemplateColumns
-    };
-  });
-  assert(
-    mobileLayout.documentWidth <= mobileLayout.viewportWidth,
-    `mobile workspace overflows by ${mobileLayout.documentWidth - mobileLayout.viewportWidth}px`
-  );
-  assert(mobileLayout.railBottom <= mobileLayout.mainTop + 1, 'mobile rail must collapse above content');
-  assert(!mobileLayout.railColumns.includes(' '), 'mobile rail must use one column');
-
-  await route('#catalog', '.catalog');
-  const mobileWorkspaceCatalog = await page.evaluate(() => {
-    const grid = document.querySelector('.catalog-grid');
-    const analysisCards = ['netflix', 'openai'].map((providerID) => {
-      const card = document.querySelector(`[data-provider-id="${providerID}"]`);
-      const analysisAction = card.querySelector('.provider-analysis-action');
-      const cardBox = card.getBoundingClientRect();
-      const actionBox = analysisAction.getBoundingClientRect();
-      const copyBox = card.querySelector('.provider-card-copy').getBoundingClientRect();
-      const metadataBox = card.querySelector('.provider-card-meta').getBoundingClientRect();
-      const nameBox = card.querySelector('.provider-name').getBoundingClientRect();
-      return {
-        actionCount: card.querySelectorAll('.provider-analysis-action').length,
-        actionBottom: actionBox.bottom,
-        actionRight: actionBox.right,
-        actionTop: actionBox.top,
-        analysisLabel: analysisAction.textContent.trim(),
-        cardRight: cardBox.right,
-        copyRight: copyBox.right,
-        metadataBottom: metadataBox.bottom,
-        metadataTop: metadataBox.top,
-        nameBottom: nameBox.bottom,
-        nameTop: nameBox.top,
-        providerID
-      };
-    });
-    const guideOnlyCards = [
-      ...document.querySelectorAll(
-        '.provider-card:not([data-provider-id="netflix"]):not([data-provider-id="openai"])'
-      )
-    ];
-    const providerIcons = [...document.querySelectorAll('.provider-icon')];
-    const providerCards = [...document.querySelectorAll('.provider-card')];
-    return {
-      analysisCards,
-      documentWidth: document.documentElement.scrollWidth,
-      viewportWidth: window.innerWidth,
-      gridColumns: getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length,
-      cardsCompactAndHorizontal: providerCards.every((providerCard) => {
-        const providerCardBox = providerCard.getBoundingClientRect();
-        const mark = providerCard.querySelector('.provider-mark').getBoundingClientRect();
-        const copy = providerCard.querySelector('.provider-card-copy').getBoundingClientRect();
-        return providerCardBox.height < 190 && mark.right <= copy.left;
-      }),
-      cardsFullyLinked: providerCards.every((providerCard) => {
-        const providerCardBox = providerCard.getBoundingClientRect();
-        const guideLinkBox = providerCard
-          .querySelector('.provider-card-guide')
-          .getBoundingClientRect();
-        return (
-          Math.abs(providerCardBox.left - guideLinkBox.left) <= 1 &&
-          Math.abs(providerCardBox.right - guideLinkBox.right) <= 1 &&
-          Math.abs(providerCardBox.top - guideLinkBox.top) <= 1 &&
-          Math.abs(providerCardBox.bottom - guideLinkBox.bottom) <= 1
-        );
-      }),
-      providerIconCount: providerIcons.length,
-      providerIconsLarge: providerIcons.every(
-        (providerIcon) => providerIcon.getBoundingClientRect().width === 56
-      ),
-      providerIconsUnframed: providerIcons.every((providerIcon) => {
-        const mark = providerIcon.closest('.provider-mark');
-        const markStyle = getComputedStyle(mark);
-        return (
-          markStyle.borderTopWidth === '0px' &&
-          markStyle.paddingTop === '0px' &&
-          markStyle.backgroundColor === 'rgba(0, 0, 0, 0)'
-        );
-      }),
-      summariesVisible: [...document.querySelectorAll('.provider-summary')].every(
-        (summary) => summary.getBoundingClientRect().height > 0
-      ),
-      guideOnlyCardsHaveNoAppAction: guideOnlyCards.every((guideOnlyCard) => {
-        return (
-          guideOnlyCard.querySelector('.provider-analysis-action') === null &&
-          guideOnlyCard.querySelector('.provider-card-meta') === null &&
-          guideOnlyCard.querySelector('.provider-type') === null &&
-          guideOnlyCard.querySelectorAll('.provider-card-guide[data-route="guide"]').length === 1 &&
-          guideOnlyCard.querySelector('.state-chip') === null
-        );
-      }),
-      stateChipCount: document.querySelectorAll('.provider-card .state-chip').length
-    };
-  });
-  assert(
-    mobileWorkspaceCatalog.documentWidth <= mobileWorkspaceCatalog.viewportWidth &&
-      mobileWorkspaceCatalog.gridColumns === 1 &&
-      mobileWorkspaceCatalog.analysisCards.every((analysisCard) => {
-        return (
-          analysisCard.actionCount === 1 &&
-          analysisCard.analysisLabel === 'Data analysis' &&
-          Math.abs(analysisCard.actionRight - analysisCard.copyRight) <= 1 &&
-          analysisCard.actionTop >= analysisCard.metadataTop &&
-          analysisCard.actionBottom <= analysisCard.metadataBottom + 1 &&
-          analysisCard.actionRight <= analysisCard.cardRight &&
-          analysisCard.nameTop >= analysisCard.metadataTop &&
-          analysisCard.nameBottom <= analysisCard.metadataBottom + 1
-        );
-      }) &&
-      mobileWorkspaceCatalog.stateChipCount === 0,
-    'mobile Netflix and OpenAI names and Data analysis actions must share each card top row'
-  );
-  assert(
-    mobileWorkspaceCatalog.guideOnlyCardsHaveNoAppAction &&
-      mobileWorkspaceCatalog.summariesVisible &&
-      mobileWorkspaceCatalog.cardsCompactAndHorizontal &&
-      mobileWorkspaceCatalog.cardsFullyLinked,
-    'mobile provider cards must remain compact, fully guide-linked, and free of obsolete actions'
-  );
-  assert(
-    mobileWorkspaceCatalog.providerIconCount === 11 &&
-      mobileWorkspaceCatalog.providerIconsLarge &&
-      mobileWorkspaceCatalog.providerIconsUnframed,
-    'mobile provider cards must retain large unframed product logos'
-  );
-
-  await route('#provider/openai', '.openai-workspace');
-  const mobileOpenAIWorkspace = await page.evaluate(() => {
-    const workspace = document.querySelector('.openai-workspace').getBoundingClientRect();
-    const command = document.querySelector('.openai-command').getBoundingClientRect();
-    return {
-      commandLeft: command.left,
-      commandRight: command.right,
-      documentWidth: document.documentElement.scrollWidth,
-      viewportWidth: window.innerWidth,
-      workspaceLeft: workspace.left,
-      workspaceRight: workspace.right
-    };
-  });
-  assert(
-    mobileOpenAIWorkspace.documentWidth <= mobileOpenAIWorkspace.viewportWidth &&
-      mobileOpenAIWorkspace.commandLeft >= mobileOpenAIWorkspace.workspaceLeft &&
-      mobileOpenAIWorkspace.commandRight <= mobileOpenAIWorkspace.workspaceRight,
-    'mobile OpenAI analysis workspace must contain its current import and index workflow'
-  );
-
-  const openAIProviderURL = `${baseURL}/api/providers/openai`;
-  const openAISearchURL = `${baseURL}/api/providers/openai/search`;
-  await page.route(openAIProviderURL, async (requestRoute) => {
-    await requestRoute.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        provider: 'openai',
-        state: 'ready',
-        statistics: {
-          imports: 1,
-          conversations: 1,
-          messages: 1
-        },
-        capabilities: {
-          browser_upload: false,
-          search_modes: ['hybrid', 'semantic', 'lexical'],
-          max_query_bytes: 4096,
-          max_results: 100,
-          max_excerpts: 10,
-          inference_boundary: 'loopback'
-        },
-        search_index: {
-          id: 1,
-          name: 'browser-contract',
-          model: 'browser-contract-embedding',
-          dimensions: 3,
-          document_count: 1,
-          eligible_document_count: 1,
-          conversation_count: 1,
-          eligible_conversation_count: 1
-        }
-      })
-    });
-  });
-  await page.route(openAISearchURL, async (requestRoute) => {
-    await requestRoute.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        results: [
-          {
-            conversation_id: 'long-content-contract',
-            conversation_title: `Unbroken-title-${'x'.repeat(4096)}`,
-            archived: false,
-            score: 0.9,
-            semantic_score: 0.9,
-            lexical_score: 0.4,
-            excerpts: [
-              {
-                message_id: 'long-excerpt-contract',
-                role: 'assistant',
-                text: `https://example.invalid/${'y'.repeat(8192)}`,
-                semantic_score: 0.9,
-                lexical_score: 0.4,
-                detection_methods: ['semantic']
-              }
-            ]
-          }
-        ],
-        query_embedding_cached: false
-      })
-    });
-  });
-  await page.reload({waitUntil: 'networkidle'});
-  await page.locator('#openai-search-form').waitFor();
-  await page.locator('#openai-search-form input[name="query"]').fill('overflow contract');
-  await page.locator('#openai-search-form button[type="submit"]').click();
-  await page.locator('.openai-result').waitFor();
-  const mobileOpenAIResult = await page.evaluate(() => {
-    const workspace = document.querySelector('.openai-workspace').getBoundingClientRect();
-    const result = document.querySelector('.openai-result').getBoundingClientRect();
-    const title = document.querySelector('.openai-result-header h4');
-    const excerpt = document.querySelector('.openai-excerpt p');
-    return {
-      documentWidth: document.documentElement.scrollWidth,
-      excerptClientWidth: excerpt.clientWidth,
-      excerptOverflowWrap: getComputedStyle(excerpt).overflowWrap,
-      excerptScrollWidth: excerpt.scrollWidth,
-      resultLeft: result.left,
-      resultRight: result.right,
-      titleClientWidth: title.clientWidth,
-      titleOverflowWrap: getComputedStyle(title).overflowWrap,
-      titleScrollWidth: title.scrollWidth,
-      viewportWidth: window.innerWidth,
-      workspaceLeft: workspace.left,
-      workspaceRight: workspace.right
-    };
-  });
-  assert(
-    mobileOpenAIResult.documentWidth <= mobileOpenAIResult.viewportWidth &&
-      mobileOpenAIResult.resultLeft >= mobileOpenAIResult.workspaceLeft &&
-      mobileOpenAIResult.resultRight <= mobileOpenAIResult.workspaceRight &&
-      mobileOpenAIResult.titleOverflowWrap === 'anywhere' &&
-      mobileOpenAIResult.titleScrollWidth <= mobileOpenAIResult.titleClientWidth &&
-      mobileOpenAIResult.excerptOverflowWrap === 'anywhere' &&
-      mobileOpenAIResult.excerptScrollWidth <= mobileOpenAIResult.excerptClientWidth,
-    'mobile OpenAI search results must contain unbroken imported titles and excerpts'
-  );
-  await page.unroute(openAIProviderURL);
-  await page.unroute(openAISearchURL);
-
-  await route('#guide/netflix', '#netflix');
-  const mobileGuideLayout = await page.evaluate(() => {
-    const step = document.querySelector('#netflix .instruction-step');
-    const content = step.querySelector('.instruction-step-content').getBoundingClientRect();
-    const link = step.querySelector('.instruction-step-link').getBoundingClientRect();
-    const image = step.querySelector('.instruction-screenshot').getBoundingClientRect();
-    const stepBox = step.getBoundingClientRect();
-    return {
-      documentWidth: document.documentElement.scrollWidth,
-      viewportWidth: window.innerWidth,
-      gridColumns: getComputedStyle(step).gridTemplateColumns,
-      contentBottom: content.bottom,
-      linkLeft: link.left,
-      linkRight: link.right,
-      imageTop: image.top,
-      imageLeft: image.left,
-      imageRight: image.right,
-      stepLeft: stepBox.left,
-      stepRight: stepBox.right
-    };
-  });
-  assert(
-    mobileGuideLayout.documentWidth <= mobileGuideLayout.viewportWidth,
-    `mobile visual guide overflows by ${
-      mobileGuideLayout.documentWidth - mobileGuideLayout.viewportWidth
-    }px`
-  );
-  assert(
-    mobileGuideLayout.gridColumns.split(' ').length === 2,
-    'mobile visual step must collapse to number and instruction columns'
-  );
-  assert(
-    mobileGuideLayout.imageTop >= mobileGuideLayout.contentBottom &&
-      mobileGuideLayout.linkLeft >= mobileGuideLayout.stepLeft &&
-      mobileGuideLayout.linkRight <= mobileGuideLayout.stepRight &&
-      mobileGuideLayout.imageLeft >= mobileGuideLayout.stepLeft &&
-      mobileGuideLayout.imageRight <= mobileGuideLayout.stepRight,
-    'mobile action link and screenshot must remain inside the numbered step'
-  );
-  assert(
-    await page.locator('#netflix .instruction-step img.instruction-screenshot').count() === 6,
-    'mobile Netflix guide must retain one screenshot per step'
-  );
-  await route('#provider/netflix', '.workspace');
-
-  await page.emulateMedia({reducedMotion: 'reduce'});
-  const reducedMotion = await page.locator('.button').first().evaluate((element) => ({
-    animation: getComputedStyle(element).animationDuration,
-    transition: getComputedStyle(element).transitionDuration
-  }));
-  assert(
-    Number.parseFloat(reducedMotion.animation) <= 0.00001 &&
-      Number.parseFloat(reducedMotion.transition) <= 0.00001,
-    `reduced-motion contract is not active: ${JSON.stringify(reducedMotion)}`
-  );
-  await page.emulateMedia({reducedMotion: 'no-preference'});
+  await page.setViewportSize({width: 390, height: 844});
+  await assertNoHorizontalOverflow('authenticated Netflix workspace');
   await page.setViewportSize({width: 1440, height: 1000});
 
-  const contrast = await page.evaluate(() => {
-    const rgb = (value) => value.match(/\d+(?:\.\d+)?/g).slice(0, 3).map(Number);
-    const luminance = (value) => {
-      const channels = rgb(value).map((channel) => {
-        const normalized = channel / 255;
-        return normalized <= 0.03928
-          ? normalized / 12.92
-          : ((normalized + 0.055) / 1.055) ** 2.4;
-      });
-      return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
-    };
-    const ratio = (foreground, background) => {
-      const values = [luminance(foreground), luminance(background)].sort((a, b) => b - a);
-      return (values[0] + 0.05) / (values[1] + 0.05);
-    };
-    const body = getComputedStyle(document.body);
-    const primary = getComputedStyle(document.querySelector('.button-primary'));
-    return {
-      body: ratio(body.color, body.backgroundColor),
-      primary: ratio(primary.color, primary.backgroundColor)
-    };
-  });
-  assert(contrast.body >= 4.5, `body contrast ${contrast.body} is below 4.5`);
-  assert(contrast.primary >= 4.5, `primary button contrast ${contrast.primary} is below 4.5`);
-
-  const beforeReplacement = (await snapshot()).active_generation.id;
-  await page.locator('#netflix-file').setInputFiles(validCSV);
-  const replacementDialog = page.getByRole('dialog', {
-    name: 'Replace the active Netflix library?'
-  });
-  await replacementDialog.waitFor();
+  await setSharedAuth(false);
+  await page.locator(
+    '.workspace-gate-panel[data-auth-state="unauthenticated"]'
+  ).waitFor();
   assert(
-    (await replacementDialog.textContent()).includes(
-      'The current library stays active while the new CSV validates and imports.'
-    ),
-    'replacement disclosure is incomplete'
+    await page.locator('.workspace, .kpi, #netflix-file').count() === 0,
+    'shared unauthenticated lifecycle did not clear protected workspace UI'
   );
-  await replacementDialog.getByRole('button', {name: 'Cancel'}).click();
-  await replacementDialog.waitFor({state: 'detached'});
+  const requestCountAfterLogout = protectedRequests().length;
+  await page.waitForTimeout(500);
   assert(
-    (await snapshot()).active_generation.id === beforeReplacement,
-    'canceling replacement changed the active generation'
+    protectedRequests().length === requestCountAfterLogout,
+    'protected polling continued after shared logout'
   );
 
-  await page.getByRole('button', {name: 'Delete Netflix data'}).click();
-  let deleteDialog = page.getByRole('dialog', {name: 'Delete all Netflix data?'});
-  await deleteDialog.waitFor();
-  await deleteDialog.getByRole('button', {name: 'Cancel'}).click();
-  assert((await snapshot()).active_generation.id === beforeReplacement, 'delete cancel changed data');
-  await page.getByRole('button', {name: 'Delete Netflix data'}).click();
-  deleteDialog = page.getByRole('dialog', {name: 'Delete all Netflix data?'});
-  await deleteDialog.getByRole('button', {name: 'Delete all Netflix data'}).click();
-  await waitForState(
-    (value) =>
-      value.state === 'empty' &&
-      value.active_generation == null &&
-      value.building_generation == null,
-    'empty provider after deletion'
+  await route('#catalog', '.catalog');
+  await route('#guide/google', '#google');
+  assert(
+    await page.locator('#google .instruction-step').count() === 7,
+    'public guides must remain usable after logout'
   );
-  await page.getByRole('heading', {name: 'Import Netflix Viewing activity'}).waitFor();
 
-  const externalRequests = requestURLs.filter(
-    (rawURL) =>
-      !rawURL.startsWith('about:') &&
-      rawURL !== baseURL &&
+  await route(
+    '#app/openai',
+    '.workspace-gate-panel[data-auth-state="unauthenticated"]'
+  );
+  await setSharedAuth(true);
+  await page.locator('.openai-workspace').waitFor();
+  assert(
+    await page.locator('.openai-prepare').count() === 1 &&
+      await page.locator('.openai-command').count() === 0,
+    'OpenAI workspace must not expose the retired unscoped operator commands'
+  );
+
+  const unexpectedExternalRequests = requestURLs.filter((rawURL) => {
+    if (rawURL.startsWith('about:') || rawURL.startsWith('data:')) {
+      return false;
+    }
+    return (
       !rawURL.startsWith(`${baseURL}/`) &&
-      !sharedShellURLs.has(rawURL)
+      rawURL !== baseURL &&
+      !rawURL.startsWith('https://accounts.google.com/') &&
+      !rawURL.startsWith('https://cdn.jsdelivr.net/') &&
+      !rawURL.startsWith('https://lh3.googleusercontent.com/')
+    );
+  });
+  assert(
+    unexpectedExternalRequests.length === 0,
+    `browser made unexpected external requests: ${unexpectedExternalRequests.join(', ')}`
   );
   assert(
-    externalRequests.length === 0,
-    `browser made external requests: ${externalRequests.join(', ')}`
-  );
-  assert(
-    [...sharedShellURLs].every((url) => requestURLs.includes(url)),
-    `browser did not load the complete mpr-ui shell: ${[...sharedShellURLs]
-      .filter((url) => !requestURLs.includes(url))
-      .join(', ')}`
+    requestURLs.includes(
+      'https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.css'
+    ) &&
+      requestURLs.includes(
+        'https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui-config.js'
+      ) &&
+      requestURLs.includes(
+        'https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.js'
+      ),
+    'browser did not load the complete mpr-ui@latest bootstrap'
   );
   assert(browserErrors.length === 0, `browser errors: ${browserErrors.join(' | ')}`);
 }

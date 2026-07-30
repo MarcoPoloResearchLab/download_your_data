@@ -2,12 +2,10 @@ GO ?= go
 PLAYWRIGHT_CLI_VERSION ?= 0.1.17
 TYPESCRIPT_VERSION ?= 5.9.2
 CGO_ENABLED ?= 1
-RELEASE_TOOL_DIR := $(abspath $(CURDIR)/scripts/release)
-override PAGES_URL := https://dyd.mprlab.com/
 
 export CGO_ENABLED
 
-.PHONY: build check-frontend ci deploy deploy-dry-run down eval-netflix-matcher fmt fmt-check lint pages-deploy publish publish-release release release-artifacts smoke-command smoke-netflix-command test test-browser test-local-lifecycle test-release-artifact test-release-workflow up validate-instruction-screenshots validate-provider-icons
+.PHONY: build check-frontend ci deploy deploy-dry-run down eval-netflix-matcher fmt fmt-check lint publish release test test-browser test-local-lifecycle up validate-instruction-screenshots validate-provider-icons
 
 build:
 	@mkdir -p build
@@ -34,7 +32,8 @@ lint:
 check-frontend:
 	npx --yes --package "typescript@$(TYPESCRIPT_VERSION)" tsc \
 		--allowJs --checkJs --noEmit --target ES2023 --module ES2022 \
-		--moduleResolution bundler --lib ES2023,DOM app.js api.js charts.js
+		--moduleResolution bundler --lib ES2023,DOM \
+		auth-lifecycle.js app.js api.js charts.js
 	node --check scripts/browser-smoke.playwright.js
 	node --check scripts/netflix-browser-workspace.playwright.js
 
@@ -59,34 +58,8 @@ validate-instruction-screenshots:
 validate-provider-icons:
 	$(GO) test . -run '^TestProviderIconContract$$' -count=1
 
-smoke-command: build
-	./scripts/command-smoke.sh ./build/download-your-data
+release publish deploy deploy-dry-run:
+	@echo "blocked: freeze the exact authenticated web production profile before $@" >&2
+	@exit 1
 
-smoke-netflix-command:
-	$(GO) test . -run '^TestNetflixOperatorCommandSmokeCoversInspectEnrichmentCacheAndExport$$' -count=1 -v
-
-test-release-workflow:
-	./scripts/release/test_release_workflow.sh
-
-test-release-artifact:
-	PLAYWRIGHT_CLI_VERSION=$(PLAYWRIGHT_CLI_VERSION) ./scripts/release/test_application_artifact.sh
-
-release:
-	@"$(RELEASE_TOOL_DIR)/prepare_release.sh"
-
-release-artifacts:
-	@python3 "$(RELEASE_TOOL_DIR)/prepare_artifacts.py"
-
-publish-release:
-	@"$(RELEASE_TOOL_DIR)/publish_release.sh"
-
-publish: publish-release
-
-pages-deploy:
-	@"$(RELEASE_TOOL_DIR)/deploy_pages_artifact.sh" --branch gh-pages --url "$(PAGES_URL)"
-
-deploy: pages-deploy
-
-deploy-dry-run: test-release-workflow test-release-artifact
-
-ci: fmt-check lint check-frontend eval-netflix-matcher test test-local-lifecycle smoke-netflix-command validate-instruction-screenshots validate-provider-icons test-browser smoke-command test-release-workflow test-release-artifact
+ci: fmt-check lint check-frontend eval-netflix-matcher test test-local-lifecycle validate-instruction-screenshots validate-provider-icons test-browser

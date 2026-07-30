@@ -10,10 +10,16 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/authentication"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix/tmdb"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/runtimeconfig"
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/tyemirov/tauth/pkg/sessionvalidator"
 )
+
+const defaultTestUserID = "user-default"
 
 func TestApplicationHTTPContract(testContext *testing.T) {
 	config := testRuntimeConfig(testContext)
@@ -25,10 +31,10 @@ func TestApplicationHTTPContract(testContext *testing.T) {
 		testContext.Fatalf("create application handler: %v", handlerError)
 	}
 	defer handler.Close()
-	server := httptest.NewServer(handler)
+	server := newAuthenticatedTestServer(testContext, config, handler, defaultTestUserID)
 	defer server.Close()
 
-	testContext.Run("reports local readiness", func(testContext *testing.T) {
+	testContext.Run("reports readiness", func(testContext *testing.T) {
 		response, requestError := http.Get(server.URL + healthPath)
 		if requestError != nil {
 			testContext.Fatalf("request health endpoint: %v", requestError)
@@ -41,7 +47,7 @@ func TestApplicationHTTPContract(testContext *testing.T) {
 		if decodeError := json.NewDecoder(response.Body).Decode(&payload); decodeError != nil {
 			testContext.Fatalf("decode health response: %v", decodeError)
 		}
-		if payload.Status != healthStatusReady || !payload.LocalOnly {
+		if payload.Status != healthStatusReady {
 			testContext.Fatalf("unexpected health response: %+v", payload)
 		}
 		if response.Header.Get("Cache-Control") != "no-store" {
@@ -75,8 +81,7 @@ func TestApplicationHTTPContract(testContext *testing.T) {
 		if decodeError := json.Unmarshal(encodedPayload, &payload); decodeError != nil {
 			testContext.Fatalf("decode capabilities response: %v", decodeError)
 		}
-		if !payload.LocalOnly ||
-			!payload.DataRoot.Ready ||
+		if !payload.DataRoot.Ready ||
 			payload.CSRFToken != config.CSRFToken() ||
 			payload.Inference.Boundary != runtimeconfig.InferenceBoundaryLoopback ||
 			payload.Inference.Readiness != inferenceNotChecked ||
@@ -113,8 +118,45 @@ func TestApplicationHTTPContract(testContext *testing.T) {
 		if !strings.Contains(string(body), "Download Your Data") {
 			testContext.Fatalf("application shell is missing the product title")
 		}
-		if response.Header.Get("Content-Security-Policy") != contentSecurityPolicy {
+		if !strings.Contains(
+			string(body),
+			`data-api-origin="`+config.Authentication().APIOrigin()+`"`,
+		) ||
+			strings.Contains(string(body), apiOriginMarker) {
+			testContext.Fatalf(
+				"application shell does not contain the configured API origin",
+			)
+		}
+		if response.Header.Get("Content-Security-Policy") != buildContentSecurityPolicy(config) {
 			testContext.Fatalf("application response is missing the canonical content security policy")
+		}
+	})
+
+	testContext.Run("serves only browser-safe shared auth configuration", func(testContext *testing.T) {
+		response, requestError := http.Get(server.URL + uiConfigPath)
+		if requestError != nil {
+			testContext.Fatalf("request browser configuration: %v", requestError)
+		}
+		defer response.Body.Close()
+		encodedConfig, readError := io.ReadAll(response.Body)
+		if readError != nil {
+			testContext.Fatalf("read browser configuration: %v", readError)
+		}
+		configText := string(encodedConfig)
+		if response.StatusCode != http.StatusOK ||
+			!strings.Contains(configText, config.Authentication().PublicOrigin()) ||
+			!strings.Contains(configText, config.Authentication().TAuthURL()) ||
+			!strings.Contains(configText, config.Authentication().TenantID()) ||
+			!strings.Contains(configText, runtimeconfig.TAuthSessionPath) {
+			testContext.Fatalf("unexpected browser configuration: %s", configText)
+		}
+		if strings.Contains(
+			configText,
+			string(config.Authentication().SessionValidatorConfig().SigningKey),
+		) ||
+			strings.Contains(configText, config.Authentication().SessionCookieName()) ||
+			strings.Contains(configText, config.Authentication().RefreshCookieName()) {
+			testContext.Fatalf("browser configuration exposed backend session material")
 		}
 	})
 
@@ -148,6 +190,7 @@ func TestCapabilitiesExposeOnlyTMDBConfiguredState(testContext *testing.T) {
 		"http://127.0.0.1:8787"+capabilitiesPath,
 		nil,
 	)
+	request.AddCookie(testSessionCookie(testContext, config, defaultTestUserID))
 	response := httptest.NewRecorder()
 	handler.ServeHTTP(response, request)
 	if response.Code != http.StatusOK {
@@ -165,7 +208,7 @@ func TestCapabilitiesExposeOnlyTMDBConfiguredState(testContext *testing.T) {
 	}
 }
 
-func TestLocalRequestBoundaryRejectsInvalidHostOriginAndCSRF(testContext *testing.T) {
+func TestRequestBoundaryEnforcesExactCORSOriginAndCSRF(testContext *testing.T) {
 	config := testRuntimeConfig(testContext)
 	handler, handlerError := newApplicationHandler(
 		config,
@@ -179,48 +222,31 @@ func TestLocalRequestBoundaryRejectsInvalidHostOriginAndCSRF(testContext *testin
 	testCases := []struct {
 		name         string
 		method       string
-		host         string
 		origin       string
 		csrfToken    string
 		expectedCode string
 	}{
 		{
-			name:         "non-loopback host",
-			method:       http.MethodGet,
-			host:         "attacker.example",
-			expectedCode: "invalid_host",
-		},
-		{
-			name:         "ambiguous empty host port",
-			method:       http.MethodGet,
-			host:         "localhost:",
-			expectedCode: "invalid_host",
-		},
-		{
 			name:         "cross-origin read",
 			method:       http.MethodGet,
-			host:         "127.0.0.1:8787",
 			origin:       "https://attacker.example",
 			expectedCode: "invalid_origin",
 		},
 		{
 			name:         "mutation without origin",
 			method:       http.MethodPost,
-			host:         "127.0.0.1:8787",
 			expectedCode: "invalid_origin",
 		},
 		{
 			name:         "mutation without CSRF token",
 			method:       http.MethodPost,
-			host:         "127.0.0.1:8787",
-			origin:       "http://127.0.0.1:8787",
+			origin:       config.Authentication().PublicOrigin(),
 			expectedCode: "invalid_csrf_token",
 		},
 		{
 			name:         "mutation with wrong CSRF token",
 			method:       http.MethodDelete,
-			host:         "localhost:8787",
-			origin:       "http://localhost:8787",
+			origin:       config.Authentication().PublicOrigin(),
 			csrfToken:    "wrong-token",
 			expectedCode: "invalid_csrf_token",
 		},
@@ -230,9 +256,10 @@ func TestLocalRequestBoundaryRejectsInvalidHostOriginAndCSRF(testContext *testin
 			response := performBoundaryRequest(
 				handler,
 				testCase.method,
-				testCase.host,
 				testCase.origin,
 				testCase.csrfToken,
+				"",
+				"",
 			)
 			if response.Code != http.StatusForbidden {
 				testContext.Fatalf("status = %d; want %d", response.Code, http.StatusForbidden)
@@ -244,7 +271,8 @@ func TestLocalRequestBoundaryRejectsInvalidHostOriginAndCSRF(testContext *testin
 			if payload.Error.Code != testCase.expectedCode {
 				testContext.Fatalf("error code = %q; want %q", payload.Error.Code, testCase.expectedCode)
 			}
-			if response.Header().Get("Access-Control-Allow-Origin") != "" {
+			if testCase.origin != config.Authentication().PublicOrigin() &&
+				response.Header().Get("Access-Control-Allow-Origin") != "" {
 				testContext.Fatalf("rejected request must not enable CORS")
 			}
 		})
@@ -253,24 +281,36 @@ func TestLocalRequestBoundaryRejectsInvalidHostOriginAndCSRF(testContext *testin
 	acceptedResponse := performBoundaryRequest(
 		handler,
 		http.MethodPost,
-		"127.0.0.1:8787",
-		"http://127.0.0.1:8787",
+		config.Authentication().PublicOrigin(),
 		config.CSRFToken(),
+		"",
+		"",
 	)
-	if acceptedResponse.Code == http.StatusForbidden {
-		testContext.Fatalf("valid same-origin mutation was rejected: %s", acceptedResponse.Body.String())
-	}
-	defaultPortResponse := performBoundaryRequest(
-		handler,
-		http.MethodPost,
-		"localhost:080",
-		"http://localhost",
-		config.CSRFToken(),
-	)
-	if defaultPortResponse.Code == http.StatusForbidden {
+	if acceptedResponse.Code != http.StatusUnauthorized {
 		testContext.Fatalf(
-			"equivalent default-port origin was rejected: %s",
-			defaultPortResponse.Body.String(),
+			"valid edge request without a session status = %d; want %d: %s",
+			acceptedResponse.Code,
+			http.StatusUnauthorized,
+			acceptedResponse.Body.String(),
+		)
+	}
+	preflightResponse := performBoundaryRequest(
+		handler,
+		http.MethodOptions,
+		config.Authentication().PublicOrigin(),
+		"",
+		http.MethodPost,
+		"content-type, x-csrf-token",
+	)
+	if preflightResponse.Code != http.StatusNoContent ||
+		preflightResponse.Header().Get("Access-Control-Allow-Origin") !=
+			config.Authentication().PublicOrigin() ||
+		preflightResponse.Header().Get("Access-Control-Allow-Credentials") != "true" {
+		testContext.Fatalf(
+			"valid credentialed preflight failed: status=%d headers=%v body=%s",
+			preflightResponse.Code,
+			preflightResponse.Header(),
+			preflightResponse.Body.String(),
 		)
 	}
 }
@@ -278,17 +318,23 @@ func TestLocalRequestBoundaryRejectsInvalidHostOriginAndCSRF(testContext *testin
 func performBoundaryRequest(
 	handler http.Handler,
 	method string,
-	host string,
 	origin string,
 	csrfToken string,
+	preflightMethod string,
+	preflightHeaders string,
 ) *httptest.ResponseRecorder {
 	request := httptest.NewRequest(method, "http://127.0.0.1:8787/api/providers/netflix", nil)
-	request.Host = host
 	if origin != "" {
 		request.Header.Set("Origin", origin)
 	}
 	if csrfToken != "" {
 		request.Header.Set(csrfHeaderName, csrfToken)
+	}
+	if preflightMethod != "" {
+		request.Header.Set("Access-Control-Request-Method", preflightMethod)
+	}
+	if preflightHeaders != "" {
+		request.Header.Set("Access-Control-Request-Headers", preflightHeaders)
 	}
 	response := httptest.NewRecorder()
 	handler.ServeHTTP(response, request)
@@ -306,19 +352,109 @@ func loadTestRuntimeConfig(
 ) runtimeconfig.Config {
 	testContext.Helper()
 	dataDirectory := filepath.Join(testContext.TempDir(), "data")
-	environment := map[string]string{
-		runtimeconfig.DataDirectoryEnvironment: dataDirectory,
-	}
+	environment := testRuntimeEnvironment(dataDirectory)
 	for key, value := range additionalEnvironment {
 		environment[key] = value
 	}
 	config, configError := runtimeconfig.Load(
 		func(key string) string { return environment[key] },
-		testContext.TempDir(),
 		bytes.NewReader(bytes.Repeat([]byte{0x5a}, 32)),
 	)
 	if configError != nil {
 		testContext.Fatalf("load test runtime config: %v", configError)
 	}
 	return config
+}
+
+func testRuntimeEnvironment(dataDirectory string) map[string]string {
+	return map[string]string{
+		runtimeconfig.DataDirectoryEnvironment:      dataDirectory,
+		runtimeconfig.PublicOriginEnvironment:       "http://127.0.0.1:4173",
+		runtimeconfig.APIOriginEnvironment:          "http://127.0.0.1:8787",
+		runtimeconfig.TAuthURLEnvironment:           "http://127.0.0.1:8787",
+		runtimeconfig.TAuthTenantIDEnvironment:      "download-your-data-test",
+		runtimeconfig.TAuthJWTSigningKeyEnvironment: strings.Repeat("test-signing-key-", 2),
+		runtimeconfig.TAuthSessionCookieEnvironment: "app_session_dyd_test",
+		runtimeconfig.TAuthRefreshCookieEnvironment: "app_refresh_dyd_test",
+		runtimeconfig.GoogleClientIDEnvironment:     "test.apps.googleusercontent.com",
+	}
+}
+
+func newAuthenticatedTestServer(
+	testContext *testing.T,
+	config runtimeconfig.Config,
+	handler http.Handler,
+	userID string,
+) *httptest.Server {
+	testContext.Helper()
+	sessionCookie := testSessionCookie(testContext, config, userID)
+	server := httptest.NewServer(http.HandlerFunc(
+		func(responseWriter http.ResponseWriter, request *http.Request) {
+			request.AddCookie(sessionCookie)
+			handler.ServeHTTP(responseWriter, request)
+		},
+	))
+	testContext.Cleanup(server.Close)
+	return server
+}
+
+func testSessionCookie(
+	testContext *testing.T,
+	config runtimeconfig.Config,
+	userID string,
+) *http.Cookie {
+	testContext.Helper()
+	now := time.Now().UTC()
+	validatorConfig := config.Authentication().SessionValidatorConfig()
+	claims := sessionvalidator.Claims{
+		TenantID: config.Authentication().TenantID(),
+		UserID:   userID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    validatorConfig.Issuer,
+			Subject:   userID,
+			IssuedAt:  jwt.NewNumericDate(now.Add(-time.Minute)),
+			NotBefore: jwt.NewNumericDate(now.Add(-time.Minute)),
+			ExpiresAt: jwt.NewNumericDate(now.Add(time.Hour)),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signedToken, signingError := token.SignedString(validatorConfig.SigningKey)
+	if signingError != nil {
+		testContext.Fatalf("mint test TAuth session: %v", signingError)
+	}
+	return &http.Cookie{
+		Name:  config.Authentication().SessionCookieName(),
+		Value: signedToken,
+	}
+}
+
+func testAuthenticatedUser(
+	testContext *testing.T,
+	config runtimeconfig.Config,
+	userID string,
+) authentication.AuthenticatedUser {
+	testContext.Helper()
+	user, userError := authentication.NewAuthenticatedUser(
+		config.Authentication().TenantID(),
+		userID,
+	)
+	if userError != nil {
+		testContext.Fatalf("create test authenticated user: %v", userError)
+	}
+	return user
+}
+
+func testUserWorkspace(
+	testContext *testing.T,
+	config runtimeconfig.Config,
+	userID string,
+) runtimeconfig.UserWorkspace {
+	testContext.Helper()
+	workspace, workspaceError := config.UserWorkspace(
+		testAuthenticatedUser(testContext, config, userID),
+	)
+	if workspaceError != nil {
+		testContext.Fatalf("resolve test user workspace: %v", workspaceError)
+	}
+	return workspace
 }

@@ -1,15 +1,17 @@
 # Deployment contract
 
-This repository owns two deliberately separate surfaces:
+Download Your Data is now one split web product:
 
-1. The product is one macOS arm64 executable. It serves its embedded workspace
-   and API on loopback and keeps personal data in the local private data root.
-2. The public deployment is a static GitHub Pages download and documentation
-   page. It never serves the product API and receives no personal data.
+1. A static public catalog, provider-guide, Credits, and application bundle.
+2. A protected Go API whose provider resources are owned by one authenticated
+   TAuth user.
+
+The previous macOS application archive and GitHub Pages download landing page
+are retired. They must not be released or deployed again.
 
 ## Lifecycle
 
-The only release-operator sequence is:
+The repository retains the canonical lifecycle entrypoints:
 
 ```bash
 make release
@@ -17,51 +19,45 @@ make publish
 make deploy
 ```
 
-`make release` runs the complete CI gate, builds the executable twice to prove
-determinism, packages the exact macOS arm64 bundle and Pages site, creates the
-checksum, prepares one CHANGELOG-only release commit and annotated tag, and
-seals every payload beneath `.git/mprlab-release`.
+All three, plus `make deploy-dry-run`, currently fail closed. They remain
+blocked until the exact production profile and replacement release workflow
+are committed. Only the user runs `make deploy` after the non-mutating checks
+pass.
 
-`make publish` pushes the prepared default-branch commit and tag, creates the
-non-draft GitHub Release, uploads the sealed assets without rebuilding, and
-downloads them again to verify their hashes.
+## Required production profile
 
-`make deploy` downloads the published manifest and Pages payload, verifies them
-against the prepared manifest and remote tag, replaces `gh-pages`, configures
-branch-based GitHub Pages with the sealed custom domain and enforced HTTPS,
-waits for that configuration to converge, and verifies the public source
-marker.
+The existing repository state confirms only the historical public origin
+`https://dyd.mprlab.com/`. It does not establish that this origin remains
+current, and it provides no authenticated backend profile. Before deployment
+work can resume, the app-owned profile must record exact, reviewed literals
+for:
 
-`make deploy-dry-run` is non-publishing validation for repository and gateway
-work. It never pushes a branch, creates a release, configures Pages, or changes
-production.
+- static frontend origin and DNS/TLS owner;
+- protected API origin, container image, upstream port, health path, and
+  persistent user-storage mount;
+- browser-facing TAuth origin and tenant;
+- session and refresh cookie names, cookie domain, `Secure`, and `SameSite`;
+- OAuth callback URL and Google client ID;
+- exact credentialed CORS origin and CSRF behavior;
+- OpenAI inference origin, boundary, models, work budget, and secret
+  references;
+- TAuth signing-key, TMDB, inference, and other runtime secret references;
+- per-user storage, generation, upload, and active-job limits.
 
-## Production profile
+Do not infer a backend hostname, TAuth tenant, cookie name, callback, port,
+mount, or secret reference from repository naming.
 
-- Frontend origin:
-  `https://dyd.mprlab.com/`
-- Frontend owner: GitHub Pages branch publishing from `gh-pages:/`
-- DNS owner: the MPR DNS `dyd.mprlab.com` CNAME points directly to
-  `marcopoloresearchlab.github.io`; the release artifact owns the matching
-  newline-terminated `CNAME` file
-- TLS owner: GitHub Pages with HTTPS enforcement
-- Backend/API origin: none
-- Origin topology: one static public documentation surface; the product API is
-  not deployed
-- Reverse proxy and upstream: none
-- Container, service port, or gateway host: none
-- OAuth callback: none
-- Authentication, tenant, session cookies, CORS credentials, and TAuth:
-  not applicable
-- Browser runtime secrets or deployment configuration: none
+## Target resources
 
-The released application itself remains same-origin on its selected loopback
-address, normally `http://127.0.0.1:8787`. It does not load `mpr-ui`, call
-TAuth, expose a public API, or accept a non-loopback listen address.
+After the profile is frozen, `.mprlab/deploy/resources.yml` must declare and
+the repository must implement:
 
-## Gateway ownership
+- the static Pages frontend;
+- the TAuth tenant dependency;
+- the Go API container and persistent storage;
+- the MPR gateway/Caddy route and public health check;
+- immutable `release`, `publish`, user-owned `deploy`, and non-mutating
+  `deploy-dry-run` targets.
 
-`.mprlab/deploy/resources.yml` is the canonical gateway discovery manifest.
-The gateway may validate and dispatch the declared Pages target, but it does
-not own or copy this repository's release, publication, or deployment
-implementation.
+The gateway discovers and dispatches this app-owned workflow. It does not
+supply missing production values or own this repository's resources.

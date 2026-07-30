@@ -1,44 +1,43 @@
 package main
 
 import (
+	"bytes"
 	"embed"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html"
 	"io/fs"
 	"log/slog"
-	"net"
 	"net/http"
-	"net/url"
 	"strconv"
-	"strings"
 
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/authentication"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/inference"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/product"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix/enrichment"
-	netflixlibrary "github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix/library"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix/tmdb"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/runtimeconfig"
+	"github.com/tyemirov/tauth/pkg/sessionvalidator"
 )
 
 const (
-	healthPath            = "/api/health"
-	capabilitiesPath      = "/api/capabilities"
-	healthStatusReady     = "ready"
-	inferenceNotChecked   = "not_checked"
-	csrfHeaderName        = "X-CSRF-Token"
-	contentSecurityPolicy = "default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self'; form-action 'self'; frame-ancestors 'none'; img-src 'self' data:; object-src 'none'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'"
+	healthPath          = "/api/health"
+	capabilitiesPath    = "/api/capabilities"
+	healthStatusReady   = "ready"
+	inferenceNotChecked = "not_checked"
+	csrfHeaderName      = "X-CSRF-Token"
+	apiOriginMarker     = "__DOWNLOAD_YOUR_DATA_API_ORIGIN__"
 )
 
-//go:embed index.html app.js api.js charts.js styles.css data.json images
+//go:embed index.html auth-lifecycle.js app.js api.js charts.js styles.css data.json images
 var applicationAssets embed.FS
 
 type healthResponse struct {
-	Status    string `json:"status"`
-	LocalOnly bool   `json:"local_only"`
+	Status string `json:"status"`
 }
 
 type capabilitiesResponse struct {
-	LocalOnly bool                   `json:"local_only"`
 	CSRFToken string                 `json:"csrf_token"`
 	DataRoot  dataRootCapability     `json:"data_root"`
 	Inference inferenceCapability    `json:"inference"`
@@ -93,8 +92,8 @@ type requestErrorPayload struct {
 }
 
 type applicationHandler struct {
-	handler          http.Handler
-	netflixWorkspace *netflixlibrary.Workspace
+	handler           http.Handler
+	workspaceRegistry *netflixWorkspaceRegistry
 }
 
 func (handler *applicationHandler) ServeHTTP(
@@ -105,10 +104,10 @@ func (handler *applicationHandler) ServeHTTP(
 }
 
 func (handler *applicationHandler) Close() error {
-	if handler == nil || handler.netflixWorkspace == nil {
+	if handler == nil || handler.workspaceRegistry == nil {
 		return nil
 	}
-	return handler.netflixWorkspace.Close()
+	return handler.workspaceRegistry.close()
 }
 
 func newApplicationHandler(
@@ -126,6 +125,20 @@ func newApplicationHandler(
 	)
 }
 
+func newNetflixMetadataClient(
+	config runtimeconfig.Config,
+) (enrichment.MetadataClient, error) {
+	readToken, configured := config.TMDBReadToken()
+	if !configured {
+		return nil, nil
+	}
+	client, clientError := tmdb.NewClient(readToken)
+	if clientError != nil {
+		return nil, fmt.Errorf("create Netflix TMDB client: %w", clientError)
+	}
+	return client, nil
+}
+
 func newApplicationHandlerWithNetflixMetadata(
 	config runtimeconfig.Config,
 	logger *slog.Logger,
@@ -137,38 +150,102 @@ func newApplicationHandlerWithNetflixMetadata(
 	if config.CSRFToken() == "" || config.DataRoot().Path() == "" {
 		return nil, errors.New("create application handler: runtime configuration is not initialized")
 	}
+	sessionValidator, validatorError := sessionvalidator.New(
+		config.Authentication().SessionValidatorConfig(),
+	)
+	if validatorError != nil {
+		return nil, fmt.Errorf("create TAuth session validator: %w", validatorError)
+	}
+	authBoundary, boundaryError := authentication.NewBoundary(
+		sessionValidator,
+		config.Authentication().TenantID(),
+	)
+	if boundaryError != nil {
+		return nil, boundaryError
+	}
 	staticRoot, staticRootError := fs.Sub(applicationAssets, ".")
 	if staticRootError != nil {
 		return nil, fmt.Errorf("open embedded application assets: %w", staticRootError)
 	}
-	netflixWorkspace, workspaceError := netflixlibrary.Open(
-		config.DataRoot(),
-		config.NetflixLibrary(),
-		config.NetflixLease(),
-		config.NetflixTMDBCache(),
+	indexDocument, indexError := buildApplicationIndex(config)
+	if indexError != nil {
+		return nil, indexError
+	}
+	workspaceRegistry, registryError := newNetflixWorkspaceRegistry(
+		config,
 		metadataClient,
 	)
-	if workspaceError != nil {
-		return nil, fmt.Errorf("open Netflix provider workspace: %w", workspaceError)
+	if registryError != nil {
+		return nil, registryError
 	}
 
+	protectedRoutes := http.NewServeMux()
+	protectedRoutes.HandleFunc("GET "+capabilitiesPath, writeCapabilities(config, logger))
+	registerOpenAIRoutes(protectedRoutes, config, logger)
+	registerNetflixRoutes(protectedRoutes, workspaceRegistry, logger)
+	protectedRoutes.HandleFunc(
+		"DELETE "+userWorkspacePath,
+		deleteAuthenticatedWorkspace(workspaceRegistry, logger),
+	)
+	requestCoordinator := &userRequestCoordinator{}
 	routes := http.NewServeMux()
 	routes.HandleFunc("GET "+healthPath, writeHealth(logger))
-	routes.HandleFunc("GET "+capabilitiesPath, writeCapabilities(config, logger))
-	registerOpenAIRoutes(routes, config, logger)
-	registerNetflixRoutes(routes, netflixWorkspace, logger)
+	routes.HandleFunc("GET "+uiConfigPath, writeUIConfig(config, logger))
+	routes.Handle(
+		"/api/",
+		requireAuthenticatedUser(
+			authBoundary,
+			requestCoordinator,
+			protectedRoutes,
+			logger,
+		),
+	)
+	routes.HandleFunc("GET /{$}", writeApplicationIndex(indexDocument))
+	routes.HandleFunc("GET /index.html", writeApplicationIndex(indexDocument))
 	routes.Handle("/", http.FileServer(http.FS(staticRoot)))
 	return &applicationHandler{
-		handler:          applySecurityHeaders(applyLocalRequestBoundary(config, routes)),
-		netflixWorkspace: netflixWorkspace,
+		handler: applySecurityHeaders(
+			config,
+			applyRequestBoundary(config, routes),
+		),
+		workspaceRegistry: workspaceRegistry,
 	}, nil
+}
+
+func buildApplicationIndex(config runtimeconfig.Config) ([]byte, error) {
+	indexSource, readError := applicationAssets.ReadFile("index.html")
+	if readError != nil {
+		return nil, fmt.Errorf("read embedded application index: %w", readError)
+	}
+	if bytes.Count(indexSource, []byte(apiOriginMarker)) != 1 {
+		return nil, errors.New("render application index: API origin marker must appear exactly once")
+	}
+	return bytes.Replace(
+		indexSource,
+		[]byte(apiOriginMarker),
+		[]byte(html.EscapeString(config.Authentication().APIOrigin())),
+		1,
+	), nil
+}
+
+func writeApplicationIndex(indexDocument []byte) http.HandlerFunc {
+	return func(responseWriter http.ResponseWriter, request *http.Request) {
+		responseWriter.Header().Set("Cache-Control", "no-store")
+		responseWriter.Header().Set("Content-Type", "text/html; charset=utf-8")
+		responseWriter.Header().Set("Content-Length", strconv.Itoa(len(indexDocument)))
+		if request.Method == http.MethodHead {
+			responseWriter.WriteHeader(http.StatusOK)
+			return
+		}
+		responseWriter.WriteHeader(http.StatusOK)
+		_, _ = responseWriter.Write(indexDocument)
+	}
 }
 
 func writeHealth(logger *slog.Logger) http.HandlerFunc {
 	return func(responseWriter http.ResponseWriter, _ *http.Request) {
 		writeJSON(responseWriter, logger, http.StatusOK, healthResponse{
-			Status:    healthStatusReady,
-			LocalOnly: true,
+			Status: healthStatusReady,
 		})
 	}
 }
@@ -176,7 +253,6 @@ func writeHealth(logger *slog.Logger) http.HandlerFunc {
 func writeCapabilities(config runtimeconfig.Config, logger *slog.Logger) http.HandlerFunc {
 	return func(responseWriter http.ResponseWriter, _ *http.Request) {
 		writeJSON(responseWriter, logger, http.StatusOK, capabilitiesResponse{
-			LocalOnly: true,
 			CSRFToken: config.CSRFToken(),
 			DataRoot: dataRootCapability{
 				Ready: true,
@@ -227,38 +303,12 @@ func writeJSON(
 	}
 }
 
-func applyLocalRequestBoundary(config runtimeconfig.Config, next http.Handler) http.Handler {
+func applySecurityHeaders(config runtimeconfig.Config, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {
-		secureRequest := request.TLS != nil
-		requestAuthority, hostValid := canonicalLoopbackAuthority(request.Host, secureRequest)
-		if !hostValid {
-			writeRequestError(responseWriter, http.StatusForbidden, "invalid_host")
-			return
-		}
-		if originValue := strings.TrimSpace(request.Header.Get("Origin")); originValue != "" {
-			if !validSameOrigin(originValue, requestAuthority, secureRequest) {
-				writeRequestError(responseWriter, http.StatusForbidden, "invalid_origin")
-				return
-			}
-		}
-		if isMutationMethod(request.Method) {
-			originValue := strings.TrimSpace(request.Header.Get("Origin"))
-			if originValue == "" || !validSameOrigin(originValue, requestAuthority, secureRequest) {
-				writeRequestError(responseWriter, http.StatusForbidden, "invalid_origin")
-				return
-			}
-			if request.Header.Get(csrfHeaderName) != config.CSRFToken() {
-				writeRequestError(responseWriter, http.StatusForbidden, "invalid_csrf_token")
-				return
-			}
-		}
-		next.ServeHTTP(responseWriter, request)
-	})
-}
-
-func applySecurityHeaders(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {
-		responseWriter.Header().Set("Content-Security-Policy", contentSecurityPolicy)
+		responseWriter.Header().Set(
+			"Content-Security-Policy",
+			buildContentSecurityPolicy(config),
+		)
 		responseWriter.Header().Set("Referrer-Policy", "no-referrer")
 		responseWriter.Header().Set("X-Content-Type-Options", "nosniff")
 		next.ServeHTTP(responseWriter, request)
@@ -272,74 +322,6 @@ func writeRequestError(responseWriter http.ResponseWriter, statusCode int, code 
 	_ = json.NewEncoder(responseWriter).Encode(requestErrorResponse{
 		Error: requestErrorPayload{Code: code},
 	})
-}
-
-func canonicalLoopbackAuthority(authority string, secureRequest bool) (string, bool) {
-	trimmedAuthority := strings.TrimSpace(authority)
-	if trimmedAuthority == "" ||
-		strings.HasSuffix(trimmedAuthority, ":") ||
-		strings.ContainsAny(trimmedAuthority, "/@?#") {
-		return "", false
-	}
-	parsedURL, parseError := url.Parse("http://" + trimmedAuthority)
-	if parseError != nil || parsedURL.Host == "" || parsedURL.User != nil {
-		return "", false
-	}
-	hostname := strings.ToLower(strings.TrimSpace(parsedURL.Hostname()))
-	port := parsedURL.Port()
-	if port != "" {
-		portNumber, portError := strconv.Atoi(port)
-		if portError != nil || portNumber < 1 || portNumber > 65535 {
-			return "", false
-		}
-		defaultPort := 80
-		if secureRequest {
-			defaultPort = 443
-		}
-		if portNumber == defaultPort {
-			port = ""
-		} else {
-			port = strconv.Itoa(portNumber)
-		}
-	}
-	if strings.EqualFold(hostname, "localhost") {
-		if port == "" {
-			return "localhost", true
-		}
-		return net.JoinHostPort("localhost", port), true
-	}
-	hostAddress := net.ParseIP(hostname)
-	if hostAddress == nil || !hostAddress.IsLoopback() {
-		return "", false
-	}
-	normalizedHost := hostAddress.String()
-	if port == "" {
-		if strings.Contains(normalizedHost, ":") {
-			return "[" + normalizedHost + "]", true
-		}
-		return normalizedHost, true
-	}
-	return net.JoinHostPort(normalizedHost, port), true
-}
-
-func validSameOrigin(originValue string, requestAuthority string, secureRequest bool) bool {
-	originURL, parseError := url.Parse(originValue)
-	if parseError != nil ||
-		originURL.User != nil ||
-		originURL.RawQuery != "" ||
-		originURL.Fragment != "" ||
-		(originURL.Path != "" && originURL.Path != "/") {
-		return false
-	}
-	expectedScheme := "http"
-	if secureRequest {
-		expectedScheme = "https"
-	}
-	if !strings.EqualFold(originURL.Scheme, expectedScheme) {
-		return false
-	}
-	originAuthority, originValid := canonicalLoopbackAuthority(originURL.Host, secureRequest)
-	return originValid && originAuthority == requestAuthority
 }
 
 func isMutationMethod(method string) bool {

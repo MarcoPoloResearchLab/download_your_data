@@ -26,16 +26,16 @@ func TestExecutableRejectsInvalidRuntimeConfigurationBeforeServing(testContext *
 		expectedCode runtimeconfig.ErrorCode
 	}{
 		{
-			name: "non-loopback listen address",
+			name: "hostname listen address",
 			environment: map[string]string{
-				runtimeconfig.AddressEnvironment: "0.0.0.0:8787",
+				runtimeconfig.AddressEnvironment: "download-your-data:8787",
 			},
 			expectedCode: runtimeconfig.ErrorInvalidListenAddress,
 		},
 		{
-			name: "unsafe data root",
+			name: "relative data root",
 			environment: map[string]string{
-				runtimeconfig.DataDirectoryEnvironment: "HOME",
+				runtimeconfig.DataDirectoryEnvironment: "application-data",
 			},
 			expectedCode: runtimeconfig.ErrorInvalidDataRoot,
 		},
@@ -64,16 +64,9 @@ func TestExecutableRejectsInvalidRuntimeConfigurationBeforeServing(testContext *
 
 	for _, testCase := range testCases {
 		testContext.Run(testCase.name, func(testContext *testing.T) {
-			homeDirectory := testContext.TempDir()
-			dataDirectory := filepath.Join(homeDirectory, "application-data")
-			environment := map[string]string{
-				"HOME":                                 homeDirectory,
-				runtimeconfig.DataDirectoryEnvironment: dataDirectory,
-			}
+			dataDirectory := filepath.Join(testContext.TempDir(), "application-data")
+			environment := testRuntimeEnvironment(dataDirectory)
 			for key, value := range testCase.environment {
-				if value == "HOME" {
-					value = homeDirectory
-				}
 				environment[key] = value
 			}
 
@@ -90,8 +83,7 @@ func TestExecutableRejectsInvalidRuntimeConfigurationBeforeServing(testContext *
 					testCase.expectedCode,
 				)
 			}
-			if _, statError := os.Stat(dataDirectory); !os.IsNotExist(statError) &&
-				dataDirectory != homeDirectory {
+			if _, statError := os.Stat(dataDirectory); !os.IsNotExist(statError) {
 				testContext.Fatalf("invalid startup created data directory %q", dataDirectory)
 			}
 		})
@@ -100,12 +92,20 @@ func TestExecutableRejectsInvalidRuntimeConfigurationBeforeServing(testContext *
 
 func replacementEnvironment(current []string, replacements map[string]string) []string {
 	replacedKeys := map[string]struct{}{
-		"HOME":                                     {},
-		runtimeconfig.AddressEnvironment:           {},
-		runtimeconfig.DataDirectoryEnvironment:     {},
-		inference.BaseURLEnvironment:               {},
-		runtimeconfig.InferenceBoundaryEnvironment: {},
-		tmdb.ReadTokenEnvironment:                  {},
+		"HOME":                                      {},
+		runtimeconfig.AddressEnvironment:            {},
+		runtimeconfig.DataDirectoryEnvironment:      {},
+		inference.BaseURLEnvironment:                {},
+		runtimeconfig.InferenceBoundaryEnvironment:  {},
+		tmdb.ReadTokenEnvironment:                   {},
+		runtimeconfig.PublicOriginEnvironment:       {},
+		runtimeconfig.APIOriginEnvironment:          {},
+		runtimeconfig.TAuthURLEnvironment:           {},
+		runtimeconfig.TAuthTenantIDEnvironment:      {},
+		runtimeconfig.TAuthJWTSigningKeyEnvironment: {},
+		runtimeconfig.TAuthSessionCookieEnvironment: {},
+		runtimeconfig.TAuthRefreshCookieEnvironment: {},
+		runtimeconfig.GoogleClientIDEnvironment:     {},
 	}
 	environment := make([]string, 0, len(current)+len(replacements))
 	for _, entry := range current {

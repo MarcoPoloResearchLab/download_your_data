@@ -12,8 +12,3 @@ mprlab_resources:
         release: release
         publish: publish
         deploy: deploy
-    - type: github_pages
-      name: download-your-data
-      target: pages-deploy
-      url: https://dyd.mprlab.com/
-      source_marker_path: /.mprlab-release.json

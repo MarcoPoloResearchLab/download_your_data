@@ -13,6 +13,7 @@ import {
   getOpenAIProvider,
   getRecords,
   initializeAPI,
+  resetAPI,
   searchOpenAI,
   uploadViewingActivity
 } from './api.js';
@@ -66,7 +67,7 @@ const REQUIRED_UI_KEYS = Object.freeze([
   'data_analysis',
   'open',
   'view_guide',
-  'local_only',
+  'private_workspace',
   'privacy_footer',
   'skip_to_content',
   'language',
@@ -79,7 +80,7 @@ const REQUIRED_UI_KEYS = Object.freeze([
   'state_validating',
   'state_importing',
   'state_enriching',
-  'state_ready_local',
+  'state_ready_private',
   'state_ready_tmdb',
   'state_action_needed',
   'state_failed',
@@ -103,7 +104,7 @@ const REQUIRED_UI_KEYS = Object.freeze([
   'choose_csv',
   'drop_csv',
   'max_upload',
-  'local_import_privacy',
+  'private_import_privacy',
   'instructions_title',
   'import',
   'enrich',
@@ -140,7 +141,7 @@ const REQUIRED_UI_KEYS = Object.freeze([
   'tmdb',
   'configured',
   'not_configured',
-  'local_privacy',
+  'privacy',
   'tmdb_boundary',
   'enrich_title',
   'enrich_disclosure',
@@ -178,6 +179,15 @@ const REQUIRED_UI_KEYS = Object.freeze([
   'unknown',
   'movie',
   'loading',
+  'auth_checking_title',
+  'auth_checking_body',
+  'auth_required_title',
+  'auth_required_body',
+  'workspace_loading_title',
+  'workspace_loading_body',
+  'workspace_error_title',
+  'workspace_error_body',
+  'retry_workspace',
   'credits_title',
   'credits_intro',
   'tmdb_credit',
@@ -198,7 +208,6 @@ const REQUIRED_UI_KEYS = Object.freeze([
   'openai_prepare_title',
   'openai_prepare_body',
   'openai_index_body',
-  'openai_command_intro',
   'openai_search_title',
   'openai_search_body',
   'openai_search_label',
@@ -226,6 +235,10 @@ const state = {
   locale: 'en',
   theme: 'dark',
   route: {name: 'catalog'},
+  sharedAuthStatus: 'pending',
+  workspaceStatus: 'idle',
+  workspaceProvider: '',
+  workspaceError: null,
   view: 'overview',
   filter: {
     startDate: '',
@@ -255,7 +268,8 @@ const state = {
   pollTimer: 0,
   pollController: null,
   dataController: null,
-  actionController: null
+  actionController: null,
+  workspaceController: null
 };
 
 const app = document.querySelector('#app');
@@ -267,32 +281,53 @@ boot().catch((error) => {
 });
 
 async function boot() {
-  initializeTheme();
   attachGlobalHandlers();
+  initializeTheme();
+  state.route = parseRoute();
   const initialController = new AbortController();
-  const [data, capabilities, netflix, openai] = await Promise.all([
-    fetchJSON('data.json', initialController.signal),
-    initializeAPI(initialController.signal),
-    getNetflixProvider(initialController.signal),
-    getOpenAIProvider(initialController.signal)
-  ]);
+  const data = await fetchJSON('data.json', initialController.signal);
   state.data = validateAppData(data);
-  state.capabilities = capabilities;
-  state.netflix = netflix;
-  state.openai = openai;
   state.locale = initialLocale();
   document.documentElement.lang = state.locale;
-  state.route = parseRoute();
   render();
-  schedulePoll();
+  if (state.sharedAuthStatus === 'authenticated') {
+    await openAuthenticatedSurface();
+  }
 }
 
 function attachGlobalHandlers() {
+  const lifecycleBuffer = Reflect.get(
+    window,
+    'DownloadYourDataAuthLifecycle'
+  );
+  if (!lifecycleBuffer || typeof lifecycleBuffer.take !== 'function') {
+    throw new Error('authentication lifecycle buffer is unavailable');
+  }
+  const initialStatuses = lifecycleBuffer.take();
+  document.addEventListener(
+    'mpr-ui:auth:authenticated',
+    handleSharedAuthenticated
+  );
+  document.addEventListener(
+    'mpr-ui:auth:unauthenticated',
+    handleSharedUnauthenticated
+  );
+  initialStatuses.forEach((status) => {
+    if (status === 'authenticated') {
+      handleSharedAuthenticated();
+    } else if (status === 'unauthenticated') {
+      handleSharedUnauthenticated();
+    } else {
+      throw new Error('authentication lifecycle buffer contains an invalid status');
+    }
+  });
   window.addEventListener('hashchange', () => {
     state.route = parseRoute();
-    resetWorkspaceData();
-    resetOpenAISearchData();
+    clearProtectedWorkspace();
     render();
+    if (state.sharedAuthStatus === 'authenticated') {
+      void openAuthenticatedSurface().catch(renderLifecycleFailure);
+    }
   });
   window.addEventListener('beforeunload', cleanupAll, {once: true});
   document.addEventListener('click', handleClick);
@@ -302,6 +337,99 @@ function attachGlobalHandlers() {
   document.addEventListener('dragover', handleDragOver);
   document.addEventListener('dragleave', handleDragLeave);
   document.addEventListener('drop', handleDrop);
+}
+
+function handleSharedAuthenticated() {
+  state.sharedAuthStatus = 'authenticated';
+  void openAuthenticatedSurface().catch(renderLifecycleFailure);
+}
+
+function handleSharedUnauthenticated() {
+  state.sharedAuthStatus = 'unauthenticated';
+  clearProtectedWorkspace();
+  if (state.data) {
+    render();
+  }
+}
+
+async function openAuthenticatedSurface() {
+  if (!state.data || state.sharedAuthStatus !== 'authenticated') {
+    return;
+  }
+  if (isWorkspaceRoute(state.route)) {
+    await hydrateWorkspace(state.route.name);
+    return;
+  }
+  render();
+  await completeAuthTransition();
+}
+
+async function hydrateWorkspace(providerID) {
+  if (
+    state.sharedAuthStatus !== 'authenticated' ||
+    !WORKSPACE_PROVIDER_IDS.includes(providerID)
+  ) {
+    return;
+  }
+  if (
+    state.workspaceStatus === 'loading' &&
+    state.workspaceProvider === providerID
+  ) {
+    return;
+  }
+
+  clearProtectedWorkspace();
+  const controller = new AbortController();
+  state.workspaceController = controller;
+  state.workspaceProvider = providerID;
+  state.workspaceStatus = 'loading';
+  render();
+  try {
+    state.capabilities = await initializeAPI(controller.signal);
+    if (providerID === 'netflix') {
+      state.netflix = await getNetflixProvider(controller.signal);
+    } else {
+      state.openai = await getOpenAIProvider(controller.signal);
+    }
+    if (
+      controller.signal.aborted ||
+      state.sharedAuthStatus !== 'authenticated' ||
+      state.route.name !== providerID
+    ) {
+      return;
+    }
+    state.workspaceStatus = 'ready';
+    render();
+    if (providerID === 'netflix') {
+      schedulePoll();
+    }
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      return;
+    }
+    state.workspaceStatus = 'error';
+    state.workspaceError = normalizeError(error);
+    render();
+  } finally {
+    if (state.workspaceController === controller) {
+      state.workspaceController = null;
+    }
+  }
+  await completeAuthTransition();
+}
+
+async function completeAuthTransition() {
+  const mprUI = Reflect.get(window, 'MPRUI');
+  if (!mprUI || typeof mprUI.whenAutoOrchestrationReady !== 'function') {
+    throw new Error('mpr-ui orchestration contract is unavailable');
+  }
+  await mprUI.whenAutoOrchestrationReady();
+  document.dispatchEvent(new CustomEvent('download-your-data:app-ready'));
+}
+
+function renderLifecycleFailure(error) {
+  state.actionError = normalizeError(error);
+  renderFatal();
 }
 
 function handleKeyDown(event) {
@@ -380,6 +508,13 @@ async function handleClick(event) {
   } else if (action === 'dismiss-notice') {
     state.notice = null;
     render();
+  } else if (
+    action === 'retry-workspace' &&
+    state.sharedAuthStatus === 'authenticated' &&
+    isWorkspaceRoute(state.route)
+  ) {
+    state.workspaceStatus = 'idle';
+    void hydrateWorkspace(state.route.name).catch(renderLifecycleFailure);
   }
 }
 
@@ -448,11 +583,13 @@ async function handleDrop(event) {
 }
 
 function render() {
-  if (!state.data || !state.netflix || !state.openai) {
+  if (!state.data) {
     return;
   }
   updateChrome();
-  if (state.route.name === 'netflix') {
+  if (isWorkspaceRoute(state.route) && state.workspaceStatus !== 'ready') {
+    renderWorkspaceGate(state.route.name);
+  } else if (state.route.name === 'netflix') {
     renderNetflixWorkspace();
   } else if (state.route.name === 'openai') {
     renderOpenAIWorkspace();
@@ -465,13 +602,72 @@ function render() {
   }
 }
 
+function renderWorkspaceGate(providerID) {
+  const provider = localizedProvider(providerID);
+  setHeaderContext(provider.title);
+  const root = element('div', {class: 'workspace-gate'});
+  const heading = element('div', {class: 'page-heading'});
+  const copy = element('div');
+  copy.append(
+    element('a', {
+      class: 'back-link',
+      href: '#catalog',
+      text: `← ${ui().back_catalog}`
+    }),
+    element('p', {class: 'page-kicker', text: ui().private_workspace}),
+    element('h1', {text: provider.title})
+  );
+  heading.append(copy);
+
+  let title = ui().workspace_loading_title;
+  let body = ui().workspace_loading_body;
+  let tone = 'info';
+  if (state.sharedAuthStatus === 'pending') {
+    title = ui().auth_checking_title;
+    body = ui().auth_checking_body;
+  } else if (state.sharedAuthStatus === 'unauthenticated') {
+    title = ui().auth_required_title;
+    body = ui().auth_required_body;
+    tone = 'warning';
+  } else if (state.workspaceStatus === 'error') {
+    title = ui().workspace_error_title;
+    body = `${ui().workspace_error_body} · ${state.workspaceError?.code || 'integration_error'}`;
+    tone = 'danger';
+  }
+
+  const panel = element('section', {
+    class: 'panel panel-raised workspace-gate-panel',
+    'data-auth-state': state.sharedAuthStatus,
+    'data-workspace-state': state.workspaceStatus,
+    'data-tone': tone
+  });
+  panel.append(
+    element('p', {class: 'eyebrow', text: ui().private_workspace}),
+    element('h2', {text: title}),
+    element('p', {class: 'panel-copy', text: body})
+  );
+  if (
+    state.sharedAuthStatus === 'authenticated' &&
+    state.workspaceStatus === 'error'
+  ) {
+    panel.append(
+      actionButton(ui().retry_workspace, {
+        'data-action': 'retry-workspace',
+        class: 'button button-primary'
+      })
+    );
+  }
+  root.append(heading, panel);
+  replaceApp(root);
+}
+
 function renderCatalog() {
   setHeaderContext(ui().provider_catalog);
   const root = element('div', {class: 'catalog'});
   const heading = element('div', {class: 'page-heading'});
   const copy = element('div');
   copy.append(
-    element('p', {class: 'page-kicker', text: ui().local_only}),
+    element('p', {class: 'page-kicker', text: ui().private_workspace}),
     element('h1', {text: ui().catalog_title}),
     element('p', {class: 'lede', text: ui().catalog_intro})
   );
@@ -700,26 +896,14 @@ function renderOpenAIWorkspace() {
 
 function renderOpenAIPreparationPanel() {
   const indexRequired = state.openai.state === 'index_required';
-  const commandLines = indexRequired
-    ? ['download-your-data index build']
-    : [
-        'download-your-data import /path/to/openai-export.zip',
-        'download-your-data index build'
-      ];
   const panel = element('section', {class: 'panel panel-raised openai-prepare'});
   panel.append(
-    element('p', {class: 'eyebrow', text: ui().local_only}),
+    element('p', {class: 'eyebrow', text: ui().private_workspace}),
     element('h2', {text: ui().openai_prepare_title}),
     element('p', {
       class: 'panel-copy',
       text: indexRequired ? ui().openai_index_body : ui().openai_prepare_body
-    }),
-    element('p', {class: 'openai-command-intro', text: ui().openai_command_intro}),
-    element(
-      'pre',
-      {class: 'openai-command'},
-      element('code', {text: commandLines.join('\n')})
-    )
+    })
   );
   return panel;
 }
@@ -950,10 +1134,10 @@ function renderEmptyImport(provider) {
   const layout = element('div', {class: 'import-layout'});
   const importCopy = element('div');
   importCopy.append(
-    element('p', {class: 'eyebrow', text: ui().local_only}),
+    element('p', {class: 'eyebrow', text: ui().private_workspace}),
     element('h2', {text: ui().empty_title}),
     element('p', {class: 'panel-copy', text: ui().empty_body}),
-    element('p', {class: 'privacy-note', text: ui().local_import_privacy})
+    element('p', {class: 'privacy-note', text: ui().private_import_privacy})
   );
   const dropZone = element('label', {class: 'drop-zone'});
   dropZone.append(
@@ -1005,7 +1189,7 @@ function renderBuildingOnly() {
   panel.append(
     element('p', {class: 'eyebrow', text: generationStateLabel(building)}),
     element('h2', {text: generationStateLabel(building)}),
-    element('p', {class: 'panel-copy', text: ui().local_import_privacy}),
+    element('p', {class: 'panel-copy', text: ui().private_import_privacy}),
     progressBar(building),
     actionButton(ui().cancel, {
       'data-action': 'cancel-generation',
@@ -1404,7 +1588,10 @@ function renderStateRail() {
   const list = element('dl', {class: 'rail-list'});
   if (active) {
     list.append(
-      definition(ui().analysis, active.analysis_level === 'tmdb' ? 'TMDB' : ui().local_only),
+      definition(
+        ui().analysis,
+        active.analysis_level === 'tmdb' ? 'TMDB' : ui().private_workspace
+      ),
       definition(ui().imported, formatDateTime(active.completed_at || active.updated_at)),
       definition(ui().source_rows, formatNumber(active.activity_count)),
       definition(ui().unique_titles, formatNumber(active.unique_title_count))
@@ -1502,8 +1689,8 @@ function renderStateRail() {
 
   const privacy = element('section', {class: 'panel rail-section'});
   privacy.append(
-    element('h2', {text: ui().local_privacy}),
-    element('p', {class: 'privacy-note', text: ui().local_import_privacy})
+    element('h2', {text: ui().privacy}),
+    element('p', {class: 'privacy-note', text: ui().private_import_privacy})
   );
   return [details, tmdb, actions, privacy];
 }
@@ -1545,7 +1732,7 @@ function appendWorkspaceNotices(main) {
 
 function renderCredits() {
   setHeaderContext(ui().credits);
-  const attribution = state.netflix.capabilities.tmdb_attribution;
+  const attribution = state.data.credits.tmdb;
   const root = element('div', {class: 'credits'});
   const heading = element('div', {class: 'page-heading'});
   const copy = element('div');
@@ -1580,12 +1767,12 @@ function renderCredits() {
       )
     )
   );
-  const local = element('section', {class: 'panel'});
-  local.append(
-    element('h2', {text: ui().local_only}),
+  const dependency = element('section', {class: 'panel'});
+  dependency.append(
+    element('h2', {text: ui().private_workspace}),
     element('p', {class: 'panel-copy', text: ui().shared_shell_dependency})
   );
-  root.append(heading, panel, local);
+  root.append(heading, panel, dependency);
   replaceApp(root);
 }
 
@@ -1945,6 +2132,7 @@ function cleanupAll() {
   cleanupDataRequest();
   cleanupOpenAISearch();
   cleanupAction();
+  cleanupWorkspaceRequest();
 }
 
 function cleanupPoll() {
@@ -1967,9 +2155,38 @@ function cleanupAction() {
   state.actionController = null;
 }
 
+function cleanupWorkspaceRequest() {
+  state.workspaceController?.abort();
+  state.workspaceController = null;
+}
+
+function clearProtectedWorkspace() {
+  window.clearTimeout(state.pollTimer);
+  state.pollTimer = 0;
+  cleanupPoll();
+  cleanupDataRequest();
+  cleanupOpenAISearch();
+  cleanupAction();
+  cleanupWorkspaceRequest();
+  resetWorkspaceData();
+  resetOpenAISearchData();
+  resetAPI();
+  state.capabilities = null;
+  state.netflix = null;
+  state.openai = null;
+  state.workspaceStatus = 'idle';
+  state.workspaceProvider = '';
+  state.workspaceError = null;
+  state.actionBusy = false;
+  state.actionError = null;
+  state.notice = null;
+  state.eventSequences.clear();
+  state.lastEvent = null;
+}
+
 function openAIStatePresentation() {
   if (state.openai?.state === 'ready') {
-    return {label: ui().state_ready_local, tone: 'success'};
+    return {label: ui().state_ready_private, tone: 'success'};
   }
   if (state.openai?.state === 'index_required') {
     return {label: ui().state_action_needed, tone: 'warning'};
@@ -2004,7 +2221,7 @@ function netflixStatePresentation() {
   if (active?.analysis_level === 'local') {
     return {
       label: state.netflix.capabilities.tmdb_configured
-        ? ui().state_ready_local
+        ? ui().state_ready_private
         : ui().state_not_configured,
       tone: state.netflix.capabilities.tmdb_configured ? 'success' : 'warning'
     };
@@ -2065,11 +2282,8 @@ function progressBar(generation) {
 
 function parseRoute() {
   const raw = window.location.hash.replace(/^#/, '');
-  if (raw === 'netflix') {
-    return {name: 'netflix'};
-  }
-  if (raw.startsWith('provider/')) {
-    const provider = raw.slice('provider/'.length);
+  if (raw.startsWith('app/')) {
+    const provider = raw.slice('app/'.length);
     if (WORKSPACE_PROVIDER_IDS.includes(provider)) {
       return {name: provider};
     }
@@ -2091,7 +2305,7 @@ function parseRoute() {
 
 function navigate(route, provider = '') {
   if (WORKSPACE_PROVIDER_IDS.includes(route)) {
-    window.location.hash = `provider/${route}`;
+    window.location.hash = `app/${route}`;
   } else if (route === 'guide') {
     window.location.hash = `guide/${provider}`;
   } else if (route === 'credits') {
@@ -2099,6 +2313,10 @@ function navigate(route, provider = '') {
   } else {
     window.location.hash = 'catalog';
   }
+}
+
+function isWorkspaceRoute(route) {
+  return WORKSPACE_PROVIDER_IDS.includes(route.name);
 }
 
 function updateChrome() {
@@ -2109,7 +2327,7 @@ function updateChrome() {
   brand.setAttribute('aria-label', strings.site_title);
   document.querySelector('#brand-label').textContent = strings.site_title;
   document.querySelector('#credits-button').textContent = ui().credits;
-  document.querySelector('#footer-local').textContent = ui().local_only;
+  document.querySelector('#footer-local').textContent = ui().private_workspace;
   document.querySelector('#footer-privacy').textContent = ui().privacy_footer;
   document.querySelector('.skip-link').textContent = ui().skip_to_content;
   document.querySelector('#language-switcher').setAttribute('aria-label', ui().language);
@@ -2203,6 +2421,19 @@ function instructionLinkURL(providerID, href) {
 
 function validateAppData(data) {
   assertObject(data, 'data.json');
+  assertObject(data.credits, 'credits');
+  assertObject(data.credits.tmdb, 'credits.tmdb');
+  assertString(data.credits.tmdb.notice, 'credits.tmdb.notice');
+  assertString(data.credits.tmdb.website, 'credits.tmdb.website');
+  const tmdbWebsite = new URL(data.credits.tmdb.website);
+  if (
+    tmdbWebsite.protocol !== 'https:' ||
+    tmdbWebsite.hostname !== 'www.themoviedb.org' ||
+    tmdbWebsite.username ||
+    tmdbWebsite.password
+  ) {
+    throw new Error('credits.tmdb.website must use the official TMDB HTTPS host');
+  }
   assertArray(data.provider_registry, 'provider_registry');
   assertObject(data.instruction_screenshots, 'instruction_screenshots');
   assertObject(data.strings, 'strings');
@@ -2458,7 +2689,7 @@ function countFor(counts, label) {
 }
 
 function statusCell(status) {
-  const label = status ? translateDimension(status) : ui().local_only;
+  const label = status ? translateDimension(status) : ui().private_workspace;
   return element(
     'td',
     {},

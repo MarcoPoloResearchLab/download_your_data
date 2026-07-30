@@ -11,9 +11,19 @@ import (
 )
 
 type frontendDataContract struct {
+	Credits                frontendCreditsContract                 `json:"credits"`
 	ProviderRegistry       []frontendProviderDefinition            `json:"provider_registry"`
 	InstructionScreenshots map[string][]instructionScreenshotAsset `json:"instruction_screenshots"`
 	Strings                map[string]frontendLocalizedContract    `json:"strings"`
+}
+
+type frontendCreditsContract struct {
+	TMDB frontendTMDBCreditsContract `json:"tmdb"`
+}
+
+type frontendTMDBCreditsContract struct {
+	Notice  string `json:"notice"`
+	Website string `json:"website"`
 }
 
 type frontendProviderDefinition struct {
@@ -76,6 +86,11 @@ func TestFrontendProviderWorkspaceContract(testContext *testing.T) {
 	}
 	if !reflect.DeepEqual(data.ProviderRegistry, expectedRegistry) {
 		testContext.Fatalf("provider registry = %#v; want %#v", data.ProviderRegistry, expectedRegistry)
+	}
+	if data.Credits.TMDB.Notice !=
+		"This product uses the TMDB API but is not endorsed or certified by TMDB." ||
+		data.Credits.TMDB.Website != "https://www.themoviedb.org" {
+		testContext.Fatalf("TMDB credits = %+v; want canonical public attribution", data.Credits.TMDB)
 	}
 
 	expectedLocales := []string{"en", "es", "fr", "ru"}
@@ -229,36 +244,58 @@ func TestFrontendProviderWorkspaceContract(testContext *testing.T) {
 func TestFrontendAssetsUseCurrentMPRShell(testContext *testing.T) {
 	index := readFrontendAsset(testContext, "index.html")
 	const sharedStylesheet = "https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.css"
-	const sharedScript = "https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.js"
+	const sharedConfigScript = "https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui-config.js"
+	const sharedBundleScript = "https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.js"
 	if !strings.Contains(index, `<script type="module" src="app.js"></script>`) ||
+		!strings.Contains(index, `<script src="auth-lifecycle.js"></script>`) ||
 		!strings.Contains(index, `<link rel="stylesheet" href="styles.css">`) ||
 		!strings.Contains(index, `href="`+sharedStylesheet+`"`) ||
-		!strings.Contains(index, `src="`+sharedScript+`"`) ||
+		!strings.Contains(index, `src="https://accounts.google.com/gsi/client" async defer`) ||
+		!strings.Contains(index, `src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"`) ||
+		!strings.Contains(index, `src="`+sharedConfigScript+`"`) ||
+		!strings.Contains(index, `data-mpr-ui-bundle-src="`+sharedBundleScript+`"`) ||
 		!strings.Contains(index, `<mpr-header`) ||
+		!strings.Contains(index, `data-config-url="/config-ui.yaml"`) ||
+		!strings.Contains(index, `data-api-origin="`+apiOriginMarker+`"`) ||
+		!strings.Contains(index, `completionEvent`) ||
+		!strings.Contains(index, `<mpr-user`) ||
 		!strings.Contains(index, `<mpr-footer`) ||
 		!strings.Contains(index, `slot="brand"`) ||
 		!strings.Contains(index, `slot="nav-left"`) ||
 		!strings.Contains(index, `slot="aux"`) ||
 		!strings.Contains(index, `slot="legal"`) ||
-		strings.Count(index, "mpr-ui@latest") != 2 ||
+		strings.Count(index, "mpr-ui@latest") != 3 ||
 		strings.Contains(index, "mpr-ui@v") ||
-		strings.Contains(index, "mpr-ui-config.js") ||
-		strings.Contains(index, "config-ui.yaml") ||
+		strings.Contains(index, "tauth.js") ||
+		strings.Contains(index, "tauth-url=") ||
+		strings.Contains(index, "tauth-login-path=") ||
+		strings.Contains(index, "tauth-logout-path=") ||
+		strings.Contains(index, "tauth-nonce-path=") ||
 		strings.Contains(index, `<header class="app-bar"`) ||
 		strings.Contains(index, `<footer class="app-footer"`) ||
 		strings.Contains(index, "http://") ||
 		strings.Contains(strings.ToLower(index), "bootstrap") {
-		testContext.Fatalf("index.html is not the canonical shell-only mpr-ui integration")
+		testContext.Fatalf("index.html is not the canonical authenticated mpr-ui integration")
 	}
+	if strings.Index(index, `<script type="module" src="app.js"></script>`) >
+		strings.Index(index, `src="`+sharedConfigScript+`"`) {
+		testContext.Fatalf("app lifecycle listeners are registered after mpr-ui startup")
+	}
+	if strings.Index(index, `<script src="auth-lifecycle.js"></script>`) >
+		strings.Index(index, `src="`+sharedConfigScript+`"`) {
+		testContext.Fatalf("auth lifecycle buffer is registered after mpr-ui startup")
+	}
+	authLifecycleScript := readFrontendAsset(testContext, "auth-lifecycle.js")
 	appScript := readFrontendAsset(testContext, "app.js")
 	apiScript := readFrontendAsset(testContext, "api.js")
 	chartsScript := readFrontendAsset(testContext, "charts.js")
 	styles := readFrontendAsset(testContext, "styles.css")
 	for path, content := range map[string]string{
-		"app.js":     appScript,
-		"api.js":     apiScript,
-		"charts.js":  chartsScript,
-		"styles.css": styles,
+		"auth-lifecycle.js": authLifecycleScript,
+		"app.js":            appScript,
+		"api.js":            apiScript,
+		"charts.js":         chartsScript,
+		"styles.css":        styles,
 	} {
 		if strings.Contains(content, "http://") ||
 			strings.Contains(content, "https://") ||
@@ -273,14 +310,35 @@ func TestFrontendAssetsUseCurrentMPRShell(testContext *testing.T) {
 	}
 	if !strings.Contains(appScript, "from './api.js'") ||
 		!strings.Contains(appScript, "from './charts.js'") ||
+		!strings.Contains(authLifecycleScript, "mpr-ui:auth:authenticated") ||
+		!strings.Contains(authLifecycleScript, "mpr-ui:auth:unauthenticated") ||
+		strings.Contains(authLifecycleScript, "document.cookie") ||
+		strings.Contains(authLifecycleScript, "localStorage") ||
+		!strings.Contains(appScript, "mpr-ui:auth:authenticated") ||
+		!strings.Contains(appScript, "mpr-ui:auth:unauthenticated") ||
+		!strings.Contains(appScript, "whenAutoOrchestrationReady") ||
+		!strings.Contains(appScript, "download-your-data:app-ready") ||
+		strings.Contains(appScript, "resolveAuthProfileSnapshot") ||
+		strings.Contains(appScript, "document.cookie") ||
+		strings.Contains(appScript, "localStorage.getItem('token") ||
+		!strings.Contains(apiScript, "credentials: 'include'") ||
+		!strings.Contains(apiScript, "data-api-origin") ||
+		strings.Contains(apiScript, "window.location.origin") ||
 		strings.Contains(styles, "gradient(") ||
 		strings.Contains(styles, "@import") {
 		testContext.Fatalf("frontend module or MPR style contract is incomplete")
 	}
-	const expectedContentSecurityPolicy = "default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self'; form-action 'self'; frame-ancestors 'none'; img-src 'self' data:; object-src 'none'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'"
-	if contentSecurityPolicy != expectedContentSecurityPolicy ||
-		strings.Contains(contentSecurityPolicy, "unsafe-eval") {
-		testContext.Fatalf("content security policy does not isolate the shared shell: %s", contentSecurityPolicy)
+	config := testRuntimeConfig(testContext)
+	securityPolicy := buildContentSecurityPolicy(config)
+	if !strings.Contains(securityPolicy, "default-src 'self'") ||
+		!strings.Contains(securityPolicy, config.Authentication().APIOrigin()) ||
+		!strings.Contains(securityPolicy, config.Authentication().TAuthURL()) ||
+		!strings.Contains(securityPolicy, "frame-ancestors 'none'") ||
+		strings.Contains(securityPolicy, "unsafe-eval") {
+		testContext.Fatalf(
+			"content security policy does not isolate the shared shell: %s",
+			securityPolicy,
+		)
 	}
 }
 

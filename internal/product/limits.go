@@ -1,7 +1,7 @@
 package product
 
 const (
-	// MaxArchiveUploadBytes is the maximum compressed OpenAI archive accepted by the local lifecycle.
+	// MaxArchiveUploadBytes is the maximum compressed OpenAI archive accepted by the user lifecycle.
 	MaxArchiveUploadBytes int64 = 2 * 1024 * 1024 * 1024
 	// MaxConversationEntryBytes is the maximum uncompressed recognized conversation payload.
 	MaxConversationEntryBytes int64 = 1024 * 1024 * 1024
@@ -11,11 +11,11 @@ const (
 	MaxArchiveCompressionRatio = 100
 	// MaxArchiveWorkingBytes bounds generation-owned working-disk use.
 	MaxArchiveWorkingBytes int64 = 4 * 1024 * 1024 * 1024
-	// DefaultInferenceBatchSize is the canonical local embedding batch size.
+	// DefaultInferenceBatchSize is the canonical embedding batch size.
 	DefaultInferenceBatchSize = 64
 	// MaxNetflixViewingCSVBytes bounds one uncompressed viewing-activity upload.
 	MaxNetflixViewingCSVBytes int64 = 64 * 1024 * 1024
-	// MaxNetflixViewingRows bounds one local generation.
+	// MaxNetflixViewingRows bounds one private generation.
 	MaxNetflixViewingRows = 250_000
 	// MaxNetflixUniqueTitles bounds derived identities in one generation.
 	MaxNetflixUniqueTitles = 100_000
@@ -33,6 +33,8 @@ const (
 	MaxNetflixGenerationHistory = 256
 	// MaxNetflixConcurrentBuilds is the sole provider build concurrency.
 	MaxNetflixConcurrentBuilds = 1
+	// MaxOpenUserNetflixWorkspaces bounds process memory and provider leases.
+	MaxOpenUserNetflixWorkspaces = 64
 	// MaxNetflixRecordPageSize bounds one records response.
 	MaxNetflixRecordPageSize = 200
 	// DefaultNetflixRecordPageSize is the canonical first records page size.

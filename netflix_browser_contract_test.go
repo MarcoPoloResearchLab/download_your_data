@@ -28,7 +28,13 @@ func TestNetflixBrowserWorkspaceContract(testContext *testing.T) {
 	}
 	testContext.Parallel()
 
-	config := testRuntimeConfig(testContext)
+	server := httptest.NewUnstartedServer(nil)
+	serverOrigin := "http://" + server.Listener.Addr().String()
+	config := loadTestRuntimeConfig(testContext, map[string]string{
+		"DOWNLOAD_YOUR_DATA_PUBLIC_ORIGIN": serverOrigin,
+		"DOWNLOAD_YOUR_DATA_API_ORIGIN":    serverOrigin,
+		"DOWNLOAD_YOUR_DATA_TAUTH_URL":     serverOrigin,
+	})
 	var logOutput bytes.Buffer
 	logger := slog.New(slog.NewTextHandler(&logOutput, nil))
 	metadataClient := newBrowserLifecycleMetadataClient()
@@ -46,7 +52,8 @@ func TestNetflixBrowserWorkspaceContract(testContext *testing.T) {
 		next:   application,
 		client: metadataClient,
 	}
-	server := httptest.NewServer(tracker)
+	server.Config.Handler = tracker
+	server.Start()
 	defer server.Close()
 
 	fixturePath := filepath.Join(testContext.TempDir(), "viewing-activity.csv")
@@ -76,6 +83,14 @@ func TestNetflixBrowserWorkspaceContract(testContext *testing.T) {
 		os.Environ(),
 		"DOWNLOAD_YOUR_DATA_BROWSER_BASE_URL="+server.URL,
 		"DOWNLOAD_YOUR_DATA_BROWSER_CSV="+fixturePath,
+		"DOWNLOAD_YOUR_DATA_BROWSER_SESSION_COOKIE="+
+			config.Authentication().SessionCookieName(),
+		"DOWNLOAD_YOUR_DATA_BROWSER_SESSION_TOKEN="+
+			testSessionCookie(
+				testContext,
+				config,
+				"browser-netflix-user",
+			).Value,
 		"PLAYWRIGHT_CLI_VERSION="+playwrightVersion,
 	)
 	output, commandError := command.CombinedOutput()

@@ -8,7 +8,6 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
@@ -33,7 +32,7 @@ func TestNetflixHTTPImportsQueriesRestartsAndDeletesLocalGeneration(
 	if handlerError != nil {
 		testContext.Fatalf("create Netflix HTTP handler: %v", handlerError)
 	}
-	server := httptest.NewServer(handler)
+	server := newAuthenticatedTestServer(testContext, config, handler, defaultTestUserID)
 
 	snapshot := requestNetflixSnapshot(testContext, server.URL)
 	if snapshot.State != netflixlibrary.ProviderStateEmpty ||
@@ -205,7 +204,7 @@ func TestNetflixHTTPImportsQueriesRestartsAndDeletesLocalGeneration(
 	}
 
 	sourcePath := filepath.Join(
-		config.DataRoot().Path(),
+		testUserWorkspace(testContext, config, defaultTestUserID).Root().Path(),
 		"providers",
 		"netflix",
 		"generations",
@@ -225,7 +224,12 @@ func TestNetflixHTTPImportsQueriesRestartsAndDeletesLocalGeneration(
 		testContext.Fatalf("restart Netflix HTTP handler: %v", restartError)
 	}
 	defer restartedHandler.Close()
-	restartedServer := httptest.NewServer(restartedHandler)
+	restartedServer := newAuthenticatedTestServer(
+		testContext,
+		config,
+		restartedHandler,
+		defaultTestUserID,
+	)
 	defer restartedServer.Close()
 	restartedSnapshot := requestNetflixSnapshot(testContext, restartedServer.URL)
 	if restartedSnapshot.Active == nil ||
@@ -297,7 +301,7 @@ func TestNetflixHTTPInvalidCSVFailsTypedWithoutSourceOrActiveData(
 		testContext.Fatalf("create Netflix failure handler: %v", handlerError)
 	}
 	defer handler.Close()
-	server := httptest.NewServer(handler)
+	server := newAuthenticatedTestServer(testContext, config, handler, defaultTestUserID)
 	defer server.Close()
 
 	createResponse := mutateNetflix(
@@ -338,7 +342,7 @@ func TestNetflixHTTPInvalidCSVFailsTypedWithoutSourceOrActiveData(
 		testContext.Fatalf("invalid CSV state = %+v", failed)
 	}
 	sourcePath := filepath.Join(
-		config.DataRoot().Path(),
+		testUserWorkspace(testContext, config, defaultTestUserID).Root().Path(),
 		"providers",
 		"netflix",
 		"generations",
@@ -366,7 +370,7 @@ func TestNetflixHTTPEnrichesFiltersAndStreamsCanonicalCSV(
 		testContext.Fatalf("create Netflix enrichment handler: %v", handlerError)
 	}
 	defer handler.Close()
-	server := httptest.NewServer(handler)
+	server := newAuthenticatedTestServer(testContext, config, handler, defaultTestUserID)
 	defer server.Close()
 
 	initial := requestNetflixSnapshot(testContext, server.URL)
@@ -622,7 +626,7 @@ func TestNetflixHTTPEnrichesFiltersAndStreamsCanonicalCSV(
 	}
 	var temporaryExports []string
 	if walkError := filepath.WalkDir(
-		config.DataRoot().Path(),
+		testUserWorkspace(testContext, config, defaultTestUserID).Root().Path(),
 		func(path string, entry os.DirEntry, walkError error) error {
 			if walkError != nil {
 				return walkError
@@ -655,7 +659,7 @@ func mutateNetflix(
 	if requestError != nil {
 		testContext.Fatalf("create Netflix mutation request: %v", requestError)
 	}
-	request.Header.Set("Origin", strings.TrimSuffix(requestURL, request.URL.Path))
+	request.Header.Set("Origin", config.Authentication().PublicOrigin())
 	request.Header.Set(csrfHeaderName, config.CSRFToken())
 	if contentType != "" {
 		request.Header.Set("Content-Type", contentType)

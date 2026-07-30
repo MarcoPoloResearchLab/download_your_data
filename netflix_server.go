@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/authentication"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/product"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix/enrichment"
@@ -41,45 +42,89 @@ type deleteNetflixProviderRequest struct {
 
 func registerNetflixRoutes(
 	routes *http.ServeMux,
-	workspace *netflixlibrary.Workspace,
+	registry *netflixWorkspaceRegistry,
 	logger *slog.Logger,
 ) {
 	routes.HandleFunc(
 		"GET "+netflixProviderPath,
-		getNetflixProvider(workspace, logger),
+		withNetflixWorkspace(registry, logger, getNetflixProvider),
 	)
 	routes.HandleFunc(
 		"POST "+netflixGenerationsPath,
-		createNetflixGeneration(workspace, logger),
+		withNetflixWorkspace(registry, logger, createNetflixGeneration),
 	)
 	routes.HandleFunc(
 		"PUT "+netflixGenerationsPath+"/{generationID}/viewing-activity",
-		uploadNetflixViewingActivity(workspace, logger),
+		withNetflixWorkspace(registry, logger, uploadNetflixViewingActivity),
 	)
 	routes.HandleFunc(
 		"GET "+netflixGenerationsPath+"/{generationID}/events",
-		getNetflixGenerationEvents(workspace, logger),
+		withNetflixWorkspace(registry, logger, getNetflixGenerationEvents),
 	)
 	routes.HandleFunc(
 		"GET "+netflixGenerationsPath+"/{generationID}/analytics",
-		getNetflixGenerationAnalytics(workspace, logger),
+		withNetflixWorkspace(registry, logger, getNetflixGenerationAnalytics),
 	)
 	routes.HandleFunc(
 		"GET "+netflixGenerationsPath+"/{generationID}/records",
-		getNetflixGenerationRecords(workspace, logger),
+		withNetflixWorkspace(registry, logger, getNetflixGenerationRecords),
 	)
 	routes.HandleFunc(
 		"GET "+netflixGenerationsPath+"/{generationID}/export",
-		exportNetflixGeneration(workspace, logger),
+		withNetflixWorkspace(registry, logger, exportNetflixGeneration),
 	)
 	routes.HandleFunc(
 		"DELETE "+netflixGenerationsPath+"/{generationID}",
-		deleteNetflixGeneration(workspace, logger),
+		withNetflixWorkspace(registry, logger, deleteNetflixGeneration),
 	)
 	routes.HandleFunc(
 		"DELETE "+netflixProviderPath,
-		deleteNetflixProvider(workspace, logger),
+		withNetflixWorkspace(registry, logger, deleteNetflixProvider),
 	)
+}
+
+type netflixHandlerFactory func(
+	workspace *netflixlibrary.Workspace,
+	logger *slog.Logger,
+) http.HandlerFunc
+
+func withNetflixWorkspace(
+	registry *netflixWorkspaceRegistry,
+	logger *slog.Logger,
+	handlerFactory netflixHandlerFactory,
+) http.HandlerFunc {
+	return func(responseWriter http.ResponseWriter, request *http.Request) {
+		user, userError := authentication.UserFromRequest(request)
+		if userError != nil {
+			logger.Error(
+				"Netflix request failed",
+				"error_type",
+				"authenticated_user_unavailable",
+			)
+			writeRequestError(responseWriter, http.StatusInternalServerError, "internal_error")
+			return
+		}
+		workspace, releaseWorkspace, workspaceError := registry.acquire(user)
+		if workspaceError != nil {
+			if errors.Is(workspaceError, errWorkspaceRegistryCapacity) {
+				writeRequestError(
+					responseWriter,
+					http.StatusServiceUnavailable,
+					"workspace_capacity_reached",
+				)
+				return
+			}
+			logger.Error(
+				"Netflix request failed",
+				"error_type",
+				"workspace_unavailable",
+			)
+			writeRequestError(responseWriter, http.StatusInternalServerError, "internal_error")
+			return
+		}
+		defer releaseWorkspace()
+		handlerFactory(workspace, logger).ServeHTTP(responseWriter, request)
+	}
 }
 
 func getNetflixProvider(

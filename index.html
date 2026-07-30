@@ -1,5 +1,10 @@
 <!doctype html>
-<html lang="en" data-theme="dark" data-mpr-theme="dark">
+<html
+  lang="en"
+  data-theme="dark"
+  data-mpr-theme="dark"
+  data-api-origin="__DOWNLOAD_YOUR_DATA_API_ORIGIN__"
+>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -12,13 +17,28 @@
     href="https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.css"
   >
   <link rel="stylesheet" href="styles.css">
+  <script src="auth-lifecycle.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+  <script type="module" src="app.js"></script>
+  <script
+    defer
+    src="https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui-config.js"
+  ></script>
+  <script
+    id="mpr-ui-bundle"
+    type="application/json"
+    data-mpr-ui-bundle-src="https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.js"
+  ></script>
 </head>
 <body>
   <a class="skip-link" href="#app">Skip to content</a>
   <mpr-header
     id="app-header"
+    data-config-url="/config-ui.yaml"
     brand-label="Download Your Data"
     brand-href="#catalog"
+    auth-transition='{"title":"Opening Download Your Data","message":"Loading your private workspace.","completionEvent":"download-your-data:app-ready"}'
     settings="false"
   >
     <a
@@ -45,6 +65,11 @@
       <button class="icon-button" id="theme-toggle" type="button" aria-label="Use light theme">
         <span aria-hidden="true">◐</span>
       </button>
+      <mpr-user
+        display-mode="avatar"
+        logout-url="#catalog"
+        logout-label="Sign out"
+      ></mpr-user>
     </div>
   </mpr-header>
 
@@ -69,15 +94,9 @@
           rel="noopener noreferrer"
         >GitHub</a>
       </span>
-      <span id="footer-local">Local-only workspace</span>
-      <span id="footer-privacy">Your imported files stay on this computer.</span>
+      <span id="footer-local">Private workspace</span>
+      <span id="footer-privacy">Your imported files stay in your authenticated workspace.</span>
     </div>
   </mpr-footer>
-
-  <script
-    defer
-    src="https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.js"
-  ></script>
-  <script type="module" src="app.js"></script>
 </body>
 </html>

@@ -25,6 +25,25 @@ const OPENAI_SEARCH_MODES = new Set(['hybrid', 'semantic', 'lexical']);
 
 let csrfToken = '';
 
+function apiURL(path) {
+  const configuredOrigin = document.documentElement.dataset.apiOrigin;
+  if (!configuredOrigin) {
+    throw new Error('data-api-origin is required');
+  }
+  const baseURL = new URL(configuredOrigin);
+  if (
+    !['http:', 'https:'].includes(baseURL.protocol) ||
+    baseURL.username ||
+    baseURL.password ||
+    (baseURL.pathname !== '/' && baseURL.pathname !== '') ||
+    baseURL.search ||
+    baseURL.hash
+  ) {
+    throw new Error('data-api-origin must be an HTTP origin');
+  }
+  return new URL(path, baseURL).href;
+}
+
 export class APIError extends Error {
   constructor(status, payload) {
     const code = payload?.error?.code || `http_${status}`;
@@ -40,10 +59,6 @@ export class APIError extends Error {
 export async function initializeAPI(signal) {
   const capabilities = await requestJSON('/api/capabilities', {signal});
   assertObject(capabilities, 'capabilities');
-  assertBoolean(capabilities.local_only, 'capabilities.local_only');
-  if (!capabilities.local_only) {
-    throw new Error('capabilities.local_only must be true');
-  }
   assertString(capabilities.csrf_token, 'capabilities.csrf_token');
   if (!capabilities.csrf_token) {
     throw new Error('capabilities.csrf_token is required');
@@ -66,6 +81,10 @@ export async function initializeAPI(signal) {
   );
   csrfToken = capabilities.csrf_token;
   return capabilities;
+}
+
+export function resetAPI() {
+  csrfToken = '';
 }
 
 export async function getNetflixProvider(signal) {
@@ -257,7 +276,9 @@ export async function getRecords(generationID, filter, cursor, limit, signal) {
 
 export function exportGenerationURL(generationID) {
   requireGenerationID(generationID);
-  return `/api/providers/netflix/generations/${encodeURIComponent(generationID)}/export`;
+  return apiURL(
+    `/api/providers/netflix/generations/${encodeURIComponent(generationID)}/export`
+  );
 }
 
 async function mutateJSON(path, method, body, signal) {
@@ -270,9 +291,9 @@ async function mutateJSON(path, method, body, signal) {
 }
 
 async function requestJSON(path, options = {}) {
-  const response = await fetch(path, {
+  const response = await fetch(apiURL(path), {
     cache: 'no-store',
-    credentials: 'same-origin',
+    credentials: 'include',
     ...options
   });
   if (response.status === 204) {
