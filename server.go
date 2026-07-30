@@ -1,13 +1,16 @@
 package main
 
 import (
+	"bytes"
 	"embed"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html"
 	"io/fs"
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/authentication"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/inference"
@@ -24,6 +27,7 @@ const (
 	healthStatusReady   = "ready"
 	inferenceNotChecked = "not_checked"
 	csrfHeaderName      = "X-CSRF-Token"
+	apiOriginMarker     = "__DOWNLOAD_YOUR_DATA_API_ORIGIN__"
 )
 
 //go:embed index.html auth-lifecycle.js app.js api.js charts.js styles.css data.json images
@@ -163,6 +167,10 @@ func newApplicationHandlerWithNetflixMetadata(
 	if staticRootError != nil {
 		return nil, fmt.Errorf("open embedded application assets: %w", staticRootError)
 	}
+	indexDocument, indexError := buildApplicationIndex(config)
+	if indexError != nil {
+		return nil, indexError
+	}
 	workspaceRegistry, registryError := newNetflixWorkspaceRegistry(
 		config,
 		metadataClient,
@@ -192,6 +200,8 @@ func newApplicationHandlerWithNetflixMetadata(
 			logger,
 		),
 	)
+	routes.HandleFunc("GET /{$}", writeApplicationIndex(indexDocument))
+	routes.HandleFunc("GET /index.html", writeApplicationIndex(indexDocument))
 	routes.Handle("/", http.FileServer(http.FS(staticRoot)))
 	return &applicationHandler{
 		handler: applySecurityHeaders(
@@ -200,6 +210,36 @@ func newApplicationHandlerWithNetflixMetadata(
 		),
 		workspaceRegistry: workspaceRegistry,
 	}, nil
+}
+
+func buildApplicationIndex(config runtimeconfig.Config) ([]byte, error) {
+	indexSource, readError := applicationAssets.ReadFile("index.html")
+	if readError != nil {
+		return nil, fmt.Errorf("read embedded application index: %w", readError)
+	}
+	if bytes.Count(indexSource, []byte(apiOriginMarker)) != 1 {
+		return nil, errors.New("render application index: API origin marker must appear exactly once")
+	}
+	return bytes.Replace(
+		indexSource,
+		[]byte(apiOriginMarker),
+		[]byte(html.EscapeString(config.Authentication().APIOrigin())),
+		1,
+	), nil
+}
+
+func writeApplicationIndex(indexDocument []byte) http.HandlerFunc {
+	return func(responseWriter http.ResponseWriter, request *http.Request) {
+		responseWriter.Header().Set("Cache-Control", "no-store")
+		responseWriter.Header().Set("Content-Type", "text/html; charset=utf-8")
+		responseWriter.Header().Set("Content-Length", strconv.Itoa(len(indexDocument)))
+		if request.Method == http.MethodHead {
+			responseWriter.WriteHeader(http.StatusOK)
+			return
+		}
+		responseWriter.WriteHeader(http.StatusOK)
+		_, _ = responseWriter.Write(indexDocument)
+	}
 }
 
 func writeHealth(logger *slog.Logger) http.HandlerFunc {
