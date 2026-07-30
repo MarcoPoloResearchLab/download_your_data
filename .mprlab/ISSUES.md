@@ -1198,9 +1198,12 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - `make test-browser`
   - `make ci`
 
-- [ ] [F010] (P1) {P006} Introduce the shared TAuth user and workspace boundary
+- [!] [F010] (P1) {P006} Introduce the shared TAuth user and workspace boundary
   Goal:
   Give every data-analysis provider one authenticated Download Your Data user without creating provider-specific login or session systems.
+
+  Blocked:
+  The literal `mpr-ui@latest` contract has no documented cold-session settlement signal, and the exact production API, TAuth tenant, cookie, OAuth, gateway, storage, inference, and secret-reference profile is not present in the repository or connected infrastructure.
 
   Requirements:
   - Use one app-owned `/config-ui.yaml`, one Download Your Data TAuth tenant, and the documented `mpr-ui:auth:*` lifecycle for every provider application.
