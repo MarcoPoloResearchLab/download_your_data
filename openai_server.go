@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/authentication"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/domain"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/embedding"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/retrieval"
@@ -109,7 +110,21 @@ func getOpenAIProvider(
 			writeRequestError(responseWriter, http.StatusBadRequest, "invalid_query")
 			return
 		}
-		snapshot, snapshotError := loadOpenAIProviderSnapshot(request.Context(), config)
+		user, userError := authentication.UserFromRequest(request)
+		if userError != nil {
+			logger.Error(
+				"OpenAI provider snapshot failed",
+				"error_type",
+				"authenticated_user_unavailable",
+			)
+			writeRequestError(responseWriter, http.StatusInternalServerError, "internal_error")
+			return
+		}
+		snapshot, snapshotError := loadOpenAIProviderSnapshot(
+			request.Context(),
+			config,
+			user,
+		)
 		if snapshotError != nil {
 			logger.Error("OpenAI provider snapshot failed", "error_type", "openai_snapshot_failed")
 			writeRequestError(responseWriter, http.StatusInternalServerError, "openai_unavailable")
@@ -139,7 +154,23 @@ func searchOpenAIProvider(
 			return
 		}
 
-		openedStore, openError := store.Open(config.ArchiveDatabase())
+		user, userError := authentication.UserFromRequest(request)
+		if userError != nil {
+			logger.Error(
+				"OpenAI search failed",
+				"error_type",
+				"authenticated_user_unavailable",
+			)
+			writeRequestError(responseWriter, http.StatusInternalServerError, "internal_error")
+			return
+		}
+		userWorkspace, workspaceError := config.UserWorkspace(user)
+		if workspaceError != nil {
+			logger.Error("OpenAI search failed", "error_type", "openai_workspace_unavailable")
+			writeRequestError(responseWriter, http.StatusInternalServerError, "openai_unavailable")
+			return
+		}
+		openedStore, openError := store.Open(userWorkspace.ArchiveDatabase())
 		if openError != nil {
 			logger.Error("OpenAI search failed", "error_type", "openai_store_unavailable")
 			writeRequestError(responseWriter, http.StatusInternalServerError, "openai_unavailable")
@@ -216,8 +247,13 @@ func searchOpenAIProvider(
 func loadOpenAIProviderSnapshot(
 	contextValue context.Context,
 	config runtimeconfig.Config,
+	user authentication.AuthenticatedUser,
 ) (openAIProviderSnapshot, error) {
-	openedStore, openError := store.Open(config.ArchiveDatabase())
+	userWorkspace, workspaceError := config.UserWorkspace(user)
+	if workspaceError != nil {
+		return openAIProviderSnapshot{}, workspaceError
+	}
+	openedStore, openError := store.Open(userWorkspace.ArchiveDatabase())
 	if openError != nil {
 		return openAIProviderSnapshot{}, openError
 	}
