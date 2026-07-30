@@ -26,7 +26,10 @@ const OPENAI_SEARCH_MODES = new Set(['hybrid', 'semantic', 'lexical']);
 let csrfToken = '';
 
 function apiURL(path) {
-  const configuredOrigin = document.documentElement.dataset.apiOrigin || window.location.origin;
+  const configuredOrigin = document.documentElement.dataset.apiOrigin;
+  if (!configuredOrigin) {
+    throw new Error('data-api-origin is required');
+  }
   const baseURL = new URL(configuredOrigin);
   if (
     !['http:', 'https:'].includes(baseURL.protocol) ||
