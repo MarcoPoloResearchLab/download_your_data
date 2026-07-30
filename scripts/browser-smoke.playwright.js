@@ -165,6 +165,74 @@ async page => {
     `public guides or Credits made protected requests: ${protectedRequests().join(', ')}`
   );
 
+  const protectedRequestCountBeforeResources = protectedRequests().length;
+  await page.setViewportSize({width: 1440, height: 1000});
+  await page.goto(`${baseURL}/resources/`, {waitUntil: 'networkidle'});
+  assert(
+    await page.locator('.resource-card').count() === 12,
+    'resource hub must expose twelve current crawlable resources'
+  );
+  assert(
+    await page.locator('link[rel="canonical"]').getAttribute('href') ===
+      `${baseURL}/resources/`,
+    'resource hub canonical does not use the final trailing-slash URL'
+  );
+  await page.evaluate(() => {
+    const structuredData = document.querySelector('#structured-data')?.textContent;
+    if (!structuredData) {
+      throw new Error('resource hub structured data is missing');
+    }
+    JSON.parse(structuredData);
+  });
+  for (const resourcePath of [
+    '/resources/netflix-viewing-history-csv/',
+    '/resources/netflix-viewing-history-analyzer/',
+    '/resources/chatgpt-data-export/',
+    '/resources/whatsapp-chat-export/'
+  ]) {
+    await page.setViewportSize({width: 390, height: 844});
+    await page.goto(`${baseURL}${resourcePath}`, {waitUntil: 'networkidle'});
+    assert(
+      await page.locator('h1').count() === 1 &&
+        await page.locator('#quick-verdict-title').count() === 1 &&
+        await page.locator('pre code').count() === 1 &&
+        await page.locator('details').count() >= 3 &&
+        await page.locator('a[rel~="author"]').count() === 1,
+      `${resourcePath} is missing required public resource depth`
+    );
+    assert(
+      await page.locator('link[rel="canonical"]').getAttribute('href') ===
+        `${baseURL}${resourcePath}`,
+      `${resourcePath} canonical does not match the final served URL`
+    );
+    assert(
+      await page.locator('img[loading="lazy"]').evaluateAll((images) =>
+        images.every(
+          (image) =>
+            Number(image.getAttribute('width')) > 0 &&
+            Number(image.getAttribute('height')) > 0
+        )
+      ),
+      `${resourcePath} has a lazy image without explicit dimensions`
+    );
+    await assertNoHorizontalOverflow(resourcePath);
+  }
+  assert(
+    protectedRequests().length === protectedRequestCountBeforeResources,
+    `public resources made protected requests: ${protectedRequests().join(', ')}`
+  );
+
+  await page.setViewportSize({width: 1440, height: 1000});
+  await page.goto(baseURL, {waitUntil: 'networkidle'});
+  await page.waitForFunction(
+    () =>
+      customElements.get('mpr-header') &&
+      customElements.get('mpr-footer') &&
+      window.MPRUI?.testing
+  );
+  await page.locator('.catalog').waitFor();
+  await setSharedAuth(false);
+
   await page.setViewportSize({width: 1440, height: 1000});
   await route('#provider/netflix', '.catalog');
   assert(

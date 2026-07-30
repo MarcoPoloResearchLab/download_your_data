@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/MarcoPoloResearchLab/download_your_data/frontend"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/authentication"
@@ -179,6 +180,12 @@ func newApplicationHandlerWithNetflixMetadata(
 	if indexError != nil {
 		return nil, indexError
 	}
+	publicSite, publicSiteError := frontend.NewPublicSite(
+		config.Authentication().PublicOrigin(),
+	)
+	if publicSiteError != nil {
+		return nil, fmt.Errorf("build public site: %w", publicSiteError)
+	}
 	workspaceRegistry, registryError := newNetflixWorkspaceRegistry(
 		config,
 		metadataClient,
@@ -199,6 +206,24 @@ func newApplicationHandlerWithNetflixMetadata(
 	routes := http.NewServeMux()
 	routes.HandleFunc("GET "+healthPath, writeHealth(logger))
 	routes.HandleFunc("GET "+uiConfigPath, writeUIConfig(config, logger))
+	for _, publicPath := range publicSite.Paths() {
+		publicHandler, publicHandlerError := newPublicDocumentHandler(
+			publicSite,
+			publicPath,
+		)
+		if publicHandlerError != nil {
+			return nil, publicHandlerError
+		}
+		pattern := "GET " + publicPath
+		if strings.HasSuffix(publicPath, "/") {
+			pattern += "{$}"
+			routes.HandleFunc(
+				"GET "+strings.TrimSuffix(publicPath, "/"),
+				redirectToCanonicalPublicPath(publicPath),
+			)
+		}
+		routes.HandleFunc(pattern, publicHandler)
+	}
 	routes.Handle(
 		"/api/",
 		requireAuthenticatedUser(
@@ -228,11 +253,19 @@ func buildApplicationIndex(config runtimeconfig.Config) ([]byte, error) {
 	if bytes.Count(indexSource, []byte(frontend.APIOriginMarker)) != 1 {
 		return nil, errors.New("render application index: API origin marker must appear exactly once")
 	}
-	return bytes.Replace(
+	if bytes.Count(indexSource, []byte(frontend.PublicOriginMarker)) != 2 {
+		return nil, errors.New("render application index: public origin marker must appear exactly twice")
+	}
+	renderedIndex := bytes.Replace(
 		indexSource,
 		[]byte(frontend.APIOriginMarker),
 		[]byte(html.EscapeString(config.Authentication().APIOrigin())),
 		1,
+	)
+	return bytes.ReplaceAll(
+		renderedIndex,
+		[]byte(frontend.PublicOriginMarker),
+		[]byte(html.EscapeString(config.Authentication().PublicOrigin())),
 	), nil
 }
 
@@ -247,6 +280,38 @@ func writeApplicationIndex(indexDocument []byte) http.HandlerFunc {
 		}
 		responseWriter.WriteHeader(http.StatusOK)
 		_, _ = responseWriter.Write(indexDocument)
+	}
+}
+
+func newPublicDocumentHandler(
+	site frontend.Site,
+	path string,
+) (http.HandlerFunc, error) {
+	body, contentType, found := site.Read(path)
+	if !found {
+		return nil, fmt.Errorf("register public document %q: document is missing", path)
+	}
+	return func(responseWriter http.ResponseWriter, request *http.Request) {
+		responseWriter.Header().Set("Cache-Control", "public, max-age=300")
+		responseWriter.Header().Set("Content-Type", contentType)
+		responseWriter.Header().Set("Content-Length", strconv.Itoa(len(body)))
+		responseWriter.WriteHeader(http.StatusOK)
+		if request.Method == http.MethodHead {
+			return
+		}
+		_, _ = responseWriter.Write(body)
+	}, nil
+}
+
+func redirectToCanonicalPublicPath(canonicalPath string) http.HandlerFunc {
+	return func(responseWriter http.ResponseWriter, request *http.Request) {
+		responseWriter.Header().Set("Cache-Control", "public, max-age=300")
+		http.Redirect(
+			responseWriter,
+			request,
+			canonicalPath,
+			http.StatusPermanentRedirect,
+		)
 	}
 }
 

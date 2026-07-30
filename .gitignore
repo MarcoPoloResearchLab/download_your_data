@@ -3,3 +3,4 @@
 /build/
 /.playwright-cli/
 /.tidy-folder-snapshots/
+/configs/.env

@@ -123,7 +123,13 @@ func TestApplicationHTTPContract(testContext *testing.T) {
 			string(body),
 			`data-api-origin="`+config.Authentication().APIOrigin()+`"`,
 		) ||
-			strings.Contains(string(body), frontend.APIOriginMarker) {
+			!strings.Contains(
+				string(body),
+				`<link rel="canonical" href="`+
+					config.Authentication().PublicOrigin()+`/">`,
+			) ||
+			strings.Contains(string(body), frontend.APIOriginMarker) ||
+			strings.Contains(string(body), frontend.PublicOriginMarker) {
 			testContext.Fatalf(
 				"application shell does not contain the configured API origin",
 			)
@@ -322,6 +328,10 @@ func TestContentSecurityPolicyIsolatesTheSharedShell(testContext *testing.T) {
 	if !strings.Contains(securityPolicy, "default-src 'self'") ||
 		!strings.Contains(securityPolicy, config.Authentication().APIOrigin()) ||
 		!strings.Contains(securityPolicy, config.Authentication().TAuthURL()) ||
+		!strings.Contains(
+			securityPolicy,
+			"style-src 'self' https://cdn.jsdelivr.net https://accounts.google.com 'unsafe-inline'",
+		) ||
 		!strings.Contains(securityPolicy, "frame-ancestors 'none'") ||
 		strings.Contains(securityPolicy, "unsafe-eval") {
 		testContext.Fatalf(

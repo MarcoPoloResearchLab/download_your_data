@@ -260,11 +260,16 @@ func TestFrontendAssetsUseCurrentMPRShell(testContext *testing.T) {
 		!strings.Contains(index, `completionEvent`) ||
 		!strings.Contains(index, `<mpr-user`) ||
 		!strings.Contains(index, `<mpr-footer`) ||
+		!strings.Contains(index, `name="description"`) ||
+		!strings.Contains(index, `<link rel="canonical" href="`+PublicOriginMarker+`/">`) ||
+		!strings.Contains(index, `<meta property="og:url" content="`+PublicOriginMarker+`/">`) ||
+		!strings.Contains(index, `href="/resources/"`) ||
 		!strings.Contains(index, `slot="brand"`) ||
 		!strings.Contains(index, `slot="nav-left"`) ||
 		!strings.Contains(index, `slot="aux"`) ||
 		!strings.Contains(index, `slot="legal"`) ||
 		strings.Count(index, "mpr-ui@latest") != 3 ||
+		strings.Count(index, PublicOriginMarker) != 2 ||
 		strings.Contains(index, "mpr-ui@v") ||
 		strings.Contains(index, "tauth.js") ||
 		strings.Contains(index, "tauth-url=") ||

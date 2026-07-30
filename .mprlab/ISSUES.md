@@ -428,6 +428,61 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - `make test-browser`
   - `make ci`
 
+- [x] [B022] (P1) Restore self-contained zero-argument local startup
+  Goal:
+  Make the repository-owned `make up` command load its complete local runtime
+  profile and report success only after the application is actually ready.
+
+  Requirements:
+  - Keep `make up` and `make down` argument-free as the sole public local
+    lifecycle.
+  - Load one ignored `configs/.env` as the sole local application and
+    dependency profile without executing it as shell code or accepting
+    inherited configuration overrides.
+  - Require every authentication and ownership value, allow only current
+    runtime keys, reject malformed, duplicate, unsupported, or empty entries,
+    and enforce mode `0600`.
+  - Initialize the one explicit signing-key bootstrap marker atomically, start
+    official `TAuth:latest` and `ghttp:latest` services, and expose the app,
+    `/auth`, and `/me` through one `http://localhost:8080` front door.
+  - Keep `make down` independent of application configuration.
+  - Announce readiness only after the app health, anonymous TAuth session and
+    profile statuses, browser config, and gateway are all verified; clean up
+    process and container ownership when configuration or readiness fails.
+  - Do not source a tracked example, inject a fake authentication profile, or
+    weaken the backend's fail-closed runtime validation. Do not place the
+    unused Google OAuth client secret in the app profile or repository.
+
+  Deliverables:
+  - Strict local environment loading and secure signing-key initialization in
+    the ownership-safe lifecycle.
+  - Checkout-scoped local Compose and TAuth contracts with same-origin routing.
+  - Black-box coverage for missing configuration, file authority, permissions,
+    key initialization, dependency ordering, same-origin readiness, duplicate
+    start, stop, repeated stop, and unrelated process rejection.
+  - Updated local operator documentation and ignored-secret boundary.
+
+  Validation:
+  - `make test-local-lifecycle`
+  - `make ci`
+
+  Resolved 2026-07-30: `make up` now loads the ignored `configs/.env`, treats
+  every value as inert data, enforces its current key set and mode `0600`,
+  ignores inherited application configuration, and atomically replaces the
+  explicit first-run marker with a private signing key. It starts the official
+  latest TAuth and ghttp images plus the local binary, routes all browser auth
+  through the authorized `http://localhost:8080` origin, and reports readiness
+  only after app health, anonymous `/auth/session=204`, `/me=401`, and
+  `/config-ui.yaml=200` checks pass. `make down` remains environment-file
+  independent and preserves the checkout-scoped TAuth data volume. The supplied
+  Google web client ID is retained only in the ignored profile; its unused
+  client secret remains outside the repository under mode `0600`. Black-box
+  lifecycle coverage, focused CSP coverage, literal real-container
+  `make up`/`make down` acceptance, real-browser shared-shell and nonce
+  acceptance, and `make ci` pass. The browser-discovered GIS stylesheet CSP
+  violation was removed; the isolated browser had no Google account, so no
+  authenticated session was fabricated or claimed.
+
 ## Improvements
 
 - [x] [I001] (P1) Establish the canonical local server and validation foundation
@@ -711,6 +766,41 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Wide and narrow browser coverage proves public and authenticated layouts remain compact, keyboard-operable, and free of overflow.
   - `make test-browser`
   - `make ci`
+
+- [x] [I013] (P1) Publish the indexable data-export resource library
+  Goal:
+  Give searchers a useful, crawlable path from provider-specific data-export questions to the current anonymous guides and supported Netflix analysis workflow.
+
+  Requirements:
+  - Publish one path-based `/resources/` hub and one meaningfully distinct English resource for every current provider export workflow.
+  - Publish a separate Netflix viewing-history analyzer resource grounded in the current per-profile CSV, private analytics, optional TMDB, export, replacement, and deletion contracts.
+  - Keep ChatGPT browser import, full Netflix account-archive analysis, mandatory TMDB enrichment, customer proof, ranking claims, and invented production values out of public copy.
+  - Derive canonical, Open Graph, JSON-LD, sitemap, robots, and internal-link URLs from the validated public origin instead of hard-coding the unresolved production host.
+  - Use trailing-slash resource canonicals, crawlable root and related-resource links, visible authorship and review dates, repository evidence, bounded FAQs, and approved lazy-loaded screenshots.
+  - Generate sitemap `<lastmod>` only from the explicit significant-content date recorded with each new resource.
+
+  Deliverables:
+  - Validated resource registry, reusable HTML rendering, resource styles, hub, provider resources, and Netflix analyzer resource.
+  - Root metadata and crawlable Resources link, aligned `sitemap.xml` and `robots.txt`, and Article, CollectionPage, BreadcrumbList, and visible FAQ structured data.
+  - Black-box HTTP and real-browser SEO coverage for canonical URLs, trailing-slash behavior, sitemap entries, structured data, public access, and responsive rendering.
+
+  Validation:
+  - `make check-frontend`
+  - `make test`
+  - `make test-browser`
+  - `make ci`
+
+  Resolved 2026-07-30: the public frontend now exposes a path-based resource
+  hub, one grounded export resource for every current provider, and a distinct
+  Netflix viewing-history analyzer resource. Canonical, Open Graph, JSON-LD,
+  sitemap, robots, and internal URLs derive from the validated public origin;
+  resource canonicals use trailing slashes with permanent slash redirects.
+  The application footer, hub, and related-resource links provide a complete
+  crawlable path. Registry validation, black-box HTTP coverage, structured-data
+  parsing, sitemap-to-`200` checks, wide and narrow browser coverage, and
+  `make ci` passed. No production profile was invented and no release,
+  publication, deployment, Search Console request, or live indexing validation
+  was performed.
 
 ## Maintenance
 

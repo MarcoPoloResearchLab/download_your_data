@@ -16,11 +16,20 @@ provider remains entirely on that provider's own site.
 | --- | --- | --- | --- |
 | Provider catalog | `#catalog` | No | No |
 | Provider guide | `#guide/{provider}` | No | No |
+| Resource library | `/resources/` | No | No |
 | Credits | `#credits` | No | No |
 | Provider application | `#app/{provider}` | Shared TAuth session | Yes |
 
 There is no `#provider/{provider}` compatibility route and no end-user
 operator CLI. The executable accepts only `serve`.
+
+The path-based resource library is the indexable companion to the interactive
+provider guides. Every resource uses a trailing-slash canonical URL, links to
+related provider workflows, and derives its canonical, Open Graph, JSON-LD,
+sitemap, and robots URLs from `DOWNLOAD_YOUR_DATA_PUBLIC_ORIGIN`. The
+repository does not hard-code the unresolved production host. See the
+[SEO resource library contract](docs/seo-resource-library.md) for the page
+inventory, evidence model, indexing rules, and publication boundary.
 
 ## Authentication boundary
 
@@ -48,10 +57,28 @@ data for the current user.
 
 ## Runtime configuration
 
-The server fails closed unless all required authentication and ownership
-values are present:
+`make up` is the zero-argument local entrypoint. It loads the checkout's exact
+ignored `configs/.env` file, protects it with mode `0600`, starts the official
+`TAuth:latest` service and same-origin `ghttp:latest` gateway through Docker,
+starts the application, and reports success only after all three boundaries
+are ready. The browser front door is `http://localhost:8080`; `/auth` and
+`/me` route to TAuth while every other path routes to the application.
+Inherited `DOWNLOAD_YOUR_DATA_*` values do not override the file. Tracked
+example environments are not runtime inputs.
+
+The local profile may contain the exact
+`DOWNLOAD_YOUR_DATA_TAUTH_JWT_SIGNING_KEY=GENERATE_ON_FIRST_MAKE_UP` bootstrap
+marker once. On first startup, the lifecycle replaces that marker atomically
+with a new private signing key before either process reads the profile. The
+Google web client ID is browser-safe and is shared by the app and TAuth; a
+Google OAuth client secret is not a runtime input for this GIS flow.
+
+The local `configs/.env` must contain all required authentication and ownership
+values:
 
 ```text
+DOWNLOAD_YOUR_DATA_ADDRESS
+DOWNLOAD_YOUR_DATA_LOCAL_APP_UPSTREAM
 DOWNLOAD_YOUR_DATA_DATA_DIR
 DOWNLOAD_YOUR_DATA_PUBLIC_ORIGIN
 DOWNLOAD_YOUR_DATA_API_ORIGIN
@@ -66,11 +93,8 @@ DOWNLOAD_YOUR_DATA_GOOGLE_CLIENT_ID
 The TAuth URL, tenant, signing key, cookie names, and Google client ID must
 match the selected TAuth environment exactly. Hosted origins require HTTPS;
 HTTP is accepted only for loopback development. The private data root is
-mandatory and must satisfy the owner-only filesystem contract.
-
-`DOWNLOAD_YOUR_DATA_ADDRESS` controls the listen address and defaults to
-`127.0.0.1:8787`; the selected production profile must set its exact container
-bind address. Optional server-owned integration values include:
+mandatory, must use an absolute path, and must satisfy the owner-only filesystem
+contract. Optional integration values may be present in the same file:
 
 ```text
 DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN
@@ -78,16 +102,19 @@ DOWNLOAD_YOUR_DATA_INFERENCE_BASE_URL
 DOWNLOAD_YOUR_DATA_INFERENCE_BOUNDARY
 ```
 
-Start and stop the configured server with:
+The local public, API, and TAuth origins must be identical. The application
+listen address and Docker-only application upstream must describe the same
+backend. Start and stop the complete stack with:
 
 ```bash
 make up
 make down
 ```
 
-`make up` remains attached to its terminal. `make down` is idempotent and
-refuses to stop a process that is not the exact server recorded by this
-checkout.
+`make up` remains attached to its terminal. `make down` is idempotent, requires
+no environment file, stops only the application process owned by this checkout, and
+removes its checkout-scoped TAuth and gateway containers. The named TAuth data
+volume remains intact across normal stop/start cycles.
 
 ## Source layout
 
@@ -98,7 +125,7 @@ Application ownership is explicit:
 cmd/download-your-data/  executable bootstrap
 internal/httpapi/        authenticated HTTP and provider adapters
 internal/                provider domains, storage, inference, and retrieval
-frontend/                browser entrypoint, modules, content, manifests, and images
+frontend/                browser app, public resources, content, manifests, and images
 scripts/                 repository-owned development and validation commands
 testdata/                fixtures shared by multiple packages
 ```
@@ -111,9 +138,9 @@ make clean
 
 ## API boundary
 
-`GET /api/health` is public and contains no user data. `/config-ui.yaml` and
-static assets are public. Every other `/api/*` route requires a valid TAuth
-session.
+`GET /api/health` is public and contains no user data. `/config-ui.yaml`,
+`/resources/`, `sitemap.xml`, `robots.txt`, and static assets are public. Every
+other `/api/*` route requires a valid TAuth session.
 
 The protected API permits only the exact configured frontend origin, uses
 credentialed CORS, and requires the per-process CSRF token for mutations.
