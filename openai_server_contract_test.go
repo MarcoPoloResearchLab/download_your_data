@@ -50,7 +50,7 @@ func TestOpenAIProviderHTTPContract(testContext *testing.T) {
 		testContext.Fatalf("create application handler: %v", handlerError)
 	}
 	defer handler.Close()
-	server := httptest.NewServer(handler)
+	server := newAuthenticatedTestServer(testContext, config, handler, defaultTestUserID)
 	defer server.Close()
 
 	testContext.Run("reports a complete private search workspace", func(testContext *testing.T) {
@@ -187,7 +187,11 @@ func TestOpenAIProviderHTTPContract(testContext *testing.T) {
 
 func TestOpenAIProviderReportsEmptyArchive(testContext *testing.T) {
 	config := testRuntimeConfig(testContext)
-	snapshot, snapshotError := loadOpenAIProviderSnapshot(context.Background(), config)
+	snapshot, snapshotError := loadOpenAIProviderSnapshot(
+		context.Background(),
+		config,
+		testAuthenticatedUser(testContext, config, defaultTestUserID),
+	)
 	if snapshotError != nil {
 		testContext.Fatalf("load empty OpenAI provider snapshot: %v", snapshotError)
 	}
@@ -202,7 +206,11 @@ func TestOpenAIProviderReportsEmptyArchive(testContext *testing.T) {
 func TestOpenAIProviderReportsIndexRequired(testContext *testing.T) {
 	config := testRuntimeConfig(testContext)
 	importOpenAITestArchive(testContext, config)
-	snapshot, snapshotError := loadOpenAIProviderSnapshot(context.Background(), config)
+	snapshot, snapshotError := loadOpenAIProviderSnapshot(
+		context.Background(),
+		config,
+		testAuthenticatedUser(testContext, config, defaultTestUserID),
+	)
 	if snapshotError != nil {
 		testContext.Fatalf("load unindexed OpenAI provider snapshot: %v", snapshotError)
 	}
@@ -240,7 +248,7 @@ func TestOpenAIProviderRejectsAnIndexFromAnotherInferenceIdentity(
 		testContext.Fatalf("create application handler: %v", handlerError)
 	}
 	defer handler.Close()
-	server := httptest.NewServer(handler)
+	server := newAuthenticatedTestServer(testContext, currentConfig, handler, defaultTestUserID)
 	defer server.Close()
 
 	response, requestError := http.Get(server.URL + openAIProviderPath)
@@ -306,7 +314,8 @@ func seedOpenAISearchArchive(
 ) {
 	testContext.Helper()
 	importOpenAITestArchive(testContext, config)
-	openedStore, openError := store.Open(config.ArchiveDatabase())
+	userWorkspace := testUserWorkspace(testContext, config, defaultTestUserID)
+	openedStore, openError := store.Open(userWorkspace.ArchiveDatabase())
 	if openError != nil {
 		testContext.Fatalf("open OpenAI archive store: %v", openError)
 	}
@@ -342,7 +351,8 @@ func importOpenAITestArchive(
 	config runtimeconfig.Config,
 ) {
 	testContext.Helper()
-	openedStore, openError := store.Open(config.ArchiveDatabase())
+	userWorkspace := testUserWorkspace(testContext, config, defaultTestUserID)
+	openedStore, openError := store.Open(userWorkspace.ArchiveDatabase())
 	if openError != nil {
 		testContext.Fatalf("open OpenAI archive store: %v", openError)
 	}
@@ -379,7 +389,7 @@ func performOpenAISearchRequest(
 		testContext.Fatalf("create OpenAI search request: %v", requestError)
 	}
 	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Origin", serverURL)
+	request.Header.Set("Origin", config.Authentication().PublicOrigin())
 	request.Header.Set(csrfHeaderName, config.CSRFToken())
 	response, requestError := http.DefaultClient.Do(request)
 	if requestError != nil {
