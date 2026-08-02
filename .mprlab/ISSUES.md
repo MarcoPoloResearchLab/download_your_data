@@ -529,7 +529,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - `make test-browser`
   - `make ci`
 
-- [ ] [F012] (P1) Add Amazon data export guide and order history workflow
+- [x] [F012] (P1) Add Amazon data export guide and order history workflow
   Goal:
   Provide a canonical export guide and provider workflow for downloading Amazon personal data, focusing on order history reports, digital purchases, Kindle content, and Prime Video history.
 
