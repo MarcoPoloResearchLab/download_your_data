@@ -33,6 +33,7 @@ var instructionScreenshotPlatformIDs = []string{
 	"x",
 	"youtube",
 	"google",
+	"amazon",
 }
 
 var instructionScreenshotLocaleIDs = []string{"en", "es", "fr", "ru"}
@@ -123,8 +124,7 @@ func TestInstructionScreenshotContract(testContext *testing.T) {
 		testContext,
 		instructionScreenshotDataPath,
 	)
-
-	const expectedScreenshotCount = 26
+	const expectedScreenshotCount = 28
 	if len(manifest.Screenshots) != expectedScreenshotCount {
 		testContext.Fatalf(
 			"manifest screenshot count = %d; want %d",
@@ -145,6 +145,7 @@ func TestInstructionScreenshotContract(testContext *testing.T) {
 		"x":         2,
 		"youtube":   2,
 		"google":    2,
+		"amazon":    2,
 	}
 	manifestByPlatform := make(map[string][]instructionScreenshotEntry, len(expectedPlatformCounts))
 	manifestByID := make(map[string]instructionScreenshotEntry, expectedScreenshotCount)

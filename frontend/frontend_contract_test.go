@@ -83,6 +83,7 @@ func TestFrontendProviderWorkspaceContract(testContext *testing.T) {
 		{ID: "x", Surface: "guide", IconSrc: "images/providers/x.png"},
 		{ID: "youtube", Surface: "guide", IconSrc: "images/providers/youtube.png"},
 		{ID: "google", Surface: "guide", IconSrc: "images/providers/google.png"},
+		{ID: "amazon", Surface: "guide", IconSrc: "images/providers/amazon.png"},
 	}
 	if !reflect.DeepEqual(data.ProviderRegistry, expectedRegistry) {
 		testContext.Fatalf("provider registry = %#v; want %#v", data.ProviderRegistry, expectedRegistry)

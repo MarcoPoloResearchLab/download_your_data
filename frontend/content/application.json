@@ -60,6 +60,11 @@
       "id": "google",
       "surface": "guide",
       "icon_src": "images/providers/google.png"
+    },
+    {
+      "id": "amazon",
+      "surface": "guide",
+      "icon_src": "images/providers/amazon.png"
     }
   ],
   "instruction_screenshots": {
@@ -213,6 +218,18 @@
         "id": "google-takeout-export-options",
         "src": "images/instructions/google-takeout-export-options.png",
         "href": "https://takeout.google.com/?hl=en"
+      }
+    ],
+    "amazon": [
+      {
+        "id": "amazon-your-account",
+        "src": "images/instructions/amazon-your-account.png",
+        "href": "https://www.amazon.com/gp/b2b/reports"
+      },
+      {
+        "id": "amazon-privacy-request",
+        "src": "images/instructions/amazon-privacy-request.png",
+        "href": "https://www.amazon.com/gp/b2b/reports"
       }
     ]
   },
@@ -944,6 +961,55 @@
             }
           ],
           "note": "Security tip: Exports can contain sensitive information. Store your ZIPs in a secure, encrypted location."
+        },
+        {
+          "id": "amazon",
+          "nav": "Amazon",
+          "title": "Amazon Order History & Personal Data",
+          "intro": "Request your Amazon order reports, digital content purchases, Kindle highlights, and Prime Video history.",
+          "steps": [
+            {
+              "text": "Sign in to your Amazon account in a web browser and open Your Account from the navigation menu.",
+              "screenshot_id": "amazon-your-account",
+              "alt": "Amazon Your Account navigation screen"
+            },
+            {
+              "text": "Under Privacy & Security, select Request Your Information (or access Privacy Central directly).",
+              "screenshot_id": "amazon-your-account",
+              "alt": "Amazon Request Your Information privacy settings option"
+            },
+            {
+              "text": "Select the data categories to export, including Your Orders for CSV purchase reports, Kindle content, and Prime Video watch history.",
+              "screenshot_id": "amazon-privacy-request",
+              "alt": "Amazon Request My Data category selection checkboxes"
+            },
+            {
+              "text": "Click Submit Request at the bottom of the data category selection list.",
+              "screenshot_id": "amazon-privacy-request",
+              "alt": "Amazon Submit Request button"
+            },
+            {
+              "text": "Open the confirmation email sent by Amazon to your registered email address and click the verification link.",
+              "screenshot_id": "amazon-privacy-request",
+              "alt": "Amazon export confirmation email link instruction"
+            },
+            {
+              "text": "Wait for Amazon to generate your archive, then download your data ZIP containing your CSV order history files.",
+              "screenshot_id": "amazon-privacy-request",
+              "alt": "Amazon download data completion step"
+            }
+          ],
+          "refs": [
+            {
+              "label": "Request Your Information (Amazon Privacy)",
+              "href": "https://www.amazon.com/gp/b2b/reports"
+            },
+            {
+              "label": "Amazon Privacy Notice & Customer Support",
+              "href": "https://www.amazon.com/gp/help/customer/display.html?nodeId=GX7NJY4G89574M9W"
+            }
+          ],
+          "note": "Amazon order history exports are delivered as ZIP archives containing CSV files. Verification via email is required before Amazon begins processing your request."
         }
       ]
     },
@@ -1674,6 +1740,55 @@
             }
           ],
           "note": "Consejo: guarda los ZIP cifrados y en lugar seguro."
+        },
+        {
+          "id": "amazon",
+          "nav": "Amazon",
+          "title": "Historial de pedidos y datos personales de Amazon",
+          "intro": "Solicita tus informes de pedidos de Amazon, compras de contenido digital, notas de Kindle e historial de Prime Video.",
+          "steps": [
+            {
+              "text": "Inicia sesión en tu cuenta de Amazon en el navegador y abre Tu cuenta desde el menú de navegación.",
+              "screenshot_id": "amazon-your-account",
+              "alt": "Navegación a Tu cuenta de Amazon"
+            },
+            {
+              "text": "En Privacidad y seguridad, selecciona Solicitar tu información (o accede directamente al portal de Privacidad).",
+              "screenshot_id": "amazon-your-account",
+              "alt": "Opción Solicitar tu información en los ajustes de privacidad de Amazon"
+            },
+            {
+              "text": "Selecciona las categorías de datos a exportar, incluyendo Tus pedidos (informes de compras en CSV), contenido de Kindle e historial de Prime Video.",
+              "screenshot_id": "amazon-privacy-request",
+              "alt": "Casillas de selección de categorías en Solicitar mis datos de Amazon"
+            },
+            {
+              "text": "Haz clic en Enviar solicitud al final de la lista de categorías.",
+              "screenshot_id": "amazon-privacy-request",
+              "alt": "Botón Enviar solicitud de Amazon"
+            },
+            {
+              "text": "Abre el correo electrónico de confirmación enviado por Amazon a tu dirección registrada y haz clic en el enlace de verificación.",
+              "screenshot_id": "amazon-privacy-request",
+              "alt": "Instrucción del enlace de verificación del correo de confirmación de exportación de Amazon"
+            },
+            {
+              "text": "Espera a que Amazon genere tu archivo y descarga el ZIP con tu historial de pedidos en CSV.",
+              "screenshot_id": "amazon-privacy-request",
+              "alt": "Paso de descarga del archivo de datos de Amazon"
+            }
+          ],
+          "refs": [
+            {
+              "label": "Solicitar tu información (Privacidad de Amazon)",
+              "href": "https://www.amazon.com/gp/b2b/reports"
+            },
+            {
+              "label": "Aviso de privacidad y atención al cliente de Amazon",
+              "href": "https://www.amazon.com/gp/help/customer/display.html?nodeId=GX7NJY4G89574M9W"
+            }
+          ],
+          "note": "Las exportaciones del historial de pedidos de Amazon se entregan como archivos ZIP con archivos CSV. Se requiere verificación por correo electrónico antes de procesar la solicitud."
         }
       ]
     },
@@ -2404,6 +2519,55 @@
             }
           ],
           "note": "Conseil : stockez les ZIP chiffrés et en lieu sûr."
+        },
+        {
+          "id": "amazon",
+          "nav": "Amazon",
+          "title": "Historique des commandes et données personnelles Amazon",
+          "intro": "Demandez vos rapports de commandes Amazon, vos achats de contenus numériques, vos notes Kindle et votre historique Prime Video.",
+          "steps": [
+            {
+              "text": "Connectez-vous à votre compte Amazon dans un navigateur web et ouvrez Votre compte depuis le menu de navigation.",
+              "screenshot_id": "amazon-your-account",
+              "alt": "Écran de navigation Votre compte Amazon"
+            },
+            {
+              "text": "Dans Confidentialité et sécurité, sélectionnez Demander vos informations (ou accédez directement au portail de confidentialité).",
+              "screenshot_id": "amazon-your-account",
+              "alt": "Option Demander vos informations dans les paramètres de confidentialité d'Amazon"
+            },
+            {
+              "text": "Sélectionnez les catégories de données à exporter, notamment Vos commandes (rapports d'achats en CSV), contenus Kindle et historique Prime Video.",
+              "screenshot_id": "amazon-privacy-request",
+              "alt": "Cases à cocher de sélection des catégories dans Demander mes données Amazon"
+            },
+            {
+              "text": "Cliquez sur Soumettre la demande au bas de la liste des catégories de données.",
+              "screenshot_id": "amazon-privacy-request",
+              "alt": "Bouton Soumettre la demande d'Amazon"
+            },
+            {
+              "text": "Ouvrez l'e-mail de confirmation envoyé par Amazon à votre adresse enregistrée et cliquez sur le lien de vérification.",
+              "screenshot_id": "amazon-privacy-request",
+              "alt": "Instruction du lien de vérification par e-mail de confirmation d'exportation Amazon"
+            },
+            {
+              "text": "Attendez qu'Amazon génère votre archive, puis téléchargez le fichier ZIP contenant l'historique de vos commandes au format CSV.",
+              "screenshot_id": "amazon-privacy-request",
+              "alt": "Étape de téléchargement du fichier ZIP de données Amazon"
+            }
+          ],
+          "refs": [
+            {
+              "label": "Demander vos informations (Confidentialité Amazon)",
+              "href": "https://www.amazon.com/gp/b2b/reports"
+            },
+            {
+              "label": "Notice de protection des données et service client Amazon",
+              "href": "https://www.amazon.com/gp/help/customer/display.html?nodeId=GX7NJY4G89574M9W"
+            }
+          ],
+          "note": "Les exportations de l'historique des commandes Amazon sont fournies sous forme d'archives ZIP contenant des fichiers CSV. Une vérification par e-mail est requise avant le traitement de la demande."
         }
       ]
     },
@@ -3134,6 +3298,55 @@
             }
           ],
           "note": "Совет: храните ZIP-архивы зашифрованными."
+        },
+        {
+          "id": "amazon",
+          "nav": "Amazon",
+          "title": "История заказов и персональные данные Amazon",
+          "intro": "Запросите отчёты о заказах Amazon, цифровых покупках, заметках Kindle и истории просмотров Prime Video.",
+          "steps": [
+            {
+              "text": "Войдите в свою учетную запись Amazon в веб-браузере и откройте раздел Ваш аккаунт из меню навигации.",
+              "screenshot_id": "amazon-your-account",
+              "alt": "Экран навигации в раздел Ваш аккаунт Amazon"
+            },
+            {
+              "text": "В разделе Конфиденциальность и безопасность выберите Запросить вашу информацию (или перейдите в центр конфиденциальности).",
+              "screenshot_id": "amazon-your-account",
+              "alt": "Пункт Запросить вашу информацию в настройках конфиденциальности Amazon"
+            },
+            {
+              "text": "Выберите категории данных для экспорта: Ваши заказы (отчеты о покупках в формате CSV), материалы Kindle и историю просмотров Prime Video.",
+              "screenshot_id": "amazon-privacy-request",
+              "alt": "Флажки выбора категорий данных Amazon"
+            },
+            {
+              "text": "Нажмите кнопку Отправить запрос внизу списка категорий данных.",
+              "screenshot_id": "amazon-privacy-request",
+              "alt": "Кнопка Отправить запрос Amazon"
+            },
+            {
+              "text": "Откройте письмо с подтверждением от Amazon, отправленное на ваш e-mail, и перейдите по ссылке верификации.",
+              "screenshot_id": "amazon-privacy-request",
+              "alt": "Инструкция по верификации запроса по ссылке из письма Amazon"
+            },
+            {
+              "text": "Дождитесь формирования архива и скачайте ZIP-файл с историей заказов в формате CSV.",
+              "screenshot_id": "amazon-privacy-request",
+              "alt": "Шаг скачивания ZIP-архива с данными Amazon"
+            }
+          ],
+          "refs": [
+            {
+              "label": "Запросить ваши данные (Конфиденциальность Amazon)",
+              "href": "https://www.amazon.com/gp/b2b/reports"
+            },
+            {
+              "label": "Уведомление о конфиденциальности и поддержка Amazon",
+              "href": "https://www.amazon.com/gp/help/customer/display.html?nodeId=GX7NJY4G89574M9W"
+            }
+          ],
+          "note": "Экспорт истории заказов Amazon предоставляется в виде ZIP-архивов с файлами CSV. Требуется подтверждение по e-mail перед началом обработки запроса."
         }
       ]
     }

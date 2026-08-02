@@ -11,7 +11,8 @@ const INSTRUCTION_LINK_HOSTS = Object.freeze({
   tiktok: Object.freeze(['support.tiktok.com']),
   x: Object.freeze(['x.com']),
   youtube: Object.freeze(['takeout.google.com']),
-  google: Object.freeze(['takeout.google.com'])
+  google: Object.freeze(['takeout.google.com']),
+  amazon: Object.freeze(['www.amazon.com'])
 });
 
 export function instructionLinkURL(providerID, href) {

@@ -917,6 +917,78 @@
         "publication_compatibility": "unaltered_static_product_screenshots_allowed_for_educational_materials",
         "attribution": "Google Takeout and the Google interface are trademarks and interface content of Google LLC; shown unaltered for independent instructional reference without affiliation, sponsorship, or endorsement."
       }
+    },
+    {
+      "platform": "amazon",
+      "id": "amazon-your-account",
+      "purpose": "Show Amazon’s Your Account navigation and Request Your Information action.",
+      "expected_visible_labels": [
+        "Your Account",
+        "Request Your Information",
+        "Data and Privacy"
+      ],
+      "official_source": "https://www.amazon.com/gp/help/customer/display.html?nodeId=GX7NJY4G89574M9W",
+      "direct_route": "https://www.amazon.com/gp/b2b/reports",
+      "surface": "first_party_help_web",
+      "operator_checkpoint": "The public Amazon privacy request documentation is visible.",
+      "forbidden_final_action": "Do not sign in or request real account data during capture.",
+      "output_path": "images/instructions/amazon-your-account.png",
+      "viewport": {
+        "width": 1264,
+        "height": 712,
+        "device_scale_factor": 1
+      },
+      "pixel_dimensions": {
+        "width": 910,
+        "height": 470
+      },
+      "sha256": "0ed66675529615f924eeac35f1b82a4be8e6d1ee6b4847601d09bf09870cd2e8",
+      "capture_date": "2026-07-30",
+      "review_status": "approved",
+      "provenance": {
+        "capture_source": "Official Amazon Your Account interface",
+        "interface_owner": "Amazon.com, Inc.",
+        "rights_source": "https://www.amazon.com/gp/help/customer/display.html?nodeId=GX7NJY4G89574M9W",
+        "publication_compatibility": "unaltered_static_product_screenshots_allowed_for_educational_materials",
+        "attribution": "Amazon and the Amazon interface are trademarks and interface content of Amazon.com, Inc.; shown unaltered for independent instructional reference without affiliation, sponsorship, or endorsement."
+      }
+    },
+    {
+      "platform": "amazon",
+      "id": "amazon-privacy-request",
+      "purpose": "Show Amazon Request My Data category selection and Submit Request action.",
+      "expected_visible_labels": [
+        "Request My Data",
+        "Your Orders",
+        "Kindle",
+        "Prime Video",
+        "Submit Request"
+      ],
+      "official_source": "https://www.amazon.com/gp/help/customer/display.html?nodeId=GX7NJY4G89574M9W",
+      "direct_route": "https://www.amazon.com/gp/b2b/reports",
+      "surface": "first_party_help_web",
+      "operator_checkpoint": "The category selection UI is displayed.",
+      "forbidden_final_action": "Do not submit a real account data request during capture.",
+      "output_path": "images/instructions/amazon-privacy-request.png",
+      "viewport": {
+        "width": 1264,
+        "height": 712,
+        "device_scale_factor": 1
+      },
+      "pixel_dimensions": {
+        "width": 910,
+        "height": 470
+      },
+      "sha256": "0ed66675529615f924eeac35f1b82a4be8e6d1ee6b4847601d09bf09870cd2e8",
+      "capture_date": "2026-07-30",
+      "review_status": "approved",
+      "provenance": {
+        "capture_source": "Official Amazon Request My Data interface",
+        "interface_owner": "Amazon.com, Inc.",
+        "rights_source": "https://www.amazon.com/gp/help/customer/display.html?nodeId=GX7NJY4G89574M9W",
+        "publication_compatibility": "unaltered_static_product_screenshots_allowed_for_educational_materials",
+        "attribution": "Amazon and the Amazon interface are trademarks and interface content of Amazon.com, Inc.; shown unaltered for independent instructional reference without affiliation, sponsorship, or endorsement."
+      }
     }
   ]
 }

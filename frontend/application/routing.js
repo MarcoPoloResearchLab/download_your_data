@@ -10,7 +10,8 @@ export const GUIDE_ONLY_PROVIDER_IDS = Object.freeze([
   'tiktok',
   'x',
   'youtube',
-  'google'
+  'google',
+  'amazon'
 ]);
 
 export function parseRoute() {
