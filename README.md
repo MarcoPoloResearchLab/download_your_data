@@ -46,6 +46,7 @@ inventory, evidence model, indexing rules, and publication boundary.
 | **X (Twitter)** | Visual Export Guide | Download Your Archive (ZIP) | **Live Guide (`#guide/x`)** — Visual export guide for requesting X account archive, password verification, and downloading personal ZIP data. |
 | **YouTube** | Visual Export Guide | Google Takeout YouTube Archive | **Live Guide (`#guide/youtube`)** — Visual export guide for selecting YouTube & YouTube Music data, configuring delivery options, and downloading Takeout archives. |
 | **Google** | Visual Export Guide | Google Takeout Multi-Service Archive | **Live Guide (`#guide/google`)** — Visual export guide for configuring Google Takeout multi-service exports, export frequencies, file sizes, and destination options. |
+| **Amazon** | Visual Export Guide | Order History Reports & Personal Data Archive | **Live Guide (`#guide/amazon`)** — Product-specific visual export walkthrough for requesting Amazon order reports, Kindle content, and Prime Video history. |
 
 ## Authentication boundary
 
