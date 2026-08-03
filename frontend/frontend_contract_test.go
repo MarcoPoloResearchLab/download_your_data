@@ -258,6 +258,7 @@ func TestFrontendAssetsUseCurrentMPRShell(testContext *testing.T) {
 		!strings.Contains(index, `<mpr-header`) ||
 		!strings.Contains(index, `data-config-url="/config-ui.yaml"`) ||
 		!strings.Contains(index, `data-api-origin="`+APIOriginMarker+`"`) ||
+		!strings.Contains(index, `content="`+ContentSecurityPolicyMarker+`"`) ||
 		!strings.Contains(index, `completionEvent`) ||
 		!strings.Contains(index, `<mpr-user`) ||
 		!strings.Contains(index, `<mpr-footer`) ||
