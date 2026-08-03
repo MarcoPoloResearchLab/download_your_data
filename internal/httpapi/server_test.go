@@ -341,6 +341,19 @@ func TestContentSecurityPolicyIsolatesTheSharedShell(testContext *testing.T) {
 	}
 }
 
+func TestApplicationHandlerRejectsInvalidBrowserConfiguration(testContext *testing.T) {
+	config := loadTestRuntimeConfig(testContext, map[string]string{
+		runtimeconfig.GoogleClientIDEnvironment: "native-client",
+	})
+	_, handlerError := newApplicationHandler(
+		config,
+		slog.New(slog.NewTextHandler(io.Discard, nil)),
+	)
+	if handlerError == nil || !strings.Contains(handlerError.Error(), "Google web client ID is invalid") {
+		testContext.Fatalf("invalid browser configuration error = %v", handlerError)
+	}
+}
+
 func performBoundaryRequest(
 	handler http.Handler,
 	method string,

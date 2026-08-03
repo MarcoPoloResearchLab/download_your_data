@@ -643,6 +643,58 @@
         "whatsapp-chat-export"
       ],
       "cta_label": "Open the visual Threads export guide"
+    },
+    {
+      "slug": "amazon-order-history-data-export",
+      "provider_id": "amazon",
+      "kind": "provider-export",
+      "meta_title": "Amazon Order History Export Guide | Download Your Data",
+      "meta_description": "Request your official Amazon order CSV reports, digital content purchases, Kindle notes, and Prime Video history with our export guide.",
+      "h1": "How to Download Your Amazon Order History and Personal Data",
+      "primary_keyword": "Amazon order history export",
+      "intro": "Amazon allows account holders to request a full personal information report, including order history CSV reports, Kindle notes, and Prime Video viewing history.",
+      "verdict": {
+        "best_for": "People who need a complete export of Amazon purchases, order reports, and digital history",
+        "required_input": "Access to your Amazon account and email verification",
+        "product_fit": "Download Your Data provides the step-by-step visual export guide for Amazon"
+      },
+      "problem": "Amazon order history and personal information downloads require navigating through Your Account privacy settings and confirming an email request before the report is prepared.",
+      "coverage": [
+        "CSV reports for past physical orders and digital purchases",
+        "Kindle notebooks, annotations, and reading data",
+        "Prime Video watch history and digital library metadata"
+      ],
+      "limitations": [
+        "Amazon may take up to several days to compile full data requests.",
+        "Verification email must be confirmed within 5 days of submission.",
+        "Download Your Data currently provides the visual guide only."
+      ],
+      "workflow_steps": [],
+      "snippet": {
+        "label": "Current in-product visual guide route",
+        "content": "#guide/amazon",
+        "source_path": "frontend/application/routing.js"
+      },
+      "faqs": [
+        {
+          "question": "How long does Amazon take to generate my data report?",
+          "answer": "Simple order history reports generate within minutes, while full personal data requests may take up to several days."
+        },
+        {
+          "question": "Does the Amazon export include Prime Video history?",
+          "answer": "Yes. When selected during the request flow, Amazon includes Prime Video titles and viewing activity."
+        },
+        {
+          "question": "In what format does Amazon provide order history data?",
+          "answer": "Amazon provides order history reports as downloadable CSV files."
+        }
+      ],
+      "related_slugs": [
+        "google-takeout",
+        "netflix-viewing-history-csv",
+        "chatgpt-data-export"
+      ],
+      "cta_label": "Open the visual Amazon export guide"
     }
   ]
 }

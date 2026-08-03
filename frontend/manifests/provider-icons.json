@@ -146,6 +146,19 @@
         "height": 32
       },
       "review_status": "approved"
+    },
+    {
+      "provider": "amazon",
+      "source_kind": "first_party_site_icon",
+      "official_site": "https://www.amazon.com/",
+      "source_url": "https://www.amazon.com/favicon.ico",
+      "output_path": "images/providers/amazon.png",
+      "sha256": "f74e02bee069027d259f94c8093320af4b705b9df8857428b8a025b13e1b7e6d",
+      "pixel_dimensions": {
+        "width": 180,
+        "height": 180
+      },
+      "review_status": "approved"
     }
   ]
 }

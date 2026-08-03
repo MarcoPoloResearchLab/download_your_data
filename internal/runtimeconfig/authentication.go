@@ -12,22 +12,21 @@ import (
 )
 
 const (
-	PublicOriginEnvironment          = "DOWNLOAD_YOUR_DATA_PUBLIC_ORIGIN"
-	APIOriginEnvironment             = "DOWNLOAD_YOUR_DATA_API_ORIGIN"
-	TAuthURLEnvironment              = "DOWNLOAD_YOUR_DATA_TAUTH_URL"
-	TAuthTenantIDEnvironment         = "DOWNLOAD_YOUR_DATA_TAUTH_TENANT_ID"
-	TAuthJWTSigningKeyEnvironment    = "DOWNLOAD_YOUR_DATA_TAUTH_JWT_SIGNING_KEY"
-	TAuthSessionCookieEnvironment    = "DOWNLOAD_YOUR_DATA_TAUTH_SESSION_COOKIE_NAME"
-	TAuthRefreshCookieEnvironment    = "DOWNLOAD_YOUR_DATA_TAUTH_REFRESH_COOKIE_NAME"
-	GoogleClientIDEnvironment        = "DOWNLOAD_YOUR_DATA_GOOGLE_CLIENT_ID"
-	TAuthJWTIssuer                   = "tauth"
-	TAuthLoginPath                   = "/auth/google"
-	TAuthLogoutPath                  = "/auth/logout"
-	TAuthNoncePath                   = "/auth/nonce"
-	TAuthSessionPath                 = "/auth/session"
-	TAuthRefreshPath                 = "/auth/refresh"
-	minimumTAuthSigningKeyBytes      = 32
-	maximumBrowserConfigurationBytes = 4 * 1024
+	PublicOriginEnvironment       = "DOWNLOAD_YOUR_DATA_PUBLIC_ORIGIN"
+	APIOriginEnvironment          = "DOWNLOAD_YOUR_DATA_API_ORIGIN"
+	TAuthURLEnvironment           = "DOWNLOAD_YOUR_DATA_TAUTH_URL"
+	TAuthTenantIDEnvironment      = "DOWNLOAD_YOUR_DATA_TAUTH_TENANT_ID"
+	TAuthJWTSigningKeyEnvironment = "DOWNLOAD_YOUR_DATA_TAUTH_JWT_SIGNING_KEY"
+	TAuthSessionCookieEnvironment = "DOWNLOAD_YOUR_DATA_TAUTH_SESSION_COOKIE_NAME"
+	TAuthRefreshCookieEnvironment = "DOWNLOAD_YOUR_DATA_TAUTH_REFRESH_COOKIE_NAME"
+	GoogleClientIDEnvironment     = "DOWNLOAD_YOUR_DATA_GOOGLE_CLIENT_ID"
+	TAuthJWTIssuer                = "tauth"
+	TAuthLoginPath                = "/auth/google"
+	TAuthLogoutPath               = "/auth/logout"
+	TAuthNoncePath                = "/auth/nonce"
+	TAuthSessionPath              = "/auth/session"
+	TAuthRefreshPath              = "/auth/refresh"
+	minimumTAuthSigningKeyBytes   = 32
 )
 
 // Authentication is the complete validated browser and backend TAuth
@@ -87,11 +86,6 @@ func (authentication Authentication) SessionValidatorConfig() sessionvalidator.C
 		Issuer:     TAuthJWTIssuer,
 		CookieName: authentication.sessionCookieName,
 	}
-}
-
-// MaximumBrowserConfigurationBytes bounds the public YAML configuration.
-func MaximumBrowserConfigurationBytes() int {
-	return maximumBrowserConfigurationBytes
 }
 
 func loadAuthentication(

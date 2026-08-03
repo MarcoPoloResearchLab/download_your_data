@@ -5,7 +5,7 @@ CGO_ENABLED ?= 1
 
 export CGO_ENABLED
 
-.PHONY: build check-frontend ci clean deploy deploy-dry-run down eval-netflix-matcher fmt fmt-check lint publish release test test-browser test-local-lifecycle up validate-instruction-screenshots validate-provider-icons
+.PHONY: build check-frontend ci clean deploy down eval-netflix-matcher fmt fmt-check lint publish release test test-browser test-local-lifecycle test-production-artifacts up validate-instruction-screenshots validate-provider-icons
 
 build:
 	@mkdir -p build
@@ -65,14 +65,24 @@ test-browser: build
 		PLAYWRIGHT_CLI_VERSION=$(PLAYWRIGHT_CLI_VERSION) \
 		$(GO) test ./internal/httpapi -run '^TestNetflixBrowserWorkspaceContract$$' -count=1
 
+test-production-artifacts:
+	./scripts/test-production-artifacts.sh
+
 validate-instruction-screenshots:
 	$(GO) test ./frontend -run '^TestInstructionScreenshotContract$$' -count=1
 
 validate-provider-icons:
 	$(GO) test ./frontend -run '^TestProviderIconContract$$' -count=1
 
-release publish deploy deploy-dry-run:
-	@echo "blocked: freeze the exact authenticated web production profile before $@" >&2
-	@exit 1
+release publish deploy:
+	@application_root="$$(git rev-parse --show-toplevel)"; \
+	gateway_root="$$(dirname "$${application_root}")/mprlab-gateway"; \
+	if [ ! -d "$${gateway_root}" ]; then \
+		printf "required sibling gateway is missing: %s; clone mprlab-gateway at exactly %s\n" \
+			"$${gateway_root}" "$${gateway_root}" >&2; \
+		exit 2; \
+	fi; \
+	$(MAKE) --no-print-directory -C "$${gateway_root}" "app-$@" \
+		MPRLAB_APP_ROOT="$${application_root}"
 
-ci: fmt-check lint check-frontend eval-netflix-matcher test test-local-lifecycle validate-instruction-screenshots validate-provider-icons test-browser
+ci: fmt-check lint check-frontend eval-netflix-matcher test test-local-lifecycle validate-instruction-screenshots validate-provider-icons test-production-artifacts test-browser

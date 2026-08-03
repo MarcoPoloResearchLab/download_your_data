@@ -124,6 +124,28 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - `make test-browser`
   - `make ci`
 
+- [x] [I014] (P1) {I012,F010} Adopt the schema-v3 production lifecycle
+  Goal:
+  Turn the existing never-deployed DNS and application foundation into one exact, forward-only production resource contract owned by this repository and orchestrated by the sibling gateway.
+
+  Requirements:
+  - Record the exact Pages, API, TAuth, cookie, CORS, DNS, Caddy, container-port, health, storage, and private-value literals for the current split-origin topology.
+  - Replace the schema-v1 workflow stub with schema v3 typed resources and direct capability references.
+  - Build one deterministic static Pages artifact and one Linux API container from committed source.
+  - Keep `.mprlab/deploy/resources.yml` as the only tracked deployment file and `.mprlab/deploy/.env` as the ignored mode-`0600` private input.
+  - Replace the fail-closed lifecycle placeholder with exact zero-argument delegators to the sibling `mprlab-gateway`.
+  - Do not publish, release, or deploy as part of implementation validation.
+
+  Deliverables:
+  - Current production profile documentation and validated artifact inputs.
+  - Schema-v3 resource manifest covering Pages, API runtime, TAuth, Caddy, health, storage, and private values.
+  - Repository CI and non-mutating gateway plan evidence.
+
+  Validation:
+  - `make test-production-artifacts` builds the Linux/AMD64 Pages and API targets, rejects unresolved or private Pages inputs, and runs the API read-only as `65532:65532` through `/api/health`.
+  - `make ci` passed on 2026-08-02.
+  - Clean sealed release, publish, and deploy plans passed through the sibling gateway against the real operator inventory without production mutation.
+
 ## Maintenance
 
 - [ ] [M400R] (P2) Backlog hygiene and archive
@@ -457,7 +479,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Build and publish one Go API container containing the provider services and current server-owned inference boundary.
   - Declare one Download Your Data TAuth tenant, exact session and refresh cookies, gateway route, persistent storage mount, health check, and runtime assets beneath `.mprlab/deploy/`.
   - Use the literal `mpr-ui@latest` contract and the production profile's exact frontend, API, TAuth, OAuth, cookie, CORS, proxy, and storage values.
-  - Keep `make release`, `make publish`, user-owned `make deploy`, and non-mutating `make deploy-dry-run` as separate contracts.
+  - Keep `make release`, `make publish`, and user-owned `make deploy` as separate zero-argument contracts; use the sibling gateway plan targets for non-mutating proofs.
   - Remove the macOS application archive, end-user operator commands, embedded browser application, loopback-only production contract, and Pages download landing page in the same forward change.
   - Do not publish personal archives, databases, vectors, reports, caches, runtime secrets, or private deployment inventory.
 
@@ -470,16 +492,13 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   Validation:
   - Black-box release smoke covers public guides, shared authentication, health, capabilities, Netflix, OpenAI, restart, replacement, cross-user isolation, and deletion.
   - Browser tests prove anonymous guide access, one login across provider applications, session restoration, and shared-shell sign-out.
-  - `make deploy-dry-run`
+  - Clean sealed gateway release, publish, and deploy plans.
   - `make ci`
   - `make release`
 
-- [!] [F010] (P1) {P006} Introduce the shared TAuth user and workspace boundary
+- [ ] [F010] (P1) {P006} Introduce the shared TAuth user and workspace boundary
   Goal:
   Give every data-analysis provider one authenticated Download Your Data user without creating provider-specific login or session systems.
-
-  Blocked:
-  The literal `mpr-ui@latest` contract has no documented cold-session settlement signal, and the exact production API, TAuth tenant, cookie, OAuth, gateway, storage, inference, and secret-reference profile is not present in the repository or connected infrastructure.
 
   Requirements:
   - Use one app-owned `/config-ui.yaml`, one Download Your Data TAuth tenant, and the documented `mpr-ui:auth:*` lifecycle for every provider application.
@@ -495,7 +514,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   Deliverables:
   - Typed authenticated-user boundary, authorization middleware, user-scoped repositories, and complete workspace deletion.
   - Real local TAuth stack and two-user black-box authorization fixture.
-  - Production profile schema containing every required origin, cookie, OAuth, CORS, proxy, port, storage, user-limit, inference, and secret-reference literal.
+  - Production profile schema containing every required origin, cookie, OAuth, CORS, proxy, port, storage, user-limit, and secret-reference literal, with unavailable inference capabilities rejected rather than inferred.
 
   Validation:
   - Unauthenticated protected routes return `401`.
@@ -529,7 +548,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - `make test-browser`
   - `make ci`
 
-- [ ] [F012] (P1) Add Amazon data export guide and order history workflow
+- [x] [F012] (P1) Add Amazon data export guide and order history workflow
   Goal:
   Provide a canonical export guide and provider workflow for downloading Amazon personal data, focusing on order history reports, digital purchases, Kindle content, and Prime Video history.
 
@@ -718,4 +737,3 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   Validation:
   - Browser tests verify `#guide/strava` opens clean instructions, visual step captures, and official help links.
   - `make ci`
-

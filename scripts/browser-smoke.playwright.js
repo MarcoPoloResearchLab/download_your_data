@@ -101,8 +101,8 @@ async page => {
   await setSharedAuth(false);
 
   assert(
-    await page.locator('.provider-card[data-provider-id]').count() === 11,
-    'anonymous provider catalog must contain eleven canonical providers'
+    await page.locator('.provider-card[data-provider-id]').count() === 12,
+    'anonymous provider catalog must contain twelve canonical providers'
   );
   assert(
     await page.locator('mpr-header header[role="banner"]').count() === 1 &&
@@ -127,7 +127,8 @@ async page => {
     'tiktok',
     'x',
     'youtube',
-    'google'
+    'google',
+    'amazon'
   ]) {
     await route(`#guide/${providerID}`, `#${providerID}`);
     assert(
@@ -153,6 +154,14 @@ async page => {
       ).count() === 1,
     'OpenAI guide must remain complete and public'
   );
+  await route('#guide/amazon', '#amazon');
+  assert(
+    await page.locator('#amazon .instruction-step').count() === 6 &&
+      await page.locator(
+        '#amazon .guide-refs a[href="https://www.amazon.com/gp/b2b/reports"]'
+      ).count() === 1,
+    'Amazon guide must remain complete and public'
+  );
   await route('#credits', '.credits');
   assert(
     (await page.locator('.tmdb-credit').textContent()).includes(
@@ -169,8 +178,8 @@ async page => {
   await page.setViewportSize({width: 1440, height: 1000});
   await page.goto(`${baseURL}/resources/`, {waitUntil: 'networkidle'});
   assert(
-    await page.locator('.resource-card').count() === 12,
-    'resource hub must expose twelve current crawlable resources'
+    await page.locator('.resource-card').count() === 13,
+    'resource hub must expose thirteen current crawlable resources'
   );
   assert(
     await page.locator('link[rel="canonical"]').getAttribute('href') ===

@@ -83,6 +83,7 @@ func TestFrontendProviderWorkspaceContract(testContext *testing.T) {
 		{ID: "x", Surface: "guide", IconSrc: "images/providers/x.png"},
 		{ID: "youtube", Surface: "guide", IconSrc: "images/providers/youtube.png"},
 		{ID: "google", Surface: "guide", IconSrc: "images/providers/google.png"},
+		{ID: "amazon", Surface: "guide", IconSrc: "images/providers/amazon.png"},
 	}
 	if !reflect.DeepEqual(data.ProviderRegistry, expectedRegistry) {
 		testContext.Fatalf("provider registry = %#v; want %#v", data.ProviderRegistry, expectedRegistry)
@@ -257,6 +258,7 @@ func TestFrontendAssetsUseCurrentMPRShell(testContext *testing.T) {
 		!strings.Contains(index, `<mpr-header`) ||
 		!strings.Contains(index, `data-config-url="/config-ui.yaml"`) ||
 		!strings.Contains(index, `data-api-origin="`+APIOriginMarker+`"`) ||
+		!strings.Contains(index, `content="`+ContentSecurityPolicyMarker+`"`) ||
 		!strings.Contains(index, `completionEvent`) ||
 		!strings.Contains(index, `<mpr-user`) ||
 		!strings.Contains(index, `<mpr-footer`) ||

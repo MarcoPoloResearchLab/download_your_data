@@ -11,7 +11,7 @@ guide or supported workspace action.
 
 ## Current scope
 
-`/resources/` links twelve distinct resources:
+`/resources/` links thirteen distinct resources:
 
 | Resource | Primary intent | Current product destination |
 | --- | --- | --- |
@@ -27,6 +27,7 @@ guide or supported workspace action.
 | Facebook data export | Scope an Accounts Center export | `#guide/facebook` |
 | Instagram data export | Scope an Instagram Accounts Center export | `#guide/instagram` |
 | Threads data export | Export Threads through Instagram Accounts Center | `#guide/threads` |
+| Amazon order history & data export | Request Amazon order reports, Kindle, and Prime Video | `#guide/amazon` |
 
 The cluster intentionally does not publish a ChatGPT browser-import page,
 full-Netflix-archive analyzer, or mandatory-TMDB page. Those claims do not

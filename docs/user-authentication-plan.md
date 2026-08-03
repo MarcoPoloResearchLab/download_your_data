@@ -77,13 +77,11 @@ hydrated. A synchronous page bootstrap buffers only the documented
 application module attaches its listeners. Completion waits for
 `MPRUI.whenAutoOrchestrationReady()`.
 
-The current literal `mpr-ui@latest` bundle does not expose a documented
-authentication-state snapshot helper and can settle a cold signed-out session
-without emitting an initial unauthenticated event. The application therefore
-keeps a requested provider application locked in a pending state until a
-documented lifecycle event arrives. Public guides remain fully available. Cold
-session restoration cannot be called complete until `mpr-ui` supplies a public
-settlement signal; application code must not work around the gap by inspecting
+The literal `mpr-ui@latest` bundle exposes the documented
+`MPRUI.whenAutoOrchestrationReady()` settlement boundary. The application
+buffers only documented authentication events during synchronous bootstrap,
+attaches its lifecycle listeners, awaits that public settlement promise, and
+then completes the requested provider transition. It does not inspect
 component internals, cookies, storage, tokens, claims, or TAuth endpoints.
 
 Public guides render independently of authentication settlement. A fresh or
@@ -218,36 +216,40 @@ The repository remains the owner of both production surfaces:
    bundle, and browser-facing public configuration.
 2. An app-owned container service publishes the protected Go API and persistent
    user workspaces through the MPR gateway.
-3. The completed app-owned `.mprlab/deploy/resources.yml` will declare the
-   Pages surface, TAuth tenant, container service, Caddy route, health check,
-   and repository lifecycle targets.
-4. Deployment implementation, Compose, Ansible, runtime examples, and runtime
-   inventory live only beneath `.mprlab/deploy/`.
+3. The app-owned `.mprlab/deploy/resources.yml` declares the Pages surface,
+   TAuth tenant, container service, Caddy route, health check, retained volume,
+   private-value bindings, and direct runtime capability references.
+4. `.mprlab/deploy/resources.yml` is the only tracked file beneath
+   `.mprlab/deploy/`. Compose generation, Ansible, inventory, platform handlers,
+   publication, and reconciliation belong to the sibling `mprlab-gateway`.
+5. The ignored `.mprlab/deploy/.env` is the sole app-private deployment input.
+   It is mode `0600`, excluded from Docker contexts, and is not read during
+   release or publication.
 
-Repository history establishes only the former public Pages origin. Before
-deployment implementation, the replacement profile must record exact literals
-for:
+The exact committed profile is:
 
-- frontend origin;
-- backend/API origin;
-- browser-facing TAuth origin;
-- TAuth tenant ID;
-- session and refresh cookie names;
-- cookie domain, `Secure`, and `SameSite`;
-- OAuth callback URL;
-- CORS origin and credential behavior;
-- DNS owner for every hostname;
-- reverse-proxy owner and upstream container port;
-- persistent storage mount;
-- per-user storage and active-job limits;
-- the server-owned OpenAI inference origin, model identity, work budget, and
-  secret references, or an explicit declaration that the OpenAI application
-  cannot launch yet;
-- secret references for the TAuth validator and provider services.
+| Boundary | Current literal |
+| --- | --- |
+| Pages frontend | `https://dyd.mprlab.com` |
+| API and browser-facing TAuth front door | `https://dyd-api.mprlab.com` |
+| TAuth tenant | `download-your-data` |
+| Session cookie | `download_your_data_session` |
+| Refresh cookie | `download_your_data_refresh` |
+| Cookie contract | Domain `.mprlab.com`, `Secure`, `SameSite=None` |
+| Credentialed CORS origin | `https://dyd.mprlab.com` |
+| API container | Port `8787`, health `/api/health` |
+| Persistent data mount | `/var/lib/download-your-data` |
 
-The existing `https://dyd.mprlab.com/` public origin may remain only if the
-completed profile confirms it. No backend or TAuth hostname is guessed in this
-plan.
+The Pages hostname remains a CNAME to GitHub Pages. The API hostname remains
+gateway-owned. Caddy sends `/auth` and `/me` to the active `tauth.http`
+capability and `/` to `download-your-data.http`. The Google Identity Services
+flow uses `/auth/google`; it does not add a separate application OAuth callback
+route.
+
+No remote OpenAI-compatible inference service or TMDB token is declared by the
+current production manifest. The API and raw Netflix workflow can launch, but
+OpenAI import/index construction and optional Netflix TMDB enrichment remain
+unavailable until their exact provider resources and private values are added.
 
 The lifecycle remains repository-owned:
 
@@ -260,8 +262,9 @@ make deploy
 `make release` validates and seals the Pages artifact and backend container
 source identity. `make publish` publishes those exact immutable artifacts.
 Only the user runs `make deploy`, which applies the committed app-owned
-deployment resources. `make deploy-dry-run` remains the non-mutating validation
-entrypoint.
+deployment resources. Non-mutating checks use the sibling gateway's sealed
+`plan-app-release`, `plan-app-publish`, and `plan-app-deploy` targets; the app
+does not add another lifecycle entrypoint.
 
 The current macOS executable artifact, end-user operator command surface,
 loopback-only production contract, embedded frontend, and Pages download

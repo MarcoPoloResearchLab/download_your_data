@@ -39,6 +39,7 @@ var providerIconExpectations = []providerIconExpectation{
 	{ID: "x", OfficialSiteHost: "x.com", SourceHost: "x.com"},
 	{ID: "youtube", OfficialSiteHost: "www.youtube.com", SourceHost: "www.gstatic.com"},
 	{ID: "google", OfficialSiteHost: "www.google.com", SourceHost: "www.google.com"},
+	{ID: "amazon", OfficialSiteHost: "www.amazon.com", SourceHost: "www.amazon.com"},
 }
 
 type providerIconManifest struct {

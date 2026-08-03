@@ -27,8 +27,8 @@ The path-based resource library is the indexable companion to the interactive
 provider guides. Every resource uses a trailing-slash canonical URL, links to
 related provider workflows, and derives its canonical, Open Graph, JSON-LD,
 sitemap, and robots URLs from `DOWNLOAD_YOUR_DATA_PUBLIC_ORIGIN`. The
-repository does not hard-code the unresolved production host. See the
-[SEO resource library contract](docs/seo-resource-library.md) for the page
+committed production artifact binds those signals to `https://dyd.mprlab.com`.
+See the [SEO resource library contract](docs/seo-resource-library.md) for the page
 inventory, evidence model, indexing rules, and publication boundary.
 
 ## Supported platforms
@@ -46,6 +46,7 @@ inventory, evidence model, indexing rules, and publication boundary.
 | **X (Twitter)** | Visual Export Guide | Download Your Archive (ZIP) | **Live Guide (`#guide/x`)** — Visual export guide for requesting X account archive, password verification, and downloading personal ZIP data. |
 | **YouTube** | Visual Export Guide | Google Takeout YouTube Archive | **Live Guide (`#guide/youtube`)** — Visual export guide for selecting YouTube & YouTube Music data, configuring delivery options, and downloading Takeout archives. |
 | **Google** | Visual Export Guide | Google Takeout Multi-Service Archive | **Live Guide (`#guide/google`)** — Visual export guide for configuring Google Takeout multi-service exports, export frequencies, file sizes, and destination options. |
+| **Amazon** | Visual Export Guide | Order History Reports & Personal Data Archive | **Live Guide (`#guide/amazon`)** — Product-specific visual export walkthrough for requesting Amazon order reports, Kindle content, and Prime Video history. |
 
 ## Authentication boundary
 
@@ -139,11 +140,14 @@ Application ownership is explicit:
 
 ```text
 cmd/download-your-data/  executable bootstrap
+cmd/render-pages/        deterministic production Pages renderer
+configs/                 local stack inputs and validated non-secret production profile
 internal/httpapi/        authenticated HTTP and provider adapters
 internal/                provider domains, storage, inference, and retrieval
 frontend/                browser app, public resources, content, manifests, and images
 scripts/                 repository-owned development and validation commands
 testdata/                fixtures shared by multiple packages
+Dockerfile               final Pages and Linux API artifact targets
 ```
 
 Generated executables and browser-run state are not source. Remove them with:
@@ -177,25 +181,33 @@ make ci
 ```
 
 The full gate runs formatting, static analysis, checked JavaScript, Go
-contracts, matcher evaluation, local lifecycle checks, asset validation, and
-real-browser public/authenticated workflows.
+contracts, matcher evaluation, local lifecycle checks, asset validation,
+Linux/AMD64 Pages and API artifact smoke checks, and real-browser
+public/authenticated workflows.
 
 ## Release and deployment
 
 The obsolete macOS application archive and static download landing page have
-been removed. The canonical lifecycle entrypoints remain:
+been removed. The repository now owns one schema-v3 lifecycle containing the
+static Pages artifact, Linux API image, retained user-data volume, TAuth
+tenant, Caddy route, and public health check. Its exact non-secret topology is
+recorded in [`configs/production.yml`](configs/production.yml) and
+[`docs/production-deployment.md`](docs/production-deployment.md).
+
+The canonical zero-argument lifecycle entrypoints are:
 
 ```bash
 make release
 make publish
-make deploy-dry-run
 make deploy
 ```
 
-They currently fail closed because the exact split-origin production profile
-does not yet exist. No API hostname, TAuth tenant, cookie contract, OAuth
-callback, gateway port, storage mount, inference service, or secret reference
-is guessed. See [.mprlab/deploy/README.md](.mprlab/deploy/README.md) and
-[the authentication plan](docs/user-authentication-plan.md) for the required
-profile and target topology. Only the user runs `make deploy` after those
-contracts and their non-mutating validation are complete.
+Each target delegates to the exact sibling `../mprlab-gateway`. Release seals
+the committed Pages and container artifacts, publish writes those immutable
+artifacts to GitHub Pages/GHCR, and deploy activates only the selected
+repository resources. The app-private `.mprlab/deploy/.env` is ignored,
+mode `0600`, excluded from Docker contexts, and read only during deployment.
+
+The repository does not own a second dry-run command. Use the gateway's sealed
+`plan-app-release`, `plan-app-publish`, and `plan-app-deploy` targets when a
+non-mutating lifecycle proof is required. Only the user runs `make deploy`.

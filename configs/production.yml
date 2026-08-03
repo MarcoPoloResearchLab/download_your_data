@@ -1,0 +1,25 @@
+---
+schema_version: 1
+browser:
+  public_origin: https://dyd.mprlab.com
+  api_origin: https://dyd-api.mprlab.com
+  tauth_origin: https://dyd-api.mprlab.com
+  tenant_id: download-your-data
+  google_web_client_id: 283383931996-582q1pholigban5bueqfq4g470hlrfpf.apps.googleusercontent.com
+  login_path: /auth/google
+  logout_path: /auth/logout
+  nonce_path: /auth/nonce
+  session_path: /auth/session
+session:
+  cookie_domain: .mprlab.com
+  session_cookie_name: download_your_data_session
+  refresh_cookie_name: download_your_data_refresh
+  secure: true
+  same_site: None
+cors:
+  allowed_origin: https://dyd.mprlab.com
+  credentials: true
+runtime:
+  container_port: 8787
+  health_path: /api/health
+  data_mount: /var/lib/download-your-data
