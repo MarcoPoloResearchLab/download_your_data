@@ -1,0 +1,8 @@
+.git
+.gitignore
+.mprlab/PLAN.md
+.mprlab/deploy/.env
+.playwright-cli
+.tidy-folder-snapshots
+build
+configs/.env
