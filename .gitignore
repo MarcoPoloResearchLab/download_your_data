@@ -4,3 +4,5 @@
 /.playwright-cli/
 /.tidy-folder-snapshots/
 /configs/.env
+/.mprlab/PLAN.md
+/.mprlab/deploy/.env
