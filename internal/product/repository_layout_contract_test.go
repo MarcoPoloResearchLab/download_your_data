@@ -20,9 +20,11 @@ func TestRepositoryLayoutKeepsApplicationSourceOutOfTheRoot(testContext *testing
 	}
 
 	allowedRootFiles := []string{
+		".dockerignore",
 		".gitignore",
 		"AGENTS.md",
 		"CHANGELOG.md",
+		"Dockerfile",
 		"LICENSE",
 		"Makefile",
 		"README.md",
@@ -40,6 +42,8 @@ func TestRepositoryLayoutKeepsApplicationSourceOutOfTheRoot(testContext *testing
 
 	requiredDirectories := []string{
 		"cmd/download-your-data",
+		"cmd/render-pages",
+		"configs",
 		"frontend/application",
 		"frontend/content",
 		"frontend/images",

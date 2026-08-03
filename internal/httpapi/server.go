@@ -1,12 +1,9 @@
 package httpapi
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"html"
-	"io/fs"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -176,9 +173,17 @@ func newApplicationHandlerWithNetflixMetadata(
 		return nil, boundaryError
 	}
 	staticRoot := frontend.Assets()
-	indexDocument, indexError := buildApplicationIndex(config)
+	indexDocument, indexError := frontend.RenderApplicationIndex(
+		config.Authentication().PublicOrigin(),
+		config.Authentication().APIOrigin(),
+		config.Authentication().TAuthURL(),
+	)
 	if indexError != nil {
 		return nil, indexError
+	}
+	uiConfigDocument, uiConfigError := buildUIConfig(config)
+	if uiConfigError != nil {
+		return nil, fmt.Errorf("build browser configuration: %w", uiConfigError)
 	}
 	publicSite, publicSiteError := frontend.NewPublicSite(
 		config.Authentication().PublicOrigin(),
@@ -205,7 +210,7 @@ func newApplicationHandlerWithNetflixMetadata(
 	requestCoordinator := &userRequestCoordinator{}
 	routes := http.NewServeMux()
 	routes.HandleFunc("GET "+healthPath, writeHealth(logger))
-	routes.HandleFunc("GET "+uiConfigPath, writeUIConfig(config, logger))
+	routes.HandleFunc("GET "+uiConfigPath, writeUIConfig(uiConfigDocument, logger))
 	for _, publicPath := range publicSite.Paths() {
 		publicHandler, publicHandlerError := newPublicDocumentHandler(
 			publicSite,
@@ -243,30 +248,6 @@ func newApplicationHandlerWithNetflixMetadata(
 		),
 		workspaceRegistry: workspaceRegistry,
 	}, nil
-}
-
-func buildApplicationIndex(config runtimeconfig.Config) ([]byte, error) {
-	indexSource, readError := fs.ReadFile(frontend.Assets(), "index.html")
-	if readError != nil {
-		return nil, fmt.Errorf("read embedded application index: %w", readError)
-	}
-	if bytes.Count(indexSource, []byte(frontend.APIOriginMarker)) != 1 {
-		return nil, errors.New("render application index: API origin marker must appear exactly once")
-	}
-	if bytes.Count(indexSource, []byte(frontend.PublicOriginMarker)) != 2 {
-		return nil, errors.New("render application index: public origin marker must appear exactly twice")
-	}
-	renderedIndex := bytes.Replace(
-		indexSource,
-		[]byte(frontend.APIOriginMarker),
-		[]byte(html.EscapeString(config.Authentication().APIOrigin())),
-		1,
-	)
-	return bytes.ReplaceAll(
-		renderedIndex,
-		[]byte(frontend.PublicOriginMarker),
-		[]byte(html.EscapeString(config.Authentication().PublicOrigin())),
-	), nil
 }
 
 func writeApplicationIndex(indexDocument []byte) http.HandlerFunc {

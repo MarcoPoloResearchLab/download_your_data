@@ -2,15 +2,15 @@ package httpapi
 
 import (
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"slices"
 	"strings"
 
+	"github.com/MarcoPoloResearchLab/download_your_data/frontend"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/authentication"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/runtimeconfig"
-	"gopkg.in/yaml.v3"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/uiconfig"
 )
 
 const (
@@ -27,60 +27,15 @@ var allowedCORSMethods = []string{
 	http.MethodDelete,
 }
 
-type uiConfigDocument struct {
-	Environments []uiConfigEnvironment `yaml:"environments"`
-}
-
-type uiConfigEnvironment struct {
-	Description string       `yaml:"description"`
-	Origins     []string     `yaml:"origins"`
-	Auth        uiConfigAuth `yaml:"auth"`
-}
-
-type uiConfigAuth struct {
-	TAuthURL       string `yaml:"tauthUrl"`
-	GoogleClientID string `yaml:"googleClientId"`
-	TenantID       string `yaml:"tenantId"`
-	LoginPath      string `yaml:"loginPath"`
-	LogoutPath     string `yaml:"logoutPath"`
-	NoncePath      string `yaml:"noncePath"`
-	SessionPath    string `yaml:"sessionPath"`
-}
-
 type deleteUserWorkspaceRequest struct {
 	Confirmation string `json:"confirmation"`
 }
 
 func writeUIConfig(
-	config runtimeconfig.Config,
+	encodedDocument []byte,
 	logger *slog.Logger,
 ) http.HandlerFunc {
-	document := uiConfigDocument{
-		Environments: []uiConfigEnvironment{{
-			Description: "Download Your Data",
-			Origins:     []string{config.Authentication().PublicOrigin()},
-			Auth: uiConfigAuth{
-				TAuthURL:       config.Authentication().TAuthURL(),
-				GoogleClientID: config.Authentication().GoogleClientID(),
-				TenantID:       config.Authentication().TenantID(),
-				LoginPath:      runtimeconfig.TAuthLoginPath,
-				LogoutPath:     runtimeconfig.TAuthLogoutPath,
-				NoncePath:      runtimeconfig.TAuthNoncePath,
-				SessionPath:    runtimeconfig.TAuthSessionPath,
-			},
-		}},
-	}
-	encodedDocument, encodeError := yaml.Marshal(document)
 	return func(responseWriter http.ResponseWriter, request *http.Request) {
-		if encodeError != nil || len(encodedDocument) > runtimeconfig.MaximumBrowserConfigurationBytes() {
-			logger.Error(
-				"write browser configuration",
-				"error_type",
-				"browser_configuration_encoding_failed",
-			)
-			writeRequestError(responseWriter, http.StatusInternalServerError, "internal_error")
-			return
-		}
 		if queryError := requireQueryKeys(request, nil); queryError != nil {
 			writeRequestError(responseWriter, http.StatusBadRequest, "invalid_query")
 			return
@@ -96,6 +51,20 @@ func writeUIConfig(
 			)
 		}
 	}
+}
+
+func buildUIConfig(config runtimeconfig.Config) ([]byte, error) {
+	return uiconfig.Render(uiconfig.Input{
+		Description:       "Download Your Data",
+		PublicOrigin:      config.Authentication().PublicOrigin(),
+		TAuthOrigin:       config.Authentication().TAuthURL(),
+		GoogleWebClientID: config.Authentication().GoogleClientID(),
+		TenantID:          config.Authentication().TenantID(),
+		LoginPath:         runtimeconfig.TAuthLoginPath,
+		LogoutPath:        runtimeconfig.TAuthLogoutPath,
+		NoncePath:         runtimeconfig.TAuthNoncePath,
+		SessionPath:       runtimeconfig.TAuthSessionPath,
+	})
 }
 
 func requireAuthenticatedUser(
@@ -256,10 +225,8 @@ func validPreflightHeaders(rawHeaders string) bool {
 }
 
 func buildContentSecurityPolicy(config runtimeconfig.Config) string {
-	return fmt.Sprintf(
-		"default-src 'self'; base-uri 'self'; connect-src 'self' %s %s https://accounts.google.com; font-src 'self'; form-action 'self' %s; frame-ancestors 'none'; frame-src https://accounts.google.com; img-src 'self' data: https://lh3.googleusercontent.com; object-src 'none'; script-src 'self' https://cdn.jsdelivr.net https://accounts.google.com; style-src 'self' https://cdn.jsdelivr.net https://accounts.google.com 'unsafe-inline'",
+	return frontend.ContentSecurityPolicy(
 		config.Authentication().APIOrigin(),
-		config.Authentication().TAuthURL(),
 		config.Authentication().TAuthURL(),
 	)
 }
