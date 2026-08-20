@@ -54,6 +54,20 @@ Format: `- [ ] [B042] (P1) {I007} Title`
 
 ## Improvements
 
+- [x] [I015] (P1) Adopt the permanent versionless selected manifest
+  Goal:
+  Use the permanent selected-manifest contract for the application lifecycle.
+
+  Requirements:
+  - Remove `mprlab_resources.schema_version`.
+  - Keep `owner`, `release`, and `resources` as the exact top-level fields.
+  - Preserve the current resource topology and all independent version fields.
+  - Reject a numbered selected manifest in the repository contract test.
+
+  Validation:
+  - Run `make ci`.
+  - Run gateway `plan-app-release` for the committed application.
+
 - [ ] [I004] (P1) {I003} Establish a retrieval-quality and completeness gate
   Goal:
   Prove that local hybrid search finds relevant conversations and suppresses unrelated semantic matches before the browser depends on it.

@@ -1,7 +1,8 @@
 ---
 mprlab_resources:
-  schema_version: 3
   owner: download-your-data
+  release:
+    scheme: semver
   resources:
     - kind: private_values
       id: private

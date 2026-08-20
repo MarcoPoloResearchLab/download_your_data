@@ -13,9 +13,14 @@ type deploymentManifest struct {
 }
 
 type deploymentResources struct {
-	SchemaVersion int                  `yaml:"schema_version"`
+	SchemaVersion *int                 `yaml:"schema_version"`
 	Owner         string               `yaml:"owner"`
+	Release       deploymentRelease    `yaml:"release"`
 	Resources     []deploymentResource `yaml:"resources"`
+}
+
+type deploymentRelease struct {
+	Scheme string `yaml:"scheme"`
 }
 
 type deploymentResource struct {
@@ -178,7 +183,9 @@ func TestDeploymentManifestMatchesTheProductionProfile(testContext *testing.T) {
 	if decodeError := yaml.Unmarshal(encodedManifest, &manifest); decodeError != nil {
 		testContext.Fatalf("decode deployment manifest: %v", decodeError)
 	}
-	if manifest.Resources.SchemaVersion != 3 || manifest.Resources.Owner != "download-your-data" {
+	if manifest.Resources.SchemaVersion != nil ||
+		manifest.Resources.Owner != "download-your-data" ||
+		manifest.Resources.Release.Scheme != "semver" {
 		testContext.Fatalf("deployment manifest envelope drifted: %+v", manifest.Resources)
 	}
 	if len(manifest.Resources.Resources) != 7 {
