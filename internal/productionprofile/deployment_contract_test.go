@@ -56,7 +56,6 @@ type deploymentResource struct {
 type deploymentImage struct {
 	ID         string          `yaml:"id"`
 	Repository string          `yaml:"repository"`
-	Visibility string          `yaml:"visibility"`
 	Build      deploymentBuild `yaml:"build"`
 }
 
@@ -205,7 +204,6 @@ func TestDeploymentManifestMatchesTheProductionProfile(testContext *testing.T) {
 	}
 	image := runtime.Images[0]
 	if image.Repository != "ghcr.io/marcopoloresearchlab/download-your-data" ||
-		image.Visibility != "public" ||
 		image.Build.Context != "." ||
 		image.Build.Dockerfile != "Dockerfile" ||
 		image.Build.Target != "api" ||

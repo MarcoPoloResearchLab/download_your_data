@@ -14,7 +14,6 @@ mprlab_resources:
       images:
         - id: api-image
           repository: ghcr.io/marcopoloresearchlab/download-your-data
-          visibility: public
           build:
             context: .
             dockerfile: Dockerfile
