@@ -54,7 +54,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
 
 ## Improvements
 
-- [x] [I015] (P1) Adopt the permanent versionless selected manifest
+- [!] [I015] (P1) Adopt the permanent versionless selected manifest
   Goal:
   Use the permanent selected-manifest contract for the application lifecycle.
 
@@ -67,6 +67,10 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   Validation:
   - Run `make ci`.
   - Run gateway `plan-app-release` for the committed application.
+
+  Blocked:
+  - `make ci` stops because the browser gate cannot load the complete external
+    `mpr-ui@latest` bootstrap. The application and manifest contract tests pass.
 
 - [ ] [I004] (P1) {I003} Establish a retrieval-quality and completeness gate
   Goal:
