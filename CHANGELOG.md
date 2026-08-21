@@ -4,6 +4,8 @@ Release entries are generated from the repository history by `make release`.
 
 ## Unreleased
 
+- Adopt the permanent versionless selected manifest and keep the current
+  application resource topology.
 - Replace the schema-v1 lifecycle stub with typed schema-v3 Pages, API,
   retained storage, Caddy, health, TAuth, and private-value resources.
 - Add deterministic Linux/AMD64 Pages and non-root API container artifacts,

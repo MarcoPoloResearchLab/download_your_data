@@ -2,8 +2,8 @@
 
 ## Status
 
-Download Your Data has one complete repository-owned schema-v3 production
-contract. As of 2026-08-02, it has not been released, published, or deployed.
+Download Your Data has one complete repository-owned versionless selected
+manifest. As of 2026-08-02, it has not been released, published, or deployed.
 The existing DNS records point the intended frontend to GitHub Pages and the
 API hostname to the MPR gateway host, but neither hostname is serving this
 application yet.

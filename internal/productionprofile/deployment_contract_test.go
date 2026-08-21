@@ -13,9 +13,14 @@ type deploymentManifest struct {
 }
 
 type deploymentResources struct {
-	SchemaVersion int                  `yaml:"schema_version"`
+	SchemaVersion *int                 `yaml:"schema_version"`
 	Owner         string               `yaml:"owner"`
+	Release       deploymentRelease    `yaml:"release"`
 	Resources     []deploymentResource `yaml:"resources"`
+}
+
+type deploymentRelease struct {
+	Scheme string `yaml:"scheme"`
 }
 
 type deploymentResource struct {
@@ -51,7 +56,6 @@ type deploymentResource struct {
 type deploymentImage struct {
 	ID         string          `yaml:"id"`
 	Repository string          `yaml:"repository"`
-	Visibility string          `yaml:"visibility"`
 	Build      deploymentBuild `yaml:"build"`
 }
 
@@ -178,7 +182,9 @@ func TestDeploymentManifestMatchesTheProductionProfile(testContext *testing.T) {
 	if decodeError := yaml.Unmarshal(encodedManifest, &manifest); decodeError != nil {
 		testContext.Fatalf("decode deployment manifest: %v", decodeError)
 	}
-	if manifest.Resources.SchemaVersion != 3 || manifest.Resources.Owner != "download-your-data" {
+	if manifest.Resources.SchemaVersion != nil ||
+		manifest.Resources.Owner != "download-your-data" ||
+		manifest.Resources.Release.Scheme != "semver" {
 		testContext.Fatalf("deployment manifest envelope drifted: %+v", manifest.Resources)
 	}
 	if len(manifest.Resources.Resources) != 7 {
@@ -198,7 +204,6 @@ func TestDeploymentManifestMatchesTheProductionProfile(testContext *testing.T) {
 	}
 	image := runtime.Images[0]
 	if image.Repository != "ghcr.io/marcopoloresearchlab/download-your-data" ||
-		image.Visibility != "public" ||
 		image.Build.Context != "." ||
 		image.Build.Dockerfile != "Dockerfile" ||
 		image.Build.Target != "api" ||

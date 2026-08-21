@@ -188,10 +188,10 @@ public/authenticated workflows.
 ## Release and deployment
 
 The obsolete macOS application archive and static download landing page have
-been removed. The repository now owns one schema-v3 lifecycle containing the
-static Pages artifact, Linux API image, retained user-data volume, TAuth
-tenant, Caddy route, and public health check. Its exact non-secret topology is
-recorded in [`configs/production.yml`](configs/production.yml) and
+been removed. The repository now owns one permanent versionless selected
+manifest. It declares the static Pages artifact, Linux API image, retained
+user-data volume, TAuth tenant, Caddy route, and public health check. Its exact
+non-secret topology is recorded in [`configs/production.yml`](configs/production.yml) and
 [`docs/production-deployment.md`](docs/production-deployment.md).
 
 The canonical zero-argument lifecycle entrypoints are:
