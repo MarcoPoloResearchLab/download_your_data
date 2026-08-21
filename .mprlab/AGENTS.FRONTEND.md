@@ -2,7 +2,7 @@
 
 ## Scope
 
-Guidance for browser frontends. Follow root `AGENTS.md` and `.mprlab/POLICY.md` for shared workflow and validation rules.
+This file gives rules for browser frontends. Obey root `AGENTS.md` and `.mprlab/POLICY.md` for shared workflow and validation rules.
 
 ## Principles
 
@@ -10,7 +10,7 @@ Guidance for browser frontends. Follow root `AGENTS.md` and `.mprlab/POLICY.md` 
 - Components render validated state and emit user intent.
 - Keep transport, persistence, and backend payload validation in explicit adapter modules.
 - Keep route strings, endpoint paths, storage keys, event names, and workflow codes in constants or backend payloads.
-- Avoid anonymous wrapper-heavy markup when semantic elements or custom elements fit.
+- Do not use anonymous wrapper-heavy markup when semantic elements or custom elements are applicable.
 
 ## JavaScript
 
@@ -38,12 +38,8 @@ Guidance for browser frontends. Follow root `AGENTS.md` and `.mprlab/POLICY.md` 
 
 ## Validation
 
-Use repo-native targets:
+Use `.mprlab/POLICY.md` for validation.
 
-```bash
-make lint
-make test
-make ci
-```
+During the change, run the smallest frontend target that validates the changed contract.
 
 Run build or browser tests when source changes affect generated or shipped assets.
