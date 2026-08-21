@@ -587,7 +587,9 @@ Another Film,2/3/26
   );
   assert(
     [...sharedShellURLs].every((url) =>
-      requests.some((request) => request.url === url)
+      requests.some(
+        (request) => request.url === url || request.url.startsWith(`${url}?`)
+      )
     ),
     'configured workflow did not load the complete mpr-ui shell'
   );

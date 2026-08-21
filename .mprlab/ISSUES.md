@@ -8,6 +8,40 @@ Format: `- [ ] [B042] (P1) {I007} Title`
 
 ## BugFixes
 
+- [x] [B004] (P1) {I015} Accept linked-worktree Git metadata
+  Goal:
+  The repository layout gate accepts the Git metadata file in a linked
+  worktree.
+
+  Requirements:
+  - Permit `.git` as repository metadata at the root.
+  - Continue to reject application or unowned root files.
+
+  Validation:
+  - Run `go test ./internal/product`.
+  - Run `make ci`.
+
+  Resolved:
+  The repository layout gate now permits the linked-worktree `.git` metadata
+  file. The root-file allowlist stays closed.
+
+- [x] [B003] (P1) {I015} Accept the current shared shell request identity
+  Goal:
+  The browser gate accepts the current `mpr-ui@latest` revalidation request.
+
+  Requirements:
+  - Compare the request origin and path with the selected shared shell asset.
+  - Permit the current cache revalidation query.
+  - Reject a request from a different origin or path.
+
+  Validation:
+  - Run `make test-browser`.
+  - Run `make ci`.
+
+  Resolved:
+  The browser gate now compares the shared shell request origin and path. The
+  current `mpr-ui` loader can add its cache revalidation query.
+
 - [ ] [B001] (P1) {I002,I003} Calibrate definition-request classification before accepting semantic results
   Goal:
   Make definition analysis precise enough that accepted results can be used without treating broad semantic similarity as a definition request.
@@ -54,7 +88,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
 
 ## Improvements
 
-- [!] [I015] (P1) Adopt the permanent versionless selected manifest
+- [x] [I015] (P1) Adopt the permanent versionless selected manifest
   Goal:
   Use the permanent selected-manifest contract for the application lifecycle.
 
@@ -68,9 +102,9 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Run `make ci`.
   - Run gateway `plan-app-release` for the committed application.
 
-  Blocked:
-  - `make ci` stops because the browser gate cannot load the complete external
-    `mpr-ui@latest` bootstrap. The application and manifest contract tests pass.
+  Resolved:
+  The selected manifest now uses the permanent versionless contract. The
+  browser gate accepts the current shared shell revalidation request.
 
 - [ ] [I004] (P1) {I003} Establish a retrieval-quality and completeness gate
   Goal:

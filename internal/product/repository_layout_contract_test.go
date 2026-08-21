@@ -21,6 +21,7 @@ func TestRepositoryLayoutKeepsApplicationSourceOutOfTheRoot(testContext *testing
 
 	allowedRootFiles := []string{
 		".dockerignore",
+		".git",
 		".gitignore",
 		"AGENTS.md",
 		"CHANGELOG.md",

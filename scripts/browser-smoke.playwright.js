@@ -19,6 +19,10 @@ async page => {
       throw new Error(message);
     }
   };
+  const requestedAsset = (assetURL) =>
+    requestURLs.some(
+      (rawURL) => rawURL === assetURL || rawURL.startsWith(`${assetURL}?`)
+    );
   const route = async (hash, readySelector) => {
     await page.evaluate((nextHash) => {
       window.location.hash = nextHash;
@@ -353,13 +357,13 @@ async page => {
     `browser made unexpected external requests: ${unexpectedExternalRequests.join(', ')}`
   );
   assert(
-    requestURLs.includes(
+    requestedAsset(
       'https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.css'
     ) &&
-      requestURLs.includes(
+      requestedAsset(
         'https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui-config.js'
       ) &&
-      requestURLs.includes(
+      requestedAsset(
         'https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.js'
       ),
     'browser did not load the complete mpr-ui@latest bootstrap'
