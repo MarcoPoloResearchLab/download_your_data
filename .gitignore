@@ -4,5 +4,8 @@
 /.playwright-cli/
 /.tidy-folder-snapshots/
 /configs/.env
-/.mprlab/PLAN.md
 /.mprlab/deploy/.env
+
+# BEGIN MPRLAB-GOVERNANCE
+/.mprlab/*-PLAN.md
+# END MPRLAB-GOVERNANCE
