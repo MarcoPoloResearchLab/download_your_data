@@ -86,7 +86,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Black-box CLI test proving a ready deterministic inference server completes the same workflow.
   - `make test`
 
-- [-] [B006] (P0) Add the current LoopAware site identifier
+- [x] [B006] (P0) Add the current LoopAware site identifier
   Goal:
   Send public page telemetry to the current Download Your Data site in LoopAware.
 
