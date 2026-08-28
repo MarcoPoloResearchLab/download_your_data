@@ -86,6 +86,27 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Black-box CLI test proving a ready deterministic inference server completes the same workflow.
   - `make test`
 
+- [-] [B006] (P0) Add the current LoopAware site identifier
+  Goal:
+  Send public page telemetry to the current Download Your Data site in LoopAware.
+
+  Requirements:
+  - Use `5a6e13d5-7584-451e-b058-36b9ecef8e8d` in each production page source.
+  - Permit the LoopAware script and API origins in the canonical browser policy.
+  - Reject a missing, duplicated, stale, or mixed site identifier.
+
+  Deliverables:
+  - Add the current pixel to the application and resource templates.
+  - Add a focused source and browser-policy contract.
+
+  Validation:
+  - Run the focused frontend contract.
+  - Run `make ci` on the committed B006 branch.
+
+  Baseline:
+  - Local `make ci` reaches the existing B005 screenshot gate.
+  - The two blocked TikTok screenshots prevent public-site construction.
+
 ## Improvements
 
 - [x] [I015] (P1) Adopt the permanent versionless selected manifest

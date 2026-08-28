@@ -346,6 +346,42 @@ func TestFrontendAssetsUseCurrentMPRShell(testContext *testing.T) {
 	}
 }
 
+func TestPublicPageSourcesUseCurrentLoopAwareSite(testContext *testing.T) {
+	const siteID = "5a6e13d5-7584-451e-b058-36b9ecef8e8d"
+	const pixelURL = "https://loopaware.mprlab.com/pixel.js?site_id=" + siteID
+	const pixelTag = `<script defer src="` + pixelURL + `"></script>`
+
+	sources := map[string]string{
+		"index.html": readFrontendAsset(testContext, "index.html"),
+	}
+	for _, sourcePath := range []string{
+		"templates/resource.html",
+		"templates/resources-index.html",
+	} {
+		source, readError := os.ReadFile(sourcePath)
+		if readError != nil {
+			testContext.Fatalf("read %s: %v", sourcePath, readError)
+		}
+		sources[sourcePath] = string(source)
+	}
+
+	for sourcePath, source := range sources {
+		if strings.Count(source, pixelTag) != 1 || strings.Count(source, "pixel.js?site_id=") != 1 {
+			testContext.Fatalf("%s does not contain exactly one current LoopAware pixel", sourcePath)
+		}
+	}
+
+	for policyName, policy := range map[string]string{
+		"response header": ContentSecurityPolicy("https://api.example.com", "https://auth.example.com"),
+		"Pages meta tag":  MetaContentSecurityPolicy("https://api.example.com", "https://auth.example.com"),
+	} {
+		if !strings.Contains(policy, "script-src 'self' https://cdn.jsdelivr.net https://accounts.google.com https://loopaware.mprlab.com") ||
+			!strings.Contains(policy, "connect-src 'self' https://api.example.com https://auth.example.com https://accounts.google.com https://loopaware-api.mprlab.com") {
+			testContext.Fatalf("%s does not permit the current LoopAware pixel", policyName)
+		}
+	}
+}
+
 func readFrontendAsset(testContext *testing.T, path string) string {
 	testContext.Helper()
 	content, readError := os.ReadFile(path)
