@@ -107,6 +107,12 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Local `make ci` reaches the existing B005 screenshot gate.
   - The two blocked TikTok screenshots prevent public-site construction.
 
+  Resolved 2026-08-28:
+  - The application page and both resource templates load the current LoopAware pixel.
+  - The response and Pages browser policies permit the LoopAware script and API origins.
+  - The focused contracts pass.
+  - The committed snapshot completed `make ci` after one retry of a transient Docker snapshot error.
+
 ## Improvements
 
 - [x] [I015] (P1) Adopt the permanent versionless selected manifest
