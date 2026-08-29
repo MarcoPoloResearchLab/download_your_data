@@ -3,6 +3,11 @@ async page => {
   const validCSV = '__VALID_CSV__';
   const sessionCookie = '__SESSION_COOKIE__';
   const sessionToken = '__SESSION_TOKEN__';
+  const loopAwareSiteID = '5a6e13d5-7584-451e-b058-36b9ecef8e8d';
+  const loopAwarePixelURL =
+    `https://loopaware.mprlab.com/pixel.js?site_id=${loopAwareSiteID}`;
+  const loopAwareVisitURLPrefix =
+    `https://loopaware-api.mprlab.com/public/visits?site_id=${loopAwareSiteID}&`;
   const browserErrors = [];
   const requestURLs = [];
 
@@ -23,6 +28,8 @@ async page => {
     requestURLs.some(
       (rawURL) => rawURL === assetURL || rawURL.startsWith(`${assetURL}?`)
     );
+  const isCurrentLoopAwareRequest = (rawURL) =>
+    rawURL === loopAwarePixelURL || rawURL.startsWith(loopAwareVisitURLPrefix);
   const route = async (hash, readySelector) => {
     await page.evaluate((nextHash) => {
       window.location.hash = nextHash;
@@ -347,6 +354,7 @@ async page => {
     return (
       !rawURL.startsWith(`${baseURL}/`) &&
       rawURL !== baseURL &&
+      !isCurrentLoopAwareRequest(rawURL) &&
       !rawURL.startsWith('https://accounts.google.com/') &&
       !rawURL.startsWith('https://cdn.jsdelivr.net/') &&
       !rawURL.startsWith('https://lh3.googleusercontent.com/')
@@ -355,6 +363,11 @@ async page => {
   assert(
     unexpectedExternalRequests.length === 0,
     `browser made unexpected external requests: ${unexpectedExternalRequests.join(', ')}`
+  );
+  assert(
+    requestedAsset(loopAwarePixelURL) &&
+      requestURLs.some((rawURL) => rawURL.startsWith(loopAwareVisitURLPrefix)),
+    'browser did not send the current LoopAware telemetry'
   );
   assert(
     requestedAsset(

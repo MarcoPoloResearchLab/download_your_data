@@ -71,7 +71,7 @@ func RenderApplicationIndex(
 // ContentSecurityPolicy returns the exact HTTP response-header policy.
 func ContentSecurityPolicy(apiOrigin string, tAuthOrigin string) string {
 	return fmt.Sprintf(
-		"default-src 'self'; base-uri 'self'; connect-src 'self' %s %s https://accounts.google.com https://loopaware-api.mprlab.com; font-src 'self'; form-action 'self' %s; frame-ancestors 'none'; frame-src https://accounts.google.com; img-src 'self' data: https://lh3.googleusercontent.com; object-src 'none'; script-src 'self' https://cdn.jsdelivr.net https://accounts.google.com https://loopaware.mprlab.com; style-src 'self' https://cdn.jsdelivr.net https://accounts.google.com 'unsafe-inline'",
+		"default-src 'self'; base-uri 'self'; connect-src 'self' %s %s https://accounts.google.com https://loopaware-api.mprlab.com; font-src 'self'; form-action 'self' %s; frame-ancestors 'none'; frame-src https://accounts.google.com; img-src 'self' data: https://lh3.googleusercontent.com https://loopaware-api.mprlab.com; object-src 'none'; script-src 'self' https://cdn.jsdelivr.net https://accounts.google.com https://loopaware.mprlab.com; style-src 'self' https://cdn.jsdelivr.net https://accounts.google.com 'unsafe-inline'",
 		apiOrigin,
 		tAuthOrigin,
 		tAuthOrigin,
@@ -83,7 +83,7 @@ func ContentSecurityPolicy(apiOrigin string, tAuthOrigin string) string {
 // that directive.
 func MetaContentSecurityPolicy(apiOrigin string, tAuthOrigin string) string {
 	return fmt.Sprintf(
-		"default-src 'self'; base-uri 'self'; connect-src 'self' %s %s https://accounts.google.com https://loopaware-api.mprlab.com; font-src 'self'; form-action 'self' %s; frame-src https://accounts.google.com; img-src 'self' data: https://lh3.googleusercontent.com; object-src 'none'; script-src 'self' https://cdn.jsdelivr.net https://accounts.google.com https://loopaware.mprlab.com; style-src 'self' https://cdn.jsdelivr.net https://accounts.google.com 'unsafe-inline'",
+		"default-src 'self'; base-uri 'self'; connect-src 'self' %s %s https://accounts.google.com https://loopaware-api.mprlab.com; font-src 'self'; form-action 'self' %s; frame-src https://accounts.google.com; img-src 'self' data: https://lh3.googleusercontent.com https://loopaware-api.mprlab.com; object-src 'none'; script-src 'self' https://cdn.jsdelivr.net https://accounts.google.com https://loopaware.mprlab.com; style-src 'self' https://cdn.jsdelivr.net https://accounts.google.com 'unsafe-inline'",
 		apiOrigin,
 		tAuthOrigin,
 		tAuthOrigin,
