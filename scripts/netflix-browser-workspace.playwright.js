@@ -3,6 +3,11 @@ async page => {
   const viewingCSV = '__VIEWING_CSV__';
   const sessionCookie = '__SESSION_COOKIE__';
   const sessionToken = '__SESSION_TOKEN__';
+  const loopAwareSiteID = '5a6e13d5-7584-451e-b058-36b9ecef8e8d';
+  const loopAwarePixelURL =
+    `https://loopaware.mprlab.com/pixel.js?site_id=${loopAwareSiteID}`;
+  const loopAwareVisitURLPrefix =
+    `https://loopaware-api.mprlab.com/public/visits?site_id=${loopAwareSiteID}&`;
   const sharedShellURLs = new Set([
     'https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.css',
     'https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui-config.js',
@@ -29,6 +34,8 @@ async page => {
       throw new Error(message);
     }
   };
+  const isCurrentLoopAwareRequest = (rawURL) =>
+    rawURL === loopAwarePixelURL || rawURL.startsWith(loopAwareVisitURLPrefix);
   const snapshot = async () =>
     page.evaluate(async () => {
       const response = await fetch('/api/providers/netflix', {
@@ -576,6 +583,7 @@ Another Film,2/3/26
     return (
       request.url !== baseURL &&
       !request.url.startsWith(`${baseURL}/`) &&
+      !isCurrentLoopAwareRequest(request.url) &&
       !request.url.startsWith('https://accounts.google.com/') &&
       !request.url.startsWith('https://cdn.jsdelivr.net/') &&
       !request.url.startsWith('https://lh3.googleusercontent.com/')
@@ -584,6 +592,11 @@ Another Film,2/3/26
   assert(
     externalRequests.length === 0,
     `browser made external requests: ${externalRequests.map((request) => request.url).join(', ')}`
+  );
+  assert(
+    requests.some((request) => request.url === loopAwarePixelURL) &&
+      requests.some((request) => request.url.startsWith(loopAwareVisitURLPrefix)),
+    'browser did not send the current LoopAware telemetry'
   );
   assert(
     [...sharedShellURLs].every((url) =>

@@ -376,7 +376,8 @@ func TestPublicPageSourcesUseCurrentLoopAwareSite(testContext *testing.T) {
 		"Pages meta tag":  MetaContentSecurityPolicy("https://api.example.com", "https://auth.example.com"),
 	} {
 		if !strings.Contains(policy, "script-src 'self' https://cdn.jsdelivr.net https://accounts.google.com https://loopaware.mprlab.com") ||
-			!strings.Contains(policy, "connect-src 'self' https://api.example.com https://auth.example.com https://accounts.google.com https://loopaware-api.mprlab.com") {
+			!strings.Contains(policy, "connect-src 'self' https://api.example.com https://auth.example.com https://accounts.google.com https://loopaware-api.mprlab.com") ||
+			!strings.Contains(policy, "img-src 'self' data: https://lh3.googleusercontent.com https://loopaware-api.mprlab.com") {
 			testContext.Fatalf("%s does not permit the current LoopAware pixel", policyName)
 		}
 	}

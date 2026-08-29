@@ -8,6 +8,31 @@ Format: `- [ ] [B042] (P1) {I007} Title`
 
 ## BugFixes
 
+- [x] [B007] (P0) Permit the current LoopAware browser requests
+  Goal:
+  The production browser test rejects the LoopAware requests that B006 adds.
+  The browser contract must permit only the current pixel and visit requests.
+
+  Requirements:
+  - Permit the exact pixel URL with the current site identifier.
+  - Permit visit API requests with the current site identifier.
+  - Permit the LoopAware image beacon in the browser policy.
+  - Reject each other LoopAware origin, path, or site identifier.
+  - Apply the same contract to the public smoke test and authenticated workspace.
+
+  Deliverables:
+  - Update `frontend/assets.go` and its focused contract.
+  - Update `scripts/browser-smoke.playwright.js`.
+  - Update `scripts/netflix-browser-workspace.playwright.js`.
+
+  Validation:
+  - Run `make test-browser`.
+  - Run `make ci`.
+
+  Resolved:
+  The browser tests now allow and require only the current LoopAware pixel and
+  visit requests. The browser policy now permits the LoopAware image beacon.
+
 - [x] [B004] (P1) {I015} Accept linked-worktree Git metadata
   Goal:
   The repository layout gate accepts the Git metadata file in a linked
@@ -226,6 +251,21 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Clean sealed release, publish, and deploy plans passed through the sibling gateway against the real operator inventory without production mutation.
 
 ## Maintenance
+
+- [ ] [M412] (P2) Normalize the managed governance documents
+  Goal:
+  The managed governance documents differ from the current normalizer output.
+
+  Requirements:
+  - Normalize `.mprlab/AGENTS.DOCKER.md`.
+  - Normalize `.mprlab/AGENTS.PY.md`.
+  - Normalize `.mprlab/POLICY.md`.
+  - Normalize `.mprlab/issues-md-format.md`.
+  - Review each managed change before it is accepted.
+
+  Validation:
+  - Run the MPR Lab normalizer with `--check`.
+  - Run `git diff --check`.
 
 - [ ] [M400R] (P2) Backlog hygiene and archive
   Goal:
