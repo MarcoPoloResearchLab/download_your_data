@@ -1,21 +1,21 @@
-MIT License
+# Marco Polo Research Lab Proprietary License
 
-Copyright (c) 2025 MarkoPoloResearchLab
+SPDX-License-Identifier: LicenseRef-MPRL-Proprietary
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Copyright (c) 2026 Marco Polo Research Lab LLC
+All rights reserved.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+This software and associated documentation files (the "Software") are the
+confidential and proprietary information of Marco Polo Research Lab LLC.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+No license is granted to the public. Any access, copying, distribution,
+modification, publication, performance, display, or use of the Software, in
+whole or in part, requires prior written permission from Marco Polo Research Lab LLC or a
+separate written agreement signed by Marco Polo Research Lab LLC.
+
+The Software is provided "AS IS", without warranty of any kind, express or
+implied, including but not limited to the warranties of merchantability,
+fitness for a particular purpose, and noninfringement. In no event shall
+Marco Polo Research Lab LLC be liable for any claim, damages, or other liability, whether in
+an action of contract, tort, or otherwise, arising from, out of, or in
+connection with the Software or the use or other dealings in the Software.
