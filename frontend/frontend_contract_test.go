@@ -236,6 +236,14 @@ func TestFrontendProviderWorkspaceContract(testContext *testing.T) {
 			strings.TrimSpace(*threads.Note) == "" {
 			testContext.Fatalf("locale %q has an incomplete Threads guide contract: %+v", localeID, threads)
 		}
+		tikTok := locale.Platforms[7]
+		if tikTok.Title != "TikTok" ||
+			strings.TrimSpace(tikTok.Intro) == "" ||
+			len(tikTok.Steps) != 6 ||
+			len(tikTok.Refs) != 1 ||
+			tikTok.Refs[0].Href != "https://www.tiktok.com/setting/download-your-data" {
+			testContext.Fatalf("locale %q has an incomplete TikTok web guide contract: %+v", localeID, tikTok)
+		}
 	}
 	if len(canonicalUIKeys) < 120 {
 		testContext.Fatalf("localized UI key count = %d; want at least 120", len(canonicalUIKeys))

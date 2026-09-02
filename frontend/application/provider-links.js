@@ -8,7 +8,7 @@ const INSTRUCTION_LINK_HOSTS = Object.freeze({
   whatsapp: Object.freeze(['faq.whatsapp.com']),
   threads: Object.freeze(['www.facebook.com']),
   linkedin: Object.freeze(['www.linkedin.com']),
-  tiktok: Object.freeze(['support.tiktok.com', 'www.tiktok.com']),
+  tiktok: Object.freeze(['www.tiktok.com']),
   x: Object.freeze(['x.com']),
   youtube: Object.freeze(['takeout.google.com']),
   google: Object.freeze(['takeout.google.com']),

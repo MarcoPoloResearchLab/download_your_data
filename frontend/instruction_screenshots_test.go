@@ -68,6 +68,14 @@ var instructionScreenshotExpectedMetaStepIDs = map[string][]string{
 		"threads-help-export-device",
 		"threads-help-export-device",
 	},
+	"tiktok": {
+		"tiktok-request-data-help",
+		"tiktok-request-data-help",
+		"tiktok-request-data-help",
+		"tiktok-request-data-help",
+		"tiktok-download-data-help",
+		"tiktok-download-data-help",
+	},
 }
 
 type instructionScreenshotManifest struct {

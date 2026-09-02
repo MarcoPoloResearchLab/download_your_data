@@ -764,43 +764,43 @@
           "id": "tiktok",
           "nav": "TikTok",
           "title": "TikTok",
-          "intro": "Request a ZIP of your account data from the mobile app.",
+          "intro": "Request a copy of your account data from TikTok's authenticated web settings.",
           "steps": [
             {
-              "text": "In the TikTok app, tap Profile at the bottom.",
+              "text": "Sign in to TikTok in a web browser, then open Download TikTok data.",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "TikTok Support request data instructions"
+              "alt": "TikTok Download data Request data panel"
             },
             {
-              "text": "Tap Menu (☰) at the top → Settings and privacy → Account → Download your data.",
+              "text": "On Request data, select TXT or JSON.",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "TikTok Support request data instructions"
+              "alt": "TikTok Download data Request data panel"
             },
             {
-              "text": "Choose which information to include and select a file format.",
+              "text": "Select the data to include.",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "TikTok Support request data instructions"
+              "alt": "TikTok Download data Request data panel"
             },
             {
-              "text": "Tap Request data.",
+              "text": "Select Request data.",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "TikTok Support request data instructions"
+              "alt": "TikTok Download data Request data panel"
             },
             {
-              "text": "TikTok notifies you in the app when the file is ready; preparation may take a few days.",
+              "text": "Wait for TikTok to prepare the file, then return to Download TikTok data.",
               "screenshot_id": "tiktok-download-data-help",
-              "alt": "TikTok Support download data instructions"
+              "alt": "TikTok Download data Download data panel"
             },
             {
-              "text": "Return to Download your data → Download data, then tap Download. The file remains available for up to 4 days.",
+              "text": "Open Download data and download the file within 4 days after it becomes available.",
               "screenshot_id": "tiktok-download-data-help",
-              "alt": "TikTok Support download data instructions"
+              "alt": "TikTok Download data Download data panel"
             }
           ],
           "refs": [
             {
-              "label": "Requesting your data",
-              "href": "https://support.tiktok.com/en/account-and-privacy/personalized-ads-and-data/requesting-your-data"
+              "label": "Download TikTok data settings",
+              "href": "https://www.tiktok.com/setting/download-your-data"
             }
           ]
         },
@@ -1541,43 +1541,43 @@
           "id": "tiktok",
           "nav": "TikTok",
           "title": "TikTok",
-          "intro": "Solicita un ZIP de tu cuenta desde la app.",
+          "intro": "Solicita una copia de los datos de tu cuenta desde la configuración web autenticada de TikTok.",
           "steps": [
             {
-              "text": "En la aplicación de TikTok, pulsa Perfil en la parte inferior.",
+              "text": "Inicia sesión en TikTok en un navegador web y abre Descargar datos de TikTok.",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "Soporte de TikTok con instrucciones para solicitar tus datos"
+              "alt": "Panel Solicitar datos de Descargar datos de TikTok"
             },
             {
-              "text": "Pulsa Menú (☰) en la parte superior → Configuración y privacidad → Cuenta → Descargar tus datos.",
+              "text": "En Solicitar datos, selecciona TXT o JSON.",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "Soporte de TikTok con instrucciones para solicitar tus datos"
+              "alt": "Panel Solicitar datos de Descargar datos de TikTok"
             },
             {
-              "text": "Elige la información que quieras incluir y selecciona un formato de archivo.",
+              "text": "Selecciona los datos que quieras incluir.",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "Soporte de TikTok con instrucciones para solicitar tus datos"
+              "alt": "Panel Solicitar datos de Descargar datos de TikTok"
             },
             {
-              "text": "Pulsa Solicitar datos.",
+              "text": "Selecciona Solicitar datos.",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "Soporte de TikTok con instrucciones para solicitar tus datos"
+              "alt": "Panel Solicitar datos de Descargar datos de TikTok"
             },
             {
-              "text": "TikTok te avisará en la aplicación cuando el archivo esté listo; la preparación puede tardar unos días.",
+              "text": "Espera a que TikTok prepare el archivo y vuelve a Descargar datos de TikTok.",
               "screenshot_id": "tiktok-download-data-help",
-              "alt": "Soporte de TikTok con instrucciones para descargar tus datos"
+              "alt": "Panel Descargar datos de Descargar datos de TikTok"
             },
             {
-              "text": "Vuelve a Descargar tus datos → Descargar datos y pulsa Descargar. El archivo estará disponible hasta 4 días.",
+              "text": "Abre Descargar datos y descarga el archivo durante los 4 días posteriores a que esté disponible.",
               "screenshot_id": "tiktok-download-data-help",
-              "alt": "Soporte de TikTok con instrucciones para descargar tus datos"
+              "alt": "Panel Descargar datos de Descargar datos de TikTok"
             }
           ],
           "refs": [
             {
-              "label": "Solicitar tus datos",
-              "href": "https://support.tiktok.com/en/account-and-privacy/personalized-ads-and-data/requesting-your-data"
+              "label": "Configuración para descargar datos de TikTok",
+              "href": "https://www.tiktok.com/setting/download-your-data"
             }
           ]
         },
@@ -2318,43 +2318,43 @@
           "id": "tiktok",
           "nav": "TikTok",
           "title": "TikTok",
-          "intro": "Demandez un ZIP via l’app.",
+          "intro": "Demandez une copie des données de votre compte depuis les paramètres web authentifiés de TikTok.",
           "steps": [
             {
-              "text": "Dans l’application TikTok, appuyez sur Profil en bas de l’écran.",
+              "text": "Connectez-vous à TikTok dans un navigateur web, puis ouvrez Télécharger les données TikTok.",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "Assistance TikTok avec les instructions de demande des données"
+              "alt": "Panneau Demander des données de Télécharger les données TikTok"
             },
             {
-              "text": "Appuyez sur Menu (☰) en haut → Paramètres et confidentialité → Compte → Télécharger vos données.",
+              "text": "Dans Demander des données, sélectionnez TXT ou JSON.",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "Assistance TikTok avec les instructions de demande des données"
+              "alt": "Panneau Demander des données de Télécharger les données TikTok"
             },
             {
-              "text": "Choisissez les informations à inclure et sélectionnez un format de fichier.",
+              "text": "Sélectionnez les données à inclure.",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "Assistance TikTok avec les instructions de demande des données"
+              "alt": "Panneau Demander des données de Télécharger les données TikTok"
             },
             {
-              "text": "Appuyez sur Demander des données.",
+              "text": "Sélectionnez Demander des données.",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "Assistance TikTok avec les instructions de demande des données"
+              "alt": "Panneau Demander des données de Télécharger les données TikTok"
             },
             {
-              "text": "TikTok vous avertit dans l’application lorsque le fichier est prêt ; sa préparation peut prendre quelques jours.",
+              "text": "Attendez que TikTok prépare le fichier, puis revenez à Télécharger les données TikTok.",
               "screenshot_id": "tiktok-download-data-help",
-              "alt": "Assistance TikTok avec les instructions de téléchargement des données"
+              "alt": "Panneau Télécharger des données de Télécharger les données TikTok"
             },
             {
-              "text": "Revenez dans Télécharger vos données → Télécharger des données, puis appuyez sur Télécharger. Le fichier reste disponible jusqu’à 4 jours.",
+              "text": "Ouvrez Télécharger des données et téléchargez le fichier dans les 4 jours suivant sa mise à disposition.",
               "screenshot_id": "tiktok-download-data-help",
-              "alt": "Assistance TikTok avec les instructions de téléchargement des données"
+              "alt": "Panneau Télécharger des données de Télécharger les données TikTok"
             }
           ],
           "refs": [
             {
-              "label": "Demande de données",
-              "href": "https://support.tiktok.com/en/account-and-privacy/personalized-ads-and-data/requesting-your-data"
+              "label": "Paramètres de téléchargement des données TikTok",
+              "href": "https://www.tiktok.com/setting/download-your-data"
             }
           ]
         },
@@ -3095,43 +3095,43 @@
           "id": "tiktok",
           "nav": "TikTok",
           "title": "TikTok",
-          "intro": "Запрос ZIP-архива в приложении.",
+          "intro": "Запросите копию данных учётной записи в веб-настройках TikTok после входа.",
           "steps": [
             {
-              "text": "В приложении TikTok нажмите «Профиль» внизу экрана.",
+              "text": "Войдите в TikTok в браузере и откройте раздел «Скачать данные TikTok».",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "Инструкции TikTok Support по запросу данных"
+              "alt": "Вкладка «Запрос данных» в разделе скачивания данных TikTok"
             },
             {
-              "text": "Нажмите «Меню» (☰) вверху → «Настройки и конфиденциальность» → «Аккаунт» → «Скачать ваши данные».",
+              "text": "На вкладке «Запрос данных» выберите TXT или JSON.",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "Инструкции TikTok Support по запросу данных"
+              "alt": "Вкладка «Запрос данных» в разделе скачивания данных TikTok"
             },
             {
-              "text": "Выберите данные, которые нужно включить, и формат файла.",
+              "text": "Выберите данные для архива.",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "Инструкции TikTok Support по запросу данных"
+              "alt": "Вкладка «Запрос данных» в разделе скачивания данных TikTok"
             },
             {
-              "text": "Нажмите «Запросить данные».",
+              "text": "Выберите «Запросить данные».",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "Инструкции TikTok Support по запросу данных"
+              "alt": "Вкладка «Запрос данных» в разделе скачивания данных TikTok"
             },
             {
-              "text": "TikTok уведомит вас в приложении, когда файл будет готов; подготовка может занять несколько дней.",
+              "text": "Подождите, пока TikTok подготовит файл, затем вернитесь в раздел «Скачать данные TikTok».",
               "screenshot_id": "tiktok-download-data-help",
-              "alt": "Инструкции TikTok Support по скачиванию данных"
+              "alt": "Вкладка «Скачать данные» в разделе скачивания данных TikTok"
             },
             {
-              "text": "Вернитесь в раздел «Скачать ваши данные» → «Загрузка данных» и нажмите «Скачать». Файл будет доступен до 4 дней.",
+              "text": "Откройте вкладку «Скачать данные» и скачайте файл в течение 4 дней после его готовности.",
               "screenshot_id": "tiktok-download-data-help",
-              "alt": "Инструкции TikTok Support по скачиванию данных"
+              "alt": "Вкладка «Скачать данные» в разделе скачивания данных TikTok"
             }
           ],
           "refs": [
             {
-              "label": "Запрос данных",
-              "href": "https://support.tiktok.com/en/account-and-privacy/personalized-ads-and-data/requesting-your-data"
+              "label": "Настройки скачивания данных TikTok",
+              "href": "https://www.tiktok.com/setting/download-your-data"
             }
           ]
         },
