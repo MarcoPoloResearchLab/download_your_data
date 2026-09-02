@@ -414,9 +414,7 @@ async page => {
       !isCurrentLoopAwareRequest(rawURL) &&
       !rawURL.startsWith('https://accounts.google.com/') &&
       !rawURL.startsWith('https://cdn.jsdelivr.net/') &&
-      !rawURL.startsWith('https://lh3.googleusercontent.com/') &&
-      !rawURL.startsWith('https://loopaware.mprlab.com/') &&
-      !rawURL.startsWith('https://loopaware-api.mprlab.com/')
+      !rawURL.startsWith('https://lh3.googleusercontent.com/')
     );
   });
   assert(
