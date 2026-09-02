@@ -172,24 +172,6 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - The focused contracts pass.
   - The committed snapshot completed `make ci` after one retry of a transient Docker snapshot error.
 
-- [x] [B007] (P1) Permit the current LoopAware browser requests
-  Goal:
-  The browser policies permit the current LoopAware pixel requests.
-
-  Requirements:
-  - Permit the LoopAware API origin in the image source policy.
-  - Permit the current LoopAware script and API origins in both browser tests.
-  - Reject requests to all other unapproved external origins.
-
-  Validation:
-  - Run the focused frontend contract.
-  - Run `make test-browser`.
-  - Run `make ci`.
-
-  Resolved:
-  The response and Pages policies now permit the LoopAware API image request.
-  Both browser tests now permit only the current LoopAware origins.
-
 ## Improvements
 
 - [x] [I015] (P1) Adopt the permanent versionless selected manifest
