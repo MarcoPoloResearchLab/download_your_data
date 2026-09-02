@@ -43,8 +43,6 @@ const LOCALE_TO_TMDB = Object.freeze({
   ru: 'ru-RU'
 });
 const REQUIRED_UI_KEYS = Object.freeze([
-  'catalog_title',
-  'catalog_intro',
   'provider_catalog',
   'workspace',
   'guide',
@@ -650,11 +648,7 @@ function renderCatalog() {
   const root = element('div', {class: 'catalog'});
   const heading = element('div', {class: 'page-heading'});
   const copy = element('div');
-  copy.append(
-    element('p', {class: 'page-kicker', text: ui().private_workspace}),
-    element('h1', {text: ui().catalog_title}),
-    element('p', {class: 'lede', text: ui().catalog_intro})
-  );
+  copy.append(element('h1', {text: ui().private_workspace}));
   heading.append(copy);
 
   const grid = element('section', {
