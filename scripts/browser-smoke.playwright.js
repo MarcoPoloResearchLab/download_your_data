@@ -52,6 +52,56 @@ async page => {
       `${label} overflows horizontally: ${JSON.stringify(dimensions)}`
     );
   };
+  const assertInstructionImages = async (providerID) => {
+    const screenshotIDs = await page
+      .locator(`#${providerID} .instruction-screenshot`)
+      .evaluateAll((images) => [
+        ...new Set(images.map((image) => image.getAttribute('data-screenshot-id')))
+      ]);
+    for (const screenshotID of screenshotIDs) {
+      const screenshot = page
+        .locator(`#${providerID} .instruction-screenshot[data-screenshot-id="${screenshotID}"]`)
+        .first();
+      await screenshot.scrollIntoViewIfNeeded();
+      const pixels = await screenshot.evaluate(async (image) => {
+        await image.decode();
+        const canvas = document.createElement('canvas');
+        canvas.width = 64;
+        canvas.height = 64;
+        const context = canvas.getContext('2d', {willReadFrequently: true});
+        if (!context) {
+          throw new Error('instruction screenshot canvas context is unavailable');
+        }
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        const rgba = context.getImageData(0, 0, canvas.width, canvas.height).data;
+        const colors = new Map();
+        let dominantPixels = 0;
+        for (let offset = 0; offset < rgba.length; offset += 4) {
+          const color =
+            ((rgba[offset] >> 4) << 8) |
+            ((rgba[offset + 1] >> 4) << 4) |
+            (rgba[offset + 2] >> 4);
+          const count = (colors.get(color) || 0) + 1;
+          colors.set(color, count);
+          dominantPixels = Math.max(dominantPixels, count);
+        }
+        return {
+          naturalWidth: image.naturalWidth,
+          naturalHeight: image.naturalHeight,
+          distinctColors: colors.size,
+          dominantPixels,
+          totalPixels: canvas.width * canvas.height
+        };
+      });
+      assert(
+        pixels.naturalWidth > 0 &&
+          pixels.naturalHeight > 0 &&
+          pixels.distinctColors >= 8 &&
+          pixels.dominantPixels * 1000 <= pixels.totalPixels * 995,
+        `${providerID} screenshot ${screenshotID} lacks decoded visible content: ${JSON.stringify(pixels)}`
+      );
+    }
+  };
   const snapshot = async () =>
     page.evaluate(async () => {
       const response = await fetch('/api/providers/netflix', {
@@ -116,6 +166,12 @@ async page => {
     'anonymous provider catalog must contain twelve canonical providers'
   );
   assert(
+    await page.locator('.catalog .page-heading h1').textContent() ===
+      'Private workspace' &&
+      await page.locator('.catalog .page-heading .lede').count() === 0,
+    'provider catalog must use Private workspace as its sole page heading'
+  );
+  assert(
     await page.locator('mpr-header header[role="banner"]').count() === 1 &&
       await page.locator('mpr-footer footer[role="contentinfo"]').count() === 1 &&
       await page.locator('mpr-user').count() === 1,
@@ -146,6 +202,7 @@ async page => {
       await page.locator(`#${providerID} .instruction-step`).count() > 0,
       `${providerID} guide must render instructions anonymously`
     );
+    await assertInstructionImages(providerID);
     await assertNoHorizontalOverflow(`${providerID} anonymous guide`);
   }
 
@@ -169,7 +226,7 @@ async page => {
   assert(
     await page.locator('#amazon .instruction-step').count() === 6 &&
       await page.locator(
-        '#amazon .guide-refs a[href="https://www.amazon.com/gp/b2b/reports"]'
+        '#amazon .guide-refs a[href="https://www.amazon.com/hz/privacy-central/data-requests/preview.html"]'
       ).count() === 1,
     'Amazon guide must remain complete and public'
   );
@@ -357,7 +414,9 @@ async page => {
       !isCurrentLoopAwareRequest(rawURL) &&
       !rawURL.startsWith('https://accounts.google.com/') &&
       !rawURL.startsWith('https://cdn.jsdelivr.net/') &&
-      !rawURL.startsWith('https://lh3.googleusercontent.com/')
+      !rawURL.startsWith('https://lh3.googleusercontent.com/') &&
+      !rawURL.startsWith('https://loopaware.mprlab.com/') &&
+      !rawURL.startsWith('https://loopaware-api.mprlab.com/')
     );
   });
   assert(

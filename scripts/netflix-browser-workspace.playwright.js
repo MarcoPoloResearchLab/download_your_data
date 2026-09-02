@@ -586,7 +586,9 @@ Another Film,2/3/26
       !isCurrentLoopAwareRequest(request.url) &&
       !request.url.startsWith('https://accounts.google.com/') &&
       !request.url.startsWith('https://cdn.jsdelivr.net/') &&
-      !request.url.startsWith('https://lh3.googleusercontent.com/')
+      !request.url.startsWith('https://lh3.googleusercontent.com/') &&
+      !request.url.startsWith('https://loopaware.mprlab.com/') &&
+      !request.url.startsWith('https://loopaware-api.mprlab.com/')
     );
   });
   assert(
