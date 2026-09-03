@@ -33,6 +33,40 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   The browser tests now allow and require only the current LoopAware pixel and
   visit requests. The browser policy now permits the LoopAware image beacon.
 
+- [x] [B005] (P1) {I011,F012} Reject invalid instruction screenshots
+  Goal:
+  The published screenshots contain the first-party content that the manifest declares.
+
+  Requirements:
+  - Replace the blank TikTok images with authenticated TikTok settings captures under I011.
+  - Replace the Amazon error pages with authenticated Privacy Central captures.
+  - Replace the unreadable Netflix image and the WhatsApp navigation images.
+  - Pin each approved PNG SHA-256 after the content review and privacy review.
+  - Reject blank, duplicate, unreviewed, or digest-mismatched images.
+  - Verify each declared visible label before the manifest uses `approved`.
+
+  Deliverables:
+  - Seven correct instruction images from current first-party sources.
+  - Manifest digest records and screenshot content validation.
+  - Browser coverage for decoded images with visible content.
+
+  Validation:
+  - Review each image at full resolution.
+  - Run `make validate-instruction-screenshots`.
+  - Run `make test-browser`.
+  - Run `make ci`.
+
+  Progress:
+  - 2026-08-26: replaced the Netflix and WhatsApp images with reviewed public help captures.
+  - 2026-08-26: replaced the Amazon error pages with reviewed authenticated captures and updated the guide for the current per-category request flow.
+  - 2026-08-26: pinned every reviewed image digest and added build, test, and browser rejection for invalid image content.
+  - 2026-09-02: replaced the blank TikTok images with reviewed authenticated settings captures.
+
+  Resolved 2026-09-02:
+  - All seven replacement images passed the screenshot content gate.
+  - The manifest contains the reviewed image dimensions, capture dates, review states, and SHA-256 values.
+  - The browser tests decoded each guide image and verified visible content.
+
 - [x] [B004] (P1) {I015} Accept linked-worktree Git metadata
   Goal:
   The repository layout gate accepts the Git metadata file in a linked
@@ -158,6 +192,60 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   The selected manifest now uses the permanent versionless contract. The
   browser gate accepts the current shared shell revalidation request.
 
+- [ ] [I016] (P1) Add IMDb title IDs to Netflix enrichment
+  Goal:
+  Add one IMDb title ID to accepted Netflix metadata when TMDB supplies the ID.
+  TMDB remains the sole title-match authority.
+
+  Source decision:
+  - Use TMDB `external_ids` as the sole IMDb title ID source for this issue.
+  - Keep this implementation independent from an IMDb data subscription.
+  - Add a separate improvement before the application consumes licensed IMDb data.
+  - Use `github.com/tyemirov/utils/scheduler` as the canonical worker for that daily data synchronization.
+  - Persist the schedule, claim, retry, result, and snapshot identity in the application repository.
+  - Activate a downloaded snapshot only after source validation and checksum validation.
+  - Keep the last valid snapshot active after a failed synchronization.
+  - Run the worker with the application context and the application shutdown sequence.
+  - Use the [IMDb data-use rules](https://help.imdb.com/article/imdb/general-information/can-i-use-imdb-data-in-my-software/G5JTRESSHJBBHTGX) for the authorization boundary.
+  - Use the [IMDb bulk product documentation](https://developer.imdb.com/documentation/bulk-data-documentation/) for licensed daily data.
+
+  Requirements:
+  - Request `external_ids` through `append_to_response` on each existing TMDB details request.
+  - Accept `imdb_id` only for an accepted TMDB movie or series match.
+  - Represent the IMDb title ID as one optional validated domain value.
+  - Accept an absent IMDb title ID as a valid TMDB result.
+  - Reject each nonempty malformed IMDb title ID as an invalid TMDB response.
+  - Keep the current TMDB title search and deterministic matcher as the sole title resolution path.
+  - Keep the current explicit TMDB title-query authorization contract.
+  - Use the existing TMDB server configuration for the external ID request.
+  - Send no Netflix title, date, row, or user data to IMDb.
+  - Record TMDB external IDs as the source of each IMDb title ID.
+  - Add `imdb_id` to metadata, API records, persisted artifacts, and the enriched CSV.
+  - Render an IMDb title link only when a valid IMDb title ID exists.
+  - Bump the TMDB client identity and each changed persisted artifact contract.
+  - Make each earlier TMDB generation stale after the identity change.
+  - Build each new enriched generation with the current metadata contract.
+  - Limit this improvement to TMDB-provided IMDb title IDs.
+  - Complete this issue with the request-time TMDB path.
+
+  Deliverables:
+  - Validated IMDb title ID domain value and strict TMDB response decoder.
+  - Updated metadata, cache payload, generation record, API, CSV, and browser contracts.
+  - Updated client and artifact identities with stale-generation rejection.
+  - Deterministic movie, series, absent-ID, and malformed-ID fixtures.
+  - Recorded boundary for a later scheduler-backed IMDb data source.
+
+  Validation:
+  - Prove that each details request asks TMDB for `external_ids`.
+  - Prove that valid movie and series IDs persist through records, restart, cache, and export.
+  - Prove that an absent ID creates no IMDb link and no invalid metadata state.
+  - Prove that a malformed nonempty ID fails the replacement generation atomically.
+  - Prove that review and unmatched outcomes contain no IMDb title ID.
+  - Prove that the matcher evaluation result does not change.
+  - Run `make eval-netflix-matcher`.
+  - Run `make test-browser`.
+  - Run `make ci`.
+
 - [ ] [I004] (P1) {I003} Establish a retrieval-quality and completeness gate
   Goal:
   Prove that local hybrid search finds relevant conversations and suppresses unrelated semantic matches before the browser depends on it.
@@ -181,27 +269,35 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Eligible-document coverage is 100% before a generation can become ready.
   - `make eval-search`
 
-- [ ] [I011] (P2) {P004} Publish the authenticated TikTok mobile instruction screenshots
+- [x] [I011] (P2) {P004} Publish the authenticated TikTok instruction screenshots
   Goal:
-  Replace the first-party TikTok Support visuals with authenticated app-native export screenshots.
+  Replace the blank TikTok visuals with current screenshots from the authenticated TikTok export settings.
 
   Requirements:
-  - Use an operator-connected authenticated TikTok mobile surface; do not substitute an unofficial web flow, mock, or stale screenshot.
-  - Capture Settings and privacy navigation and Download your data before Request data.
+  - Use the first-party authenticated TikTok settings surface.
+  - Capture the Request data panel and the Download data panel.
   - Keep credentials, identity-verification material, personal identifiers, notifications, and private account content out of published assets.
-  - Do not request, cancel, or download an archive, change settings, switch accounts, or cross an identity-verification boundary.
-  - Record current official workflow and publication guidance at capture time.
+  - Do not select data or submit a request.
+  - Do not download, cancel, or delete an archive.
+  - Record the current source route, capture date, review state, dimensions, and SHA-256.
 
   Deliverables:
-  - Reviewed, metadata-free portrait assets covering the current request and download panels.
+  - Reviewed, metadata-free assets for the current request and download panels.
   - Updated per-step visual mappings without locale-specific image duplication.
-  - Updated screenshot validation and browser coverage.
+  - Updated screenshot manifest records and browser coverage.
 
   Validation:
-  - Every TikTok step still renders one visual after the first-party help captures are removed.
-  - All replacement assets match the current authenticated app labels and contain no private content.
+  - Verify that every TikTok step renders one visual.
+  - Verify that the replacement assets match the current authenticated labels.
+  - Verify that the replacement assets contain no private content.
+  - Run `make validate-instruction-screenshots`.
   - `make test-browser`
   - `make ci`
+
+  Resolved 2026-09-02:
+  - Captured both panels from the authenticated TikTok export settings in an isolated browser window.
+  - Cropped each image to exclude the browser header, account details, notifications, and private content.
+  - Removed PNG metadata and recorded each reviewed SHA-256 in the screenshot manifest.
 
 - [ ] [I012] (P1) {F010} Make Pages the canonical anonymous guide frontend
   Goal:

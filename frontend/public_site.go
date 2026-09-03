@@ -2,13 +2,16 @@ package frontend
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"embed"
+	"encoding/hex"
 	"encoding/json"
 	"encoding/xml"
 	"errors"
 	"fmt"
 	"html/template"
 	"io"
+	"io/fs"
 	"net/url"
 	"regexp"
 	"slices"
@@ -160,6 +163,7 @@ type screenshotManifest struct {
 type screenshotManifestRecord struct {
 	ID              string                    `json:"id"`
 	OutputPath      string                    `json:"output_path"`
+	SHA256          string                    `json:"sha256"`
 	PixelDimensions screenshotPixelDimensions `json:"pixel_dimensions"`
 	ReviewStatus    string                    `json:"review_status"`
 	Provenance      screenshotProvenance      `json:"provenance"`
@@ -353,6 +357,45 @@ func loadScreenshotManifest() (screenshotManifest, error) {
 	var manifest screenshotManifest
 	if decodeError := json.Unmarshal(encodedManifest, &manifest); decodeError != nil {
 		return screenshotManifest{}, fmt.Errorf("decode screenshot manifest: %w", decodeError)
+	}
+	if manifest.SchemaVersion != 3 {
+		return screenshotManifest{}, fmt.Errorf(
+			"validate screenshot manifest: schema version = %d; want 3",
+			manifest.SchemaVersion,
+		)
+	}
+	digestOwners := make(map[string]string, len(manifest.Screenshots))
+	for _, asset := range manifest.Screenshots {
+		if asset.ReviewStatus != "approved" {
+			return screenshotManifest{}, fmt.Errorf(
+				"validate screenshot manifest: screenshot %q is not approved",
+				asset.ID,
+			)
+		}
+		content, assetReadError := fs.ReadFile(Assets(), asset.OutputPath)
+		if assetReadError != nil {
+			return screenshotManifest{}, fmt.Errorf(
+				"validate screenshot manifest: read screenshot %q: %w",
+				asset.ID,
+				assetReadError,
+			)
+		}
+		digest := sha256.Sum256(content)
+		actualDigest := hex.EncodeToString(digest[:])
+		if strings.TrimSpace(asset.SHA256) == "" || actualDigest != asset.SHA256 {
+			return screenshotManifest{}, fmt.Errorf(
+				"validate screenshot manifest: screenshot %q digest is not approved",
+				asset.ID,
+			)
+		}
+		if existingID, exists := digestOwners[actualDigest]; exists {
+			return screenshotManifest{}, fmt.Errorf(
+				"validate screenshot manifest: screenshots %q and %q have identical content",
+				existingID,
+				asset.ID,
+			)
+		}
+		digestOwners[actualDigest] = asset.ID
 	}
 	return manifest, nil
 }

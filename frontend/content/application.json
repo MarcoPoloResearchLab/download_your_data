@@ -176,12 +176,12 @@
       {
         "id": "tiktok-request-data-help",
         "src": "images/instructions/tiktok-request-data-help.png",
-        "href": "https://support.tiktok.com/en/account-and-privacy/personalized-ads-and-data/requesting-your-data"
+        "href": "https://www.tiktok.com/setting/download-your-data"
       },
       {
         "id": "tiktok-download-data-help",
         "src": "images/instructions/tiktok-download-data-help.png",
-        "href": "https://support.tiktok.com/en/account-and-privacy/personalized-ads-and-data/requesting-your-data"
+        "href": "https://www.tiktok.com/setting/download-your-data"
       }
     ],
     "x": [
@@ -224,12 +224,12 @@
       {
         "id": "amazon-your-account",
         "src": "images/instructions/amazon-your-account.png",
-        "href": "https://www.amazon.com/gp/b2b/reports"
+        "href": "https://www.amazon.com/gp/css/homepage.html"
       },
       {
         "id": "amazon-privacy-request",
         "src": "images/instructions/amazon-privacy-request.png",
-        "href": "https://www.amazon.com/gp/b2b/reports"
+        "href": "https://www.amazon.com/hz/privacy-central/data-requests/preview.html"
       }
     ]
   },
@@ -237,8 +237,6 @@
     "en": {
       "site_title": "Download Your Data",
       "ui": {
-        "catalog_title": "Your data providers",
-        "catalog_intro": "Browse current export guides publicly, or open a private authenticated workspace for data analysis.",
         "provider_catalog": "Provider catalog",
         "workspace": "Workspace",
         "guide": "Guide",
@@ -766,43 +764,43 @@
           "id": "tiktok",
           "nav": "TikTok",
           "title": "TikTok",
-          "intro": "Request a ZIP of your account data from the mobile app.",
+          "intro": "Request a copy of your account data from TikTok's authenticated web settings.",
           "steps": [
             {
-              "text": "In the TikTok app, tap Profile at the bottom.",
+              "text": "Sign in to TikTok in a web browser, then open Download TikTok data.",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "TikTok Support request data instructions"
+              "alt": "TikTok Download data Request data panel"
             },
             {
-              "text": "Tap Menu (☰) at the top → Settings and privacy → Account → Download your data.",
+              "text": "On Request data, select TXT or JSON.",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "TikTok Support request data instructions"
+              "alt": "TikTok Download data Request data panel"
             },
             {
-              "text": "Choose which information to include and select a file format.",
+              "text": "Select the data to include.",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "TikTok Support request data instructions"
+              "alt": "TikTok Download data Request data panel"
             },
             {
-              "text": "Tap Request data.",
+              "text": "Select Request data.",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "TikTok Support request data instructions"
+              "alt": "TikTok Download data Request data panel"
             },
             {
-              "text": "TikTok notifies you in the app when the file is ready; preparation may take a few days.",
+              "text": "Wait for TikTok to prepare the file, then return to Download TikTok data.",
               "screenshot_id": "tiktok-download-data-help",
-              "alt": "TikTok Support download data instructions"
+              "alt": "TikTok Download data Download data panel"
             },
             {
-              "text": "Return to Download your data → Download data, then tap Download. The file remains available for up to 4 days.",
+              "text": "Open Download data and download the file within 4 days after it becomes available.",
               "screenshot_id": "tiktok-download-data-help",
-              "alt": "TikTok Support download data instructions"
+              "alt": "TikTok Download data Download data panel"
             }
           ],
           "refs": [
             {
-              "label": "Requesting your data",
-              "href": "https://support.tiktok.com/en/account-and-privacy/personalized-ads-and-data/requesting-your-data"
+              "label": "Download TikTok data settings",
+              "href": "https://www.tiktok.com/setting/download-your-data"
             }
           ]
         },
@@ -971,53 +969,51 @@
             {
               "text": "Sign in to your Amazon account in a web browser and open Your Account from the navigation menu.",
               "screenshot_id": "amazon-your-account",
-              "alt": "Amazon Your Account navigation screen"
+              "alt": "Amazon Manage your data links with Request your data"
             },
             {
-              "text": "Under Privacy & Security, select Request Your Information (or access Privacy Central directly).",
+              "text": "Under Manage your data, select Request your data.",
               "screenshot_id": "amazon-your-account",
-              "alt": "Amazon Request Your Information privacy settings option"
+              "alt": "Amazon Manage your data links with Request your data"
             },
             {
-              "text": "Select the data categories to export, including Your Orders for CSV purchase reports, Kindle content, and Prime Video watch history.",
+              "text": "On Request your data, find the category you need, such as Your Orders, Kindle, or Prime Video.",
               "screenshot_id": "amazon-privacy-request",
-              "alt": "Amazon Request My Data category selection checkboxes"
+              "alt": "Amazon Request your data list with Your Orders and Submit Request"
             },
             {
-              "text": "Click Submit Request at the bottom of the data category selection list.",
+              "text": "Select Submit Request beside that category.",
               "screenshot_id": "amazon-privacy-request",
-              "alt": "Amazon Submit Request button"
+              "alt": "Amazon Request your data list with Your Orders and Submit Request"
             },
             {
               "text": "Open the confirmation email sent by Amazon to your registered email address and click the verification link.",
               "screenshot_id": "amazon-privacy-request",
-              "alt": "Amazon export confirmation email link instruction"
+              "alt": "Amazon Request your data list with Your Orders and Submit Request"
             },
             {
-              "text": "Wait for Amazon to generate your archive, then download your data ZIP containing your CSV order history files.",
+              "text": "Wait for Amazon to prepare the requested file, then follow its email instructions to download it.",
               "screenshot_id": "amazon-privacy-request",
-              "alt": "Amazon download data completion step"
+              "alt": "Amazon Request your data list with Your Orders and Submit Request"
             }
           ],
           "refs": [
             {
-              "label": "Request Your Information (Amazon Privacy)",
-              "href": "https://www.amazon.com/gp/b2b/reports"
+              "label": "Request your data (Amazon Privacy)",
+              "href": "https://www.amazon.com/hz/privacy-central/data-requests/preview.html"
             },
             {
               "label": "Amazon Privacy Notice & Customer Support",
               "href": "https://www.amazon.com/gp/help/customer/display.html?nodeId=GX7NJY4G89574M9W"
             }
           ],
-          "note": "Amazon order history exports are delivered as ZIP archives containing CSV files. Verification via email is required before Amazon begins processing your request."
+          "note": "Amazon shows each data category with its own Submit Request control. Request only the categories that you need."
         }
       ]
     },
     "es": {
       "site_title": "Descarga tus datos",
       "ui": {
-        "catalog_title": "Tus proveedores de datos",
-        "catalog_intro": "Consulta públicamente las guías de exportación actuales o abre un espacio privado autenticado para analizar tus datos.",
         "provider_catalog": "Catálogo de proveedores",
         "workspace": "Espacio de trabajo",
         "guide": "Guía",
@@ -1545,43 +1541,43 @@
           "id": "tiktok",
           "nav": "TikTok",
           "title": "TikTok",
-          "intro": "Solicita un ZIP de tu cuenta desde la app.",
+          "intro": "Solicita una copia de los datos de tu cuenta desde la configuración web autenticada de TikTok.",
           "steps": [
             {
-              "text": "En la aplicación de TikTok, pulsa Perfil en la parte inferior.",
+              "text": "Inicia sesión en TikTok en un navegador web y abre Descargar datos de TikTok.",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "Soporte de TikTok con instrucciones para solicitar tus datos"
+              "alt": "Panel Solicitar datos de Descargar datos de TikTok"
             },
             {
-              "text": "Pulsa Menú (☰) en la parte superior → Configuración y privacidad → Cuenta → Descargar tus datos.",
+              "text": "En Solicitar datos, selecciona TXT o JSON.",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "Soporte de TikTok con instrucciones para solicitar tus datos"
+              "alt": "Panel Solicitar datos de Descargar datos de TikTok"
             },
             {
-              "text": "Elige la información que quieras incluir y selecciona un formato de archivo.",
+              "text": "Selecciona los datos que quieras incluir.",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "Soporte de TikTok con instrucciones para solicitar tus datos"
+              "alt": "Panel Solicitar datos de Descargar datos de TikTok"
             },
             {
-              "text": "Pulsa Solicitar datos.",
+              "text": "Selecciona Solicitar datos.",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "Soporte de TikTok con instrucciones para solicitar tus datos"
+              "alt": "Panel Solicitar datos de Descargar datos de TikTok"
             },
             {
-              "text": "TikTok te avisará en la aplicación cuando el archivo esté listo; la preparación puede tardar unos días.",
+              "text": "Espera a que TikTok prepare el archivo y vuelve a Descargar datos de TikTok.",
               "screenshot_id": "tiktok-download-data-help",
-              "alt": "Soporte de TikTok con instrucciones para descargar tus datos"
+              "alt": "Panel Descargar datos de Descargar datos de TikTok"
             },
             {
-              "text": "Vuelve a Descargar tus datos → Descargar datos y pulsa Descargar. El archivo estará disponible hasta 4 días.",
+              "text": "Abre Descargar datos y descarga el archivo durante los 4 días posteriores a que esté disponible.",
               "screenshot_id": "tiktok-download-data-help",
-              "alt": "Soporte de TikTok con instrucciones para descargar tus datos"
+              "alt": "Panel Descargar datos de Descargar datos de TikTok"
             }
           ],
           "refs": [
             {
-              "label": "Solicitar tus datos",
-              "href": "https://support.tiktok.com/en/account-and-privacy/personalized-ads-and-data/requesting-your-data"
+              "label": "Configuración para descargar datos de TikTok",
+              "href": "https://www.tiktok.com/setting/download-your-data"
             }
           ]
         },
@@ -1750,53 +1746,51 @@
             {
               "text": "Inicia sesión en tu cuenta de Amazon en el navegador y abre Tu cuenta desde el menú de navegación.",
               "screenshot_id": "amazon-your-account",
-              "alt": "Navegación a Tu cuenta de Amazon"
+              "alt": "Enlaces de Amazon para gestionar tus datos, incluido Solicita tus datos"
             },
             {
-              "text": "En Privacidad y seguridad, selecciona Solicitar tu información (o accede directamente al portal de Privacidad).",
+              "text": "En Gestiona tus datos, selecciona Solicita tus datos.",
               "screenshot_id": "amazon-your-account",
-              "alt": "Opción Solicitar tu información en los ajustes de privacidad de Amazon"
+              "alt": "Enlaces de Amazon para gestionar tus datos, incluido Solicita tus datos"
             },
             {
-              "text": "Selecciona las categorías de datos a exportar, incluyendo Tus pedidos (informes de compras en CSV), contenido de Kindle e historial de Prime Video.",
+              "text": "En Solicita tus datos, busca la categoría que necesitas, como Tus pedidos, Kindle o Prime Video.",
               "screenshot_id": "amazon-privacy-request",
-              "alt": "Casillas de selección de categorías en Solicitar mis datos de Amazon"
+              "alt": "Lista Solicita tus datos de Amazon con Tus pedidos y Enviar solicitud"
             },
             {
-              "text": "Haz clic en Enviar solicitud al final de la lista de categorías.",
+              "text": "Selecciona Enviar solicitud junto a esa categoría.",
               "screenshot_id": "amazon-privacy-request",
-              "alt": "Botón Enviar solicitud de Amazon"
+              "alt": "Lista Solicita tus datos de Amazon con Tus pedidos y Enviar solicitud"
             },
             {
               "text": "Abre el correo electrónico de confirmación enviado por Amazon a tu dirección registrada y haz clic en el enlace de verificación.",
               "screenshot_id": "amazon-privacy-request",
-              "alt": "Instrucción del enlace de verificación del correo de confirmación de exportación de Amazon"
+              "alt": "Lista Solicita tus datos de Amazon con Tus pedidos y Enviar solicitud"
             },
             {
-              "text": "Espera a que Amazon genere tu archivo y descarga el ZIP con tu historial de pedidos en CSV.",
+              "text": "Espera a que Amazon prepare el archivo solicitado y sigue las instrucciones del correo electrónico para descargarlo.",
               "screenshot_id": "amazon-privacy-request",
-              "alt": "Paso de descarga del archivo de datos de Amazon"
+              "alt": "Lista Solicita tus datos de Amazon con Tus pedidos y Enviar solicitud"
             }
           ],
           "refs": [
             {
-              "label": "Solicitar tu información (Privacidad de Amazon)",
-              "href": "https://www.amazon.com/gp/b2b/reports"
+              "label": "Solicita tus datos (Privacidad de Amazon)",
+              "href": "https://www.amazon.com/hz/privacy-central/data-requests/preview.html"
             },
             {
               "label": "Aviso de privacidad y atención al cliente de Amazon",
               "href": "https://www.amazon.com/gp/help/customer/display.html?nodeId=GX7NJY4G89574M9W"
             }
           ],
-          "note": "Las exportaciones del historial de pedidos de Amazon se entregan como archivos ZIP con archivos CSV. Se requiere verificación por correo electrónico antes de procesar la solicitud."
+          "note": "Amazon muestra cada categoría de datos con su propio control Enviar solicitud. Solicita solo las categorías que necesites."
         }
       ]
     },
     "fr": {
       "site_title": "Téléchargez vos données",
       "ui": {
-        "catalog_title": "Vos fournisseurs de données",
-        "catalog_intro": "Consultez publiquement les guides d’exportation à jour ou ouvrez un espace privé authentifié pour analyser vos données.",
         "provider_catalog": "Catalogue des fournisseurs",
         "workspace": "Espace de travail",
         "guide": "Guide",
@@ -2324,43 +2318,43 @@
           "id": "tiktok",
           "nav": "TikTok",
           "title": "TikTok",
-          "intro": "Demandez un ZIP via l’app.",
+          "intro": "Demandez une copie des données de votre compte depuis les paramètres web authentifiés de TikTok.",
           "steps": [
             {
-              "text": "Dans l’application TikTok, appuyez sur Profil en bas de l’écran.",
+              "text": "Connectez-vous à TikTok dans un navigateur web, puis ouvrez Télécharger les données TikTok.",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "Assistance TikTok avec les instructions de demande des données"
+              "alt": "Panneau Demander des données de Télécharger les données TikTok"
             },
             {
-              "text": "Appuyez sur Menu (☰) en haut → Paramètres et confidentialité → Compte → Télécharger vos données.",
+              "text": "Dans Demander des données, sélectionnez TXT ou JSON.",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "Assistance TikTok avec les instructions de demande des données"
+              "alt": "Panneau Demander des données de Télécharger les données TikTok"
             },
             {
-              "text": "Choisissez les informations à inclure et sélectionnez un format de fichier.",
+              "text": "Sélectionnez les données à inclure.",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "Assistance TikTok avec les instructions de demande des données"
+              "alt": "Panneau Demander des données de Télécharger les données TikTok"
             },
             {
-              "text": "Appuyez sur Demander des données.",
+              "text": "Sélectionnez Demander des données.",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "Assistance TikTok avec les instructions de demande des données"
+              "alt": "Panneau Demander des données de Télécharger les données TikTok"
             },
             {
-              "text": "TikTok vous avertit dans l’application lorsque le fichier est prêt ; sa préparation peut prendre quelques jours.",
+              "text": "Attendez que TikTok prépare le fichier, puis revenez à Télécharger les données TikTok.",
               "screenshot_id": "tiktok-download-data-help",
-              "alt": "Assistance TikTok avec les instructions de téléchargement des données"
+              "alt": "Panneau Télécharger des données de Télécharger les données TikTok"
             },
             {
-              "text": "Revenez dans Télécharger vos données → Télécharger des données, puis appuyez sur Télécharger. Le fichier reste disponible jusqu’à 4 jours.",
+              "text": "Ouvrez Télécharger des données et téléchargez le fichier dans les 4 jours suivant sa mise à disposition.",
               "screenshot_id": "tiktok-download-data-help",
-              "alt": "Assistance TikTok avec les instructions de téléchargement des données"
+              "alt": "Panneau Télécharger des données de Télécharger les données TikTok"
             }
           ],
           "refs": [
             {
-              "label": "Demande de données",
-              "href": "https://support.tiktok.com/en/account-and-privacy/personalized-ads-and-data/requesting-your-data"
+              "label": "Paramètres de téléchargement des données TikTok",
+              "href": "https://www.tiktok.com/setting/download-your-data"
             }
           ]
         },
@@ -2529,53 +2523,51 @@
             {
               "text": "Connectez-vous à votre compte Amazon dans un navigateur web et ouvrez Votre compte depuis le menu de navigation.",
               "screenshot_id": "amazon-your-account",
-              "alt": "Écran de navigation Votre compte Amazon"
+              "alt": "Liens Amazon pour gérer vos données, avec Demander vos données"
             },
             {
-              "text": "Dans Confidentialité et sécurité, sélectionnez Demander vos informations (ou accédez directement au portail de confidentialité).",
+              "text": "Dans Gérer vos données, sélectionnez Demander vos données.",
               "screenshot_id": "amazon-your-account",
-              "alt": "Option Demander vos informations dans les paramètres de confidentialité d'Amazon"
+              "alt": "Liens Amazon pour gérer vos données, avec Demander vos données"
             },
             {
-              "text": "Sélectionnez les catégories de données à exporter, notamment Vos commandes (rapports d'achats en CSV), contenus Kindle et historique Prime Video.",
+              "text": "Dans Demander vos données, trouvez la catégorie nécessaire, comme Vos commandes, Kindle ou Prime Video.",
               "screenshot_id": "amazon-privacy-request",
-              "alt": "Cases à cocher de sélection des catégories dans Demander mes données Amazon"
+              "alt": "Liste Amazon Demander vos données avec Vos commandes et Soumettre la demande"
             },
             {
-              "text": "Cliquez sur Soumettre la demande au bas de la liste des catégories de données.",
+              "text": "Sélectionnez Soumettre la demande à côté de cette catégorie.",
               "screenshot_id": "amazon-privacy-request",
-              "alt": "Bouton Soumettre la demande d'Amazon"
+              "alt": "Liste Amazon Demander vos données avec Vos commandes et Soumettre la demande"
             },
             {
               "text": "Ouvrez l'e-mail de confirmation envoyé par Amazon à votre adresse enregistrée et cliquez sur le lien de vérification.",
               "screenshot_id": "amazon-privacy-request",
-              "alt": "Instruction du lien de vérification par e-mail de confirmation d'exportation Amazon"
+              "alt": "Liste Amazon Demander vos données avec Vos commandes et Soumettre la demande"
             },
             {
-              "text": "Attendez qu'Amazon génère votre archive, puis téléchargez le fichier ZIP contenant l'historique de vos commandes au format CSV.",
+              "text": "Attendez qu'Amazon prépare le fichier demandé, puis suivez les instructions de l'e-mail pour le télécharger.",
               "screenshot_id": "amazon-privacy-request",
-              "alt": "Étape de téléchargement du fichier ZIP de données Amazon"
+              "alt": "Liste Amazon Demander vos données avec Vos commandes et Soumettre la demande"
             }
           ],
           "refs": [
             {
-              "label": "Demander vos informations (Confidentialité Amazon)",
-              "href": "https://www.amazon.com/gp/b2b/reports"
+              "label": "Demander vos données (Confidentialité Amazon)",
+              "href": "https://www.amazon.com/hz/privacy-central/data-requests/preview.html"
             },
             {
               "label": "Notice de protection des données et service client Amazon",
               "href": "https://www.amazon.com/gp/help/customer/display.html?nodeId=GX7NJY4G89574M9W"
             }
           ],
-          "note": "Les exportations de l'historique des commandes Amazon sont fournies sous forme d'archives ZIP contenant des fichiers CSV. Une vérification par e-mail est requise avant le traitement de la demande."
+          "note": "Amazon affiche chaque catégorie de données avec sa propre commande Soumettre la demande. Demandez uniquement les catégories nécessaires."
         }
       ]
     },
     "ru": {
       "site_title": "Скачать ваши данные",
       "ui": {
-        "catalog_title": "Провайдеры ваших данных",
-        "catalog_intro": "Просматривайте актуальные инструкции по экспорту без входа или откройте приватное пространство с аутентификацией для анализа своих данных.",
         "provider_catalog": "Каталог провайдеров",
         "workspace": "Рабочее пространство",
         "guide": "Инструкция",
@@ -3103,43 +3095,43 @@
           "id": "tiktok",
           "nav": "TikTok",
           "title": "TikTok",
-          "intro": "Запрос ZIP-архива в приложении.",
+          "intro": "Запросите копию данных учётной записи в веб-настройках TikTok после входа.",
           "steps": [
             {
-              "text": "В приложении TikTok нажмите «Профиль» внизу экрана.",
+              "text": "Войдите в TikTok в браузере и откройте раздел «Скачать данные TikTok».",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "Инструкции TikTok Support по запросу данных"
+              "alt": "Вкладка «Запрос данных» в разделе скачивания данных TikTok"
             },
             {
-              "text": "Нажмите «Меню» (☰) вверху → «Настройки и конфиденциальность» → «Аккаунт» → «Скачать ваши данные».",
+              "text": "На вкладке «Запрос данных» выберите TXT или JSON.",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "Инструкции TikTok Support по запросу данных"
+              "alt": "Вкладка «Запрос данных» в разделе скачивания данных TikTok"
             },
             {
-              "text": "Выберите данные, которые нужно включить, и формат файла.",
+              "text": "Выберите данные для архива.",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "Инструкции TikTok Support по запросу данных"
+              "alt": "Вкладка «Запрос данных» в разделе скачивания данных TikTok"
             },
             {
-              "text": "Нажмите «Запросить данные».",
+              "text": "Выберите «Запросить данные».",
               "screenshot_id": "tiktok-request-data-help",
-              "alt": "Инструкции TikTok Support по запросу данных"
+              "alt": "Вкладка «Запрос данных» в разделе скачивания данных TikTok"
             },
             {
-              "text": "TikTok уведомит вас в приложении, когда файл будет готов; подготовка может занять несколько дней.",
+              "text": "Подождите, пока TikTok подготовит файл, затем вернитесь в раздел «Скачать данные TikTok».",
               "screenshot_id": "tiktok-download-data-help",
-              "alt": "Инструкции TikTok Support по скачиванию данных"
+              "alt": "Вкладка «Скачать данные» в разделе скачивания данных TikTok"
             },
             {
-              "text": "Вернитесь в раздел «Скачать ваши данные» → «Загрузка данных» и нажмите «Скачать». Файл будет доступен до 4 дней.",
+              "text": "Откройте вкладку «Скачать данные» и скачайте файл в течение 4 дней после его готовности.",
               "screenshot_id": "tiktok-download-data-help",
-              "alt": "Инструкции TikTok Support по скачиванию данных"
+              "alt": "Вкладка «Скачать данные» в разделе скачивания данных TikTok"
             }
           ],
           "refs": [
             {
-              "label": "Запрос данных",
-              "href": "https://support.tiktok.com/en/account-and-privacy/personalized-ads-and-data/requesting-your-data"
+              "label": "Настройки скачивания данных TikTok",
+              "href": "https://www.tiktok.com/setting/download-your-data"
             }
           ]
         },
@@ -3306,47 +3298,47 @@
           "intro": "Запросите отчёты о заказах Amazon, цифровых покупках, заметках Kindle и истории просмотров Prime Video.",
           "steps": [
             {
-              "text": "Войдите в свою учетную запись Amazon в веб-браузере и откройте раздел Ваш аккаунт из меню навигации.",
+              "text": "Войдите в свою учётную запись Amazon в веб-браузере и откройте раздел Ваш аккаунт из меню навигации.",
               "screenshot_id": "amazon-your-account",
-              "alt": "Экран навигации в раздел Ваш аккаунт Amazon"
+              "alt": "Ссылки Amazon в разделе «Управление данными», включая «Запросить данные»"
             },
             {
-              "text": "В разделе Конфиденциальность и безопасность выберите Запросить вашу информацию (или перейдите в центр конфиденциальности).",
+              "text": "В разделе «Управление данными» выберите «Запросить данные».",
               "screenshot_id": "amazon-your-account",
-              "alt": "Пункт Запросить вашу информацию в настройках конфиденциальности Amazon"
+              "alt": "Ссылки Amazon в разделе «Управление данными», включая «Запросить данные»"
             },
             {
-              "text": "Выберите категории данных для экспорта: Ваши заказы (отчеты о покупках в формате CSV), материалы Kindle и историю просмотров Prime Video.",
+              "text": "На странице «Запрос данных» найдите нужную категорию, например «Ваши заказы», Kindle или Prime Video.",
               "screenshot_id": "amazon-privacy-request",
-              "alt": "Флажки выбора категорий данных Amazon"
+              "alt": "Список Amazon «Запрос данных» с пунктом «Ваши заказы» и кнопкой «Отправить запрос»"
             },
             {
-              "text": "Нажмите кнопку Отправить запрос внизу списка категорий данных.",
+              "text": "Нажмите «Отправить запрос» рядом с нужной категорией.",
               "screenshot_id": "amazon-privacy-request",
-              "alt": "Кнопка Отправить запрос Amazon"
+              "alt": "Список Amazon «Запрос данных» с пунктом «Ваши заказы» и кнопкой «Отправить запрос»"
             },
             {
               "text": "Откройте письмо с подтверждением от Amazon, отправленное на ваш e-mail, и перейдите по ссылке верификации.",
               "screenshot_id": "amazon-privacy-request",
-              "alt": "Инструкция по верификации запроса по ссылке из письма Amazon"
+              "alt": "Список Amazon «Запрос данных» с пунктом «Ваши заказы» и кнопкой «Отправить запрос»"
             },
             {
-              "text": "Дождитесь формирования архива и скачайте ZIP-файл с историей заказов в формате CSV.",
+              "text": "Дождитесь, пока Amazon подготовит запрошенный файл. Затем следуйте инструкциям в письме, чтобы скачать его.",
               "screenshot_id": "amazon-privacy-request",
-              "alt": "Шаг скачивания ZIP-архива с данными Amazon"
+              "alt": "Список Amazon «Запрос данных» с пунктом «Ваши заказы» и кнопкой «Отправить запрос»"
             }
           ],
           "refs": [
             {
-              "label": "Запросить ваши данные (Конфиденциальность Amazon)",
-              "href": "https://www.amazon.com/gp/b2b/reports"
+              "label": "Запросить данные (Конфиденциальность Amazon)",
+              "href": "https://www.amazon.com/hz/privacy-central/data-requests/preview.html"
             },
             {
               "label": "Уведомление о конфиденциальности и поддержка Amazon",
               "href": "https://www.amazon.com/gp/help/customer/display.html?nodeId=GX7NJY4G89574M9W"
             }
           ],
-          "note": "Экспорт истории заказов Amazon предоставляется в виде ZIP-архивов с файлами CSV. Требуется подтверждение по e-mail перед началом обработки запроса."
+          "note": "Amazon показывает каждую категорию данных с отдельной кнопкой «Отправить запрос». Запрашивайте только нужные категории."
         }
       ]
     }

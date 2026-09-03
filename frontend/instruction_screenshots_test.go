@@ -2,7 +2,9 @@ package frontend
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"image/png"
@@ -66,10 +68,19 @@ var instructionScreenshotExpectedMetaStepIDs = map[string][]string{
 		"threads-help-export-device",
 		"threads-help-export-device",
 	},
+	"tiktok": {
+		"tiktok-request-data-help",
+		"tiktok-request-data-help",
+		"tiktok-request-data-help",
+		"tiktok-request-data-help",
+		"tiktok-download-data-help",
+		"tiktok-download-data-help",
+	},
 }
 
 type instructionScreenshotManifest struct {
-	Screenshots []instructionScreenshotEntry `json:"screenshots"`
+	SchemaVersion int                          `json:"schema_version"`
+	Screenshots   []instructionScreenshotEntry `json:"screenshots"`
 }
 
 type instructionScreenshotEntry struct {
@@ -79,6 +90,7 @@ type instructionScreenshotEntry struct {
 	DirectRoute           string                    `json:"direct_route"`
 	Surface               string                    `json:"surface"`
 	OutputPath            string                    `json:"output_path"`
+	SHA256                string                    `json:"sha256"`
 	PixelDimensions       instructionScreenshotSize `json:"pixel_dimensions"`
 	CaptureDate           string                    `json:"capture_date"`
 	ReviewStatus          string                    `json:"review_status"`
@@ -124,6 +136,9 @@ func TestInstructionScreenshotContract(testContext *testing.T) {
 		testContext,
 		instructionScreenshotDataPath,
 	)
+	if manifest.SchemaVersion != 3 {
+		testContext.Fatalf("manifest schema version = %d; want 3", manifest.SchemaVersion)
+	}
 	const expectedScreenshotCount = 28
 	if len(manifest.Screenshots) != expectedScreenshotCount {
 		testContext.Fatalf(
@@ -151,6 +166,7 @@ func TestInstructionScreenshotContract(testContext *testing.T) {
 	manifestByID := make(map[string]instructionScreenshotEntry, expectedScreenshotCount)
 	seenIDs := make(map[string]struct{}, expectedScreenshotCount)
 	seenPaths := make(map[string]struct{}, expectedScreenshotCount)
+	digestOwners := make(map[string]string, expectedScreenshotCount)
 
 	for _, screenshot := range manifest.Screenshots {
 		if _, exists := expectedPlatformCounts[screenshot.Platform]; !exists {
@@ -176,7 +192,7 @@ func TestInstructionScreenshotContract(testContext *testing.T) {
 			)
 		}
 		if screenshot.ReviewStatus != "approved" {
-			testContext.Fatalf("screenshot %q review status = %q; want approved", screenshot.ID, screenshot.ReviewStatus)
+			testContext.Errorf("screenshot %q review status = %q; want approved", screenshot.ID, screenshot.ReviewStatus)
 		}
 		if _, parseError := time.Parse(time.DateOnly, screenshot.CaptureDate); parseError != nil {
 			testContext.Fatalf("screenshot %q capture date is invalid: %v", screenshot.ID, parseError)
@@ -186,7 +202,20 @@ func TestInstructionScreenshotContract(testContext *testing.T) {
 			testContext.Fatalf("manifest contains duplicate screenshot path %q", screenshot.OutputPath)
 		}
 		seenPaths[screenshot.OutputPath] = struct{}{}
-		validateInstructionScreenshotPNG(testContext, screenshot)
+		actualDigest := validateInstructionScreenshotPNG(testContext, screenshot)
+		if screenshot.SHA256 == "" {
+			testContext.Errorf("screenshot %q has no reviewed SHA-256", screenshot.ID)
+		} else if actualDigest != screenshot.SHA256 {
+			testContext.Errorf("screenshot %q digest does not match its reviewed manifest", screenshot.ID)
+		}
+		if existingID, exists := digestOwners[actualDigest]; exists {
+			testContext.Errorf(
+				"screenshots %q and %q have identical content",
+				existingID,
+				screenshot.ID,
+			)
+		}
+		digestOwners[actualDigest] = screenshot.ID
 		manifestByPlatform[screenshot.Platform] = append(manifestByPlatform[screenshot.Platform], screenshot)
 	}
 
@@ -259,12 +288,14 @@ func validateInstructionScreenshotPath(
 func validateInstructionScreenshotPNG(
 	testContext *testing.T,
 	screenshot instructionScreenshotEntry,
-) {
+) string {
 	testContext.Helper()
 	content, readError := os.ReadFile(screenshot.OutputPath)
 	if readError != nil {
 		testContext.Fatalf("read screenshot %q: %v", screenshot.ID, readError)
 	}
+	digest := sha256.Sum256(content)
+	actualDigest := hex.EncodeToString(digest[:])
 	config, decodeError := png.DecodeConfig(bytes.NewReader(content))
 	if decodeError != nil {
 		testContext.Fatalf("decode screenshot %q as PNG: %v", screenshot.ID, decodeError)
@@ -283,6 +314,37 @@ func validateInstructionScreenshotPNG(
 	if config.Width < 480 || config.Height < 220 {
 		testContext.Fatalf("screenshot %q is too small at %dx%d", screenshot.ID, config.Width, config.Height)
 	}
+	decodedImage, imageDecodeError := png.Decode(bytes.NewReader(content))
+	if imageDecodeError != nil {
+		testContext.Fatalf("decode screenshot %q pixels: %v", screenshot.ID, imageDecodeError)
+	}
+	var quantizedColors [4096]int
+	distinctColors := 0
+	dominantColorPixels := 0
+	pixelCount := 0
+	for pixelY := decodedImage.Bounds().Min.Y; pixelY < decodedImage.Bounds().Max.Y; pixelY++ {
+		for pixelX := decodedImage.Bounds().Min.X; pixelX < decodedImage.Bounds().Max.X; pixelX++ {
+			red, green, blue, _ := decodedImage.At(pixelX, pixelY).RGBA()
+			colorIndex := int(red>>12)<<8 | int(green>>12)<<4 | int(blue>>12)
+			if quantizedColors[colorIndex] == 0 {
+				distinctColors++
+			}
+			quantizedColors[colorIndex]++
+			if quantizedColors[colorIndex] > dominantColorPixels {
+				dominantColorPixels = quantizedColors[colorIndex]
+			}
+			pixelCount++
+		}
+	}
+	if distinctColors < 8 || dominantColorPixels*1000 > pixelCount*995 {
+		testContext.Errorf(
+			"screenshot %q lacks visible content: colors=%d dominant=%d/%d",
+			screenshot.ID,
+			distinctColors,
+			dominantColorPixels,
+			pixelCount,
+		)
+	}
 
 	chunkTypes, chunkError := pngChunkTypes(content)
 	if chunkError != nil {
@@ -299,6 +361,7 @@ func validateInstructionScreenshotPNG(
 			)
 		}
 	}
+	return actualDigest
 }
 
 func pngChunkTypes(content []byte) ([]string, error) {
