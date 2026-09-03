@@ -1,0 +1,12 @@
+environments:
+    - description: Download Your Data
+      origins:
+        - https://dyd.mprlab.com
+      auth:
+        tauthUrl: https://dyd-api.mprlab.com
+        googleClientId: 283383931996-582q1pholigban5bueqfq4g470hlrfpf.apps.googleusercontent.com
+        tenantId: download-your-data
+        loginPath: /auth/google
+        logoutPath: /auth/logout
+        noncePath: /auth/nonce
+        sessionPath: /auth/session
