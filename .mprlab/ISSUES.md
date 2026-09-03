@@ -8,6 +8,22 @@ Format: `- [ ] [B042] (P1) {I007} Title`
 
 ## BugFixes
 
+- [x] [B008] (P0) Accept project legal notices at the repository root
+  Goal:
+  The repository layout gate accepts the project-wide legal files that the
+  current license requires.
+
+  Requirements:
+  - Permit `COMMERCIAL_LICENSE.md`, `CONTRIBUTOR_LICENSE.md`, and `NOTICE`.
+  - Continue to reject each other unowned root file.
+
+  Validation:
+  - Run `go test ./internal/product`.
+  - Run `make ci`.
+
+  Resolved:
+  The closed root-file allowlist now includes the three current legal files.
+
 - [x] [B007] (P0) Permit the current LoopAware browser requests
   Goal:
   The production browser test rejects the LoopAware requests that B006 adds.
