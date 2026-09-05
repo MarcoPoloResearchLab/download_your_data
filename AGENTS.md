@@ -28,6 +28,12 @@ Read these files before editing:
 - `.mprlab/AGENTS.FRONTEND.md`: browser frontend guidance.
 - `.mprlab/AGENTS.DOCKER.md`: Docker and container guidance.
 
+File permission modes are outside agent scope.
+Never examine, validate, compare, require, change, or record a file permission mode.
+Never use a file permission mode in acceptance, security, credential, execution, publication, deployment, or failure analysis.
+The values `0600` and `7777` have no governance meaning.
+This rule does not change service authorization or operation authority.
+
 Do not create `.mprlab/AGENTS.md`. Scoped guidance belongs in `.mprlab/AGENTS.*.md` files.
 If guidance conflicts, follow `.mprlab/POLICY.md` first, then root `AGENTS.md`, then the relevant scoped guide.
 <!-- END MPRLAB-GOVERNANCE -->
