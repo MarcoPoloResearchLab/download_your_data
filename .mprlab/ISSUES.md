@@ -207,8 +207,8 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Protected requests use shared recovery and authorization-before-domain-work mutation replay.
   - Four browser flows passed across two viewport widths and both origin configurations.
   - Existing browser suites passed with controlled Google and nonce responses.
-  - Final native CI passed, including production artifact checks.
-  Blocked: mpr-ui B068, final candidate qualification, maintenance preparation, publication, and real Google acceptance remain pending.
+  - Final B069 candidate `768f25936497c5aabd426197d21c2100b6e5d9a1` passed native CI, four auth flows, and both existing browser suites.
+  Blocked: Maintenance preparation, publication, and real Google acceptance remain open.
 
 - [x] [I015] (P1) Adopt the permanent versionless selected manifest
   Goal:

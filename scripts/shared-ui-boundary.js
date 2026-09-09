@@ -1,11 +1,11 @@
 // @ts-check
 // Inserted inside the native Playwright scenario before application navigation.
 await page.goto('__BASE_URL__/api/health');
-const sharedCandidate = 'dd5bff9fdaf0e2c989624f9f6f75d3c55e460866';
+const sharedCandidate = '768f25936497c5aabd426197d21c2100b6e5d9a1';
 const sharedDigests = {
   'mpr-ui-config.js': '3f56fbd212a516d2bd8b0b95f73ae7ad82952c10d8d5f4e6f8b44d3233f01304',
-  'mpr-ui.js': 'a70b83442bc9693aec0421db0ef6dc6dba5654ff6f1497937eef4a2f321c4fd0',
-  'mpr-ui.css': '31b92536df3a1584b7f19ac50eb61d6c7aff7c710ee92b84c46835194849e816'
+  'mpr-ui.js': '3e725dbe911470ca934cb46456369479b6ac232eee5ccba2582bf8d939259ae8',
+  'mpr-ui.css': '351bbf6c15054528a651571d8c8bd85536eea76c3e574f9335e6cd413878923f'
 };
 for (const [name, expectedDigest] of Object.entries(sharedDigests)) {
   const response = await page.request.get(

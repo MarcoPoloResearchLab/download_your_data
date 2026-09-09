@@ -17,14 +17,15 @@ Four auth flows now pass across two viewport widths and both origin configuratio
 They cover Google exchange, restored sessions, read recovery, mutation replay, logout, and footer content.
 The new browser scenario uses real application files and API operations.
 Google and TAuth are controlled at their external boundaries.
-The shared candidate is `dd5bff9fdaf0e2c989624f9f6f75d3c55e460866`.
+The shared candidate is `768f25936497c5aabd426197d21c2100b6e5d9a1`.
 The native browser harness verifies all three asset digests before application navigation.
 Focused checks and both existing browser suites passed.
 The browser harness supplies controlled Google and nonce responses for all shared-library checks.
 Application navigation uses DOM readiness and its existing rendered-state waits.
 The broader suite exposed shared header overflow after Google startup failure beside application controls.
-mpr-ui B068 owns that error-state correction before final candidate qualification.
-Final native CI passed, including Go tests, static checks, lifecycle checks, production artifacts, and browser suites.
+The final B069 candidate includes the shared B068 error-state correction.
+Final B069 native CI passed, including Go tests, static checks, lifecycle checks, production artifacts, and browser suites.
+The final validation log is `/tmp/dyd-i017-b069-ci.log`.
 The repository has no hosted workflow. Local CI supplies the required source validation.
 
 ## Publication Gates
