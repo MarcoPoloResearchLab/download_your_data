@@ -2,7 +2,7 @@
 set -euo pipefail
 
 readonly base_url="${DOWNLOAD_YOUR_DATA_BROWSER_BASE_URL:?DOWNLOAD_YOUR_DATA_BROWSER_BASE_URL is required}"
-readonly viewing_csv="${DOWNLOAD_YOUR_DATA_BROWSER_CSV:?DOWNLOAD_YOUR_DATA_BROWSER_CSV is required}"
+readonly api_url="${DOWNLOAD_YOUR_DATA_BROWSER_API_URL:?DOWNLOAD_YOUR_DATA_BROWSER_API_URL is required}"
 readonly session_cookie="${DOWNLOAD_YOUR_DATA_BROWSER_SESSION_COOKIE:?DOWNLOAD_YOUR_DATA_BROWSER_SESSION_COOKIE is required}"
 readonly session_token="${DOWNLOAD_YOUR_DATA_BROWSER_SESSION_TOKEN:?DOWNLOAD_YOUR_DATA_BROWSER_SESSION_TOKEN is required}"
 readonly playwright_version="${PLAYWRIGHT_CLI_VERSION:?PLAYWRIGHT_CLI_VERSION is required}"
@@ -26,9 +26,9 @@ trap cleanup EXIT
 
 curl --fail --silent --show-error "${base_url}/api/health" >/dev/null
 
-scenario="$(<"${script_directory}/netflix-browser-workspace.playwright.js")"
+scenario="$(<"${script_directory}/shared-ui-auth.playwright.js")"
 scenario="${scenario/__BASE_URL__/${base_url}}"
-scenario="${scenario/__VIEWING_CSV__/${viewing_csv}}"
+scenario="${scenario/__API_URL__/${api_url}}"
 scenario="${scenario/__SESSION_COOKIE__/${session_cookie}}"
 scenario="${scenario/__SESSION_TOKEN__/${session_token}}"
 
@@ -42,4 +42,4 @@ if [[ "${scenario_output}" == *"### Error"* ]]; then
   exit 1
 fi
 
-echo "Deterministic Netflix browser lifecycle passed at ${base_url}"
+echo "Shared authentication browser lifecycle passed at ${base_url}"

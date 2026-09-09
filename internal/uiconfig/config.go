@@ -40,13 +40,28 @@ type environment struct {
 }
 
 type auth struct {
-	TAuthURL       string `yaml:"tauthUrl"`
-	GoogleClientID string `yaml:"googleClientId"`
-	TenantID       string `yaml:"tenantId"`
-	LoginPath      string `yaml:"loginPath"`
-	LogoutPath     string `yaml:"logoutPath"`
-	NoncePath      string `yaml:"noncePath"`
-	SessionPath    string `yaml:"sessionPath"`
+	TAuthURL    string    `yaml:"tauthUrl"`
+	TenantID    string    `yaml:"tenantId"`
+	LogoutPath  string    `yaml:"logoutPath"`
+	SessionPath string    `yaml:"sessionPath"`
+	Providers   providers `yaml:"providers"`
+}
+
+type providers struct {
+	Google   googleProvider   `yaml:"google"`
+	Apple    disabledProvider `yaml:"apple"`
+	Password disabledProvider `yaml:"password"`
+}
+
+type googleProvider struct {
+	Enabled   bool   `yaml:"enabled"`
+	ClientID  string `yaml:"clientId"`
+	LoginPath string `yaml:"loginPath"`
+	NoncePath string `yaml:"noncePath"`
+}
+
+type disabledProvider struct {
+	Enabled bool `yaml:"enabled"`
 }
 
 // Render validates and encodes one exact browser configuration document.
@@ -83,13 +98,11 @@ func Render(input Input) ([]byte, error) {
 			Description: input.Description,
 			Origins:     []string{input.PublicOrigin},
 			Auth: auth{
-				TAuthURL:       input.TAuthOrigin,
-				GoogleClientID: input.GoogleWebClientID,
-				TenantID:       input.TenantID,
-				LoginPath:      input.LoginPath,
-				LogoutPath:     input.LogoutPath,
-				NoncePath:      input.NoncePath,
-				SessionPath:    input.SessionPath,
+				TAuthURL:    input.TAuthOrigin,
+				TenantID:    input.TenantID,
+				LogoutPath:  input.LogoutPath,
+				SessionPath: input.SessionPath,
+				Providers:   providers{Google: googleProvider{Enabled: true, ClientID: input.GoogleWebClientID, LoginPath: input.LoginPath, NoncePath: input.NoncePath}},
 			},
 		}},
 	})

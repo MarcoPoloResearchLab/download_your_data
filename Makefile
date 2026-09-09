@@ -5,7 +5,7 @@ CGO_ENABLED ?= 1
 
 export CGO_ENABLED
 
-.PHONY: build check-frontend ci clean deploy down eval-netflix-matcher fmt fmt-check lint publish release test test-browser test-local-lifecycle test-production-artifacts up validate-instruction-screenshots validate-provider-icons
+.PHONY: build check-frontend ci clean deploy down eval-netflix-matcher fmt fmt-check lint publish release test test-browser test-shared-ui test-local-lifecycle test-production-artifacts up validate-instruction-screenshots validate-provider-icons
 
 build:
 	@mkdir -p build
@@ -49,6 +49,8 @@ check-frontend:
 		frontend/application/routing.js
 	node --check scripts/browser-smoke.playwright.js
 	node --check scripts/netflix-browser-workspace.playwright.js
+	node --check scripts/shared-ui-auth.playwright.js
+	node --input-type=module --check < scripts/shared-ui-boundary.js
 
 test:
 	$(GO) test ./...
@@ -59,7 +61,10 @@ test-local-lifecycle: build
 eval-netflix-matcher:
 	$(GO) test ./internal/providers/netflix -run '^TestMatcherEvaluationGate$$' -count=1 -v
 
-test-browser: build
+test-shared-ui:
+	DOWNLOAD_YOUR_DATA_RUN_BROWSER_CONTRACT=1 PLAYWRIGHT_CLI_VERSION=$(PLAYWRIGHT_CLI_VERSION) $(GO) test ./internal/httpapi -run '^TestSharedUI' -count=1 -v
+
+test-browser: build test-shared-ui
 	PLAYWRIGHT_CLI_VERSION=$(PLAYWRIGHT_CLI_VERSION) ./scripts/browser-smoke.sh ./build/download-your-data
 	DOWNLOAD_YOUR_DATA_RUN_BROWSER_CONTRACT=1 \
 		PLAYWRIGHT_CLI_VERSION=$(PLAYWRIGHT_CLI_VERSION) \

@@ -190,6 +190,26 @@ Format: `- [ ] [B042] (P1) {I007} Title`
 
 ## Improvements
 
+- [!] [I017] (P1) Adopt the current shared authentication contract
+  Goal: Download Your Data uses the current shared configuration and protected request transport.
+  Requirements:
+  - Preserve configured origins, Google identifiers, tenant identity, and session endpoints.
+  - Generate the provider map for server and Pages configuration.
+  - Use shared session recovery for protected requests.
+  - Preserve anonymous guides, workspace isolation, and mutation authorization.
+  Validation:
+  - Confirm failing HTTP and browser regressions before production edits.
+  - Verify login, restoration, recovery, logout, and responsive behavior through the real application.
+  - Run native CI after the last source change.
+  - Record final candidate, cache transition, publication, and real provider gates.
+  Preparation:
+  - The serializer supplies the provider map to both API and Pages configuration.
+  - Protected requests use shared recovery and authorization-before-domain-work mutation replay.
+  - Four browser flows passed across two viewport widths and both origin configurations.
+  - Existing browser suites passed with controlled Google and nonce responses.
+  - Final native CI passed, including production artifact checks.
+  Blocked: mpr-ui B068, final candidate qualification, maintenance preparation, publication, and real Google acceptance remain pending.
+
 - [x] [I015] (P1) Adopt the permanent versionless selected manifest
   Goal:
   Use the permanent selected-manifest contract for the application lifecycle.

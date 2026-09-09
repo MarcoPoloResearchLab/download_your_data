@@ -35,6 +35,8 @@ func TestRenderBuildsTheCompleteProductionPagesArtifact(testContext *testing.T) 
 		"tauthUrl: https://dyd-api.mprlab.com",
 		"tenantId: download-your-data",
 		"sessionPath: /auth/session",
+		"providers:",
+		"clientId: 283383931996-582q1pholigban5bueqfq4g470hlrfpf.apps.googleusercontent.com",
 	} {
 		if !strings.Contains(uiConfig, expected) {
 			testContext.Fatalf("rendered browser configuration is missing %q", expected)

@@ -45,7 +45,8 @@ async page => {
   const assertNoHorizontalOverflow = async (label) => {
     const dimensions = await page.evaluate(() => ({
       viewport: window.innerWidth,
-      document: document.documentElement.scrollWidth
+      document: document.documentElement.scrollWidth,
+      overflow: Array.from(document.querySelectorAll('body *')).filter(node => node.getBoundingClientRect().right > innerWidth && getComputedStyle(node).visibility !== 'hidden').slice(0,8).map(node=>({tag:node.tagName,classes:node.className,right:node.getBoundingClientRect().right}))
     }));
     assert(
       dimensions.document <= dimensions.viewport,
@@ -151,7 +152,7 @@ async page => {
   };
 
   await page.setViewportSize({width: 1440, height: 1000});
-  await page.goto(baseURL, {waitUntil: 'networkidle'});
+  await page.goto(baseURL, {waitUntil: 'domcontentloaded'});
   await page.waitForFunction(
     () =>
       customElements.get('mpr-header') &&
@@ -244,7 +245,7 @@ async page => {
 
   const protectedRequestCountBeforeResources = protectedRequests().length;
   await page.setViewportSize({width: 1440, height: 1000});
-  await page.goto(`${baseURL}/resources/`, {waitUntil: 'networkidle'});
+  await page.goto(`${baseURL}/resources/`, {waitUntil: 'domcontentloaded'});
   assert(
     await page.locator('.resource-card').count() === 13,
     'resource hub must expose thirteen current crawlable resources'
@@ -268,7 +269,7 @@ async page => {
     '/resources/whatsapp-chat-export/'
   ]) {
     await page.setViewportSize({width: 390, height: 844});
-    await page.goto(`${baseURL}${resourcePath}`, {waitUntil: 'networkidle'});
+    await page.goto(`${baseURL}${resourcePath}`, {waitUntil: 'domcontentloaded'});
     assert(
       await page.locator('h1').count() === 1 &&
         await page.locator('#quick-verdict-title').count() === 1 &&
@@ -300,7 +301,7 @@ async page => {
   );
 
   await page.setViewportSize({width: 1440, height: 1000});
-  await page.goto(baseURL, {waitUntil: 'networkidle'});
+  await page.goto(baseURL, {waitUntil: 'domcontentloaded'});
   await page.waitForFunction(
     () =>
       customElements.get('mpr-header') &&

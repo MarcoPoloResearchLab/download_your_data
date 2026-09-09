@@ -51,7 +51,8 @@ inventory, evidence model, indexing rules, and publication boundary.
 ## Authentication boundary
 
 The browser loads the literal `mpr-ui@latest` bootstrap and uses app-owned
-`/config-ui.yaml` as its only authentication input. Application code reacts to
+`/config-ui.yaml` as its only authentication input. The generated provider map
+preserves configured origins, identifiers, and session endpoints. Application code reacts to
 the documented `mpr-ui:auth:authenticated` and
 `mpr-ui:auth:unauthenticated` events. It does not load `tauth.js`, call TAuth
 endpoints, inspect cookies or tokens, or infer login state from an API
@@ -164,9 +165,11 @@ other `/api/*` route requires a valid TAuth session.
 
 The protected API permits only the exact configured frontend origin, uses
 credentialed CORS, and requires the per-process CSRF token for mutations.
-Frontend requests use `credentials: include`. A `401` after mpr-ui has reported
-authenticated is displayed as an integration failure; it never starts an
-application-owned login flow.
+Frontend requests use `MPRUI.authenticatedFetch()` with `credentials: include`.
+Shared session recovery handles an expired request. Mutation replay requires
+authorization before domain work. The API enforces that order. Remaining
+request failures use the existing application error contract.
+The [I017 migration record](docs/mpr-ui-migration.md) describes validation and publication gates.
 
 Netflix supports user-owned CSV import, analytics, records, progress,
 replacement, optional TMDB enrichment, export, provider deletion, and complete
