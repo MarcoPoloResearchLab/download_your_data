@@ -104,6 +104,9 @@ scenario="${scenario/__SESSION_COOKIE__/${session_cookie}}"
 scenario="${scenario/__SESSION_TOKEN__/${session_token}}"
 
 run_playwright open about:blank >/dev/null
+candidate_boundary="$(<"${script_directory}/shared-ui-boundary.js")"
+candidate_boundary="${candidate_boundary//__BASE_URL__/${base_url}}"
+scenario="${scenario/async page => \{/async page => \{${candidate_boundary}}"
 scenario_output="$(run_playwright run-code "${scenario}")"
 if [[ "${scenario_output}" == *"### Error"* ]]; then
   printf '%s\n' "${scenario_output}" >&2

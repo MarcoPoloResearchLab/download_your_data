@@ -1,0 +1,58 @@
+[
+  {
+    "url": "https://dyd.mprlab.com/",
+    "status": 200,
+    "final_url": "https://dyd.mprlab.com/",
+    "cache_control": "max-age=600",
+    "sha256": "232470c1a5469db78df976fbabee0e529fa7cec1370d1ea0446a7eb899e67df6"
+  },
+  {
+    "url": "https://dyd.mprlab.com/config-ui.yaml",
+    "status": 200,
+    "final_url": "https://dyd.mprlab.com/config-ui.yaml",
+    "cache_control": "max-age=600",
+    "sha256": "625af716b6edafe762247eb07dcf1fd34a9a3ede1a1261ebd3de91a382ac9f89"
+  },
+  {
+    "url": "https://dyd.mprlab.com/.mprlab-release.json",
+    "status": 200,
+    "final_url": "https://dyd.mprlab.com/.mprlab-release.json",
+    "cache_control": "max-age=600",
+    "sha256": "bbd74c164dce05c053c56b0038eaffab6a6e91b8f58702d5f2cd24269de016cd"
+  },
+  {
+    "url": "https://dyd.mprlab.com/resources/",
+    "status": 200,
+    "final_url": "https://dyd.mprlab.com/resources/",
+    "cache_control": "max-age=600",
+    "sha256": "a2868a63491700df492d953bdce6d67902a5492beeda894854610d393a6d6af8"
+  },
+  {
+    "url": "https://dyd-api.mprlab.com/config-ui.yaml",
+    "status": 200,
+    "final_url": "https://dyd-api.mprlab.com/config-ui.yaml",
+    "cache_control": "no-store",
+    "sha256": "625af716b6edafe762247eb07dcf1fd34a9a3ede1a1261ebd3de91a382ac9f89"
+  },
+  {
+    "url": "https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui-config.js",
+    "status": 200,
+    "final_url": "https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui-config.js",
+    "cache_control": "public, max-age=604800, s-maxage=43200",
+    "sha256": "8366e4f63d6c8835380f59427874b0301ec7683542f17b2e75cd38ebcdbc3f6f"
+  },
+  {
+    "url": "https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.js",
+    "status": 200,
+    "final_url": "https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.js",
+    "cache_control": "public, max-age=604800, s-maxage=43200",
+    "sha256": "a74e0e5dce0071dfc4164fdc75cee26ceaaaa448dd55ee06c961e715cbe9b206"
+  },
+  {
+    "url": "https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.css",
+    "status": 200,
+    "final_url": "https://cdn.jsdelivr.net/gh/MarcoPoloResearchLab/mpr-ui@latest/mpr-ui.css",
+    "cache_control": "public, max-age=604800, s-maxage=43200",
+    "sha256": "662b37032b21cac44549ad5376e7bce35bed65915bf4a4c9e86c596e266542c7"
+  }
+]

@@ -127,7 +127,7 @@ Another Film,2/3/26
   };
 
   await page.setViewportSize({width: 1440, height: 1000});
-  await page.goto(baseURL, {waitUntil: 'networkidle'});
+  await page.goto(baseURL, {waitUntil: 'domcontentloaded'});
   await page.waitForFunction(
     () =>
       customElements.get('mpr-header') &&

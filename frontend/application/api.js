@@ -291,11 +291,13 @@ async function mutateJSON(path, method, body, signal) {
 }
 
 async function requestJSON(path, options = {}) {
-  const response = await fetch(apiURL(path), {
-    cache: 'no-store',
-    credentials: 'include',
-    ...options
-  });
+  const sharedUI = Reflect.get(window, 'MPRUI');
+  const response = await sharedUI.authenticatedFetch(
+    document.querySelector('#app-header'),
+    apiURL(path),
+    {cache: 'no-store', credentials: 'include', ...options},
+    {mutationReplay: 'authorization-before-domain-work'}
+  );
   if (response.status === 204) {
     if (!response.ok) {
       throw new APIError(response.status, null);

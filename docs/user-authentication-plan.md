@@ -66,9 +66,10 @@ The current `#provider/{provider}` application route is replaced by
   `mpr-ui` reports `authenticated`.
 - On `unauthenticated`, the frontend cancels provider work, closes event
   streams, revokes object URLs, and clears all app-owned workspace state.
-- A protected API failure after `mpr-ui` reports authenticated is rendered as
-  an authorization, workspace, or deployment-integration failure. It never
-  starts another login flow.
+- Send protected requests through `MPRUI.authenticatedFetch()` with the shared header as the auth host.
+- Use shared session recovery for expired requests.
+- Permit mutation replay only because the API authorizes each request before domain work.
+- Render remaining request failures through the application error contract.
 
 The authenticated shell uses the shared `auth-transition` surface. Its
 completion event fires only after the requested provider application has

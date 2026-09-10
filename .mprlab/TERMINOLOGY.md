@@ -93,6 +93,9 @@ Give each term one meaning. Use the same term for the same concept in all docume
 
 Add repository-specific technical nouns below this line.
 
+- `provider map`: The explicit Google, Apple, and password entries in shared authentication configuration.
+- `migration`: A bounded change from an obsolete contract to the current contract.
+
 ```text
 - `term`: Definition with one meaning.
 ```
