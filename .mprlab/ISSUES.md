@@ -153,12 +153,12 @@ Format: `- [ ] [B042] (P1) {I007} Title`
 
   Deliverables:
   - Shared inference-readiness contract used by definition analysis and archive indexing.
-  - Public CLI coverage for each readiness failure.
+  - Add integration coverage for each readiness failure through the authenticated HTTP entry point.
   - Bounded, paged archive scanning after readiness succeeds.
 
   Validation:
-  - Black-box CLI test proving a missing model fails before history scanning or report creation.
-  - Black-box CLI test proving a ready deterministic inference server completes the same workflow.
+  - Verify that a missing model fails before archive queries or report creation through the authenticated HTTP entry point.
+  - Verify that a ready deterministic inference server completes the same workflow.
   - `make test`
 
 - [x] [B006] (P0) Add the current LoopAware site identifier
@@ -582,6 +582,29 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   Goal:
   Remove the obsolete local project boundary after the first target-owned release proves complete parity.
 
+  Operator decision 2026-09-05:
+  The operator approved local removal before F005 release acceptance, after a documentation review.
+  This decision replaces the release prerequisite for local removal only.
+  Both `/Users/tyemirov/Development/chatIndex` and `/Users/tyemirov/Development/chatindex-0.1.1` moved to Trash with all their data.
+  F001 through F005, B001, B002, and I004 remain open.
+  This issue retains the independent validation and external-reference checks below.
+
+  Local removal result 2026-09-05:
+  - The retained folders are `/Users/tyemirov/.Trash/chatIndex-retired-2026-09-05` and `/Users/tyemirov/.Trash/chatindex-0.1.1-retired-2026-09-05`.
+  - File counts and byte totals stayed unchanged.
+  - `chatIndex` contains 1,843 files and 2,851,939,660 bytes.
+  - `chatindex-0.1.1` contains 48 files and 188,334 bytes.
+  - The original paths are absent. No data moved into the DYD repository.
+  - Active DYD source, scripts, build files, and documentation contain no ChatIndex dependency.
+  - The focused engine and OpenAI HTTP tests passed with the original paths absent.
+  - Full `make ci`, external automation inspection, and F005 release acceptance remain open.
+
+  Commands completed after local removal:
+  ```bash
+  go test ./internal/exportformat ./internal/ingest ./internal/store ./internal/normalize ./internal/embedding ./internal/retrieval ./internal/intent ./internal/report -count=1
+  go test ./internal/httpapi -run '^TestOpenAI' -count=1
+  ```
+
   Requirements:
   - Confirm the target release owns every maintained engine, browser workflow, fixture, report, and validation capability required by the current authenticated web contract without a filesystem or module dependency on the standalone checkout.
   - Search active local documentation and automation for references to the old directory or a nonexistent remote repository and remove them at their owning source.
@@ -734,6 +757,17 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Keep `make release`, `make publish`, and user-owned `make deploy` as separate zero-argument contracts; use the sibling gateway plan targets for non-mutating proofs.
   - Remove the macOS application archive, end-user operator commands, embedded browser application, loopback-only production contract, and Pages download landing page in the same forward change.
   - Do not publish personal archives, databases, vectors, reports, caches, runtime secrets, or private deployment inventory.
+
+  Definition-analysis handoff:
+  The repository owns `internal/intent` and `internal/report`, but the authenticated application does not expose these capabilities.
+  B001 owns classifier quality. B002 owns inference readiness. F005 owns their authenticated delivery.
+  - Before implementation, define the HTTP routes, request schemas, report schemas, and browser actions for definition analysis.
+  - Use the authenticated user's active OpenAI generation as the input.
+  - Provide accepted, review, and audit reports through authenticated downloads.
+  - Preserve CSV and JSON output requirements from the incorporated report engine.
+  - Verify classification and downloads through HTTP and browser integration tests with synthetic data.
+  - Verify that another user cannot read, generate, or delete these reports.
+  - Include these reports in workspace deletion and release acceptance.
 
   Deliverables:
   - Reproducible Pages and container artifacts tied to one source revision and manifest.
