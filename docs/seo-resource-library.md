@@ -11,7 +11,7 @@ guide or supported workspace action.
 
 ## Current scope
 
-`/resources/` links fourteen distinct resources:
+`/resources/` links fifteen distinct resources:
 
 | Resource | Primary intent | Current product destination |
 | --- | --- | --- |
@@ -29,6 +29,7 @@ guide or supported workspace action.
 | Instagram data export | Scope an Instagram Accounts Center export | `#guide/instagram` |
 | Threads data export | Export Threads through Instagram Accounts Center | `#guide/threads` |
 | Amazon order history & data export | Request Amazon order reports, Kindle, and Prime Video | `#guide/amazon` |
+| Apple Passwords export and import | Export, review, and import a local Passwords CSV | `#guide/apple-passwords` |
 
 The cluster intentionally does not publish a ChatGPT browser-import page,
 full-Netflix-archive analyzer, or mandatory-TMDB page. Those claims do not
@@ -65,9 +66,8 @@ conversion surface.
 - `sitemap.xml` contains the public root, resource hub, and current resource
   pages. It does not contain hash fragments, protected APIs, or unknown
   production values.
-- Every new sitemap URL uses the explicit `2026-07-30` significant-content
-  creation date from the registry. Builds do not replace it with build or
-  deployment time.
+- Every new sitemap URL uses the explicit significant-content date from the
+  registry. Builds do not replace it with build or deployment time.
 - `robots.txt` allows public crawling and references the absolute sitemap URL.
 - The application footer links the resource hub with a crawlable HTML anchor;
   the hub links every resource, and every resource links adjacent pages.
