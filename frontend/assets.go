@@ -10,7 +10,7 @@ import (
 	"io/fs"
 )
 
-//go:embed index.html application content images styles
+//go:embed index.html application content images styles tools
 var embeddedAssets embed.FS
 
 // APIOriginMarker is replaced exactly once when the local application index is served.
