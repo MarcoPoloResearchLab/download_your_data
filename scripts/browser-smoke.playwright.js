@@ -163,12 +163,16 @@ async page => {
   await setSharedAuth(false);
 
   assert(
-    await page.locator('.provider-card[data-provider-id]').count() === 13,
-    'anonymous provider catalog must contain thirteen canonical providers'
+    await page.locator('.provider-card[data-provider-id]').count() === 14,
+    'anonymous provider catalog must contain fourteen canonical providers'
   );
   assert(
     await page.locator('.provider-card[data-provider-id="google-authenticator"] a[href="/tools/google-authenticator/"]').count() === 1,
     'Google Authenticator provider must link to the local browser tool'
+  );
+  assert(
+    await page.locator('.provider-card[data-provider-id="apple-passwords"] a[href="#guide/apple-passwords"]').count() === 1,
+    'Apple Passwords provider must link to its public guide'
   );
   assert(
     await page.locator('.catalog .page-heading h1').textContent() ===
@@ -200,7 +204,8 @@ async page => {
     'x',
     'youtube',
     'google',
-    'amazon'
+    'amazon',
+    'apple-passwords'
   ]) {
     await route(`#guide/${providerID}`, `#${providerID}`);
     assert(
@@ -235,6 +240,17 @@ async page => {
       ).count() === 1,
     'Amazon guide must remain complete and public'
   );
+  await route('#guide/apple-passwords', '#apple-passwords');
+  assert(
+    await page.locator('#apple-passwords .instruction-step').count() === 9 &&
+      await page.locator(
+        '#apple-passwords .guide-refs a[href="https://support.apple.com/en-ph/guide/passwords/mchl35b12625/2.0/mac/26"]'
+      ).count() === 1 &&
+      await page.locator(
+        '#apple-passwords .guide-refs a[href="https://support.apple.com/en-ph/guide/passwords/mchl2f1a184c/2.0/mac/26"]'
+      ).count() === 1,
+    'Apple Passwords guide must expose export and import instructions'
+  );
   await route('#credits', '.credits');
   assert(
     (await page.locator('.tmdb-credit').textContent()).includes(
@@ -251,8 +267,8 @@ async page => {
   await page.setViewportSize({width: 1440, height: 1000});
   await page.goto(`${baseURL}/resources/`, {waitUntil: 'domcontentloaded'});
   assert(
-    await page.locator('.resource-card').count() === 14,
-    'resource hub must expose fourteen current crawlable resources'
+    await page.locator('.resource-card').count() === 15,
+    'resource hub must expose fifteen current crawlable resources'
   );
   assert(
     await page.locator('link[rel="canonical"]').getAttribute('href') ===
@@ -270,7 +286,8 @@ async page => {
     '/resources/netflix-viewing-history-csv/',
     '/resources/netflix-viewing-history-analyzer/',
     '/resources/chatgpt-data-export/',
-    '/resources/whatsapp-chat-export/'
+    '/resources/whatsapp-chat-export/',
+    '/resources/apple-passwords-export/'
   ]) {
     await page.setViewportSize({width: 390, height: 844});
     await page.goto(`${baseURL}${resourcePath}`, {waitUntil: 'domcontentloaded'});
