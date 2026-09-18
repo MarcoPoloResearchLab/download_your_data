@@ -46,7 +46,8 @@ check-frontend:
 		frontend/application/charts.js \
 		frontend/application/dom.js \
 		frontend/application/provider-links.js \
-		frontend/application/routing.js
+		frontend/application/routing.js \
+		frontend/tools/google-authenticator/tool.js
 	node --check scripts/browser-smoke.playwright.js
 	node --check scripts/netflix-browser-workspace.playwright.js
 	node --check scripts/shared-ui-auth.playwright.js
