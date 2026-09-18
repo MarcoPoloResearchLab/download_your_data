@@ -247,8 +247,8 @@ async page => {
   await page.setViewportSize({width: 1440, height: 1000});
   await page.goto(`${baseURL}/resources/`, {waitUntil: 'domcontentloaded'});
   assert(
-    await page.locator('.resource-card').count() === 13,
-    'resource hub must expose thirteen current crawlable resources'
+    await page.locator('.resource-card').count() === 14,
+    'resource hub must expose fourteen current crawlable resources'
   );
   assert(
     await page.locator('link[rel="canonical"]').getAttribute('href') ===
@@ -298,6 +298,45 @@ async page => {
   assert(
     protectedRequests().length === protectedRequestCountBeforeResources,
     `public resources made protected requests: ${protectedRequests().join(', ')}`
+  );
+
+  await page.setViewportSize({width: 390, height: 844});
+  await page.goto(`${baseURL}/tools/google-authenticator/`, {waitUntil: 'domcontentloaded'});
+  assert(
+    await page.locator('h1').textContent() ===
+      'Google Authenticator to Apple Passwords' &&
+      await page.locator('[data-simulator]').count() === 1 &&
+      await page.locator('#qr-images').count() === 1,
+    'Google Authenticator tool must render its simulator and local QR input'
+  );
+  await page.locator('[data-action="start-simulator"]').click();
+  assert(
+    await page.locator('[data-simulator-stage="export"]').count() === 1,
+    'simulator must show the export step after start'
+  );
+  await page.locator('[data-action="next-stage"]').click();
+  assert(
+    await page.locator('[data-simulator-stage="save"]').count() === 1,
+    'simulator must show the QR screenshot step after export'
+  );
+  await page.locator('[data-action="next-stage"]').click();
+  assert(
+    await page.locator('[data-simulator-stage="upload"]').count() === 1,
+    'simulator must show the local upload step after saving a QR screenshot'
+  );
+  assert(
+    await page.locator('#qr-images').getAttribute('multiple') !== null &&
+      await page.locator('[data-local-only]').count() === 1,
+    'tool must accept multiple QR screenshots and state local-only processing'
+  );
+  await page.locator('[data-action="next-stage"]').click();
+  assert(
+    await page.locator('[data-simulator-stage="apple"]').count() === 1,
+    'simulator must show the Apple Passwords handoff step'
+  );
+  assert(
+    protectedRequests().length === protectedRequestCountBeforeResources,
+    `Google Authenticator tool made protected requests: ${protectedRequests().join(', ')}`
   );
 
   await page.setViewportSize({width: 1440, height: 1000});
