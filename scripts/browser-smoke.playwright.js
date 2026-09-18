@@ -314,13 +314,15 @@ async page => {
     'Google Authenticator tool must render its simulator and local QR input'
   );
   assert(
-    await page.locator('[data-simulator-stage="start"] img[src="/images/tools/google-authenticator/google-authenticator-simulator-onboarding.png"]').count() === 1,
-    'Google Authenticator walkthrough must start with the real simulator capture'
+    await page.locator('[data-simulator-stage="start"] img[src="/images/tools/google-authenticator/google-authenticator-existing-accounts.png"]').count() === 1 &&
+      await page.locator('[data-simulator-stage="start"] img[src*="google-authenticator-simulator-onboarding"]').count() === 0,
+    'Google Authenticator walkthrough must start with an existing-accounts capture'
   );
   assert(
     await page.getByText('A fresh install cannot recreate missing codes.', {exact: false}).count() === 1 &&
+      await page.getByText('This walkthrough exports what is already in Authenticator', {exact: false}).count() === 1 &&
     await page.locator('[data-simulator-stage="start"] a[href*="play.google.com"]').count() === 0,
-    'Google Authenticator walkthrough must state its prerequisite without an app-listing link'
+    'Google Authenticator walkthrough must describe exporting existing accounts without an app-listing link'
   );
   await page.locator('[data-action="start-simulator"]').click();
   assert(

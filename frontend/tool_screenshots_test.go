@@ -53,9 +53,9 @@ func TestToolScreenshotContract(testContext *testing.T) {
 		width   int
 		height  int
 	}{
-		"google-authenticator-simulator-onboarding": {host: "play.google.com", surface: "first_party_simulator_capture", width: 1080, height: 2400},
-		"google-authenticator-transfer-help":        {host: "support.google.com", surface: "first_party_help_web", width: 1440, height: 1000},
-		"apple-passwords-setup-key-help":            {host: "support.apple.com", surface: "first_party_help_web", width: 1440, height: 1000},
+		"google-authenticator-existing-accounts": {host: "play.google.com", surface: "first_party_store_capture", width: 1080, height: 2340},
+		"google-authenticator-transfer-help":     {host: "support.google.com", surface: "first_party_help_web", width: 1440, height: 1000},
+		"apple-passwords-setup-key-help":         {host: "support.apple.com", surface: "first_party_help_web", width: 1440, height: 1000},
 	}
 	if len(manifest.Screenshots) != len(expectations) {
 		testContext.Fatalf("tool screenshot count = %d; want %d", len(manifest.Screenshots), len(expectations))

@@ -416,7 +416,7 @@ function buildSimulatorStage(stage) {
   text.textContent = simulatorDescription(stage);
   copy.append(title, text);
   if (stage === 'start') {
-    copy.append(actionButton('start-simulator', 'Continue to the transfer steps'));
+    copy.append(actionButton('start-simulator', 'Continue to the export steps'));
   } else if (stage === 'apple') {
     const list = document.createElement('ul');
     for (const item of ['Copy one setup key from the result card.', 'Open the matching account in Apple Passwords.', 'Choose Edit, Set Up Code, and Use Setup Key.']) {
@@ -436,9 +436,9 @@ function buildSimulatorStage(stage) {
 function buildSimulatedScreen(stage) {
   if (stage === 'start') {
     return buildAppCapture(
-      '/images/tools/google-authenticator/google-authenticator-simulator-onboarding.png',
-      'Real Google Authenticator onboarding screen captured from an Android simulator.',
-      'Google Authenticator 7.2 — Android simulator capture',
+      '/images/tools/google-authenticator/google-authenticator-existing-accounts.png',
+      'Google Authenticator main screen showing existing accounts and current verification codes.',
+      'Google Authenticator — existing accounts',
     );
   }
   if (stage === 'export') {
@@ -543,7 +543,7 @@ function actionButton(action, label) {
 /** @param {string} stage @returns {string} */
 function simulatorTitle(stage) {
   return ({
-    start: 'Open Google Authenticator on the old device',
+    start: 'Start with the accounts already in Authenticator',
     export: 'Create the export QR code',
     save: 'Save every QR screen',
     upload: 'Choose the screenshots',
@@ -554,7 +554,7 @@ function simulatorTitle(stage) {
 /** @param {string} stage @returns {string} */
 function simulatorDescription(stage) {
   return ({
-    start: 'This is the real Google Authenticator app. Continue to Menu, Transfer accounts, and Export accounts on the old device.',
+    start: 'Open the device that already has the accounts you want to move. This walkthrough exports what is already in Authenticator; it does not create a new vault.',
     export: 'Choose Menu, Transfer accounts, Export accounts, select the accounts, and tap Next.',
     save: 'Google Authenticator can show more than one QR code. Save one screenshot for each screen.',
     upload: 'Choose all QR screenshots in the real converter below. It decodes them without sending the images away.',
