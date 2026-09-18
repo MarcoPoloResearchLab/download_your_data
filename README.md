@@ -49,6 +49,7 @@ inventory, evidence model, indexing rules, and publication boundary.
 | **Google** | Visual Export Guide | Google Takeout Multi-Service Archive | **Live Guide (`#guide/google`)** — Visual export guide for configuring Google Takeout multi-service exports, export frequencies, file sizes, and destination options. |
 | **Google Authenticator** | Browser Conversion Tool | Google Authenticator export QR screenshots | **Live Tool (`/tools/google-authenticator/`)** — Simulated walkthrough and local browser conversion from export QR screenshots to setup keys for Apple Passwords. |
 | **Amazon** | Visual Export Guide | Order History Reports & Personal Data Archive | **Live Guide (`#guide/amazon`)** — Product-specific visual export walkthrough for requesting Amazon order reports, Kindle content, and Prime Video history. |
+| **Apple Passwords** | Visual Export and Import Guide | Passwords CSV (`name`, `url`, `username`, `password`, `note`) | **Live Guide (`#guide/apple-passwords`)** — Export all passwords from Passwords on Mac, review duplicate records, and import the final CSV without uploading it. |
 
 ## Authentication boundary
 
