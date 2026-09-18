@@ -402,6 +402,9 @@ function buildSimulatorStage(stage) {
   section.className = 'simulator-stage-content';
   const device = document.createElement('div');
   device.className = 'simulated-device';
+  if (stage === 'export' || stage === 'apple') {
+    device.classList.add('help-capture-frame');
+  }
   device.append(buildSimulatedScreen(stage));
   const copy = document.createElement('div');
   copy.className = 'simulator-copy';
@@ -429,22 +432,33 @@ function buildSimulatorStage(stage) {
 
 /** @param {string} stage @returns {HTMLElement} */
 function buildSimulatedScreen(stage) {
+  if (stage === 'export') {
+    return buildHelpCapture(
+      '/images/tools/google-authenticator/google-authenticator-transfer-help.png',
+      'Google Account Help transfer instructions showing Menu, Transfer accounts, and Export accounts.',
+      'Google Account Help: transfer your Google Authenticator codes',
+      'https://support.google.com/accounts/answer/1066447?co=GENIE.Platform%3DiOS&hl=en',
+    );
+  }
+  if (stage === 'apple') {
+    return buildHelpCapture(
+      '/images/tools/google-authenticator/apple-passwords-setup-key-help.png',
+      'Apple iPhone User Guide instructions showing how to enter a setup key in Passwords.',
+      'Apple iPhone User Guide: enter a setup key',
+      'https://support.apple.com/en-mt/guide/iphone/ipha6173c19f/ios',
+    );
+  }
   const screen = document.createElement('div');
   screen.className = 'simulated-screen';
-  if (stage === 'start' || stage === 'export') {
+  if (stage === 'start') {
     const heading = document.createElement('h3');
     heading.textContent = 'Authenticator';
     screen.append(heading);
-    for (const rowText of stage === 'start' ? ['Menu', 'Transfer accounts'] : ['Export accounts', 'Select accounts', 'Next']) {
+    for (const rowText of ['Menu', 'Transfer accounts']) {
       const row = document.createElement('div');
       row.className = 'simulated-row';
       row.textContent = rowText;
       screen.append(row);
-    }
-    if (stage === 'export') {
-      const note = document.createElement('p');
-      note.textContent = 'Unlock the device if prompted.';
-      screen.append(note);
     }
   } else if (stage === 'save') {
     const heading = document.createElement('h3');
@@ -475,6 +489,27 @@ function buildSimulatedScreen(stage) {
     }
   }
   return screen;
+}
+
+/** @param {string} imageSource @param {string} imageAlt @param {string} sourceLabel @param {string} sourceURL @returns {HTMLElement} */
+function buildHelpCapture(imageSource, imageAlt, sourceLabel, sourceURL) {
+  const figure = document.createElement('figure');
+  figure.className = 'help-capture-content';
+  const image = document.createElement('img');
+  image.src = imageSource;
+  image.alt = imageAlt;
+  image.width = 1440;
+  image.height = 1000;
+  const caption = document.createElement('figcaption');
+  caption.append(`${sourceLabel} — `);
+  const sourceLink = document.createElement('a');
+  sourceLink.href = sourceURL;
+  sourceLink.target = '_blank';
+  sourceLink.rel = 'noopener noreferrer';
+  sourceLink.textContent = 'open source';
+  caption.append(sourceLink);
+  figure.append(image, caption);
+  return figure;
 }
 
 /** @param {string} action @param {string} label @returns {HTMLButtonElement} */

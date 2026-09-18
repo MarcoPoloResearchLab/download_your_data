@@ -5,7 +5,7 @@ CGO_ENABLED ?= 1
 
 export CGO_ENABLED
 
-.PHONY: build check-frontend ci clean deploy down eval-netflix-matcher fmt fmt-check lint publish release test test-browser test-shared-ui test-local-lifecycle test-production-artifacts up validate-instruction-screenshots validate-provider-icons
+.PHONY: build check-frontend ci clean deploy down eval-netflix-matcher fmt fmt-check lint publish release test test-browser test-shared-ui test-local-lifecycle test-production-artifacts up validate-instruction-screenshots validate-provider-icons validate-tool-screenshots
 
 build:
 	@mkdir -p build
@@ -80,6 +80,9 @@ validate-instruction-screenshots:
 validate-provider-icons:
 	$(GO) test ./frontend -run '^TestProviderIconContract$$' -count=1
 
+validate-tool-screenshots:
+	$(GO) test ./frontend -run '^TestToolScreenshotContract$$' -count=1
+
 release publish deploy:
 	@application_root="$$(git rev-parse --show-toplevel)"; \
 	gateway_root="$$(dirname "$${application_root}")/mprlab-gateway"; \
@@ -91,4 +94,4 @@ release publish deploy:
 	$(MAKE) --no-print-directory -C "$${gateway_root}" "app-$@" \
 		MPRLAB_APP_ROOT="$${application_root}"
 
-ci: fmt-check lint check-frontend eval-netflix-matcher test test-local-lifecycle validate-instruction-screenshots validate-provider-icons test-production-artifacts test-browser
+ci: fmt-check lint check-frontend eval-netflix-matcher test test-local-lifecycle validate-instruction-screenshots validate-provider-icons validate-tool-screenshots test-production-artifacts test-browser

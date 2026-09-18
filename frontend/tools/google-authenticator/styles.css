@@ -78,6 +78,38 @@
   box-shadow: 0 18px 40px rgb(0 0 0 / 24%);
 }
 
+.simulated-device.help-capture-frame {
+  width: min(100%, 560px);
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 18px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.help-capture-content {
+  margin: 0;
+  background: #fff;
+}
+
+.help-capture-content img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.help-capture-content figcaption {
+  padding: 10px 12px;
+  background: #172028;
+  color: #fff;
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.help-capture-content figcaption a {
+  color: #b9f4ec;
+}
+
 .simulated-screen {
   min-height: 390px;
   padding: 20px 16px;
@@ -328,6 +360,10 @@
 
   .simulated-device {
     margin-bottom: 26px;
+  }
+
+  .simulated-device.help-capture-frame {
+    width: 100%;
   }
 
   .simulator-progress {
