@@ -320,6 +320,7 @@ async page => {
   );
   assert(
     await page.getByText('A fresh install cannot recreate missing codes.', {exact: false}).count() === 1 &&
+      await page.getByText('Export the accounts you already have', {exact: true}).count() === 1 &&
       await page.getByText('This walkthrough exports what is already in Authenticator', {exact: false}).count() === 1 &&
     await page.locator('[data-simulator-stage="start"] a[href*="play.google.com"]').count() === 0,
     'Google Authenticator walkthrough must describe exporting existing accounts without an app-listing link'
