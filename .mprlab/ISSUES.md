@@ -1023,3 +1023,38 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   Validation:
   - Browser tests verify `#guide/strava` opens clean instructions, visual step captures, and official help links.
   - `make ci`
+
+- [ ] [F022] (P1) Add browser-only password consolidation workflow
+  Goal:
+  Provide a browser-only workflow that creates one canonical password CSV from user-supplied exports.
+
+  Requirements:
+  - Run file parsing, normalization, grouping, and conflict review in the browser.
+  - Keep source files and credential fields out of application servers, logs, telemetry, and analytics.
+  - Provide current export instructions for Chrome, Vivaldi, Firefox, Safari, and Apple Passwords.
+  - Accept multiple CSV files from each supported source and show the detected record counts locally.
+  - Group records by normalized site and username while preserving distinct subdomains and accounts.
+  - Keep records with an empty password as non-conflicting records in the resolved result.
+  - Show each conflicting pair or triple in a compact local editor with clear candidate labels.
+  - Let the user select one candidate for each conflict without manual password edits after export.
+  - Produce one final CSV with the canonical import fields: `name`, `url`, `username`, `password`, and `note`.
+  - Explain how to import the final CSV into Apple Passwords, Chrome, Vivaldi, Firefox, and Safari.
+  - Explain that Apple Passwords does not replace existing passwords during CSV import.
+  - Document the Apple flow: export Apple records to retain, remove current website-password entries, and import the final CSV once.
+  - Provide exact Apple reset steps: select current website-password entries, delete them, confirm the deletion, and import the final CSV.
+  - State that passkeys, shared items, and other Apple-only records require separate handling when they are absent from the CSV.
+  - Require a clear confirmation before a user deletes current destination passwords.
+
+  Deliverables:
+  - Provider instructions for all five source applications with official help links.
+  - Browser upload, local merge, conflict editor, and single-file export flow.
+  - Destination import instructions with the Apple replacement procedure.
+  - Synthetic fixtures for same-password copies, conflicting passwords, empty passwords, and distinct accounts.
+
+  Validation:
+  - Browser tests prove that uploaded file contents do not leave the browser.
+  - Browser tests prove deterministic grouping, conflict selection, empty-password handling, and final CSV headers.
+  - Browser tests prove that one selected candidate remains for every conflict.
+  - Documentation tests verify all five export guides and all five destination import guides.
+  - `make test-browser`
+  - `make ci`
