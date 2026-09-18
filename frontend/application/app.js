@@ -661,12 +661,19 @@ function renderCatalog() {
       class: 'provider-card',
       'data-provider-id': providerDefinition.id
     });
-    const guideLink = element('a', {
+    const providerLink = element('a', {
       class: 'provider-card-guide',
-      href: `#guide/${providerDefinition.id}`,
+      href:
+        providerDefinition.surface === 'tool'
+          ? providerDefinition.tool_path
+          : `#guide/${providerDefinition.id}`,
       'aria-label': localized.title,
-      'data-route': 'guide',
-      'data-provider': providerDefinition.id
+      ...(providerDefinition.surface === 'tool'
+        ? {'data-tool-route': providerDefinition.tool_path}
+        : {
+            'data-route': 'guide',
+            'data-provider': providerDefinition.id
+          })
     });
     const cardCopy = element('div', {class: 'provider-card-copy'});
     const providerName = element('h2', {
@@ -692,7 +699,7 @@ function renderCatalog() {
       element('p', {class: 'provider-summary', text: localized.intro})
     );
     card.append(
-      guideLink,
+      providerLink,
       providerMark(providerDefinition.id, localized.title, providerDefinition.icon_src),
       cardCopy
     );
@@ -2362,11 +2369,24 @@ function validateAppData(data) {
     if (provider.icon_src !== `images/providers/${provider.id}.png`) {
       throw new Error(`provider ${provider.id} icon_src must use its canonical local asset`);
     }
-    if (provider.surface !== 'workspace' && provider.surface !== 'guide') {
+    if (
+      provider.surface !== 'workspace' &&
+      provider.surface !== 'guide' &&
+      provider.surface !== 'tool'
+    ) {
       throw new Error(`provider ${provider.id} has invalid surface`);
+    }
+    if (provider.surface === 'tool') {
+      assertString(provider.tool_path, `provider ${provider.id} tool_path`);
+      if (!provider.tool_path.startsWith('/tools/')) {
+        throw new Error(`provider ${provider.id} tool_path must use the local tool route`);
+      }
     }
     return provider.id;
   });
+  const definitionsByID = new Map(
+    data.provider_registry.map((provider) => [provider.id, provider])
+  );
   if (new Set(providerIDs).size !== providerIDs.length || providerIDs[0] !== 'netflix') {
     throw new Error('provider_registry must start with one unique netflix provider');
   }
@@ -2382,11 +2402,14 @@ function validateAppData(data) {
       throw new Error(`${providerID} must be guide-only`);
     }
   });
-  if (Object.keys(data.instruction_screenshots).length !== providerIDs.length) {
+  const instructionProviderIDs = data.provider_registry
+    .filter((provider) => provider.surface !== 'tool')
+    .map((provider) => provider.id);
+  if (Object.keys(data.instruction_screenshots).length !== instructionProviderIDs.length) {
     throw new Error('instruction_screenshots must cover every provider');
   }
   const screenshotIDsByProvider = new Map();
-  providerIDs.forEach((providerID) => {
+  instructionProviderIDs.forEach((providerID) => {
     const assets = data.instruction_screenshots[providerID];
     assertArray(assets, `${providerID} screenshots`);
     if (!assets.length) {
@@ -2434,7 +2457,7 @@ function validateAppData(data) {
       }
       assertArray(provider.steps, `${provider.id}.steps`);
       assertArray(provider.refs, `${provider.id}.refs`);
-      if (!provider.steps.length) {
+      if (definitionsByID.get(provider.id)?.surface !== 'tool' && !provider.steps.length) {
         throw new Error(`${locale} ${provider.id} must have at least one instruction step`);
       }
       if (Object.hasOwn(provider, 'images')) {
@@ -2446,6 +2469,12 @@ function validateAppData(data) {
         Object.hasOwn(provider, 'generation')
       ) {
         throw new Error(`localized provider ${provider.id} contains backend workflow state`);
+      }
+      if (definitionsByID.get(provider.id)?.surface === 'tool') {
+        if (provider.steps.length || provider.refs.length) {
+          throw new Error(`${locale} ${provider.id} tool providers cannot contain guide steps or references`);
+        }
+        return;
       }
       const availableScreenshotIDs = screenshotIDsByProvider.get(provider.id);
       const usedScreenshotIDs = new Set();

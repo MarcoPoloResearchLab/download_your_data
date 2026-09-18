@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "significant_update": "2026-07-30",
+  "significant_update": "2026-09-18",
   "author": {
     "name": "Vadym Tyemirov",
     "url": "https://github.com/tyemirov"
@@ -279,6 +279,75 @@
         "netflix-viewing-history-csv"
       ],
       "cta_label": "Open the visual Google Takeout guide"
+    },
+    {
+      "slug": "google-authenticator-apple-passwords",
+      "provider_id": "google-authenticator",
+      "kind": "browser-tool",
+      "tool_path": "/tools/google-authenticator/",
+      "meta_title": "Google Authenticator to Apple Passwords Tool Guide",
+      "meta_description": "Convert Google Authenticator export QR screenshots into setup keys for Apple Passwords in your browser without uploading the QR data.",
+      "h1": "Move Google Authenticator Codes to Apple Passwords",
+      "primary_keyword": "Google Authenticator to Apple Passwords",
+      "intro": "This browser tool reads Google Authenticator export QR screenshots and shows the setup keys that Apple Passwords can use for one-time verification codes.",
+      "verdict": {
+        "best_for": "Moving authenticator accounts from a manual Google Authenticator export",
+        "required_input": "One or more screenshots of the Google Authenticator export QR code",
+        "product_fit": "The tool converts the QR payload; Apple Passwords receives each setup key manually"
+      },
+      "problem": "Google Authenticator can create one or more export QR codes. Apple Passwords needs a setup key for each account, so this tool decodes the QR screenshots in the browser and keeps the handoff visible.",
+      "coverage": [
+        "The Google Authenticator menu path for a manual account export",
+        "A simulated walkthrough that shows the export, screenshot, upload, and Apple Passwords handoff",
+        "Conversion of standard TOTP QR codes and Google Authenticator migration QR codes",
+        "Copyable setup keys and otpauth URIs for each decoded account"
+      ],
+      "limitations": [
+        "Google Authenticator may create more than one QR code when you export several accounts.",
+        "The tool does not connect to Google Authenticator or Apple Passwords and does not import accounts automatically.",
+        "Anyone who gets a setup key can generate the account's verification codes."
+      ],
+      "workflow_steps": [
+        "Open Google Authenticator on the old device and choose Menu, Transfer accounts, then Export accounts.",
+        "Select the accounts, tap Next, and save a screenshot of each QR code without sending it to a cloud service.",
+        "Open the browser tool, choose all QR screenshots, and wait for the local conversion to finish.",
+        "Open the matching account in Apple Passwords, choose Edit and Set Up Code, then enter the copied setup key."
+      ],
+      "snippet": {
+        "label": "Local tool entry point",
+        "content": "/tools/google-authenticator/",
+        "source_path": "frontend/tools/google-authenticator/index.html"
+      },
+      "references": [
+        {
+          "label": "Google Authenticator transfer instructions",
+          "href": "https://support.google.com/accounts/answer/1066447?co=GENIE.Platform%3DiOS&hl=en"
+        },
+        {
+          "label": "Apple verification code setup",
+          "href": "https://support.apple.com/en-mt/guide/iphone/ipha6173c19f/ios"
+        }
+      ],
+      "faqs": [
+        {
+          "question": "Does Google Authenticator create a downloadable export file?",
+          "answer": "The manual export flow creates QR code screens. Save a screenshot of each QR code, then choose those image files in the browser tool."
+        },
+        {
+          "question": "Can I upload more than one QR screenshot?",
+          "answer": "Yes. Choose all export QR screenshots at one time. The tool merges the decoded accounts and removes exact duplicates."
+        },
+        {
+          "question": "Does this page send my QR codes to a server?",
+          "answer": "No. The conversion runs in the browser. The page does not upload the selected images or decoded setup keys."
+        }
+      ],
+      "related_slugs": [
+        "google-takeout",
+        "chatgpt-data-export",
+        "netflix-viewing-history-csv"
+      ],
+      "cta_label": "Open the local conversion tool"
     },
     {
       "slug": "youtube-data-export",
@@ -695,6 +764,69 @@
         "chatgpt-data-export"
       ],
       "cta_label": "Open the visual Amazon export guide"
+    },
+    {
+      "slug": "apple-passwords-export",
+      "provider_id": "apple-passwords",
+      "kind": "provider-export",
+      "meta_title": "Apple Passwords Export and Import Guide | Download Your Data",
+      "meta_description": "Export Apple Passwords to a local CSV, review merged records, and import the final file into Passwords on Mac with this practical guide.",
+      "h1": "How to Export and Import Apple Passwords",
+      "primary_keyword": "Apple Passwords export and import",
+      "intro": "Apple Passwords can export website and app passwords to a CSV file on Mac. Review the file before you combine it with browser exports or import it into Passwords.",
+      "verdict": {
+        "best_for": "People who need a local Apple Passwords CSV for review or migration",
+        "required_input": "A Mac with the Passwords app and access to its File menu",
+        "product_fit": "Download Your Data provides the public guide and does not upload or import your password file"
+      },
+      "problem": "Apple provides separate export and import commands in the Passwords app. A careful workflow must preserve the CSV locally, resolve duplicate site records, and review skipped entries after import.",
+      "coverage": [
+        "Exporting all website and app passwords from Passwords on Mac",
+        "Reviewing a merged CSV with name, url, username, password, and note fields",
+        "Identifying duplicate site and username pairs and keeping one reviewed password per pair",
+        "Importing the final CSV and checking entries that Apple could not import"
+      ],
+      "limitations": [
+        "Apple warns that exported CSV files are not encrypted.",
+        "Apple does not replace passwords that already exist in Passwords during import.",
+        "Wi-Fi passwords, shared group passwords, and access to Sign in with Apple accounts are not exported by this workflow.",
+        "Apple item modification dates do not prove when a password changed.",
+        "An app-to-app handoff to a custom receiver is separate from this CSV workflow."
+      ],
+      "workflow_steps": [],
+      "snippet": {
+        "label": "Apple-compatible CSV columns",
+        "content": "name,url,username,password,note",
+        "source_path": "frontend/content/application.json"
+      },
+      "faqs": [
+        {
+          "question": "How do I export all passwords from Apple Passwords?",
+          "answer": "Open Passwords on Mac, choose File > Export All Passwords to File, confirm the export, and save the CSV in a local folder."
+        },
+        {
+          "question": "How do I import a CSV into Apple Passwords?",
+          "answer": "Open Passwords, choose File > Import Passwords from File, click Choose File, select the final CSV, and click Import."
+        },
+        {
+          "question": "Does Apple Passwords replace an existing password during import?",
+          "answer": "No. Apple says imported passwords do not replace existing entries. Review the import result and update any selected winners in Passwords."
+        },
+        {
+          "question": "How should I resolve duplicate passwords before import?",
+          "answer": "Group rows by site and username, compare the candidate records, verify the selected password on the site, and keep one reviewed row before import."
+        },
+        {
+          "question": "Can I use this guide for a custom app receiver?",
+          "answer": "This guide covers the local CSV path. Use it when an app-to-app export does not deliver records to a custom receiver."
+        }
+      ],
+      "related_slugs": [
+        "google-authenticator-apple-passwords",
+        "google-takeout",
+        "chatgpt-data-export"
+      ],
+      "cta_label": "Open the Apple Passwords visual guide"
     }
   ]
 }

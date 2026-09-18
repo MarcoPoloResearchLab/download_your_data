@@ -163,8 +163,16 @@ async page => {
   await setSharedAuth(false);
 
   assert(
-    await page.locator('.provider-card[data-provider-id]').count() === 12,
-    'anonymous provider catalog must contain twelve canonical providers'
+    await page.locator('.provider-card[data-provider-id]').count() === 14,
+    'anonymous provider catalog must contain fourteen canonical providers'
+  );
+  assert(
+    await page.locator('.provider-card[data-provider-id="google-authenticator"] a[href="/tools/google-authenticator/"]').count() === 1,
+    'Google Authenticator provider must link to the local browser tool'
+  );
+  assert(
+    await page.locator('.provider-card[data-provider-id="apple-passwords"] a[href="#guide/apple-passwords"]').count() === 1,
+    'Apple Passwords provider must link to its public guide'
   );
   assert(
     await page.locator('.catalog .page-heading h1').textContent() ===
@@ -196,7 +204,8 @@ async page => {
     'x',
     'youtube',
     'google',
-    'amazon'
+    'amazon',
+    'apple-passwords'
   ]) {
     await route(`#guide/${providerID}`, `#${providerID}`);
     assert(
@@ -231,6 +240,17 @@ async page => {
       ).count() === 1,
     'Amazon guide must remain complete and public'
   );
+  await route('#guide/apple-passwords', '#apple-passwords');
+  assert(
+    await page.locator('#apple-passwords .instruction-step').count() === 9 &&
+      await page.locator(
+        '#apple-passwords .guide-refs a[href="https://support.apple.com/en-ph/guide/passwords/mchl35b12625/2.0/mac/26"]'
+      ).count() === 1 &&
+      await page.locator(
+        '#apple-passwords .guide-refs a[href="https://support.apple.com/en-ph/guide/passwords/mchl2f1a184c/2.0/mac/26"]'
+      ).count() === 1,
+    'Apple Passwords guide must expose export and import instructions'
+  );
   await route('#credits', '.credits');
   assert(
     (await page.locator('.tmdb-credit').textContent()).includes(
@@ -247,8 +267,8 @@ async page => {
   await page.setViewportSize({width: 1440, height: 1000});
   await page.goto(`${baseURL}/resources/`, {waitUntil: 'domcontentloaded'});
   assert(
-    await page.locator('.resource-card').count() === 13,
-    'resource hub must expose thirteen current crawlable resources'
+    await page.locator('.resource-card').count() === 15,
+    'resource hub must expose fifteen current crawlable resources'
   );
   assert(
     await page.locator('link[rel="canonical"]').getAttribute('href') ===
@@ -266,7 +286,8 @@ async page => {
     '/resources/netflix-viewing-history-csv/',
     '/resources/netflix-viewing-history-analyzer/',
     '/resources/chatgpt-data-export/',
-    '/resources/whatsapp-chat-export/'
+    '/resources/whatsapp-chat-export/',
+    '/resources/apple-passwords-export/'
   ]) {
     await page.setViewportSize({width: 390, height: 844});
     await page.goto(`${baseURL}${resourcePath}`, {waitUntil: 'domcontentloaded'});
@@ -298,6 +319,57 @@ async page => {
   assert(
     protectedRequests().length === protectedRequestCountBeforeResources,
     `public resources made protected requests: ${protectedRequests().join(', ')}`
+  );
+
+  await page.setViewportSize({width: 390, height: 844});
+  await page.goto(`${baseURL}/tools/google-authenticator/`, {waitUntil: 'domcontentloaded'});
+  assert(
+    await page.locator('h1').textContent() ===
+      'Google Authenticator to Apple Passwords' &&
+      await page.locator('[data-simulator]').count() === 1 &&
+      await page.locator('#qr-images').count() === 1,
+    'Google Authenticator tool must render its simulator and local QR input'
+  );
+  assert(
+    await page.locator('[data-simulator-stage="start"] img[src="/images/tools/google-authenticator/google-authenticator-existing-accounts.png"]').count() === 1 &&
+      await page.locator('[data-simulator-stage="start"] img[src*="google-authenticator-simulator-onboarding"]').count() === 0,
+    'Google Authenticator walkthrough must start with an existing-accounts capture'
+  );
+  assert(
+    await page.getByText('A fresh install cannot recreate missing codes.', {exact: false}).count() === 1 &&
+      await page.getByText('Export the accounts you already have', {exact: true}).count() === 1 &&
+      await page.getByText('This walkthrough exports what is already in Authenticator', {exact: false}).count() === 1 &&
+    await page.locator('[data-simulator-stage="start"] a[href*="play.google.com"]').count() === 0,
+    'Google Authenticator walkthrough must describe exporting existing accounts without an app-listing link'
+  );
+  await page.locator('[data-action="start-simulator"]').click();
+  assert(
+    await page.locator('[data-simulator-stage="export"]').count() === 1,
+    'simulator must show the export step after start'
+  );
+  await page.locator('[data-action="next-stage"]').click();
+  assert(
+    await page.locator('[data-simulator-stage="save"]').count() === 1,
+    'simulator must show the QR screenshot step after export'
+  );
+  await page.locator('[data-action="next-stage"]').click();
+  assert(
+    await page.locator('[data-simulator-stage="upload"]').count() === 1,
+    'simulator must show the local upload step after saving a QR screenshot'
+  );
+  assert(
+    await page.locator('#qr-images').getAttribute('multiple') !== null &&
+      await page.locator('[data-local-only]').count() === 1,
+    'tool must accept multiple QR screenshots and state local-only processing'
+  );
+  await page.locator('[data-action="next-stage"]').click();
+  assert(
+    await page.locator('[data-simulator-stage="apple"]').count() === 1,
+    'simulator must show the Apple Passwords handoff step'
+  );
+  assert(
+    protectedRequests().length === protectedRequestCountBeforeResources,
+    `Google Authenticator tool made protected requests: ${protectedRequests().join(', ')}`
   );
 
   await page.setViewportSize({width: 1440, height: 1000});

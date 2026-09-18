@@ -11,7 +11,7 @@ guide or supported workspace action.
 
 ## Current scope
 
-`/resources/` links thirteen distinct resources:
+`/resources/` links fifteen distinct resources:
 
 | Resource | Primary intent | Current product destination |
 | --- | --- | --- |
@@ -20,6 +20,7 @@ guide or supported workspace action.
 | ChatGPT data export | Request and save the OpenAI ZIP | `#guide/openai` |
 | WhatsApp chat export | Choose account report or per-chat export | `#guide/whatsapp` |
 | Google Takeout | Export selected Google products | `#guide/google` |
+| Google Authenticator to Apple Passwords | Convert export QR screenshots into setup keys | `/tools/google-authenticator/` |
 | YouTube data export | Export YouTube through focused Takeout | `#guide/youtube` |
 | X data archive | Complete X verification and archive download | `#guide/x` |
 | TikTok data export | Request and retrieve the mobile archive | `#guide/tiktok` |
@@ -28,6 +29,7 @@ guide or supported workspace action.
 | Instagram data export | Scope an Instagram Accounts Center export | `#guide/instagram` |
 | Threads data export | Export Threads through Instagram Accounts Center | `#guide/threads` |
 | Amazon order history & data export | Request Amazon order reports, Kindle, and Prime Video | `#guide/amazon` |
+| Apple Passwords export and import | Export, review, and import a local Passwords CSV | `#guide/apple-passwords` |
 
 The cluster intentionally does not publish a ChatGPT browser-import page,
 full-Netflix-archive analyzer, or mandatory-TMDB page. Those claims do not
@@ -50,7 +52,9 @@ with:
 Every resource includes a visible quick verdict, repository snippet, author
 profile, significant-content date, limitations, first-party sources, semantic
 FAQ, and related-resource links. Screenshots are deduplicated per page,
-lazy-loaded below the fold, and rendered with explicit dimensions.
+lazy-loaded below the fold, and rendered with explicit dimensions. The Google
+Authenticator tool uses a separate simulated walkthrough and a local browser
+conversion surface.
 
 ## Indexing contract
 
@@ -62,9 +66,8 @@ lazy-loaded below the fold, and rendered with explicit dimensions.
 - `sitemap.xml` contains the public root, resource hub, and current resource
   pages. It does not contain hash fragments, protected APIs, or unknown
   production values.
-- Every new sitemap URL uses the explicit `2026-07-30` significant-content
-  creation date from the registry. Builds do not replace it with build or
-  deployment time.
+- Every new sitemap URL uses the explicit significant-content date from the
+  registry. Builds do not replace it with build or deployment time.
 - `robots.txt` allows public crawling and references the absolute sitemap URL.
 - The application footer links the resource hub with a crawlable HTML anchor;
   the hub links every resource, and every resource links adjacent pages.
@@ -75,9 +78,10 @@ The frontend contract validates the registry, provider coverage, metadata
 bounds, screenshot readiness, internal relations, structured data, sitemap
 URLs, and truthful `<lastmod>` values. The HTTP contract requests every public
 document, follows every sitemap path without a redirect, checks the canonical
-origin, and confirms slash normalization. Browser coverage checks the hub and
-representative resources at wide and narrow viewport widths and asserts that
-public resource browsing makes no protected API request.
+origin, and confirms slash normalization. Browser coverage checks the hub,
+selected resources, and the Google Authenticator tool at wide and narrow
+viewports. It also verifies that public browsing makes no protected API
+request.
 
 After the production profile is frozen and deployed, verify representative
 resource URLs with Google Search Console URL Inspection and validate the
