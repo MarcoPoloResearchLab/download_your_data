@@ -25,21 +25,23 @@ type providerIconExpectation struct {
 	ID               string
 	OfficialSiteHost string
 	SourceHost       string
+	SourceKind       string
 }
 
 var providerIconExpectations = []providerIconExpectation{
-	{ID: "netflix", OfficialSiteHost: "www.netflix.com", SourceHost: "www.netflix.com"},
-	{ID: "openai", OfficialSiteHost: "chatgpt.com", SourceHost: "cdn.oaistatic.com"},
-	{ID: "facebook", OfficialSiteHost: "www.facebook.com", SourceHost: "www.facebook.com"},
-	{ID: "instagram", OfficialSiteHost: "www.instagram.com", SourceHost: "static.cdninstagram.com"},
-	{ID: "whatsapp", OfficialSiteHost: "www.whatsapp.com", SourceHost: "static.whatsapp.net"},
-	{ID: "threads", OfficialSiteHost: "www.threads.com", SourceHost: "static.cdninstagram.com"},
-	{ID: "linkedin", OfficialSiteHost: "www.linkedin.com", SourceHost: "www.linkedin.com"},
-	{ID: "tiktok", OfficialSiteHost: "www.tiktok.com", SourceHost: "www.tiktok.com"},
-	{ID: "x", OfficialSiteHost: "x.com", SourceHost: "x.com"},
-	{ID: "youtube", OfficialSiteHost: "www.youtube.com", SourceHost: "www.gstatic.com"},
-	{ID: "google", OfficialSiteHost: "www.google.com", SourceHost: "www.google.com"},
-	{ID: "amazon", OfficialSiteHost: "www.amazon.com", SourceHost: "www.amazon.com"},
+	{ID: "netflix", OfficialSiteHost: "www.netflix.com", SourceHost: "www.netflix.com", SourceKind: "first_party_site_icon"},
+	{ID: "openai", OfficialSiteHost: "chatgpt.com", SourceHost: "cdn.oaistatic.com", SourceKind: "first_party_site_icon"},
+	{ID: "facebook", OfficialSiteHost: "www.facebook.com", SourceHost: "www.facebook.com", SourceKind: "first_party_site_icon"},
+	{ID: "instagram", OfficialSiteHost: "www.instagram.com", SourceHost: "static.cdninstagram.com", SourceKind: "first_party_site_icon"},
+	{ID: "whatsapp", OfficialSiteHost: "www.whatsapp.com", SourceHost: "static.whatsapp.net", SourceKind: "first_party_site_icon"},
+	{ID: "threads", OfficialSiteHost: "www.threads.com", SourceHost: "static.cdninstagram.com", SourceKind: "first_party_site_icon"},
+	{ID: "linkedin", OfficialSiteHost: "www.linkedin.com", SourceHost: "www.linkedin.com", SourceKind: "first_party_site_icon"},
+	{ID: "tiktok", OfficialSiteHost: "www.tiktok.com", SourceHost: "www.tiktok.com", SourceKind: "first_party_site_icon"},
+	{ID: "x", OfficialSiteHost: "x.com", SourceHost: "x.com", SourceKind: "first_party_site_icon"},
+	{ID: "youtube", OfficialSiteHost: "www.youtube.com", SourceHost: "www.gstatic.com", SourceKind: "first_party_site_icon"},
+	{ID: "google", OfficialSiteHost: "www.google.com", SourceHost: "www.google.com", SourceKind: "first_party_site_icon"},
+	{ID: "google-authenticator", OfficialSiteHost: "support.google.com", SourceHost: "lh3.googleusercontent.com", SourceKind: "first_party_help_icon"},
+	{ID: "amazon", OfficialSiteHost: "www.amazon.com", SourceHost: "www.amazon.com", SourceKind: "first_party_site_icon"},
 }
 
 type providerIconManifest struct {
@@ -74,9 +76,10 @@ type providerIconData struct {
 }
 
 type providerIconRegistryEntry struct {
-	ID      string `json:"id"`
-	Surface string `json:"surface"`
-	IconSrc string `json:"icon_src"`
+	ID       string `json:"id"`
+	Surface  string `json:"surface"`
+	ToolPath string `json:"tool_path"`
+	IconSrc  string `json:"icon_src"`
 }
 
 func TestProviderIconContract(testContext *testing.T) {
@@ -139,12 +142,13 @@ func TestProviderIconContract(testContext *testing.T) {
 		}
 		seenPaths[icon.OutputPath] = struct{}{}
 
-		if icon.SourceKind != "first_party_site_icon" || icon.ReviewStatus != "approved" {
+		if icon.SourceKind != expectation.SourceKind || icon.ReviewStatus != "approved" {
 			testContext.Fatalf(
-				"provider %q icon source/review = %q/%q; want first_party_site_icon/approved",
+				"provider %q icon source/review = %q/%q; want %s/approved",
 				expectation.ID,
 				icon.SourceKind,
 				icon.ReviewStatus,
+				expectation.SourceKind,
 			)
 		}
 		validateProviderIconURL(

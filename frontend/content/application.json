@@ -62,6 +62,12 @@
       "icon_src": "images/providers/google.png"
     },
     {
+      "id": "google-authenticator",
+      "surface": "tool",
+      "tool_path": "/tools/google-authenticator/",
+      "icon_src": "images/providers/google-authenticator.png"
+    },
+    {
       "id": "amazon",
       "surface": "guide",
       "icon_src": "images/providers/amazon.png"
@@ -961,6 +967,14 @@
           "note": "Security tip: Exports can contain sensitive information. Store your ZIPs in a secure, encrypted location."
         },
         {
+          "id": "google-authenticator",
+          "nav": "Google Authenticator",
+          "title": "Google Authenticator",
+          "intro": "Move Google Authenticator export QR screenshots into Apple Passwords with a private browser tool.",
+          "steps": [],
+          "refs": []
+        },
+        {
           "id": "amazon",
           "nav": "Amazon",
           "title": "Amazon Order History & Personal Data",
@@ -1736,6 +1750,14 @@
             }
           ],
           "note": "Consejo: guarda los ZIP cifrados y en lugar seguro."
+        },
+        {
+          "id": "google-authenticator",
+          "nav": "Google Authenticator",
+          "title": "Google Authenticator",
+          "intro": "Mueve las capturas de los códigos QR exportados de Google Authenticator a Apple Passwords con una herramienta privada del navegador.",
+          "steps": [],
+          "refs": []
         },
         {
           "id": "amazon",
@@ -2515,6 +2537,14 @@
           "note": "Conseil : stockez les ZIP chiffrés et en lieu sûr."
         },
         {
+          "id": "google-authenticator",
+          "nav": "Google Authenticator",
+          "title": "Google Authenticator",
+          "intro": "Transférez les captures des codes QR exportés de Google Authenticator vers Mots de passe Apple avec un outil privé du navigateur.",
+          "steps": [],
+          "refs": []
+        },
+        {
           "id": "amazon",
           "nav": "Amazon",
           "title": "Historique des commandes et données personnelles Amazon",
@@ -3290,6 +3320,14 @@
             }
           ],
           "note": "Совет: храните ZIP-архивы зашифрованными."
+        },
+        {
+          "id": "google-authenticator",
+          "nav": "Google Authenticator",
+          "title": "Google Authenticator",
+          "intro": "Перенесите снимки экспортированных QR-кодов Google Authenticator в Apple Passwords с помощью приватного инструмента в браузере.",
+          "steps": [],
+          "refs": []
         },
         {
           "id": "amazon",

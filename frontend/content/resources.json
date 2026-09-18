@@ -282,7 +282,7 @@
     },
     {
       "slug": "google-authenticator-apple-passwords",
-      "provider_id": "google",
+      "provider_id": "google-authenticator",
       "kind": "browser-tool",
       "tool_path": "/tools/google-authenticator/",
       "meta_title": "Google Authenticator to Apple Passwords Tool Guide",

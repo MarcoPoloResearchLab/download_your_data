@@ -487,30 +487,32 @@ func validateInstructionScreenshotLocales(
 		if !exists {
 			testContext.Fatalf("localized strings are missing %q", localeID)
 		}
-		if len(locale.Platforms) != len(instructionScreenshotPlatformIDs) {
+		platformByID := make(map[string]instructionScreenshotLocalizedPlatform, len(locale.Platforms))
+		for _, platform := range locale.Platforms {
+			if platform.ID == "google-authenticator" {
+				if len(platform.Steps) != 0 {
+					testContext.Fatalf("locale %q tool provider %q must not contain instruction content", localeID, platform.ID)
+				}
+				continue
+			}
+			if _, exists := platformByID[platform.ID]; exists {
+				testContext.Fatalf("locale %q contains duplicate provider %q", localeID, platform.ID)
+			}
+			platformByID[platform.ID] = platform
+		}
+		if len(platformByID) != len(instructionScreenshotPlatformIDs) {
 			testContext.Fatalf(
 				"locale %q platform count = %d; want %d",
 				localeID,
-				len(locale.Platforms),
+				len(platformByID),
 				len(instructionScreenshotPlatformIDs),
 			)
 		}
-		if locale.Platforms[0].ID != "netflix" {
+		if platformByID["netflix"].ID != "netflix" {
 			testContext.Fatalf(
 				"locale %q must start with the Netflix workspace",
 				localeID,
 			)
-		}
-		platformByID := make(map[string]instructionScreenshotLocalizedPlatform, len(locale.Platforms))
-		for _, platform := range locale.Platforms {
-			if _, exists := platformByID[platform.ID]; exists {
-				testContext.Fatalf(
-					"locale %q contains duplicate provider %q",
-					localeID,
-					platform.ID,
-				)
-			}
-			platformByID[platform.ID] = platform
 		}
 		for _, expectedPlatformID := range instructionScreenshotPlatformIDs {
 			platform, exists := platformByID[expectedPlatformID]

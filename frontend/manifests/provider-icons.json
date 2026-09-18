@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "source_review_date": "2026-07-29",
+  "source_review_date": "2026-09-18",
   "usage": "provider_identification_only",
   "runtime_loading": "local_only",
   "icons": [
@@ -144,6 +144,19 @@
       "pixel_dimensions": {
         "width": 32,
         "height": 32
+      },
+      "review_status": "approved"
+    },
+    {
+      "provider": "google-authenticator",
+      "source_kind": "first_party_help_icon",
+      "official_site": "https://support.google.com/accounts/answer/1066447?co=GENIE.Platform%3DiOS&hl=en",
+      "source_url": "https://lh3.googleusercontent.com/n7AImigclZa6u3kC7_tLldQxXa1VI-9vmBTfTLzKEVJrfKM6sfIppCNk20_j5Pv6YyI=w128-h128",
+      "output_path": "images/providers/google-authenticator.png",
+      "sha256": "dba9b3e049b2ce09ac0dea8974d4c8be1d2cd89ad5859f39b11c75811ac1de04",
+      "pixel_dimensions": {
+        "width": 48,
+        "height": 48
       },
       "review_status": "approved"
     },

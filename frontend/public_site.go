@@ -124,9 +124,10 @@ type applicationResourceData struct {
 }
 
 type applicationProviderDefinition struct {
-	ID      string `json:"id"`
-	Surface string `json:"surface"`
-	IconSrc string `json:"icon_src"`
+	ID       string `json:"id"`
+	Surface  string `json:"surface"`
+	ToolPath string `json:"tool_path"`
+	IconSrc  string `json:"icon_src"`
 }
 
 type applicationScreenshot struct {
@@ -476,6 +477,12 @@ func validateResourceRegistry(
 
 	resourcesBySlug := make(map[string]resourceDefinition, len(registry.Resources))
 	providerExportCoverage := make(map[string]struct{}, len(providers))
+	instructionProviderCount := 0
+	for _, provider := range applicationData.ProviderRegistry {
+		if provider.Surface != "tool" {
+			instructionProviderCount++
+		}
+	}
 	metaTitles := make(map[string]string, len(registry.Resources))
 	metaDescriptions := make(map[string]string, len(registry.Resources))
 	headings := make(map[string]string, len(registry.Resources))
@@ -632,11 +639,11 @@ func validateResourceRegistry(
 			}
 		}
 	}
-	if len(providerExportCoverage) != len(providers) {
+	if len(providerExportCoverage) != instructionProviderCount {
 		return fmt.Errorf(
 			"validate public resource registry: provider export coverage = %d; want %d",
 			len(providerExportCoverage),
-			len(providers),
+			instructionProviderCount,
 		)
 	}
 	if analysisPageCount != 1 {

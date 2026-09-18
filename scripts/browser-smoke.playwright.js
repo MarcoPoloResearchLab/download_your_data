@@ -163,8 +163,12 @@ async page => {
   await setSharedAuth(false);
 
   assert(
-    await page.locator('.provider-card[data-provider-id]').count() === 12,
-    'anonymous provider catalog must contain twelve canonical providers'
+    await page.locator('.provider-card[data-provider-id]').count() === 13,
+    'anonymous provider catalog must contain thirteen canonical providers'
+  );
+  assert(
+    await page.locator('.provider-card[data-provider-id="google-authenticator"] a[href="/tools/google-authenticator/"]').count() === 1,
+    'Google Authenticator provider must link to the local browser tool'
   );
   assert(
     await page.locator('.catalog .page-heading h1').textContent() ===

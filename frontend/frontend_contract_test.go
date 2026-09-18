@@ -27,9 +27,10 @@ type frontendTMDBCreditsContract struct {
 }
 
 type frontendProviderDefinition struct {
-	ID      string `json:"id"`
-	Surface string `json:"surface"`
-	IconSrc string `json:"icon_src"`
+	ID       string `json:"id"`
+	Surface  string `json:"surface"`
+	ToolPath string `json:"tool_path"`
+	IconSrc  string `json:"icon_src"`
 }
 
 type frontendLocalizedContract struct {
@@ -83,6 +84,7 @@ func TestFrontendProviderWorkspaceContract(testContext *testing.T) {
 		{ID: "x", Surface: "guide", IconSrc: "images/providers/x.png"},
 		{ID: "youtube", Surface: "guide", IconSrc: "images/providers/youtube.png"},
 		{ID: "google", Surface: "guide", IconSrc: "images/providers/google.png"},
+		{ID: "google-authenticator", Surface: "tool", ToolPath: "/tools/google-authenticator/", IconSrc: "images/providers/google-authenticator.png"},
 		{ID: "amazon", Surface: "guide", IconSrc: "images/providers/amazon.png"},
 	}
 	if !reflect.DeepEqual(data.ProviderRegistry, expectedRegistry) {
@@ -147,6 +149,12 @@ func TestFrontendProviderWorkspaceContract(testContext *testing.T) {
 					provider.ID,
 					expectedRegistry[providerIndex].ID,
 				)
+			}
+			if expectedRegistry[providerIndex].Surface == "tool" {
+				if len(provider.Steps) != 0 || len(provider.Refs) != 0 {
+					testContext.Fatalf("locale %q tool provider %q must not contain guide content", localeID, provider.ID)
+				}
+				continue
 			}
 			assets := data.InstructionScreenshots[provider.ID]
 			if len(assets) == 0 {
