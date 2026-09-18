@@ -42,6 +42,7 @@ var providerIconExpectations = []providerIconExpectation{
 	{ID: "google", OfficialSiteHost: "www.google.com", SourceHost: "www.google.com", SourceKind: "first_party_site_icon"},
 	{ID: "google-authenticator", OfficialSiteHost: "support.google.com", SourceHost: "lh3.googleusercontent.com", SourceKind: "first_party_help_icon"},
 	{ID: "amazon", OfficialSiteHost: "www.amazon.com", SourceHost: "www.amazon.com", SourceKind: "first_party_site_icon"},
+	{ID: "apple-passwords", OfficialSiteHost: "www.apple.com", SourceHost: "www.apple.com", SourceKind: "first_party_site_icon"},
 }
 
 type providerIconManifest struct {

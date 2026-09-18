@@ -1016,6 +1016,76 @@
         "publication_compatibility": "unaltered_static_product_screenshots_allowed_for_educational_materials",
         "attribution": "Amazon and the Amazon interface are trademarks and interface content of Amazon.com, Inc.; shown unaltered for independent instructional reference without affiliation, sponsorship, or endorsement."
       }
+    },
+    {
+      "platform": "apple-passwords",
+      "id": "apple-passwords-export",
+      "purpose": "Show the Apple Passwords User Guide export-all-passwords workflow.",
+      "expected_visible_labels": [
+        "Export passwords from your Mac to a file",
+        "Export all passwords",
+        "File"
+      ],
+      "official_source": "https://support.apple.com/en-ph/guide/passwords/mchl35b12625/2.0/mac/26",
+      "direct_route": "https://support.apple.com/en-ph/guide/passwords/mchl35b12625/2.0/mac/26",
+      "surface": "first_party_help_web",
+      "operator_checkpoint": "The public Apple Passwords User Guide export page is visible.",
+      "forbidden_final_action": "Do not export a real password file during capture.",
+      "output_path": "images/instructions/apple-passwords-export.png",
+      "viewport": {
+        "width": 1280,
+        "height": 720,
+        "device_scale_factor": 1
+      },
+      "pixel_dimensions": {
+        "width": 1280,
+        "height": 1468
+      },
+      "sha256": "c649b586e70f27d4bab47287ff1ff9d33375eba8b2b8dcaddb961eac9dd866a7",
+      "capture_date": "2026-09-18",
+      "review_status": "approved",
+      "provenance": {
+        "capture_source": "Official Apple Passwords User Guide",
+        "interface_owner": "Apple Inc.",
+        "rights_source": "https://www.apple.com/legal/intellectual-property/",
+        "publication_compatibility": "unaltered_static_product_screenshots_allowed_for_educational_materials",
+        "attribution": "Apple and the Apple Passwords User Guide are trademarks and interface content of Apple Inc.; shown unaltered for independent instructional reference without affiliation, sponsorship, or endorsement."
+      }
+    },
+    {
+      "platform": "apple-passwords",
+      "id": "apple-passwords-import",
+      "purpose": "Show the Apple Passwords User Guide import-from-file workflow.",
+      "expected_visible_labels": [
+        "Import passwords from another app into Passwords on Mac",
+        "Choose File",
+        "Import"
+      ],
+      "official_source": "https://support.apple.com/en-ph/guide/passwords/mchl2f1a184c/2.0/mac/26",
+      "direct_route": "https://support.apple.com/en-ph/guide/passwords/mchl2f1a184c/2.0/mac/26",
+      "surface": "first_party_help_web",
+      "operator_checkpoint": "The public Apple Passwords User Guide import page is visible.",
+      "forbidden_final_action": "Do not import a real password file during capture.",
+      "output_path": "images/instructions/apple-passwords-import.png",
+      "viewport": {
+        "width": 1280,
+        "height": 720,
+        "device_scale_factor": 1
+      },
+      "pixel_dimensions": {
+        "width": 1280,
+        "height": 1237
+      },
+      "sha256": "2ff1c79ad3f91e961b744a063fa66c1bbae6f5e3c431b6d4d0f76a9ca5c90de6",
+      "capture_date": "2026-09-18",
+      "review_status": "approved",
+      "provenance": {
+        "capture_source": "Official Apple Passwords User Guide",
+        "interface_owner": "Apple Inc.",
+        "rights_source": "https://www.apple.com/legal/intellectual-property/",
+        "publication_compatibility": "unaltered_static_product_screenshots_allowed_for_educational_materials",
+        "attribution": "Apple and the Apple Passwords User Guide are trademarks and interface content of Apple Inc.; shown unaltered for independent instructional reference without affiliation, sponsorship, or endorsement."
+      }
     }
   ]
 }

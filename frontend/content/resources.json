@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "significant_update": "2026-07-30",
+  "significant_update": "2026-09-18",
   "author": {
     "name": "Vadym Tyemirov",
     "url": "https://github.com/tyemirov"
@@ -764,6 +764,69 @@
         "chatgpt-data-export"
       ],
       "cta_label": "Open the visual Amazon export guide"
+    },
+    {
+      "slug": "apple-passwords-export",
+      "provider_id": "apple-passwords",
+      "kind": "provider-export",
+      "meta_title": "Apple Passwords Export and Import Guide | Download Your Data",
+      "meta_description": "Export Apple Passwords to a local CSV, review merged records, and import the final file into Passwords on Mac with this practical guide.",
+      "h1": "How to Export and Import Apple Passwords",
+      "primary_keyword": "Apple Passwords export and import",
+      "intro": "Apple Passwords can export website and app passwords to a CSV file on Mac. Review the file before you combine it with browser exports or import it into Passwords.",
+      "verdict": {
+        "best_for": "People who need a local Apple Passwords CSV for review or migration",
+        "required_input": "A Mac with the Passwords app and access to its File menu",
+        "product_fit": "Download Your Data provides the public guide and does not upload or import your password file"
+      },
+      "problem": "Apple provides separate export and import commands in the Passwords app. A careful workflow must preserve the CSV locally, resolve duplicate site records, and review skipped entries after import.",
+      "coverage": [
+        "Exporting all website and app passwords from Passwords on Mac",
+        "Reviewing a merged CSV with name, url, username, password, and note fields",
+        "Identifying duplicate site and username pairs and keeping one reviewed password per pair",
+        "Importing the final CSV and checking entries that Apple could not import"
+      ],
+      "limitations": [
+        "Apple warns that exported CSV files are not encrypted.",
+        "Apple does not replace passwords that already exist in Passwords during import.",
+        "Wi-Fi passwords, shared group passwords, and access to Sign in with Apple accounts are not exported by this workflow.",
+        "Apple item modification dates do not prove when a password changed.",
+        "An app-to-app handoff to a custom receiver is separate from this CSV workflow."
+      ],
+      "workflow_steps": [],
+      "snippet": {
+        "label": "Apple-compatible CSV columns",
+        "content": "name,url,username,password,note",
+        "source_path": "frontend/content/application.json"
+      },
+      "faqs": [
+        {
+          "question": "How do I export all passwords from Apple Passwords?",
+          "answer": "Open Passwords on Mac, choose File > Export All Passwords to File, confirm the export, and save the CSV in a local folder."
+        },
+        {
+          "question": "How do I import a CSV into Apple Passwords?",
+          "answer": "Open Passwords, choose File > Import Passwords from File, click Choose File, select the final CSV, and click Import."
+        },
+        {
+          "question": "Does Apple Passwords replace an existing password during import?",
+          "answer": "No. Apple says imported passwords do not replace existing entries. Review the import result and update any selected winners in Passwords."
+        },
+        {
+          "question": "How should I resolve duplicate passwords before import?",
+          "answer": "Group rows by site and username, compare the candidate records, verify the selected password on the site, and keep one reviewed row before import."
+        },
+        {
+          "question": "Can I use this guide for a custom app receiver?",
+          "answer": "This guide covers the local CSV path. Use it when an app-to-app export does not deliver records to a custom receiver."
+        }
+      ],
+      "related_slugs": [
+        "google-authenticator-apple-passwords",
+        "google-takeout",
+        "chatgpt-data-export"
+      ],
+      "cta_label": "Open the Apple Passwords visual guide"
     }
   ]
 }

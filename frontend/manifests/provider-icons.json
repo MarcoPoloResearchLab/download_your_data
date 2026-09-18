@@ -172,6 +172,19 @@
         "height": 180
       },
       "review_status": "approved"
+    },
+    {
+      "provider": "apple-passwords",
+      "source_kind": "first_party_site_icon",
+      "official_site": "https://www.apple.com/",
+      "source_url": "https://www.apple.com/favicon.ico",
+      "output_path": "images/providers/apple-passwords.png",
+      "sha256": "815ec8c8f206ad9acf858f1a7b64b0872117f63d3e49ad00b5a895260c82c067",
+      "pixel_dimensions": {
+        "width": 64,
+        "height": 64
+      },
+      "review_status": "approved"
     }
   ]
 }
