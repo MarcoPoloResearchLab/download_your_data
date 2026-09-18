@@ -439,7 +439,6 @@ function buildSimulatedScreen(stage) {
       '/images/tools/google-authenticator/google-authenticator-simulator-onboarding.png',
       'Real Google Authenticator onboarding screen captured from an Android simulator.',
       'Google Authenticator 7.2 — Android simulator capture',
-      'https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2',
     );
   }
   if (stage === 'export') {
@@ -491,8 +490,8 @@ function buildSimulatedScreen(stage) {
   return screen;
 }
 
-/** @param {string} imageSource @param {string} imageAlt @param {string} sourceLabel @param {string} sourceURL @returns {HTMLElement} */
-function buildAppCapture(imageSource, imageAlt, sourceLabel, sourceURL) {
+/** @param {string} imageSource @param {string} imageAlt @param {string} sourceLabel @returns {HTMLElement} */
+function buildAppCapture(imageSource, imageAlt, sourceLabel) {
   const figure = document.createElement('figure');
   figure.className = 'app-capture-content';
   const image = document.createElement('img');
@@ -501,13 +500,7 @@ function buildAppCapture(imageSource, imageAlt, sourceLabel, sourceURL) {
   image.width = 1080;
   image.height = 2400;
   const caption = document.createElement('figcaption');
-  caption.append(`${sourceLabel} — `);
-  const sourceLink = document.createElement('a');
-  sourceLink.href = sourceURL;
-  sourceLink.target = '_blank';
-  sourceLink.rel = 'noopener noreferrer';
-  sourceLink.textContent = 'open app listing';
-  caption.append(sourceLink);
+  caption.textContent = sourceLabel;
   figure.append(image, caption);
   return figure;
 }

@@ -317,6 +317,11 @@ async page => {
     await page.locator('[data-simulator-stage="start"] img[src="/images/tools/google-authenticator/google-authenticator-simulator-onboarding.png"]').count() === 1,
     'Google Authenticator walkthrough must start with the real simulator capture'
   );
+  assert(
+    await page.getByText('A fresh install cannot recreate missing codes.', {exact: false}).count() === 1 &&
+    await page.locator('[data-simulator-stage="start"] a[href*="play.google.com"]').count() === 0,
+    'Google Authenticator walkthrough must state its prerequisite without an app-listing link'
+  );
   await page.locator('[data-action="start-simulator"]').click();
   assert(
     await page.locator('[data-simulator-stage="export"]').count() === 1,
