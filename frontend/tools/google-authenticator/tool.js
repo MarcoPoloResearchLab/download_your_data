@@ -402,7 +402,9 @@ function buildSimulatorStage(stage) {
   section.className = 'simulator-stage-content';
   const device = document.createElement('div');
   device.className = 'simulated-device';
-  if (stage === 'export' || stage === 'apple') {
+  if (stage === 'start') {
+    device.classList.add('app-capture-frame');
+  } else if (stage === 'export' || stage === 'apple') {
     device.classList.add('help-capture-frame');
   }
   device.append(buildSimulatedScreen(stage));
@@ -414,7 +416,7 @@ function buildSimulatorStage(stage) {
   text.textContent = simulatorDescription(stage);
   copy.append(title, text);
   if (stage === 'start') {
-    copy.append(actionButton('start-simulator', 'Start the simulated walkthrough'));
+    copy.append(actionButton('start-simulator', 'Continue to the transfer steps'));
   } else if (stage === 'apple') {
     const list = document.createElement('ul');
     for (const item of ['Copy one setup key from the result card.', 'Open the matching account in Apple Passwords.', 'Choose Edit, Set Up Code, and Use Setup Key.']) {
@@ -432,6 +434,14 @@ function buildSimulatorStage(stage) {
 
 /** @param {string} stage @returns {HTMLElement} */
 function buildSimulatedScreen(stage) {
+  if (stage === 'start') {
+    return buildAppCapture(
+      '/images/tools/google-authenticator/google-authenticator-simulator-onboarding.png',
+      'Real Google Authenticator onboarding screen captured from an Android simulator.',
+      'Google Authenticator 7.2 — Android simulator capture',
+      'https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2',
+    );
+  }
   if (stage === 'export') {
     return buildHelpCapture(
       '/images/tools/google-authenticator/google-authenticator-transfer-help.png',
@@ -450,17 +460,7 @@ function buildSimulatedScreen(stage) {
   }
   const screen = document.createElement('div');
   screen.className = 'simulated-screen';
-  if (stage === 'start') {
-    const heading = document.createElement('h3');
-    heading.textContent = 'Authenticator';
-    screen.append(heading);
-    for (const rowText of ['Menu', 'Transfer accounts']) {
-      const row = document.createElement('div');
-      row.className = 'simulated-row';
-      row.textContent = rowText;
-      screen.append(row);
-    }
-  } else if (stage === 'save') {
+  if (stage === 'save') {
     const heading = document.createElement('h3');
     heading.textContent = 'Export accounts';
     const qr = document.createElement('div');
@@ -489,6 +489,27 @@ function buildSimulatedScreen(stage) {
     }
   }
   return screen;
+}
+
+/** @param {string} imageSource @param {string} imageAlt @param {string} sourceLabel @param {string} sourceURL @returns {HTMLElement} */
+function buildAppCapture(imageSource, imageAlt, sourceLabel, sourceURL) {
+  const figure = document.createElement('figure');
+  figure.className = 'app-capture-content';
+  const image = document.createElement('img');
+  image.src = imageSource;
+  image.alt = imageAlt;
+  image.width = 1080;
+  image.height = 2400;
+  const caption = document.createElement('figcaption');
+  caption.append(`${sourceLabel} — `);
+  const sourceLink = document.createElement('a');
+  sourceLink.href = sourceURL;
+  sourceLink.target = '_blank';
+  sourceLink.rel = 'noopener noreferrer';
+  sourceLink.textContent = 'open app listing';
+  caption.append(sourceLink);
+  figure.append(image, caption);
+  return figure;
 }
 
 /** @param {string} imageSource @param {string} imageAlt @param {string} sourceLabel @param {string} sourceURL @returns {HTMLElement} */
@@ -529,7 +550,7 @@ function actionButton(action, label) {
 /** @param {string} stage @returns {string} */
 function simulatorTitle(stage) {
   return ({
-    start: 'Start on the old device',
+    start: 'Open Google Authenticator on the old device',
     export: 'Create the export QR code',
     save: 'Save every QR screen',
     upload: 'Choose the screenshots',
@@ -540,7 +561,7 @@ function simulatorTitle(stage) {
 /** @param {string} stage @returns {string} */
 function simulatorDescription(stage) {
   return ({
-    start: 'Use the old device that contains your Google Authenticator accounts.',
+    start: 'This is the real Google Authenticator app. Continue to Menu, Transfer accounts, and Export accounts on the old device.',
     export: 'Choose Menu, Transfer accounts, Export accounts, select the accounts, and tap Next.',
     save: 'Google Authenticator can show more than one QR code. Save one screenshot for each screen.',
     upload: 'Choose all QR screenshots in the real converter below. It decodes them without sending the images away.',

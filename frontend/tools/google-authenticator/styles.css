@@ -87,18 +87,30 @@
   overflow: hidden;
 }
 
-.help-capture-content {
+.simulated-device.app-capture-frame {
+  width: min(100%, 286px);
+  padding: 0;
+  border: 4px solid var(--border-strong);
+  border-radius: 32px;
+  background: #080b0e;
+  overflow: hidden;
+}
+
+.help-capture-content,
+.app-capture-content {
   margin: 0;
   background: #fff;
 }
 
-.help-capture-content img {
+.help-capture-content img,
+.app-capture-content img {
   display: block;
   width: 100%;
   height: auto;
 }
 
-.help-capture-content figcaption {
+.help-capture-content figcaption,
+.app-capture-content figcaption {
   padding: 10px 12px;
   background: #172028;
   color: #fff;
@@ -106,7 +118,8 @@
   line-height: 1.35;
 }
 
-.help-capture-content figcaption a {
+.help-capture-content figcaption a,
+.app-capture-content figcaption a {
   color: #b9f4ec;
 }
 

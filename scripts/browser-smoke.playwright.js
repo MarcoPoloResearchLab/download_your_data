@@ -313,6 +313,10 @@ async page => {
       await page.locator('#qr-images').count() === 1,
     'Google Authenticator tool must render its simulator and local QR input'
   );
+  assert(
+    await page.locator('[data-simulator-stage="start"] img[src="/images/tools/google-authenticator/google-authenticator-simulator-onboarding.png"]').count() === 1,
+    'Google Authenticator walkthrough must start with the real simulator capture'
+  );
   await page.locator('[data-action="start-simulator"]').click();
   assert(
     await page.locator('[data-simulator-stage="export"]').count() === 1,

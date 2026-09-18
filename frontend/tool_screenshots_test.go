@@ -48,12 +48,14 @@ func TestToolScreenshotContract(testContext *testing.T) {
 		testContext.Fatalf("tool screenshot manifest schema version = %d; want 1", manifest.SchemaVersion)
 	}
 	expectations := map[string]struct {
-		host   string
-		width  int
-		height int
+		host    string
+		surface string
+		width   int
+		height  int
 	}{
-		"google-authenticator-transfer-help": {host: "support.google.com", width: 1440, height: 1000},
-		"apple-passwords-setup-key-help":     {host: "support.apple.com", width: 1440, height: 1000},
+		"google-authenticator-simulator-onboarding": {host: "play.google.com", surface: "first_party_simulator_capture", width: 1080, height: 2400},
+		"google-authenticator-transfer-help":        {host: "support.google.com", surface: "first_party_help_web", width: 1440, height: 1000},
+		"apple-passwords-setup-key-help":            {host: "support.apple.com", surface: "first_party_help_web", width: 1440, height: 1000},
 	}
 	if len(manifest.Screenshots) != len(expectations) {
 		testContext.Fatalf("tool screenshot count = %d; want %d", len(manifest.Screenshots), len(expectations))
@@ -72,8 +74,8 @@ func TestToolScreenshotContract(testContext *testing.T) {
 		if len(screenshot.ExpectedVisibleLabels) == 0 {
 			testContext.Fatalf("tool screenshot %q has no visible labels", screenshot.ID)
 		}
-		if screenshot.Surface != "first_party_help_web" || screenshot.ReviewStatus != "approved" {
-			testContext.Fatalf("tool screenshot %q is %q/%q; want first_party_help_web/approved", screenshot.ID, screenshot.Surface, screenshot.ReviewStatus)
+		if screenshot.Surface != expectation.surface || screenshot.ReviewStatus != "approved" {
+			testContext.Fatalf("tool screenshot %q is %q/%q; want %s/approved", screenshot.ID, screenshot.Surface, screenshot.ReviewStatus, expectation.surface)
 		}
 		if _, parseError := time.Parse(time.DateOnly, screenshot.CaptureDate); parseError != nil {
 			testContext.Fatalf("tool screenshot %q capture date is invalid: %v", screenshot.ID, parseError)
