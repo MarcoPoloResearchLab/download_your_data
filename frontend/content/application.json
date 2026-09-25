@@ -62,9 +62,20 @@
       "icon_src": "images/providers/google.png"
     },
     {
+      "id": "google-authenticator",
+      "surface": "tool",
+      "tool_path": "/tools/google-authenticator/",
+      "icon_src": "images/providers/google-authenticator.png"
+    },
+    {
       "id": "amazon",
       "surface": "guide",
       "icon_src": "images/providers/amazon.png"
+    },
+    {
+      "id": "apple-passwords",
+      "surface": "guide",
+      "icon_src": "images/providers/apple-passwords.png"
     }
   ],
   "instruction_screenshots": {
@@ -230,6 +241,18 @@
         "id": "amazon-privacy-request",
         "src": "images/instructions/amazon-privacy-request.png",
         "href": "https://www.amazon.com/hz/privacy-central/data-requests/preview.html"
+      }
+    ],
+    "apple-passwords": [
+      {
+        "id": "apple-passwords-export",
+        "src": "images/instructions/apple-passwords-export.png",
+        "href": "https://support.apple.com/en-ph/guide/passwords/mchl35b12625/2.0/mac/26"
+      },
+      {
+        "id": "apple-passwords-import",
+        "src": "images/instructions/apple-passwords-import.png",
+        "href": "https://support.apple.com/en-ph/guide/passwords/mchl2f1a184c/2.0/mac/26"
       }
     ]
   },
@@ -961,6 +984,14 @@
           "note": "Security tip: Exports can contain sensitive information. Store your ZIPs in a secure, encrypted location."
         },
         {
+          "id": "google-authenticator",
+          "nav": "Google Authenticator",
+          "title": "Google Authenticator",
+          "intro": "Move Google Authenticator export QR screenshots into Apple Passwords with a private browser tool.",
+          "steps": [],
+          "refs": []
+        },
+        {
           "id": "amazon",
           "nav": "Amazon",
           "title": "Amazon Order History & Personal Data",
@@ -1008,6 +1039,70 @@
             }
           ],
           "note": "Amazon shows each data category with its own Submit Request control. Request only the categories that you need."
+        },
+        {
+          "id": "apple-passwords",
+          "nav": "Apple Passwords",
+          "title": "Apple Passwords",
+          "intro": "Export passwords from the Mac Passwords app, review a merged CSV, and import the final file.",
+          "steps": [
+            {
+              "text": "Open the Passwords app on your Mac.",
+              "screenshot_id": "apple-passwords-export",
+              "alt": "Apple Passwords User Guide export page"
+            },
+            {
+              "text": "Choose File > Export All Passwords to File.",
+              "screenshot_id": "apple-passwords-export",
+              "alt": "Apple Passwords User Guide export page"
+            },
+            {
+              "text": "Confirm the export, choose a local folder, and click Save.",
+              "screenshot_id": "apple-passwords-export",
+              "alt": "Apple Passwords User Guide export page"
+            },
+            {
+              "text": "Keep the CSV local. Review duplicate site and username rows and keep one verified password before you import. Apple says the export is not encrypted.",
+              "screenshot_id": "apple-passwords-export",
+              "alt": "Apple Passwords User Guide export page"
+            },
+            {
+              "text": "Open the Passwords app and choose File > Import Passwords from File.",
+              "screenshot_id": "apple-passwords-import",
+              "alt": "Apple Passwords User Guide import page"
+            },
+            {
+              "text": "Click Choose File and select the final CSV.",
+              "screenshot_id": "apple-passwords-import",
+              "alt": "Apple Passwords User Guide import page"
+            },
+            {
+              "text": "Click Import and wait for the result.",
+              "screenshot_id": "apple-passwords-import",
+              "alt": "Apple Passwords User Guide import page"
+            },
+            {
+              "text": "Review any passwords that could not be imported. Existing entries are not replaced.",
+              "screenshot_id": "apple-passwords-import",
+              "alt": "Apple Passwords User Guide import page"
+            },
+            {
+              "text": "Delete the temporary CSV after you finish the import.",
+              "screenshot_id": "apple-passwords-import",
+              "alt": "Apple Passwords User Guide import page"
+            }
+          ],
+          "refs": [
+            {
+              "label": "Export passwords from your Mac to a file",
+              "href": "https://support.apple.com/en-ph/guide/passwords/mchl35b12625/2.0/mac/26"
+            },
+            {
+              "label": "Import passwords from another app into Passwords on Mac",
+              "href": "https://support.apple.com/en-ph/guide/passwords/mchl2f1a184c/2.0/mac/26"
+            }
+          ],
+          "note": "Use the CSV workflow when an app-to-app handoff does not complete. This guide does not upload your password file."
         }
       ]
     },
@@ -1738,6 +1833,14 @@
           "note": "Consejo: guarda los ZIP cifrados y en lugar seguro."
         },
         {
+          "id": "google-authenticator",
+          "nav": "Google Authenticator",
+          "title": "Google Authenticator",
+          "intro": "Mueve las capturas de los códigos QR exportados de Google Authenticator a Apple Passwords con una herramienta privada del navegador.",
+          "steps": [],
+          "refs": []
+        },
+        {
           "id": "amazon",
           "nav": "Amazon",
           "title": "Historial de pedidos y datos personales de Amazon",
@@ -1785,6 +1888,70 @@
             }
           ],
           "note": "Amazon muestra cada categoría de datos con su propio control Enviar solicitud. Solicita solo las categorías que necesites."
+        },
+        {
+          "id": "apple-passwords",
+          "nav": "Apple Passwords",
+          "title": "Apple Passwords",
+          "intro": "Exporta las contraseñas de la app Passwords del Mac, revisa un CSV combinado e importa el archivo final.",
+          "steps": [
+            {
+              "text": "Abre la app Passwords en el Mac.",
+              "screenshot_id": "apple-passwords-export",
+              "alt": "Página de exportación de la Guía del usuario de Apple Passwords"
+            },
+            {
+              "text": "Selecciona Archivo > Exportar todas las contraseñas a un archivo.",
+              "screenshot_id": "apple-passwords-export",
+              "alt": "Página de exportación de la Guía del usuario de Apple Passwords"
+            },
+            {
+              "text": "Confirma la exportación, selecciona una carpeta local y haz clic en Guardar.",
+              "screenshot_id": "apple-passwords-export",
+              "alt": "Página de exportación de la Guía del usuario de Apple Passwords"
+            },
+            {
+              "text": "Guarda el CSV localmente. Revisa las filas duplicadas de cada sitio y usuario, y conserva una contraseña verificada antes de importar. Apple indica que la exportación no está cifrada.",
+              "screenshot_id": "apple-passwords-export",
+              "alt": "Página de exportación de la Guía del usuario de Apple Passwords"
+            },
+            {
+              "text": "Abre Passwords y selecciona Archivo > Importar contraseñas desde un archivo.",
+              "screenshot_id": "apple-passwords-import",
+              "alt": "Página de importación de la Guía del usuario de Apple Passwords"
+            },
+            {
+              "text": "Haz clic en Elegir archivo y selecciona el CSV final.",
+              "screenshot_id": "apple-passwords-import",
+              "alt": "Página de importación de la Guía del usuario de Apple Passwords"
+            },
+            {
+              "text": "Haz clic en Importar y espera el resultado.",
+              "screenshot_id": "apple-passwords-import",
+              "alt": "Página de importación de la Guía del usuario de Apple Passwords"
+            },
+            {
+              "text": "Revisa las contraseñas que no se pudieron importar. Las entradas existentes no se reemplazan.",
+              "screenshot_id": "apple-passwords-import",
+              "alt": "Página de importación de la Guía del usuario de Apple Passwords"
+            },
+            {
+              "text": "Elimina el CSV temporal cuando termines la importación.",
+              "screenshot_id": "apple-passwords-import",
+              "alt": "Página de importación de la Guía del usuario de Apple Passwords"
+            }
+          ],
+          "refs": [
+            {
+              "label": "Exportar contraseñas del Mac a un archivo",
+              "href": "https://support.apple.com/en-ph/guide/passwords/mchl35b12625/2.0/mac/26"
+            },
+            {
+              "label": "Importar contraseñas de otra app a Passwords en el Mac",
+              "href": "https://support.apple.com/en-ph/guide/passwords/mchl2f1a184c/2.0/mac/26"
+            }
+          ],
+          "note": "Usa el flujo CSV cuando no se complete una transferencia entre apps. Esta guía no carga tu archivo de contraseñas."
         }
       ]
     },
@@ -2515,6 +2682,14 @@
           "note": "Conseil : stockez les ZIP chiffrés et en lieu sûr."
         },
         {
+          "id": "google-authenticator",
+          "nav": "Google Authenticator",
+          "title": "Google Authenticator",
+          "intro": "Transférez les captures des codes QR exportés de Google Authenticator vers Mots de passe Apple avec un outil privé du navigateur.",
+          "steps": [],
+          "refs": []
+        },
+        {
           "id": "amazon",
           "nav": "Amazon",
           "title": "Historique des commandes et données personnelles Amazon",
@@ -2562,6 +2737,70 @@
             }
           ],
           "note": "Amazon affiche chaque catégorie de données avec sa propre commande Soumettre la demande. Demandez uniquement les catégories nécessaires."
+        },
+        {
+          "id": "apple-passwords",
+          "nav": "Apple Passwords",
+          "title": "Apple Passwords",
+          "intro": "Exportez les mots de passe de l’app Passwords sur Mac, vérifiez un CSV fusionné, puis importez le fichier final.",
+          "steps": [
+            {
+              "text": "Ouvrez l’app Passwords sur votre Mac.",
+              "screenshot_id": "apple-passwords-export",
+              "alt": "Page d’exportation du guide d’utilisation Apple Passwords"
+            },
+            {
+              "text": "Choisissez Fichier > Exporter tous les mots de passe vers un fichier.",
+              "screenshot_id": "apple-passwords-export",
+              "alt": "Page d’exportation du guide d’utilisation Apple Passwords"
+            },
+            {
+              "text": "Confirmez l’exportation, choisissez un dossier local, puis cliquez sur Enregistrer.",
+              "screenshot_id": "apple-passwords-export",
+              "alt": "Page d’exportation du guide d’utilisation Apple Passwords"
+            },
+            {
+              "text": "Conservez le CSV en local. Vérifiez les lignes en double pour chaque site et utilisateur, puis gardez un mot de passe vérifié avant l’importation. Apple indique que l’exportation n’est pas chiffrée.",
+              "screenshot_id": "apple-passwords-export",
+              "alt": "Page d’exportation du guide d’utilisation Apple Passwords"
+            },
+            {
+              "text": "Ouvrez Passwords et choisissez Fichier > Importer des mots de passe depuis un fichier.",
+              "screenshot_id": "apple-passwords-import",
+              "alt": "Page d’importation du guide d’utilisation Apple Passwords"
+            },
+            {
+              "text": "Cliquez sur Choisir un fichier, puis sélectionnez le CSV final.",
+              "screenshot_id": "apple-passwords-import",
+              "alt": "Page d’importation du guide d’utilisation Apple Passwords"
+            },
+            {
+              "text": "Cliquez sur Importer et attendez le résultat.",
+              "screenshot_id": "apple-passwords-import",
+              "alt": "Page d’importation du guide d’utilisation Apple Passwords"
+            },
+            {
+              "text": "Vérifiez les mots de passe qui n’ont pas pu être importés. Les entrées existantes ne sont pas remplacées.",
+              "screenshot_id": "apple-passwords-import",
+              "alt": "Page d’importation du guide d’utilisation Apple Passwords"
+            },
+            {
+              "text": "Supprimez le CSV temporaire après l’importation.",
+              "screenshot_id": "apple-passwords-import",
+              "alt": "Page d’importation du guide d’utilisation Apple Passwords"
+            }
+          ],
+          "refs": [
+            {
+              "label": "Exporter des mots de passe du Mac vers un fichier",
+              "href": "https://support.apple.com/en-ph/guide/passwords/mchl35b12625/2.0/mac/26"
+            },
+            {
+              "label": "Importer des mots de passe d’une autre app dans Passwords sur Mac",
+              "href": "https://support.apple.com/en-ph/guide/passwords/mchl2f1a184c/2.0/mac/26"
+            }
+          ],
+          "note": "Utilisez le flux CSV si le transfert entre apps ne se termine pas. Ce guide n’envoie pas votre fichier de mots de passe."
         }
       ]
     },
@@ -3292,6 +3531,14 @@
           "note": "Совет: храните ZIP-архивы зашифрованными."
         },
         {
+          "id": "google-authenticator",
+          "nav": "Google Authenticator",
+          "title": "Google Authenticator",
+          "intro": "Перенесите снимки экспортированных QR-кодов Google Authenticator в Apple Passwords с помощью приватного инструмента в браузере.",
+          "steps": [],
+          "refs": []
+        },
+        {
           "id": "amazon",
           "nav": "Amazon",
           "title": "История заказов и персональные данные Amazon",
@@ -3339,6 +3586,70 @@
             }
           ],
           "note": "Amazon показывает каждую категорию данных с отдельной кнопкой «Отправить запрос». Запрашивайте только нужные категории."
+        },
+        {
+          "id": "apple-passwords",
+          "nav": "Apple Passwords",
+          "title": "Apple Passwords",
+          "intro": "Экспортируйте пароли из приложения Passwords на Mac, проверьте объединённый CSV и импортируйте итоговый файл.",
+          "steps": [
+            {
+              "text": "Откройте приложение Passwords на Mac.",
+              "screenshot_id": "apple-passwords-export",
+              "alt": "Страница экспорта в руководстве пользователя Apple Passwords"
+            },
+            {
+              "text": "Выберите File > Export All Passwords to File.",
+              "screenshot_id": "apple-passwords-export",
+              "alt": "Страница экспорта в руководстве пользователя Apple Passwords"
+            },
+            {
+              "text": "Подтвердите экспорт, выберите локальную папку и нажмите Save.",
+              "screenshot_id": "apple-passwords-export",
+              "alt": "Страница экспорта в руководстве пользователя Apple Passwords"
+            },
+            {
+              "text": "Храните CSV локально. Проверьте повторяющиеся строки для каждого сайта и пользователя и оставьте один проверенный пароль перед импортом. Apple указывает, что экспорт не зашифрован.",
+              "screenshot_id": "apple-passwords-export",
+              "alt": "Страница экспорта в руководстве пользователя Apple Passwords"
+            },
+            {
+              "text": "Откройте Passwords и выберите File > Import Passwords from File.",
+              "screenshot_id": "apple-passwords-import",
+              "alt": "Страница импорта в руководстве пользователя Apple Passwords"
+            },
+            {
+              "text": "Нажмите Choose File и выберите итоговый CSV.",
+              "screenshot_id": "apple-passwords-import",
+              "alt": "Страница импорта в руководстве пользователя Apple Passwords"
+            },
+            {
+              "text": "Нажмите Import и дождитесь результата.",
+              "screenshot_id": "apple-passwords-import",
+              "alt": "Страница импорта в руководстве пользователя Apple Passwords"
+            },
+            {
+              "text": "Проверьте пароли, которые не удалось импортировать. Существующие записи не заменяются.",
+              "screenshot_id": "apple-passwords-import",
+              "alt": "Страница импорта в руководстве пользователя Apple Passwords"
+            },
+            {
+              "text": "Удалите временный CSV после завершения импорта.",
+              "screenshot_id": "apple-passwords-import",
+              "alt": "Страница импорта в руководстве пользователя Apple Passwords"
+            }
+          ],
+          "refs": [
+            {
+              "label": "Экспорт паролей с Mac в файл",
+              "href": "https://support.apple.com/en-ph/guide/passwords/mchl35b12625/2.0/mac/26"
+            },
+            {
+              "label": "Импорт паролей из другого приложения в Passwords на Mac",
+              "href": "https://support.apple.com/en-ph/guide/passwords/mchl2f1a184c/2.0/mac/26"
+            }
+          ],
+          "note": "Используйте CSV, если передача между приложениями не завершается. Это руководство не загружает ваш файл паролей."
         }
       ]
     }

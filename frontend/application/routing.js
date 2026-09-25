@@ -11,7 +11,8 @@ export const GUIDE_ONLY_PROVIDER_IDS = Object.freeze([
   'x',
   'youtube',
   'google',
-  'amazon'
+  'amazon',
+  'apple-passwords'
 ]);
 
 export function parseRoute() {

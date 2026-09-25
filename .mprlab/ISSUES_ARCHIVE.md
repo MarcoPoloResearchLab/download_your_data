@@ -435,6 +435,146 @@ Completed non-recurring issue history archived during backlog hygiene passes.
   violation was removed; the isolated browser had no Google account, so no
   authenticated session was fabricated or claimed.
 
+Identifier reconciliation:
+  - On 2026-09-18, active closed entries B003-B008 were renumbered to B023-B028.
+  - The archive already contained historical entries with identifiers B003-B008.
+
+- [x] [B023] (P1) {I015} Accept the current shared shell request identity
+  Goal:
+  The browser gate accepts the current `mpr-ui@latest` revalidation request.
+
+  Requirements:
+  - Compare the request origin and path with the selected shared shell asset.
+  - Permit the current cache revalidation query.
+  - Reject a request from a different origin or path.
+
+  Validation:
+  - Run `make test-browser`.
+  - Run `make ci`.
+
+  Resolved:
+  The browser gate now compares the shared shell request origin and path. The
+  current `mpr-ui` loader can add the current cache revalidation query.
+
+- [x] [B024] (P1) {I015} Accept linked-worktree Git metadata
+  Goal:
+  The repository layout gate accepts the Git metadata file in a linked
+  worktree.
+
+  Requirements:
+  - Permit `.git` as repository metadata at the root.
+  - Continue to reject application or unowned root files.
+
+  Validation:
+  - Run `go test ./internal/product`.
+  - Run `make ci`.
+
+  Resolved:
+  The repository layout gate now permits the linked-worktree `.git` metadata
+  file. The root-file allowlist stays closed.
+
+- [x] [B025] (P1) {I011,F012} Reject invalid instruction screenshots
+  Goal:
+  The published screenshots contain the first-party content that the manifest declares.
+
+  Requirements:
+  - Replace the blank TikTok images with authenticated TikTok settings captures under I011.
+  - Replace the Amazon error pages with authenticated Privacy Central captures.
+  - Replace the unreadable Netflix image and the WhatsApp navigation images.
+  - Pin each approved PNG SHA-256 after the content review and privacy review.
+  - Reject blank, duplicate, unreviewed, or digest-mismatched images.
+  - Verify each declared visible label before the manifest uses `approved`.
+
+  Deliverables:
+  - Seven correct instruction images from current first-party sources.
+  - Manifest digest records and screenshot content validation.
+  - Browser coverage for decoded images with visible content.
+
+  Validation:
+  - Review each image at full resolution.
+  - Run `make validate-instruction-screenshots`.
+  - Run `make test-browser`.
+  - Run `make ci`.
+
+  Progress:
+  - 2026-08-26: replaced the Netflix and WhatsApp images with reviewed public help captures.
+  - 2026-08-26: replaced the Amazon error pages with reviewed authenticated captures and updated the guide for the current per-category request flow.
+  - 2026-08-26: pinned every reviewed image digest and added build, test, and browser rejection for invalid image content.
+  - 2026-09-02: replaced the blank TikTok images with reviewed authenticated settings captures.
+
+  Resolved 2026-09-02:
+  - All seven replacement images passed the screenshot content gate.
+  - The manifest contains the reviewed image dimensions, capture dates, review states, and SHA-256 values.
+  - The browser tests decoded each guide image and verified visible content.
+
+- [x] [B026] (P0) Add the current LoopAware site identifier
+  Goal:
+  Send public page telemetry to the current Download Your Data site in LoopAware.
+
+  Requirements:
+  - Use `5a6e13d5-7584-451e-b058-36b9ecef8e8d` in each production page source.
+  - Permit the LoopAware script and API origins in the canonical browser policy.
+  - Reject a missing, duplicated, stale, or mixed site identifier.
+
+  Deliverables:
+  - Add the current pixel to the application and resource templates.
+  - Add a focused source and browser-policy contract.
+
+  Validation:
+  - Run the focused frontend contract.
+  - Run `make ci` on the committed B026 branch.
+
+  Baseline:
+  - Local `make ci` reaches the existing B025 screenshot gate.
+  - The two blocked TikTok screenshots prevent public-site construction.
+
+  Resolved 2026-08-28:
+  - The application page and both resource templates load the current LoopAware pixel.
+  - The response and Pages browser policies permit the LoopAware script and API origins.
+  - The focused contracts pass.
+  - The committed snapshot completed `make ci` after one retry of a transient Docker snapshot error.
+
+- [x] [B027] (P0) Permit the current LoopAware browser requests
+  Goal:
+  The production browser test rejects the LoopAware requests that B026 adds.
+  The browser contract must permit only the current pixel and visit requests.
+
+  Requirements:
+  - Permit the exact pixel URL with the current site identifier.
+  - Permit visit API requests with the current site identifier.
+  - Permit the LoopAware image beacon in the browser policy.
+  - Reject each other LoopAware origin, path, or site identifier.
+  - Apply the same contract to the public smoke test and authenticated workspace.
+
+  Deliverables:
+  - Update `frontend/assets.go` and its focused contract.
+  - Update `scripts/browser-smoke.playwright.js`.
+  - Update `scripts/netflix-browser-workspace.playwright.js`.
+
+  Validation:
+  - Run `make test-browser`.
+  - Run `make ci`.
+
+  Resolved:
+  The browser tests now allow and require only the current LoopAware pixel and
+  visit requests. The browser policy now permits the LoopAware image beacon.
+
+- [x] [B028] (P0) Accept project legal notices at the repository root
+  Goal:
+  The repository layout gate accepts the project-wide legal files that the
+  current license requires.
+
+  Requirements:
+  - Permit `COMMERCIAL_LICENSE.md`, `CONTRIBUTOR_LICENSE.md`, and `NOTICE`.
+  - Continue to reject each other unowned root file.
+
+  Validation:
+  - Run `go test ./internal/product`.
+  - Run `make ci`.
+
+  Resolved:
+  The closed root-file allowlist now includes the three current legal files.
+
 ## Improvements
 
 - [x] [I001] (P1) Establish the canonical local server and validation foundation
@@ -684,6 +824,76 @@ Completed non-recurring issue history archived during backlog hygiene passes.
   publication, deployment, Search Console request, or live indexing validation
   was performed.
 
+- [x] [I011] (P2) {P004} Publish the authenticated TikTok instruction screenshots
+  Goal:
+  Replace the blank TikTok visuals with current screenshots from the authenticated TikTok export settings.
+
+  Requirements:
+  - Use the first-party authenticated TikTok settings surface.
+  - Capture the Request data panel and the Download data panel.
+  - Keep credentials, identity-verification material, personal identifiers, notifications, and private account content out of published assets.
+  - Do not select data or submit a request.
+  - Do not download, cancel, or delete an archive.
+  - Record the current source route, capture date, review state, dimensions, and SHA-256.
+
+  Deliverables:
+  - Reviewed, metadata-free assets for the current request and download panels.
+  - Updated per-step visual mappings without locale-specific image duplication.
+  - Updated screenshot manifest records and browser coverage.
+
+  Validation:
+  - Verify that every TikTok step renders one visual.
+  - Verify that the replacement assets match the current authenticated labels.
+  - Verify that the replacement assets contain no private content.
+  - Run `make validate-instruction-screenshots`.
+  - `make test-browser`
+  - `make ci`
+
+  Resolved 2026-09-02:
+  - Captured both panels from the authenticated TikTok export settings in an isolated browser window.
+  - Cropped each image to exclude the browser header, account details, notifications, and private content.
+  - Removed PNG metadata and recorded each reviewed SHA-256 in the screenshot manifest.
+
+- [x] [I014] (P1) {I012,F010} Adopt the schema-v3 production lifecycle
+  Goal:
+  Turn the never-deployed DNS and application foundation into one production resource contract owned by this repository and orchestrated by the sibling gateway.
+
+  Requirements:
+  - Record exact Pages, API, TAuth, cookie, CORS, DNS, Caddy, container-port, health, storage, and private-value literals for this split-origin topology.
+  - Replace the schema-v1 workflow stub with schema v3 typed resources and direct capability references.
+  - Build one deterministic static Pages artifact and one Linux API container from committed source.
+  - Keep `.mprlab/deploy/resources.yml` as the only tracked deployment file and `.mprlab/deploy/.env` as the ignored mode-`0600` private input.
+  - Replace the fail-closed lifecycle placeholder with exact zero-argument delegators to the sibling `mprlab-gateway`.
+  - Do not publish, release, or deploy as part of implementation validation.
+
+  Deliverables:
+  - Current production profile documentation and validated artifact inputs.
+  - Schema-v3 resource manifest covering Pages, API runtime, TAuth, Caddy, health, storage, and private values.
+  - Repository CI and non-mutating gateway plan evidence.
+
+  Validation:
+  - `make test-production-artifacts` builds Linux/AMD64 Pages/API targets, rejects unresolved/private inputs, and runs the API read-only as `65532:65532` through `/api/health`.
+  - `make ci` passed on 2026-08-02.
+  - Clean sealed release, publish, and deploy plans passed through the sibling gateway against the real operator inventory without production mutation.
+
+- [x] [I015] (P1) Adopt the permanent versionless selected manifest
+  Goal:
+  Use the permanent selected-manifest contract for the application lifecycle.
+
+  Requirements:
+  - Remove `mprlab_resources.schema_version`.
+  - Keep `owner`, `release`, and `resources` as the exact top-level fields.
+  - Preserve the current resource topology and all independent version fields.
+  - Reject a numbered selected manifest in the repository contract test.
+
+  Validation:
+  - Run `make ci`.
+  - Run gateway `plan-app-release` for the committed application.
+
+  Resolved:
+  The selected manifest now uses the permanent versionless contract. The
+  browser gate accepts the current shared shell revalidation request.
+
 ## Maintenance
 
 - [x] [M410] (P1) {M404R} Add the canonical release, publication, and deployment lifecycle
@@ -853,6 +1063,25 @@ Completed non-recurring issue history archived during backlog hygiene passes.
   - Every locale exposes exactly one Facebook, Instagram, WhatsApp, and Threads identity in the same canonical order.
   - Browser tests open the WhatsApp and Threads routes, verify complete instructions, and verify the official first-party references.
   - `make test-browser`
+  - `make ci`
+
+- [x] [F012] (P1) Add Amazon data export guide and order history workflow
+  Goal:
+  Provide an Amazon export guide and workflow for personal data, including order reports, digital purchases, Kindle content, and Prime Video history.
+
+  Requirements:
+  - Add `amazon` to the provider registry across supported locales with icon assets and visual step-by-step guidance.
+  - Explain the exact first-party Amazon export path (Your Account → Request Your Information / Download Order Reports).
+  - Document supported exports (order CSV reports, Kindle notebooks/highlights, Prime Video viewing history) and limitations.
+  - Link to official Amazon Help & Customer Service privacy request documentation.
+  - Provide complete accessibility, keyboard navigation, and locale resolution.
+
+  Deliverables:
+  - Localized Amazon provider guide entry, step assets, routing, and reference links.
+  - Integration test fixtures and real-browser guide validation.
+
+  Validation:
+  - Browser tests verify `#guide/amazon` resolves instructions, visual captures, and official help references in all supported locales.
   - `make ci`
 
 ## Planning

@@ -17,6 +17,7 @@ provider remains entirely on that provider's own site.
 | Provider catalog | `#catalog` | No | No |
 | Provider guide | `#guide/{provider}` | No | No |
 | Resource library | `/resources/` | No | No |
+| Authenticator tool | `/tools/google-authenticator/` | No | No |
 | Credits | `#credits` | No | No |
 | Provider application | `#app/{provider}` | Shared TAuth session | Yes |
 
@@ -46,7 +47,9 @@ inventory, evidence model, indexing rules, and publication boundary.
 | **X (Twitter)** | Visual Export Guide | Download Your Archive (ZIP) | **Live Guide (`#guide/x`)** — Visual export guide for requesting X account archive, password verification, and downloading personal ZIP data. |
 | **YouTube** | Visual Export Guide | Google Takeout YouTube Archive | **Live Guide (`#guide/youtube`)** — Visual export guide for selecting YouTube & YouTube Music data, configuring delivery options, and downloading Takeout archives. |
 | **Google** | Visual Export Guide | Google Takeout Multi-Service Archive | **Live Guide (`#guide/google`)** — Visual export guide for configuring Google Takeout multi-service exports, export frequencies, file sizes, and destination options. |
+| **Google Authenticator** | Browser Conversion Tool | Google Authenticator export QR screenshots | **Live Tool (`/tools/google-authenticator/`)** — Simulated walkthrough and local browser conversion from export QR screenshots to setup keys for Apple Passwords. |
 | **Amazon** | Visual Export Guide | Order History Reports & Personal Data Archive | **Live Guide (`#guide/amazon`)** — Product-specific visual export walkthrough for requesting Amazon order reports, Kindle content, and Prime Video history. |
+| **Apple Passwords** | Visual Export and Import Guide | Passwords CSV (`name`, `url`, `username`, `password`, `note`) | **Live Guide (`#guide/apple-passwords`)** — Export all passwords from Passwords on Mac, review duplicate records, and import the final CSV without uploading it. |
 
 ## Authentication boundary
 

@@ -27,9 +27,10 @@ type frontendTMDBCreditsContract struct {
 }
 
 type frontendProviderDefinition struct {
-	ID      string `json:"id"`
-	Surface string `json:"surface"`
-	IconSrc string `json:"icon_src"`
+	ID       string `json:"id"`
+	Surface  string `json:"surface"`
+	ToolPath string `json:"tool_path"`
+	IconSrc  string `json:"icon_src"`
 }
 
 type frontendLocalizedContract struct {
@@ -83,7 +84,9 @@ func TestFrontendProviderWorkspaceContract(testContext *testing.T) {
 		{ID: "x", Surface: "guide", IconSrc: "images/providers/x.png"},
 		{ID: "youtube", Surface: "guide", IconSrc: "images/providers/youtube.png"},
 		{ID: "google", Surface: "guide", IconSrc: "images/providers/google.png"},
+		{ID: "google-authenticator", Surface: "tool", ToolPath: "/tools/google-authenticator/", IconSrc: "images/providers/google-authenticator.png"},
 		{ID: "amazon", Surface: "guide", IconSrc: "images/providers/amazon.png"},
+		{ID: "apple-passwords", Surface: "guide", IconSrc: "images/providers/apple-passwords.png"},
 	}
 	if !reflect.DeepEqual(data.ProviderRegistry, expectedRegistry) {
 		testContext.Fatalf("provider registry = %#v; want %#v", data.ProviderRegistry, expectedRegistry)
@@ -147,6 +150,12 @@ func TestFrontendProviderWorkspaceContract(testContext *testing.T) {
 					provider.ID,
 					expectedRegistry[providerIndex].ID,
 				)
+			}
+			if expectedRegistry[providerIndex].Surface == "tool" {
+				if len(provider.Steps) != 0 || len(provider.Refs) != 0 {
+					testContext.Fatalf("locale %q tool provider %q must not contain guide content", localeID, provider.ID)
+				}
+				continue
 			}
 			assets := data.InstructionScreenshots[provider.ID]
 			if len(assets) == 0 {
@@ -243,6 +252,19 @@ func TestFrontendProviderWorkspaceContract(testContext *testing.T) {
 			len(tikTok.Refs) != 1 ||
 			tikTok.Refs[0].Href != "https://www.tiktok.com/setting/download-your-data" {
 			testContext.Fatalf("locale %q has an incomplete TikTok web guide contract: %+v", localeID, tikTok)
+		}
+		applePasswords := locale.Platforms[13]
+		if applePasswords.Title != "Apple Passwords" ||
+			strings.TrimSpace(applePasswords.Intro) == "" ||
+			len(applePasswords.Steps) != 9 ||
+			len(applePasswords.Refs) != 2 ||
+			applePasswords.Refs[0].Href !=
+				"https://support.apple.com/en-ph/guide/passwords/mchl35b12625/2.0/mac/26" ||
+			applePasswords.Refs[1].Href !=
+				"https://support.apple.com/en-ph/guide/passwords/mchl2f1a184c/2.0/mac/26" ||
+			applePasswords.Note == nil ||
+			strings.TrimSpace(*applePasswords.Note) == "" {
+			testContext.Fatalf("locale %q has an incomplete Apple Passwords guide contract: %+v", localeID, applePasswords)
 		}
 	}
 	if len(canonicalUIKeys) < 120 {

@@ -73,23 +73,25 @@ type resourceHub struct {
 }
 
 type resourceDefinition struct {
-	Slug            string          `json:"slug"`
-	ProviderID      string          `json:"provider_id"`
-	Kind            string          `json:"kind"`
-	MetaTitle       string          `json:"meta_title"`
-	MetaDescription string          `json:"meta_description"`
-	H1              string          `json:"h1"`
-	PrimaryKeyword  string          `json:"primary_keyword"`
-	Intro           string          `json:"intro"`
-	Verdict         resourceVerdict `json:"verdict"`
-	Problem         string          `json:"problem"`
-	Coverage        []string        `json:"coverage"`
-	Limitations     []string        `json:"limitations"`
-	WorkflowSteps   []string        `json:"workflow_steps"`
-	Snippet         resourceSnippet `json:"snippet"`
-	FAQs            []resourceFAQ   `json:"faqs"`
-	RelatedSlugs    []string        `json:"related_slugs"`
-	CTALabel        string          `json:"cta_label"`
+	Slug            string              `json:"slug"`
+	ProviderID      string              `json:"provider_id"`
+	Kind            string              `json:"kind"`
+	ToolPath        string              `json:"tool_path"`
+	MetaTitle       string              `json:"meta_title"`
+	MetaDescription string              `json:"meta_description"`
+	H1              string              `json:"h1"`
+	PrimaryKeyword  string              `json:"primary_keyword"`
+	Intro           string              `json:"intro"`
+	Verdict         resourceVerdict     `json:"verdict"`
+	Problem         string              `json:"problem"`
+	Coverage        []string            `json:"coverage"`
+	Limitations     []string            `json:"limitations"`
+	WorkflowSteps   []string            `json:"workflow_steps"`
+	Snippet         resourceSnippet     `json:"snippet"`
+	References      []resourceReference `json:"references"`
+	FAQs            []resourceFAQ       `json:"faqs"`
+	RelatedSlugs    []string            `json:"related_slugs"`
+	CTALabel        string              `json:"cta_label"`
 }
 
 type resourceVerdict struct {
@@ -109,6 +111,11 @@ type resourceFAQ struct {
 	Answer   string `json:"answer"`
 }
 
+type resourceReference struct {
+	Label string `json:"label"`
+	Href  string `json:"href"`
+}
+
 type applicationResourceData struct {
 	Credits                json.RawMessage                     `json:"credits"`
 	ProviderRegistry       []applicationProviderDefinition     `json:"provider_registry"`
@@ -117,9 +124,10 @@ type applicationResourceData struct {
 }
 
 type applicationProviderDefinition struct {
-	ID      string `json:"id"`
-	Surface string `json:"surface"`
-	IconSrc string `json:"icon_src"`
+	ID       string `json:"id"`
+	Surface  string `json:"surface"`
+	ToolPath string `json:"tool_path"`
+	IconSrc  string `json:"icon_src"`
 }
 
 type applicationScreenshot struct {
@@ -469,6 +477,12 @@ func validateResourceRegistry(
 
 	resourcesBySlug := make(map[string]resourceDefinition, len(registry.Resources))
 	providerExportCoverage := make(map[string]struct{}, len(providers))
+	instructionProviderCount := 0
+	for _, provider := range applicationData.ProviderRegistry {
+		if provider.Surface != "tool" {
+			instructionProviderCount++
+		}
+	}
 	metaTitles := make(map[string]string, len(registry.Resources))
 	metaDescriptions := make(map[string]string, len(registry.Resources))
 	headings := make(map[string]string, len(registry.Resources))
@@ -498,6 +512,12 @@ func validateResourceRegistry(
 		}
 		switch resource.Kind {
 		case "provider-export":
+			if strings.TrimSpace(resource.ToolPath) != "" || len(resource.References) != 0 {
+				return fmt.Errorf(
+					"validate public resource registry: %s has tool-only fields",
+					label,
+				)
+			}
 			if len(resource.WorkflowSteps) != 0 {
 				return fmt.Errorf(
 					"validate public resource registry: %s duplicates provider workflow steps",
@@ -506,10 +526,23 @@ func validateResourceRegistry(
 			}
 			providerExportCoverage[resource.ProviderID] = struct{}{}
 		case "netflix-analysis":
+			if strings.TrimSpace(resource.ToolPath) != "" || len(resource.References) != 0 {
+				return fmt.Errorf(
+					"validate public resource registry: %s has tool-only fields",
+					label,
+				)
+			}
 			analysisPageCount++
 			if resource.ProviderID != "netflix" || len(resource.WorkflowSteps) < 4 {
 				return fmt.Errorf(
 					"validate public resource registry: %s has an invalid Netflix analysis workflow",
+					label,
+				)
+			}
+		case "browser-tool":
+			if strings.TrimSpace(resource.ToolPath) == "" || len(resource.WorkflowSteps) < 4 || len(resource.References) < 2 {
+				return fmt.Errorf(
+					"validate public resource registry: %s has an incomplete browser tool workflow",
 					label,
 				)
 			}
@@ -606,11 +639,11 @@ func validateResourceRegistry(
 			}
 		}
 	}
-	if len(providerExportCoverage) != len(providers) {
+	if len(providerExportCoverage) != instructionProviderCount {
 		return fmt.Errorf(
 			"validate public resource registry: provider export coverage = %d; want %d",
 			len(providerExportCoverage),
-			len(providers),
+			instructionProviderCount,
 		)
 	}
 	if analysisPageCount != 1 {
@@ -850,8 +883,15 @@ func buildResourcePageData(
 			ProviderName: relatedProvider.Title,
 		})
 	}
-	officialReferences := make([]resourcePageReference, 0, len(provider.Refs))
-	for _, reference := range provider.Refs {
+	references := provider.Refs
+	if len(resource.References) != 0 {
+		references = make([]applicationReference, 0, len(resource.References))
+		for _, reference := range resource.References {
+			references = append(references, applicationReference(reference))
+		}
+	}
+	officialReferences := make([]resourcePageReference, 0, len(references))
+	for _, reference := range references {
 		officialReferences = append(officialReferences, resourcePageReference{
 			Label: reference.Label,
 			URL:   reference.Href,
@@ -873,6 +913,8 @@ func buildResourcePageData(
 	ctaURL := "/#guide/" + resource.ProviderID
 	if resource.Kind == "netflix-analysis" {
 		ctaURL = "/#app/netflix"
+	} else if resource.Kind == "browser-tool" {
+		ctaURL = resource.ToolPath
 	}
 	return resourcePageData{
 		MetaTitle:                resource.MetaTitle,
@@ -919,7 +961,7 @@ func buildResourceWorkflow(
 		assetsByID[asset.ID] = asset
 	}
 	steps := make([]resourcePageStep, 0, max(len(provider.Steps), len(resource.WorkflowSteps)))
-	if resource.Kind == "netflix-analysis" {
+	if resource.Kind == "netflix-analysis" || resource.Kind == "browser-tool" {
 		for stepIndex, step := range resource.WorkflowSteps {
 			steps = append(steps, resourcePageStep{
 				Number: stepIndex + 1,
@@ -942,6 +984,10 @@ func buildResourceWorkflow(
 				ActionURL: asset.Href,
 			})
 		}
+	}
+
+	if resource.Kind == "browser-tool" {
+		return steps, nil, "How to move the codes safely", nil
 	}
 
 	visuals := make([]resourcePageVisual, 0, len(screenshotAssets))

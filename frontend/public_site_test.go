@@ -65,12 +65,19 @@ func TestPublicSiteSEOContract(testContext *testing.T) {
 			!strings.Contains(page, `id="quick-verdict-title"`) ||
 			!strings.Contains(page, `<pre><code>`) ||
 			!strings.Contains(page, `<details>`) ||
-			!strings.Contains(page, `loading="lazy"`) ||
 			!strings.Contains(page, registry.Author.URL) ||
 			!strings.Contains(page, `datetime="`+registry.SignificantUpdate+`"`) ||
 			strings.Contains(page, "noindex") ||
 			strings.Contains(page, PublicOriginMarker) {
 			testContext.Fatalf("public resource %q is missing an SEO contract", resource.Slug)
+		}
+		if resource.Kind == "browser-tool" {
+			if !strings.Contains(page, `href="/tools/google-authenticator/"`) ||
+				strings.Contains(page, `loading="lazy"`) {
+				testContext.Fatalf("browser tool resource %q has an invalid tool contract", resource.Slug)
+			}
+		} else if !strings.Contains(page, `loading="lazy"`) {
+			testContext.Fatalf("public resource %q is missing lazy-loaded visuals", resource.Slug)
 		}
 		for _, relatedSlug := range resource.RelatedSlugs {
 			if !strings.Contains(page, `href="`+resourcePath(relatedSlug)+`"`) {

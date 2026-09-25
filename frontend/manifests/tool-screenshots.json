@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "screenshots": [
+    {
+      "id": "google-authenticator-existing-accounts",
+      "expected_visible_labels": [
+        "Search...",
+        "hikingfan@gmail.com",
+        "elisa.g.beckett@gmail.com",
+        "surfingfan@gmail.com"
+      ],
+      "direct_route": "https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2",
+      "surface": "first_party_store_capture",
+      "output_path": "images/tools/google-authenticator/google-authenticator-existing-accounts.png",
+      "sha256": "26ab9609514fc722882c1c3775c4429c58ee31d59df52d876cbd6d6273175b70",
+      "pixel_dimensions": {
+        "width": 1080,
+        "height": 2340
+      },
+      "capture_date": "2026-09-18",
+      "review_status": "approved"
+    },
+    {
+      "id": "google-authenticator-transfer-help",
+      "expected_visible_labels": [
+        "Transfer your Google Authenticator codes",
+        "Transfer accounts",
+        "Export accounts"
+      ],
+      "direct_route": "https://support.google.com/accounts/answer/1066447?co=GENIE.Platform%3DiOS&hl=en",
+      "surface": "first_party_help_web",
+      "output_path": "images/tools/google-authenticator/google-authenticator-transfer-help.png",
+      "sha256": "6740fb761b5b318ce2cdfba1245355447fc0109a7d322f5451b421d314a32f11",
+      "pixel_dimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "capture_date": "2026-09-18",
+      "review_status": "approved"
+    },
+    {
+      "id": "apple-passwords-setup-key-help",
+      "expected_visible_labels": [
+        "Set up automatic verification codes for a website or app by entering a setup key",
+        "Passwords",
+        "Set Up Code",
+        "Use Setup Key"
+      ],
+      "direct_route": "https://support.apple.com/en-mt/guide/iphone/ipha6173c19f/ios",
+      "surface": "first_party_help_web",
+      "output_path": "images/tools/google-authenticator/apple-passwords-setup-key-help.png",
+      "sha256": "23113ea3984da6e635c32577682799c70da56623a9622df9a18392de5476ee70",
+      "pixel_dimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "capture_date": "2026-09-18",
+      "review_status": "approved"
+    }
+  ]
+}

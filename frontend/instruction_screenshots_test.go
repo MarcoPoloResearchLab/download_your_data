@@ -36,6 +36,7 @@ var instructionScreenshotPlatformIDs = []string{
 	"youtube",
 	"google",
 	"amazon",
+	"apple-passwords",
 }
 
 var instructionScreenshotLocaleIDs = []string{"en", "es", "fr", "ru"}
@@ -139,7 +140,7 @@ func TestInstructionScreenshotContract(testContext *testing.T) {
 	if manifest.SchemaVersion != 3 {
 		testContext.Fatalf("manifest schema version = %d; want 3", manifest.SchemaVersion)
 	}
-	const expectedScreenshotCount = 28
+	const expectedScreenshotCount = 30
 	if len(manifest.Screenshots) != expectedScreenshotCount {
 		testContext.Fatalf(
 			"manifest screenshot count = %d; want %d",
@@ -149,18 +150,19 @@ func TestInstructionScreenshotContract(testContext *testing.T) {
 	}
 
 	expectedPlatformCounts := map[string]int{
-		"netflix":   1,
-		"openai":    4,
-		"facebook":  4,
-		"instagram": 4,
-		"threads":   1,
-		"whatsapp":  2,
-		"linkedin":  2,
-		"tiktok":    2,
-		"x":         2,
-		"youtube":   2,
-		"google":    2,
-		"amazon":    2,
+		"netflix":         1,
+		"openai":          4,
+		"facebook":        4,
+		"instagram":       4,
+		"threads":         1,
+		"whatsapp":        2,
+		"linkedin":        2,
+		"tiktok":          2,
+		"x":               2,
+		"youtube":         2,
+		"google":          2,
+		"amazon":          2,
+		"apple-passwords": 2,
 	}
 	manifestByPlatform := make(map[string][]instructionScreenshotEntry, len(expectedPlatformCounts))
 	manifestByID := make(map[string]instructionScreenshotEntry, expectedScreenshotCount)
@@ -487,30 +489,32 @@ func validateInstructionScreenshotLocales(
 		if !exists {
 			testContext.Fatalf("localized strings are missing %q", localeID)
 		}
-		if len(locale.Platforms) != len(instructionScreenshotPlatformIDs) {
+		platformByID := make(map[string]instructionScreenshotLocalizedPlatform, len(locale.Platforms))
+		for _, platform := range locale.Platforms {
+			if platform.ID == "google-authenticator" {
+				if len(platform.Steps) != 0 {
+					testContext.Fatalf("locale %q tool provider %q must not contain instruction content", localeID, platform.ID)
+				}
+				continue
+			}
+			if _, exists := platformByID[platform.ID]; exists {
+				testContext.Fatalf("locale %q contains duplicate provider %q", localeID, platform.ID)
+			}
+			platformByID[platform.ID] = platform
+		}
+		if len(platformByID) != len(instructionScreenshotPlatformIDs) {
 			testContext.Fatalf(
 				"locale %q platform count = %d; want %d",
 				localeID,
-				len(locale.Platforms),
+				len(platformByID),
 				len(instructionScreenshotPlatformIDs),
 			)
 		}
-		if locale.Platforms[0].ID != "netflix" {
+		if platformByID["netflix"].ID != "netflix" {
 			testContext.Fatalf(
 				"locale %q must start with the Netflix workspace",
 				localeID,
 			)
-		}
-		platformByID := make(map[string]instructionScreenshotLocalizedPlatform, len(locale.Platforms))
-		for _, platform := range locale.Platforms {
-			if _, exists := platformByID[platform.ID]; exists {
-				testContext.Fatalf(
-					"locale %q contains duplicate provider %q",
-					localeID,
-					platform.ID,
-				)
-			}
-			platformByID[platform.ID] = platform
 		}
 		for _, expectedPlatformID := range instructionScreenshotPlatformIDs {
 			platform, exists := platformByID[expectedPlatformID]

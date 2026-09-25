@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Google Authenticator to Apple Passwords | Download Your Data</title>
+  <meta
+    name="description"
+    content="Convert Google Authenticator export QR screenshots into Apple Passwords setup keys in your browser."
+  >
+  <link rel="icon" href="../../images/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../../styles/resources.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <header class="site-header">
+    <a class="site-brand" href="../../" aria-label="Download Your Data home">
+      <img class="brand-mark" src="../../images/favicon.svg" alt="" width="30" height="30">
+      <span>Download Your Data</span>
+    </a>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a href="../../#catalog">Provider catalog</a>
+      <a href="../../resources/">Resources</a>
+      <a href="https://github.com/MarcoPoloResearchLab/download_your_data" rel="noopener noreferrer">GitHub</a>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="../../">Home</a></li>
+        <li><a href="../../resources/">Resources</a></li>
+        <li aria-current="page">Authenticator tool</li>
+      </ol>
+    </nav>
+
+    <article>
+      <header class="tool-hero">
+        <p class="eyebrow">Private browser tool</p>
+        <h1>Google Authenticator to Apple Passwords</h1>
+        <p class="lede">
+          Export the accounts you already have in Google Authenticator, then decode the QR screenshots into setup keys for Apple Passwords.
+        </p>
+        <p class="tool-disclaimer" data-local-only>
+          Local-only conversion: selected images and decoded keys stay in this browser. This page does not upload them.
+        </p>
+        <p class="tool-prerequisite">
+          <strong>What you need:</strong> A device that already has the Google Authenticator accounts you want to move, or a device where those accounts are synced. A fresh install cannot recreate missing codes.
+        </p>
+      </header>
+
+      <section class="tool-section" aria-labelledby="simulator-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Walkthrough</p>
+            <h2 id="simulator-title">Export the accounts you already have</h2>
+          </div>
+          <p class="simulator-note">The first panel shows an existing Google Authenticator vault. The export path uses Google’s help instructions; the save and upload panels are illustrative, and none of these images are from your personal accounts.</p>
+        </div>
+        <div class="simulator" data-simulator>
+          <div class="simulator-progress" aria-label="Walkthrough progress">
+            <span data-progress="0">1. Export</span>
+            <span data-progress="1">2. Save</span>
+            <span data-progress="2">3. Upload</span>
+            <span data-progress="3">4. Add to Passwords</span>
+          </div>
+          <div class="simulator-stage" data-simulator-stage-container></div>
+        </div>
+      </section>
+
+      <section class="tool-section converter-section" aria-labelledby="converter-title">
+        <p class="eyebrow">Real conversion tool</p>
+        <h2 id="converter-title">Choose your export QR screenshots</h2>
+        <p>
+          On the old device, choose Menu, Transfer accounts, Export accounts, select the accounts, and tap Next. Save each QR screen as an image.
+        </p>
+        <div class="tool-warning">
+          <strong>Handle the result as a secret.</strong>
+          Anyone with a setup key can generate that account's verification codes. Do not use a screenshot with unrelated private content.
+        </div>
+        <label class="file-picker" for="qr-images">
+          <span>Choose QR screenshots</span>
+          <input id="qr-images" type="file" accept="image/*" multiple>
+        </label>
+        <p class="field-help">Choose every QR screenshot from the export. The browser merges exact duplicate accounts.</p>
+        <p class="tool-status" data-status role="status" aria-live="polite">Choose one or more export QR screenshots.</p>
+        <div class="results" data-results></div>
+        <canvas data-qr-canvas hidden></canvas>
+      </section>
+
+      <section class="tool-section handoff-section" aria-labelledby="handoff-title">
+        <p class="eyebrow">Apple Passwords handoff</p>
+        <h2 id="handoff-title">Add each setup key to the matching account</h2>
+        <ol class="handoff-steps">
+          <li>Open the matching account in Apple Passwords.</li>
+          <li>Choose Edit, then Set Up Code.</li>
+          <li>Paste the setup key and choose Use Setup Key.</li>
+          <li>Verify that Apple Passwords generates the current code before you remove the old entry.</li>
+        </ol>
+        <p class="tool-sources">
+          <a href="https://support.google.com/accounts/answer/1066447?co=GENIE.Platform%3DiOS&amp;hl=en" rel="noopener noreferrer">Google Authenticator transfer help ↗</a>
+          <a href="https://support.apple.com/en-mt/guide/iphone/ipha6173c19f/ios" rel="noopener noreferrer">Apple verification-code help ↗</a>
+        </p>
+      </section>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <p>Verification-code setup keys are sensitive. Keep them out of shared screenshots and cloud storage.</p>
+    <nav aria-label="Footer navigation">
+      <a href="../../">Download Your Data</a>
+      <a href="../../resources/">Resources</a>
+      <a href="https://mprlab.com/" rel="noopener noreferrer">MPR Lab</a>
+      <a href="https://github.com/MarcoPoloResearchLab/download_your_data" rel="noopener noreferrer">Source</a>
+    </nav>
+  </footer>
+  <script type="module" src="tool.js"></script>
+</body>
+</html>
