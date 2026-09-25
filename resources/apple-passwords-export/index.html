@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Apple Passwords Export and Import Guide | Download Your Data</title>
+  <meta name="description" content="Export Apple Passwords to a local CSV, review merged records, and import the final file into Passwords on Mac with this practical guide.">
+  <link rel="canonical" href="https://dyd.mprlab.com/resources/apple-passwords-export/">
+  <meta property="og:title" content="Apple Passwords Export and Import Guide | Download Your Data">
+  <meta property="og:description" content="Export Apple Passwords to a local CSV, review merged records, and import the final file into Passwords on Mac with this practical guide.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://dyd.mprlab.com/resources/apple-passwords-export/">
+  <meta property="og:site_name" content="Download Your Data">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Apple Passwords Export and Import Guide | Download Your Data">
+  <meta name="twitter:description" content="Export Apple Passwords to a local CSV, review merged records, and import the final file into Passwords on Mac with this practical guide.">
+  <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/images/favicon.png" sizes="32x32" type="image/png">
+  <link rel="stylesheet" href="/styles/resources.css">
+  <script id="structured-data" type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Article","author":{"@type":"Person","name":"Vadym Tyemirov","url":"https://github.com/tyemirov"},"dateModified":"2026-09-18","datePublished":"2026-09-18","description":"Export Apple Passwords to a local CSV, review merged records, and import the final file into Passwords on Mac with this practical guide.","headline":"How to Export and Import Apple Passwords","mainEntityOfPage":"https://dyd.mprlab.com/resources/apple-passwords-export/","publisher":{"@type":"Organization","name":"Marco Polo Research Lab","url":"https://mprlab.com/"},"url":"https://dyd.mprlab.com/resources/apple-passwords-export/"},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","item":"https://dyd.mprlab.com/","name":"Home","position":1},{"@type":"ListItem","item":"https://dyd.mprlab.com/resources/","name":"Resources","position":2},{"@type":"ListItem","item":"https://dyd.mprlab.com/resources/apple-passwords-export/","name":"Apple Passwords","position":3}]},{"@type":"FAQPage","mainEntity":[{"@type":"Question","acceptedAnswer":{"@type":"Answer","text":"Open Passwords on Mac, choose File \u003e Export All Passwords to File, confirm the export, and save the CSV in a local folder."},"name":"How do I export all passwords from Apple Passwords?"},{"@type":"Question","acceptedAnswer":{"@type":"Answer","text":"Open Passwords, choose File \u003e Import Passwords from File, click Choose File, select the final CSV, and click Import."},"name":"How do I import a CSV into Apple Passwords?"},{"@type":"Question","acceptedAnswer":{"@type":"Answer","text":"No. Apple says imported passwords do not replace existing entries. Review the import result and update any selected winners in Passwords."},"name":"Does Apple Passwords replace an existing password during import?"},{"@type":"Question","acceptedAnswer":{"@type":"Answer","text":"Group rows by site and username, compare the candidate records, verify the selected password on the site, and keep one reviewed row before import."},"name":"How should I resolve duplicate passwords before import?"},{"@type":"Question","acceptedAnswer":{"@type":"Answer","text":"This guide covers the local CSV path. Use it when an app-to-app export does not deliver records to a custom receiver."},"name":"Can I use this guide for a custom app receiver?"}]}]}</script>
+  <script defer src="https://loopaware.mprlab.com/pixel.js?site_id=5a6e13d5-7584-451e-b058-36b9ecef8e8d"></script>
+<link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <header class="site-header">
+    <a class="site-brand" href="/" aria-label="Download Your Data home">
+      <img class="brand-mark" src="/images/favicon.svg" alt="" width="30" height="30">
+      <span>Download Your Data</span>
+    </a>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a href="/#catalog">Provider catalog</a>
+      <a href="/resources/" aria-current="page">Resources</a>
+      <a href="https://github.com/MarcoPoloResearchLab/download_your_data" rel="noopener noreferrer">GitHub</a>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">Home</a></li>
+        <li><a href="/resources/">Resources</a></li>
+        <li aria-current="page">Apple Passwords</li>
+      </ol>
+    </nav>
+
+    <article>
+      <header class="resource-hero">
+        <div class="resource-hero-copy">
+          <p class="eyebrow">Apple Passwords resource</p>
+          <h1>How to Export and Import Apple Passwords</h1>
+          <p class="lede">Apple Passwords can export website and app passwords to a CSV file on Mac. Review the file before you combine it with browser exports or import it into Passwords.</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="/#guide/apple-passwords">Open the Apple Passwords visual guide</a>
+            <a class="button" href="#export-steps">See the workflow</a>
+          </div>
+        </div>
+        <aside class="quick-verdict" aria-labelledby="quick-verdict-title">
+          <h2 id="quick-verdict-title">Quick verdict</h2>
+          <dl>
+            <div>
+              <dt>Best for</dt>
+              <dd>People who need a local Apple Passwords CSV for review or migration</dd>
+            </div>
+            <div>
+              <dt>Required input</dt>
+              <dd>A Mac with the Passwords app and access to its File menu</dd>
+            </div>
+            <div>
+              <dt>Product fit</dt>
+              <dd>Download Your Data provides the public guide and does not upload or import your password file</dd>
+            </div>
+          </dl>
+        </aside>
+      </header>
+
+      <section class="resource-section" aria-labelledby="problem-title">
+        <p class="eyebrow">The decision that matters</p>
+        <h2 id="problem-title">Choose the right export before you start</h2>
+        <p>Apple provides separate export and import commands in the Passwords app. A careful workflow must preserve the CSV locally, resolve duplicate site records, and review skipped entries after import.</p>
+      </section>
+
+      <section class="resource-section" id="export-steps" aria-labelledby="steps-title">
+        <p class="eyebrow">Current workflow</p>
+        <h2 id="steps-title">How to complete the current provider export</h2>
+        <ol class="steps">
+          
+          <li>
+            <span class="step-number" aria-hidden="true">1</span>
+            <p>Open the Passwords app on your Mac.</p>
+            <a href="https://support.apple.com/en-ph/guide/passwords/mchl35b12625/2.0/mac/26" rel="noopener noreferrer">Open the first-party step <span aria-hidden="true">↗</span></a>
+          </li>
+          
+          <li>
+            <span class="step-number" aria-hidden="true">2</span>
+            <p>Choose File &gt; Export All Passwords to File.</p>
+            <a href="https://support.apple.com/en-ph/guide/passwords/mchl35b12625/2.0/mac/26" rel="noopener noreferrer">Open the first-party step <span aria-hidden="true">↗</span></a>
+          </li>
+          
+          <li>
+            <span class="step-number" aria-hidden="true">3</span>
+            <p>Confirm the export, choose a local folder, and click Save.</p>
+            <a href="https://support.apple.com/en-ph/guide/passwords/mchl35b12625/2.0/mac/26" rel="noopener noreferrer">Open the first-party step <span aria-hidden="true">↗</span></a>
+          </li>
+          
+          <li>
+            <span class="step-number" aria-hidden="true">4</span>
+            <p>Keep the CSV local. Review duplicate site and username rows and keep one verified password before you import. Apple says the export is not encrypted.</p>
+            <a href="https://support.apple.com/en-ph/guide/passwords/mchl35b12625/2.0/mac/26" rel="noopener noreferrer">Open the first-party step <span aria-hidden="true">↗</span></a>
+          </li>
+          
+          <li>
+            <span class="step-number" aria-hidden="true">5</span>
+            <p>Open the Passwords app and choose File &gt; Import Passwords from File.</p>
+            <a href="https://support.apple.com/en-ph/guide/passwords/mchl2f1a184c/2.0/mac/26" rel="noopener noreferrer">Open the first-party step <span aria-hidden="true">↗</span></a>
+          </li>
+          
+          <li>
+            <span class="step-number" aria-hidden="true">6</span>
+            <p>Click Choose File and select the final CSV.</p>
+            <a href="https://support.apple.com/en-ph/guide/passwords/mchl2f1a184c/2.0/mac/26" rel="noopener noreferrer">Open the first-party step <span aria-hidden="true">↗</span></a>
+          </li>
+          
+          <li>
+            <span class="step-number" aria-hidden="true">7</span>
+            <p>Click Import and wait for the result.</p>
+            <a href="https://support.apple.com/en-ph/guide/passwords/mchl2f1a184c/2.0/mac/26" rel="noopener noreferrer">Open the first-party step <span aria-hidden="true">↗</span></a>
+          </li>
+          
+          <li>
+            <span class="step-number" aria-hidden="true">8</span>
+            <p>Review any passwords that could not be imported. Existing entries are not replaced.</p>
+            <a href="https://support.apple.com/en-ph/guide/passwords/mchl2f1a184c/2.0/mac/26" rel="noopener noreferrer">Open the first-party step <span aria-hidden="true">↗</span></a>
+          </li>
+          
+          <li>
+            <span class="step-number" aria-hidden="true">9</span>
+            <p>Delete the temporary CSV after you finish the import.</p>
+            <a href="https://support.apple.com/en-ph/guide/passwords/mchl2f1a184c/2.0/mac/26" rel="noopener noreferrer">Open the first-party step <span aria-hidden="true">↗</span></a>
+          </li>
+          
+        </ol>
+      </section>
+
+      
+      <section class="resource-section" aria-labelledby="visuals-title">
+        <p class="eyebrow">Reviewed visual references</p>
+        <h2 id="visuals-title">Match the current first-party screens</h2>
+        <div class="visual-grid">
+          
+          <figure>
+            <a href="https://support.apple.com/en-ph/guide/passwords/mchl35b12625/2.0/mac/26" rel="noopener noreferrer">
+              <img
+                src="/images/instructions/apple-passwords-export.png"
+                alt="Apple Passwords User Guide export page"
+                width="1280"
+                height="1468"
+                loading="lazy"
+                decoding="async"
+              >
+            </a>
+            <figcaption>Apple and the Apple Passwords User Guide are trademarks and interface content of Apple Inc.; shown unaltered for independent instructional reference without affiliation, sponsorship, or endorsement.</figcaption>
+          </figure>
+          
+          <figure>
+            <a href="https://support.apple.com/en-ph/guide/passwords/mchl2f1a184c/2.0/mac/26" rel="noopener noreferrer">
+              <img
+                src="/images/instructions/apple-passwords-import.png"
+                alt="Apple Passwords User Guide import page"
+                width="1280"
+                height="1237"
+                loading="lazy"
+                decoding="async"
+              >
+            </a>
+            <figcaption>Apple and the Apple Passwords User Guide are trademarks and interface content of Apple Inc.; shown unaltered for independent instructional reference without affiliation, sponsorship, or endorsement.</figcaption>
+          </figure>
+          
+        </div>
+      </section>
+      
+
+      <div class="two-column-sections">
+        <section class="resource-section" aria-labelledby="coverage-title">
+          <p class="eyebrow">What this workflow covers</p>
+          <h2 id="coverage-title">Useful output and next steps</h2>
+          <ul class="check-list">
+            <li>Exporting all website and app passwords from Passwords on Mac</li><li>Reviewing a merged CSV with name, url, username, password, and note fields</li><li>Identifying duplicate site and username pairs and keeping one reviewed password per pair</li><li>Importing the final CSV and checking entries that Apple could not import</li>
+          </ul>
+        </section>
+
+        <section class="resource-section" aria-labelledby="limits-title">
+          <p class="eyebrow">Objections and limits</p>
+          <h2 id="limits-title">What this resource does not promise</h2>
+          <ul class="limit-list">
+            <li>Apple warns that exported CSV files are not encrypted.</li><li>Apple does not replace passwords that already exist in Passwords during import.</li><li>Wi-Fi passwords, shared group passwords, and access to Sign in with Apple accounts are not exported by this workflow.</li><li>Apple item modification dates do not prove when a password changed.</li><li>An app-to-app handoff to a custom receiver is separate from this CSV workflow.</li>
+          </ul>
+        </section>
+      </div>
+
+      <section class="resource-section evidence-section" aria-labelledby="evidence-title">
+        <p class="eyebrow">Repository evidence</p>
+        <h2 id="evidence-title">Apple-compatible CSV columns</h2>
+        <pre><code>name,url,username,password,note</code></pre>
+        <p>This exact route or input shape is maintained in <a href="https://github.com/MarcoPoloResearchLab/download_your_data/blob/master/frontend/content/application.json" rel="noopener noreferrer">frontend/content/application.json</a>.</p>
+      </section>
+
+      
+      <section class="resource-section" aria-labelledby="sources-title">
+        <p class="eyebrow">First-party sources</p>
+        <h2 id="sources-title">Verify the provider workflow</h2>
+        <ul class="source-list">
+          
+          <li><a href="https://support.apple.com/en-ph/guide/passwords/mchl35b12625/2.0/mac/26" rel="noopener noreferrer">Export passwords from your Mac to a file <span aria-hidden="true">↗</span></a></li>
+          
+          <li><a href="https://support.apple.com/en-ph/guide/passwords/mchl2f1a184c/2.0/mac/26" rel="noopener noreferrer">Import passwords from another app into Passwords on Mac <span aria-hidden="true">↗</span></a></li>
+          
+        </ul>
+        <p class="callout">Use the CSV workflow when an app-to-app handoff does not complete. This guide does not upload your password file.</p>
+      </section>
+      
+
+      <section class="resource-section" aria-labelledby="faq-title">
+        <p class="eyebrow">Questions before you export</p>
+        <h2 id="faq-title">Frequently asked questions</h2>
+        <div class="faq-list">
+          
+          <details>
+            <summary>How do I export all passwords from Apple Passwords?</summary>
+            <p>Open Passwords on Mac, choose File &gt; Export All Passwords to File, confirm the export, and save the CSV in a local folder.</p>
+          </details>
+          
+          <details>
+            <summary>How do I import a CSV into Apple Passwords?</summary>
+            <p>Open Passwords, choose File &gt; Import Passwords from File, click Choose File, select the final CSV, and click Import.</p>
+          </details>
+          
+          <details>
+            <summary>Does Apple Passwords replace an existing password during import?</summary>
+            <p>No. Apple says imported passwords do not replace existing entries. Review the import result and update any selected winners in Passwords.</p>
+          </details>
+          
+          <details>
+            <summary>How should I resolve duplicate passwords before import?</summary>
+            <p>Group rows by site and username, compare the candidate records, verify the selected password on the site, and keep one reviewed row before import.</p>
+          </details>
+          
+          <details>
+            <summary>Can I use this guide for a custom app receiver?</summary>
+            <p>This guide covers the local CSV path. Use it when an app-to-app export does not deliver records to a custom receiver.</p>
+          </details>
+          
+        </div>
+      </section>
+
+      <section class="resource-section" aria-labelledby="related-title">
+        <p class="eyebrow">Continue with the right provider</p>
+        <h2 id="related-title">Related data export resources</h2>
+        <div class="related-grid">
+          
+          <a href="/resources/google-authenticator-apple-passwords/">
+            <span>Google Authenticator</span>
+            <strong>Move Google Authenticator Codes to Apple Passwords</strong>
+          </a>
+          
+          <a href="/resources/google-takeout/">
+            <span>Google (All Account Data)</span>
+            <strong>How to Export Account Data with Google Takeout</strong>
+          </a>
+          
+          <a href="/resources/chatgpt-data-export/">
+            <span>OpenAI (ChatGPT)</span>
+            <strong>How to Export Your ChatGPT Data</strong>
+          </a>
+          
+        </div>
+      </section>
+
+      <footer class="article-footer">
+        <p>
+          Written and reviewed by
+          <a href="https://github.com/tyemirov" rel="author noopener noreferrer">Vadym Tyemirov</a>.
+          Published and verified against the repository on
+          <time datetime="2026-09-18">September 18, 2026</time>.
+        </p>
+        <a class="button button-primary" href="/#guide/apple-passwords">Open the Apple Passwords visual guide</a>
+      </footer>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <p>Provider exports can contain sensitive information. Keep downloaded archives in a secure location.</p>
+    <nav aria-label="Footer navigation">
+      <a href="/">Download Your Data</a>
+      <a href="/resources/">Resources</a>
+      <a href="https://mprlab.com/" rel="noopener noreferrer">MPR Lab</a>
+      <a href="https://github.com/MarcoPoloResearchLab/download_your_data" rel="noopener noreferrer">Source</a>
+    </nav>
+  </footer>
+</body>
+</html>

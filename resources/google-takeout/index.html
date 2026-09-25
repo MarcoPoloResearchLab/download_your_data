@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Google Takeout Data Export Guide | Download Your Data</title>
+  <meta name="description" content="Use Google Takeout to select account products, choose one-time delivery and file options, create the export, and store split archives securely.">
+  <link rel="canonical" href="https://dyd.mprlab.com/resources/google-takeout/">
+  <meta property="og:title" content="Google Takeout Data Export Guide | Download Your Data">
+  <meta property="og:description" content="Use Google Takeout to select account products, choose one-time delivery and file options, create the export, and store split archives securely.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://dyd.mprlab.com/resources/google-takeout/">
+  <meta property="og:site_name" content="Download Your Data">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Google Takeout Data Export Guide | Download Your Data">
+  <meta name="twitter:description" content="Use Google Takeout to select account products, choose one-time delivery and file options, create the export, and store split archives securely.">
+  <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/images/favicon.png" sizes="32x32" type="image/png">
+  <link rel="stylesheet" href="/styles/resources.css">
+  <script id="structured-data" type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Article","author":{"@type":"Person","name":"Vadym Tyemirov","url":"https://github.com/tyemirov"},"dateModified":"2026-09-18","datePublished":"2026-09-18","description":"Use Google Takeout to select account products, choose one-time delivery and file options, create the export, and store split archives securely.","headline":"How to Export Account Data with Google Takeout","mainEntityOfPage":"https://dyd.mprlab.com/resources/google-takeout/","publisher":{"@type":"Organization","name":"Marco Polo Research Lab","url":"https://mprlab.com/"},"url":"https://dyd.mprlab.com/resources/google-takeout/"},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","item":"https://dyd.mprlab.com/","name":"Home","position":1},{"@type":"ListItem","item":"https://dyd.mprlab.com/resources/","name":"Resources","position":2},{"@type":"ListItem","item":"https://dyd.mprlab.com/resources/google-takeout/","name":"Google (All Account Data)","position":3}]},{"@type":"FAQPage","mainEntity":[{"@type":"Question","acceptedAnswer":{"@type":"Answer","text":"Products you use and that hold your data are selected automatically, but you can uncheck products or refine supported product options before continuing."},"name":"Does Google Takeout export every Google product?"},{"@type":"Question","acceptedAnswer":{"@type":"Answer","text":"Google splits an export when it exceeds the maximum archive size you selected."},"name":"Why did Google split my Takeout export?"},{"@type":"Question","acceptedAnswer":{"@type":"Answer","text":"No. Creating the archive makes a copy and does not delete the original data."},"name":"Does creating a Google Takeout export delete my data?"}]}]}</script>
+  <script defer src="https://loopaware.mprlab.com/pixel.js?site_id=5a6e13d5-7584-451e-b058-36b9ecef8e8d"></script>
+<link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <header class="site-header">
+    <a class="site-brand" href="/" aria-label="Download Your Data home">
+      <img class="brand-mark" src="/images/favicon.svg" alt="" width="30" height="30">
+      <span>Download Your Data</span>
+    </a>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a href="/#catalog">Provider catalog</a>
+      <a href="/resources/" aria-current="page">Resources</a>
+      <a href="https://github.com/MarcoPoloResearchLab/download_your_data" rel="noopener noreferrer">GitHub</a>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">Home</a></li>
+        <li><a href="/resources/">Resources</a></li>
+        <li aria-current="page">Google (All Account Data)</li>
+      </ol>
+    </nav>
+
+    <article>
+      <header class="resource-hero">
+        <div class="resource-hero-copy">
+          <p class="eyebrow">Google (All Account Data) resource</p>
+          <h1>How to Export Account Data with Google Takeout</h1>
+          <p class="lede">Google Takeout lets you export data from the Google products you use, including Gmail, Drive, Photos, Maps, and YouTube. You control the included products, delivery method, frequency, file type, and archive size.</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="/#guide/google">Open the visual Google Takeout guide</a>
+            <a class="button" href="#export-steps">See the workflow</a>
+          </div>
+        </div>
+        <aside class="quick-verdict" aria-labelledby="quick-verdict-title">
+          <h2 id="quick-verdict-title">Quick verdict</h2>
+          <dl>
+            <div>
+              <dt>Best for</dt>
+              <dd>Creating one configurable export across multiple Google products</dd>
+            </div>
+            <div>
+              <dt>Required input</dt>
+              <dd>A signed-in Google account and enough secure storage for the archive</dd>
+            </div>
+            <div>
+              <dt>Product fit</dt>
+              <dd>Download Your Data provides the public export guide but no general Takeout importer</dd>
+            </div>
+          </dl>
+        </aside>
+      </header>
+
+      <section class="resource-section" aria-labelledby="problem-title">
+        <p class="eyebrow">The decision that matters</p>
+        <h2 id="problem-title">Choose the right export before you start</h2>
+        <p>A broad Takeout archive can be much larger and more sensitive than expected. Review the selected products, choose a private delivery method, and set a practical split size before creating the export.</p>
+      </section>
+
+      <section class="resource-section" id="export-steps" aria-labelledby="steps-title">
+        <p class="eyebrow">Current workflow</p>
+        <h2 id="steps-title">How to complete the current provider export</h2>
+        <ol class="steps">
+          
+          <li>
+            <span class="step-number" aria-hidden="true">1</span>
+            <p>Open Google Takeout and sign in.</p>
+            <a href="https://takeout.google.com/?hl=en" rel="noopener noreferrer">Open the first-party step <span aria-hidden="true">↗</span></a>
+          </li>
+          
+          <li>
+            <span class="step-number" aria-hidden="true">2</span>
+            <p>Google products that you use and that hold your data are selected automatically; uncheck any product you do not want to include.</p>
+            <a href="https://takeout.google.com/?hl=en" rel="noopener noreferrer">Open the first-party step <span aria-hidden="true">↗</span></a>
+          </li>
+          
+          <li>
+            <span class="step-number" aria-hidden="true">3</span>
+            <p>Click Next step.</p>
+            <a href="https://takeout.google.com/?hl=en" rel="noopener noreferrer">Open the first-party step <span aria-hidden="true">↗</span></a>
+          </li>
+          
+          <li>
+            <span class="step-number" aria-hidden="true">4</span>
+            <p>Choose the delivery method; Send download link via email keeps the archive out of a connected external destination.</p>
+            <a href="https://takeout.google.com/?hl=en" rel="noopener noreferrer">Open the first-party step <span aria-hidden="true">↗</span></a>
+          </li>
+          
+          <li>
+            <span class="step-number" aria-hidden="true">5</span>
+            <p>Set Frequency to Export once.</p>
+            <a href="https://takeout.google.com/?hl=en" rel="noopener noreferrer">Open the first-party step <span aria-hidden="true">↗</span></a>
+          </li>
+          
+          <li>
+            <span class="step-number" aria-hidden="true">6</span>
+            <p>Choose the file type and maximum file size; larger exports are split into multiple archives.</p>
+            <a href="https://takeout.google.com/?hl=en" rel="noopener noreferrer">Open the first-party step <span aria-hidden="true">↗</span></a>
+          </li>
+          
+          <li>
+            <span class="step-number" aria-hidden="true">7</span>
+            <p>Click Create export. Google emails you when the archive is ready; creating an archive does not delete the original data.</p>
+            <a href="https://takeout.google.com/?hl=en" rel="noopener noreferrer">Open the first-party step <span aria-hidden="true">↗</span></a>
+          </li>
+          
+        </ol>
+      </section>
+
+      
+      <section class="resource-section" aria-labelledby="visuals-title">
+        <p class="eyebrow">Reviewed visual references</p>
+        <h2 id="visuals-title">Match the current first-party screens</h2>
+        <div class="visual-grid">
+          
+          <figure>
+            <a href="https://takeout.google.com/?hl=en" rel="noopener noreferrer">
+              <img
+                src="/images/instructions/google-takeout-service-selection.png"
+                alt="Google Takeout Select data to include step"
+                width="500"
+                height="330"
+                loading="lazy"
+                decoding="async"
+              >
+            </a>
+            <figcaption>Google Takeout and the Google interface are trademarks and interface content of Google LLC; shown unaltered for independent instructional reference without affiliation, sponsorship, or endorsement.</figcaption>
+          </figure>
+          
+          <figure>
+            <a href="https://takeout.google.com/?hl=en" rel="noopener noreferrer">
+              <img
+                src="/images/instructions/google-takeout-export-options.png"
+                alt="Google Takeout export destination, frequency, and file options"
+                width="680"
+                height="800"
+                loading="lazy"
+                decoding="async"
+              >
+            </a>
+            <figcaption>Google Takeout and the Google interface are trademarks and interface content of Google LLC; shown unaltered for independent instructional reference without affiliation, sponsorship, or endorsement.</figcaption>
+          </figure>
+          
+        </div>
+      </section>
+      
+
+      <div class="two-column-sections">
+        <section class="resource-section" aria-labelledby="coverage-title">
+          <p class="eyebrow">What this workflow covers</p>
+          <h2 id="coverage-title">Useful output and next steps</h2>
+          <ul class="check-list">
+            <li>Selecting or removing Google products before export</li><li>Choosing email delivery, one-time frequency, file type, and maximum archive size</li><li>Creating the export and waiting for Google&#39;s completion email</li>
+          </ul>
+        </section>
+
+        <section class="resource-section" aria-labelledby="limits-title">
+          <p class="eyebrow">Objections and limits</p>
+          <h2 id="limits-title">What this resource does not promise</h2>
+          <ul class="limit-list">
+            <li>Large exports can be split into multiple archives.</li><li>Creating a Takeout archive does not delete the original data.</li><li>The resulting ZIPs can contain sensitive information and need secure storage.</li>
+          </ul>
+        </section>
+      </div>
+
+      <section class="resource-section evidence-section" aria-labelledby="evidence-title">
+        <p class="eyebrow">Repository evidence</p>
+        <h2 id="evidence-title">Current in-product visual guide route</h2>
+        <pre><code>#guide/google</code></pre>
+        <p>This exact route or input shape is maintained in <a href="https://github.com/MarcoPoloResearchLab/download_your_data/blob/master/frontend/application/routing.js" rel="noopener noreferrer">frontend/application/routing.js</a>.</p>
+      </section>
+
+      
+      <section class="resource-section" aria-labelledby="sources-title">
+        <p class="eyebrow">First-party sources</p>
+        <h2 id="sources-title">Verify the provider workflow</h2>
+        <ul class="source-list">
+          
+          <li><a href="https://takeout.google.com" rel="noopener noreferrer">Open Google Takeout <span aria-hidden="true">↗</span></a></li>
+          
+          <li><a href="https://support.google.com/accounts/answer/3024190" rel="noopener noreferrer">Download your data (Google Takeout) <span aria-hidden="true">↗</span></a></li>
+          
+        </ul>
+        <p class="callout">Security tip: Exports can contain sensitive information. Store your ZIPs in a secure, encrypted location.</p>
+      </section>
+      
+
+      <section class="resource-section" aria-labelledby="faq-title">
+        <p class="eyebrow">Questions before you export</p>
+        <h2 id="faq-title">Frequently asked questions</h2>
+        <div class="faq-list">
+          
+          <details>
+            <summary>Does Google Takeout export every Google product?</summary>
+            <p>Products you use and that hold your data are selected automatically, but you can uncheck products or refine supported product options before continuing.</p>
+          </details>
+          
+          <details>
+            <summary>Why did Google split my Takeout export?</summary>
+            <p>Google splits an export when it exceeds the maximum archive size you selected.</p>
+          </details>
+          
+          <details>
+            <summary>Does creating a Google Takeout export delete my data?</summary>
+            <p>No. Creating the archive makes a copy and does not delete the original data.</p>
+          </details>
+          
+        </div>
+      </section>
+
+      <section class="resource-section" aria-labelledby="related-title">
+        <p class="eyebrow">Continue with the right provider</p>
+        <h2 id="related-title">Related data export resources</h2>
+        <div class="related-grid">
+          
+          <a href="/resources/youtube-data-export/">
+            <span>YouTube</span>
+            <strong>How to Export YouTube Data with Google Takeout</strong>
+          </a>
+          
+          <a href="/resources/chatgpt-data-export/">
+            <span>OpenAI (ChatGPT)</span>
+            <strong>How to Export Your ChatGPT Data</strong>
+          </a>
+          
+          <a href="/resources/netflix-viewing-history-csv/">
+            <span>Netflix</span>
+            <strong>How to Download Your Netflix Viewing History CSV</strong>
+          </a>
+          
+        </div>
+      </section>
+
+      <footer class="article-footer">
+        <p>
+          Written and reviewed by
+          <a href="https://github.com/tyemirov" rel="author noopener noreferrer">Vadym Tyemirov</a>.
+          Published and verified against the repository on
+          <time datetime="2026-09-18">September 18, 2026</time>.
+        </p>
+        <a class="button button-primary" href="/#guide/google">Open the visual Google Takeout guide</a>
+      </footer>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <p>Provider exports can contain sensitive information. Keep downloaded archives in a secure location.</p>
+    <nav aria-label="Footer navigation">
+      <a href="/">Download Your Data</a>
+      <a href="/resources/">Resources</a>
+      <a href="https://mprlab.com/" rel="noopener noreferrer">MPR Lab</a>
+      <a href="https://github.com/MarcoPoloResearchLab/download_your_data" rel="noopener noreferrer">Source</a>
+    </nav>
+  </footer>
+</body>
+</html>

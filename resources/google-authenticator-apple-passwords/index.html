@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Google Authenticator to Apple Passwords Tool Guide</title>
+  <meta name="description" content="Convert Google Authenticator export QR screenshots into setup keys for Apple Passwords in your browser without uploading the QR data.">
+  <link rel="canonical" href="https://dyd.mprlab.com/resources/google-authenticator-apple-passwords/">
+  <meta property="og:title" content="Google Authenticator to Apple Passwords Tool Guide">
+  <meta property="og:description" content="Convert Google Authenticator export QR screenshots into setup keys for Apple Passwords in your browser without uploading the QR data.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://dyd.mprlab.com/resources/google-authenticator-apple-passwords/">
+  <meta property="og:site_name" content="Download Your Data">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Google Authenticator to Apple Passwords Tool Guide">
+  <meta name="twitter:description" content="Convert Google Authenticator export QR screenshots into setup keys for Apple Passwords in your browser without uploading the QR data.">
+  <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/images/favicon.png" sizes="32x32" type="image/png">
+  <link rel="stylesheet" href="/styles/resources.css">
+  <script id="structured-data" type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Article","author":{"@type":"Person","name":"Vadym Tyemirov","url":"https://github.com/tyemirov"},"dateModified":"2026-09-18","datePublished":"2026-09-18","description":"Convert Google Authenticator export QR screenshots into setup keys for Apple Passwords in your browser without uploading the QR data.","headline":"Move Google Authenticator Codes to Apple Passwords","mainEntityOfPage":"https://dyd.mprlab.com/resources/google-authenticator-apple-passwords/","publisher":{"@type":"Organization","name":"Marco Polo Research Lab","url":"https://mprlab.com/"},"url":"https://dyd.mprlab.com/resources/google-authenticator-apple-passwords/"},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","item":"https://dyd.mprlab.com/","name":"Home","position":1},{"@type":"ListItem","item":"https://dyd.mprlab.com/resources/","name":"Resources","position":2},{"@type":"ListItem","item":"https://dyd.mprlab.com/resources/google-authenticator-apple-passwords/","name":"Google Authenticator","position":3}]},{"@type":"FAQPage","mainEntity":[{"@type":"Question","acceptedAnswer":{"@type":"Answer","text":"The manual export flow creates QR code screens. Save a screenshot of each QR code, then choose those image files in the browser tool."},"name":"Does Google Authenticator create a downloadable export file?"},{"@type":"Question","acceptedAnswer":{"@type":"Answer","text":"Yes. Choose all export QR screenshots at one time. The tool merges the decoded accounts and removes exact duplicates."},"name":"Can I upload more than one QR screenshot?"},{"@type":"Question","acceptedAnswer":{"@type":"Answer","text":"No. The conversion runs in the browser. The page does not upload the selected images or decoded setup keys."},"name":"Does this page send my QR codes to a server?"}]}]}</script>
+  <script defer src="https://loopaware.mprlab.com/pixel.js?site_id=5a6e13d5-7584-451e-b058-36b9ecef8e8d"></script>
+<link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <header class="site-header">
+    <a class="site-brand" href="/" aria-label="Download Your Data home">
+      <img class="brand-mark" src="/images/favicon.svg" alt="" width="30" height="30">
+      <span>Download Your Data</span>
+    </a>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a href="/#catalog">Provider catalog</a>
+      <a href="/resources/" aria-current="page">Resources</a>
+      <a href="https://github.com/MarcoPoloResearchLab/download_your_data" rel="noopener noreferrer">GitHub</a>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">Home</a></li>
+        <li><a href="/resources/">Resources</a></li>
+        <li aria-current="page">Google Authenticator</li>
+      </ol>
+    </nav>
+
+    <article>
+      <header class="resource-hero">
+        <div class="resource-hero-copy">
+          <p class="eyebrow">Google Authenticator resource</p>
+          <h1>Move Google Authenticator Codes to Apple Passwords</h1>
+          <p class="lede">This browser tool reads Google Authenticator export QR screenshots and shows the setup keys that Apple Passwords can use for one-time verification codes.</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="/tools/google-authenticator/">Open the local conversion tool</a>
+            <a class="button" href="#export-steps">See the workflow</a>
+          </div>
+        </div>
+        <aside class="quick-verdict" aria-labelledby="quick-verdict-title">
+          <h2 id="quick-verdict-title">Quick verdict</h2>
+          <dl>
+            <div>
+              <dt>Best for</dt>
+              <dd>Moving authenticator accounts from a manual Google Authenticator export</dd>
+            </div>
+            <div>
+              <dt>Required input</dt>
+              <dd>One or more screenshots of the Google Authenticator export QR code</dd>
+            </div>
+            <div>
+              <dt>Product fit</dt>
+              <dd>The tool converts the QR payload; Apple Passwords receives each setup key manually</dd>
+            </div>
+          </dl>
+        </aside>
+      </header>
+
+      <section class="resource-section" aria-labelledby="problem-title">
+        <p class="eyebrow">The decision that matters</p>
+        <h2 id="problem-title">Choose the right export before you start</h2>
+        <p>Google Authenticator can create one or more export QR codes. Apple Passwords needs a setup key for each account, so this tool decodes the QR screenshots in the browser and keeps the handoff visible.</p>
+      </section>
+
+      <section class="resource-section" id="export-steps" aria-labelledby="steps-title">
+        <p class="eyebrow">Current workflow</p>
+        <h2 id="steps-title">How to move the codes safely</h2>
+        <ol class="steps">
+          
+          <li>
+            <span class="step-number" aria-hidden="true">1</span>
+            <p>Open Google Authenticator on the old device and choose Menu, Transfer accounts, then Export accounts.</p>
+            
+          </li>
+          
+          <li>
+            <span class="step-number" aria-hidden="true">2</span>
+            <p>Select the accounts, tap Next, and save a screenshot of each QR code without sending it to a cloud service.</p>
+            
+          </li>
+          
+          <li>
+            <span class="step-number" aria-hidden="true">3</span>
+            <p>Open the browser tool, choose all QR screenshots, and wait for the local conversion to finish.</p>
+            
+          </li>
+          
+          <li>
+            <span class="step-number" aria-hidden="true">4</span>
+            <p>Open the matching account in Apple Passwords, choose Edit and Set Up Code, then enter the copied setup key.</p>
+            
+          </li>
+          
+        </ol>
+      </section>
+
+      
+
+      <div class="two-column-sections">
+        <section class="resource-section" aria-labelledby="coverage-title">
+          <p class="eyebrow">What this workflow covers</p>
+          <h2 id="coverage-title">Useful output and next steps</h2>
+          <ul class="check-list">
+            <li>The Google Authenticator menu path for a manual account export</li><li>A simulated walkthrough that shows the export, screenshot, upload, and Apple Passwords handoff</li><li>Conversion of standard TOTP QR codes and Google Authenticator migration QR codes</li><li>Copyable setup keys and otpauth URIs for each decoded account</li>
+          </ul>
+        </section>
+
+        <section class="resource-section" aria-labelledby="limits-title">
+          <p class="eyebrow">Objections and limits</p>
+          <h2 id="limits-title">What this resource does not promise</h2>
+          <ul class="limit-list">
+            <li>Google Authenticator may create more than one QR code when you export several accounts.</li><li>The tool does not connect to Google Authenticator or Apple Passwords and does not import accounts automatically.</li><li>Anyone who gets a setup key can generate the account&#39;s verification codes.</li>
+          </ul>
+        </section>
+      </div>
+
+      <section class="resource-section evidence-section" aria-labelledby="evidence-title">
+        <p class="eyebrow">Repository evidence</p>
+        <h2 id="evidence-title">Local tool entry point</h2>
+        <pre><code>/tools/google-authenticator/</code></pre>
+        <p>This exact route or input shape is maintained in <a href="https://github.com/MarcoPoloResearchLab/download_your_data/blob/master/frontend/tools/google-authenticator/index.html" rel="noopener noreferrer">frontend/tools/google-authenticator/index.html</a>.</p>
+      </section>
+
+      
+      <section class="resource-section" aria-labelledby="sources-title">
+        <p class="eyebrow">First-party sources</p>
+        <h2 id="sources-title">Verify the provider workflow</h2>
+        <ul class="source-list">
+          
+          <li><a href="https://support.google.com/accounts/answer/1066447?co=GENIE.Platform%3DiOS&amp;hl=en" rel="noopener noreferrer">Google Authenticator transfer instructions <span aria-hidden="true">↗</span></a></li>
+          
+          <li><a href="https://support.apple.com/en-mt/guide/iphone/ipha6173c19f/ios" rel="noopener noreferrer">Apple verification code setup <span aria-hidden="true">↗</span></a></li>
+          
+        </ul>
+        
+      </section>
+      
+
+      <section class="resource-section" aria-labelledby="faq-title">
+        <p class="eyebrow">Questions before you export</p>
+        <h2 id="faq-title">Frequently asked questions</h2>
+        <div class="faq-list">
+          
+          <details>
+            <summary>Does Google Authenticator create a downloadable export file?</summary>
+            <p>The manual export flow creates QR code screens. Save a screenshot of each QR code, then choose those image files in the browser tool.</p>
+          </details>
+          
+          <details>
+            <summary>Can I upload more than one QR screenshot?</summary>
+            <p>Yes. Choose all export QR screenshots at one time. The tool merges the decoded accounts and removes exact duplicates.</p>
+          </details>
+          
+          <details>
+            <summary>Does this page send my QR codes to a server?</summary>
+            <p>No. The conversion runs in the browser. The page does not upload the selected images or decoded setup keys.</p>
+          </details>
+          
+        </div>
+      </section>
+
+      <section class="resource-section" aria-labelledby="related-title">
+        <p class="eyebrow">Continue with the right provider</p>
+        <h2 id="related-title">Related data export resources</h2>
+        <div class="related-grid">
+          
+          <a href="/resources/google-takeout/">
+            <span>Google (All Account Data)</span>
+            <strong>How to Export Account Data with Google Takeout</strong>
+          </a>
+          
+          <a href="/resources/chatgpt-data-export/">
+            <span>OpenAI (ChatGPT)</span>
+            <strong>How to Export Your ChatGPT Data</strong>
+          </a>
+          
+          <a href="/resources/netflix-viewing-history-csv/">
+            <span>Netflix</span>
+            <strong>How to Download Your Netflix Viewing History CSV</strong>
+          </a>
+          
+        </div>
+      </section>
+
+      <footer class="article-footer">
+        <p>
+          Written and reviewed by
+          <a href="https://github.com/tyemirov" rel="author noopener noreferrer">Vadym Tyemirov</a>.
+          Published and verified against the repository on
+          <time datetime="2026-09-18">September 18, 2026</time>.
+        </p>
+        <a class="button button-primary" href="/tools/google-authenticator/">Open the local conversion tool</a>
+      </footer>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <p>Provider exports can contain sensitive information. Keep downloaded archives in a secure location.</p>
+    <nav aria-label="Footer navigation">
+      <a href="/">Download Your Data</a>
+      <a href="/resources/">Resources</a>
+      <a href="https://mprlab.com/" rel="noopener noreferrer">MPR Lab</a>
+      <a href="https://github.com/MarcoPoloResearchLab/download_your_data" rel="noopener noreferrer">Source</a>
+    </nav>
+  </footer>
+</body>
+</html>
