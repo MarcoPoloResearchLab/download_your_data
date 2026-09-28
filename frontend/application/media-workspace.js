@@ -10,7 +10,13 @@ let report = null;
 let prime = null;
 let netflix = null;
 /** @type {Record<string,string>} */
-let filter = {provider:'all',timezone:'UTC',title:'',start_date:'',end_date:'',kind:'all',match_status:'all'};
+let filter = newFilter();
+/** @type {Record<string,string>} */
+let filterDraft = {...filter};
+/** @type {{file:File|null,label:string}} */
+let netflixDraft = {file:null,label:''};
+/** @type {{file:File|null,label:string,previewID:string,datasets:string[]}} */
+let primeDraft = {file:null,label:'',previewID:'',datasets:[]};
 let view = 'overview';
 let busy = false;
 let error = '';
@@ -30,6 +36,23 @@ const pendingConfirmations = new Set();
 const VIEWS = ['overview','titles','activity','sources'];
 const LOCALE_TO_TMDB = {en:'en-US',es:'es-ES',fr:'fr-FR',ru:'ru-RU'};
 
+function newFilter() { return {provider:'all',timezone:'UTC',title:'',start_date:'',end_date:'',kind:'all',match_status:'all'}; }
+function resetPagination() { cursors=[]; cursor=''; titlesCursor=''; titlesCursors=[]; }
+
+function synchronizePrimePreview() {
+  const pending = prime?.building_generation;
+  if (pending?.state==='awaiting_confirmation' && pending.id!==primeDraft.previewID) {
+    primeDraft.previewID=pending.id;
+    primeDraft.datasets=pending.preview.datasets.filter(dataset=>['viewing','playback_details'].includes(dataset.id)).map(dataset=>dataset.id);
+  }
+}
+
+function updateProviders(providers) {
+  if (prime?.active_generation?.id!==providers[0].active_generation?.id || netflix?.active_generation?.id!==providers[1].active_generation?.id) resetPagination();
+  [prime,netflix]=providers;
+  synchronizePrimePreview();
+}
+
 export function clearMediaWorkspace() {
   enabled = false;
   for (const dismiss of pendingConfirmations) dismiss();
@@ -45,11 +68,11 @@ export function clearMediaWorkspace() {
   busy = false;
   error = '';
   view = 'overview';
-  cursors = [];
-  cursor = '';
-  titlesCursor = '';
-  titlesCursors = [];
-  filter = {provider:'all',timezone:'UTC',title:'',start_date:'',end_date:'',kind:'all',match_status:'all'};
+  resetPagination();
+  filter = newFilter();
+  filterDraft = {...filter};
+  netflixDraft = {file:null,label:''};
+  primeDraft = {file:null,label:'',previewID:'',datasets:[]};
 }
 
 export async function hydrateMediaWorkspace(signal) {
@@ -57,7 +80,8 @@ export async function hydrateMediaWorkspace(signal) {
   const providers = await Promise.all([getPrimeProvider(signal),getNetflixProvider(signal)]);
   const currentReport = await getMediaReport(filter,signal);
   if (signal.aborted || !enabled) return;
-  [prime,netflix] = providers;
+  updateProviders(providers);
+  primeDraft.label=prime.active_generation?.profile_label || '';
   report = currentReport;
   schedulePoll();
 }
@@ -75,9 +99,20 @@ async function refresh() {
   const request = new AbortController();
   controller = request;
   const providers = await Promise.all([getPrimeProvider(request.signal),getNetflixProvider(request.signal)]);
-  const currentReport = await getMediaReport(filter,request.signal,cursor,titlesCursor);
   if (request.signal.aborted || !enabled) return;
-  [prime,netflix] = providers;
+  updateProviders(providers);
+  let currentReport;
+  try {
+    currentReport = await getMediaReport(filter,request.signal,cursor,titlesCursor);
+  } catch (failure) {
+    if (failure.code!=='stale_cursor' || (!cursor && !titlesCursor)) throw failure;
+    resetPagination();
+    const currentProviders = await Promise.all([getPrimeProvider(request.signal),getNetflixProvider(request.signal)]);
+    if (request.signal.aborted || !enabled) return;
+    updateProviders(currentProviders);
+    currentReport = await getMediaReport(filter,request.signal);
+  }
+  if (request.signal.aborted || !enabled) return;
   report = currentReport;
   error = '';
   redraw();
@@ -97,6 +132,30 @@ function field(text,id,node) {
   return element('label',{class:'field',for:id},element('span',{text}),node);
 }
 function textInput(id,name,value,type='text') { return element('input',{id,name,type,value}); }
+function fileInput(id,accept,file) {
+  const input = /** @type {HTMLInputElement} */(element('input',{id,type:'file',accept}));
+  if (file) {
+    const transfer = new DataTransfer();
+    transfer.items.add(file);
+    input.files=transfer.files;
+  }
+  return input;
+}
+
+function updateDraft(event) {
+  const input = /** @type {HTMLInputElement} */(event.target);
+  if (input.closest('#media-filter-form')) { filterDraft[input.name]=input.value; return; }
+  switch (input.id) {
+    case 'media-netflix-label': netflixDraft.label=input.value; return;
+    case 'media-prime-label': primeDraft.label=input.value; return;
+    case 'media-netflix-file': netflixDraft.file=input.files[0] || null; return;
+    case 'media-prime-file': primeDraft.file=input.files[0] || null; return;
+  }
+  if (input.name==='dataset') {
+    primeDraft.datasets=primeDraft.datasets.filter(dataset=>dataset!==input.value);
+    if (input.checked) primeDraft.datasets.push(input.value);
+  }
+}
 function providerName(provider) { return provider==='netflix' ? 'Netflix' : 'Prime Video'; }
 function statusLabel(status,copy) {
   const names = {not_enriched:copy.notEnriched,receiving:copy.state_receiving,validating:copy.state_validating,awaiting_confirmation:copy.readyPreview,importing:copy.state_importing,enriching:copy.state_enriching,ready:copy.state_ready_private,failed:copy.state_failed,watch_summary:copy.watchEvents,search:copy.searches,purchase:copy.purchases,deleted:copy.deleted,unknown_duration:copy.unknownDuration,zero_duration:`${copy.seconds}: 0`};
@@ -108,7 +167,17 @@ function statusLabel(status,copy) {
 /** Render validated report state and attach intent handlers to this workspace only. */
 export function renderMediaWorkspace(common,locale,onRender) {
   const copy = {...common,...MEDIA_COPY[locale]};
-  redraw = onRender;
+  redraw = () => {
+    const active = document.activeElement;
+    const restoreFocus = active instanceof HTMLInputElement && Boolean(active.closest('.media-workspace'));
+    const selection = restoreFocus ? [active.selectionStart,active.selectionEnd] : null;
+    onRender();
+    if (restoreFocus) {
+      const replacement = /** @type {HTMLInputElement|null} */(document.getElementById(active.id));
+      replacement?.focus({preventScroll:true});
+      if (replacement && selection[0]!==null && selection[1]!==null) replacement.setSelectionRange(selection[0],selection[1]);
+    }
+  };
   const root = element('div',{class:'media-workspace'});
   root.append(element('div',{class:'page-heading'},element('div',{},element('a',{class:'back-link',href:'#catalog',text:`← ${copy.back_catalog}`}),element('h1',{text:copy.heading}),element('p',{class:'lede',text:copy.intro})),element('div',{class:'page-heading-actions'},element('a',{class:'button',href:'#app/netflix',text:'Netflix'}),element('a',{class:'button',href:'#guide/amazon',text:copy.primeGuide}),button(copy.exportCombined,'export',{disabled:busy || !report?.overview.source_record_count}))));
   if (error) root.append(element('p',{class:'notice',role:'alert',text:`${copy.error_notice} · ${error}`}));
@@ -136,7 +205,8 @@ export function renderMediaWorkspace(common,locale,onRender) {
     const title = target.closest('[data-media-title]');
     if (title) {
       filter = {...filter,title_id:title.getAttribute('data-media-title'),title:''};
-      view = 'activity'; cursor=''; cursors=[]; titlesCursor=''; titlesCursors=[];
+      filterDraft = {...filter};
+      view = 'activity'; resetPagination();
       void refresh().catch(showError);
       return;
     }
@@ -148,18 +218,20 @@ export function renderMediaWorkspace(common,locale,onRender) {
     event.preventDefault();
     void perform('apply-filters',root,copy,locale).catch(showError);
   });
+  root.addEventListener('input',updateDraft);
+  root.addEventListener('change',updateDraft);
   return root;
 }
 
 function renderFilters(copy) {
   const form = element('form',{id:'media-filter-form',class:'panel media-filters'});
   const providers = element('select',{id:'media-provider',name:'provider'});
-  for (const [id,name] of [['all',copy.allServices],['netflix','Netflix'],['prime-video','Prime Video']]) providers.append(element('option',{value:id,selected:filter.provider===id,text:name}));
+  for (const [id,name] of [['all',copy.allServices],['netflix','Netflix'],['prime-video','Prime Video']]) providers.append(element('option',{value:id,selected:filterDraft.provider===id,text:name}));
   const kinds = element('select',{id:'media-kind',name:'kind'});
-  for (const [id,name] of [['all',copy.allServices],['activity',copy.netflixUnit],['playback',copy.primeUnit],['watch_summary',copy.watchEvents],['search',copy.searches],['purchase',copy.purchases],['trailer',copy.trailers]]) kinds.append(element('option',{value:id,selected:filter.kind===id,text:name}));
+  for (const [id,name] of [['all',copy.allServices],['activity',copy.netflixUnit],['playback',copy.primeUnit],['watch_summary',copy.watchEvents],['search',copy.searches],['purchase',copy.purchases],['trailer',copy.trailers]]) kinds.append(element('option',{value:id,selected:filterDraft.kind===id,text:name}));
   const statuses = element('select',{id:'media-match-status',name:'match_status'});
-  for (const id of ['all','not_enriched','matched','review','unmatched']) statuses.append(element('option',{value:id,selected:filter.match_status===id,text:id==='all'?copy.all_statuses:statusLabel(id,copy)}));
-  form.append(field(copy.provider,'media-provider',providers),field(copy.start_date,'media-start',textInput('media-start','start_date',filter.start_date,'date')),field(copy.end_date,'media-end',textInput('media-end','end_date',filter.end_date,'date')),field(copy.timezone,'media-timezone',textInput('media-timezone','timezone',filter.timezone)),field(copy.titleFilter,'media-title-filter',textInput('media-title-filter','title',filter.title)),field(copy.type,'media-kind',kinds),field(copy.match_status,'media-match-status',statuses),element('button',{type:'submit',class:'button button-primary','data-media-action':'apply-filters',disabled:busy,text:copy.applyFilters}),button(copy.clear_filters,'clear-filters'));
+  for (const id of ['all','not_enriched','matched','review','unmatched']) statuses.append(element('option',{value:id,selected:filterDraft.match_status===id,text:id==='all'?copy.all_statuses:statusLabel(id,copy)}));
+  form.append(field(copy.provider,'media-provider',providers),field(copy.start_date,'media-start',textInput('media-start','start_date',filterDraft.start_date,'date')),field(copy.end_date,'media-end',textInput('media-end','end_date',filterDraft.end_date,'date')),field(copy.timezone,'media-timezone',textInput('media-timezone','timezone',filterDraft.timezone)),field(copy.titleFilter,'media-title-filter',textInput('media-title-filter','title',filterDraft.title)),field(copy.type,'media-kind',kinds),field(copy.match_status,'media-match-status',statuses),element('button',{type:'submit',class:'button button-primary','data-media-action':'apply-filters',disabled:busy,text:copy.applyFilters}),button(copy.clear_filters,'clear-filters'));
   return form;
 }
 
@@ -236,18 +308,18 @@ function datasetName(id,copy) {
 function renderImports(copy,tmdbConfigured) {
   const root = element('section',{class:'media-imports','aria-label':copy.import});
   const netflixForm = element('section',{class:'panel'});
-  netflixForm.append(element('h2',{text:copy.netflixImport}),element('p',{class:'panel-copy',text:copy.private_import_privacy}),field(copy.choose_csv,'media-netflix-file',element('input',{id:'media-netflix-file',type:'file',accept:'.csv,text/csv'})),field(copy.profileLabel,'media-netflix-label',textInput('media-netflix-label','profile_label','')),button(copy.import,'import-netflix',{class:'button button-primary'}));
+  netflixForm.append(element('h2',{text:copy.netflixImport}),element('p',{class:'panel-copy',text:copy.private_import_privacy}),field(copy.choose_csv,'media-netflix-file',fileInput('media-netflix-file','.csv,text/csv',netflixDraft.file)),field(copy.profileLabel,'media-netflix-label',textInput('media-netflix-label','profile_label',netflixDraft.label)),button(copy.import,'import-netflix',{class:'button button-primary'}));
   if (netflix?.active_generation) netflixForm.append(button(copy.enrich,'enrich-netflix',{disabled:busy || !tmdbConfigured || Boolean(netflix.building_generation)}));
   if (netflix?.building_generation) netflixForm.append(element('p',{role:'status',text:statusLabel(netflix.building_generation.state,copy)}));
   root.append(netflixForm);
   const primeForm = element('section',{class:'panel'});
-  primeForm.append(element('h2',{text:copy.primeImport}),element('p',{class:'panel-copy',text:copy.privacy_footer}),field(copy.primeImport,'media-prime-file',element('input',{id:'media-prime-file',type:'file',accept:'.zip,application/zip'})),field(copy.profileLabel,'media-prime-label',textInput('media-prime-label','profile_label',prime?.active_generation?.profile_label || '')),button(copy.primePreview,'preview-prime',{class:'button button-primary',disabled:busy || Boolean(prime?.building_generation && prime.building_generation.state!=='failed')}));
+  primeForm.append(element('h2',{text:copy.primeImport}),element('p',{class:'panel-copy',text:copy.privacy_footer}),field(copy.primeImport,'media-prime-file',fileInput('media-prime-file','.zip,application/zip',primeDraft.file)),field(copy.profileLabel,'media-prime-label',textInput('media-prime-label','profile_label',primeDraft.label)),button(copy.primePreview,'preview-prime',{class:'button button-primary',disabled:busy || Boolean(prime?.building_generation && prime.building_generation.state!=='failed')}));
   const pending = prime?.building_generation;
   if (pending) {
     primeForm.append(element('p',{role:'status',text:`${statusLabel(pending.state,copy)} · ${pending.completed_titles}/${pending.total_titles}`}));
     if (pending.state==='awaiting_confirmation') {
       const preview = element('section',{class:'media-preview'},element('h3',{text:copy.readyPreview}));
-      for (const dataset of pending.preview.datasets) preview.append(element('label',{class:'media-dataset'},element('input',{type:'checkbox',name:'dataset',value:dataset.id,checked:['viewing','playback_details'].includes(dataset.id)}),`${datasetName(dataset.id,copy)} · ${dataset.rows} · ${dataset.start_date || ''} — ${dataset.end_date || ''}`));
+      for (const dataset of pending.preview.datasets) preview.append(element('label',{class:'media-dataset'},element('input',{type:'checkbox',name:'dataset',value:dataset.id,checked:primeDraft.datasets.includes(dataset.id)}),`${datasetName(dataset.id,copy)} · ${dataset.rows} · ${dataset.start_date || ''} — ${dataset.end_date || ''}`));
       preview.append(element('p',{class:'panel-copy',text:`Prime Video: ${copy.watchNote}`}),element('p',{class:'panel-copy',text:copy.coverageNote}));
       if (pending.preview.unsupported_files.length) preview.append(element('p',{text:`${copy.unsupported}: ${pending.preview.unsupported_files.join(', ')}`}));
       preview.append(button(copy.confirmImport,'confirm-prime',{class:'button button-primary'}));
@@ -287,16 +359,10 @@ async function confirmIntent(title,body,confirmText,copy) {
 async function perform(action,root,copy,locale) {
   if (busy && action!=='cancel-prime') return;
   if (action==='apply-filters' || action==='clear-filters') {
-    const values = new FormData(root.querySelector('#media-filter-form'));
-    filter = {provider:'all',timezone:'UTC',title:'',start_date:'',end_date:'',kind:'all',match_status:'all'};
-    if (action==='apply-filters') {
-      for (const key of Object.keys(filter)) {
-        const value = values.get(key);
-        if (typeof value!=='string') throw new Error('media filter form is incomplete');
-        filter[key]=value;
-      }
-    }
-    cursor=''; cursors=[]; titlesCursor=''; titlesCursors=[]; await refresh(); return;
+    filter = action==='apply-filters' ? {...filterDraft} : newFilter();
+    delete filter.title_id;
+    filterDraft = {...filter};
+    resetPagination(); await refresh(); return;
   }
   if (action==='next' || action==='previous') {
     if (action==='next') { cursors.push(cursor); cursor=report.next_cursor; }
@@ -312,11 +378,10 @@ async function perform(action,root,copy,locale) {
     if (!await confirmIntent(copy.enrich_title,`${copy.enrich_disclosure} ${copy.enrich_query_only}`,copy.confirm_enrich,copy)) return;
   }
   if (action==='delete-prime' && !await confirmIntent(copy.deletePrimeTitle,copy.deletePrimeBody,copy.confirmDeletePrime,copy)) return;
-  const fileID = action==='import-netflix'?'media-netflix-file':'media-prime-file';
-  const fileInput = /** @type {HTMLInputElement} */(root.querySelector(`#${fileID}`));
-  const file = fileInput?.files?.[0];
-  const label = /** @type {HTMLInputElement} */(root.querySelector(action==='import-netflix'?'#media-netflix-label':'#media-prime-label')).value;
-  const selected = [...root.querySelectorAll('input[name="dataset"]:checked')].map(input=>/** @type {HTMLInputElement} */(input).value);
+  const draft = action==='import-netflix'?netflixDraft:primeDraft;
+  const file = draft.file;
+  const label = draft.label;
+  const selected = [...primeDraft.datasets];
   if ((action==='import-netflix' || action==='preview-prime') && !file) { error='file_required'; redraw(); return; }
   busy=true; error=''; redraw();
   controller?.abort();
@@ -324,11 +389,22 @@ async function perform(action,root,copy,locale) {
   try {
     if (action==='import-netflix') {
       const generation = await createLocalGeneration(request.signal);
+      if (request.signal.aborted || !enabled) return;
+      netflix = {...netflix,building_generation:generation};
+      redraw();
       await setNetflixProfileLabel(generation.id,label,request.signal);
       await uploadViewingActivity(generation.id,file,request.signal);
+      if (request.signal.aborted || !enabled) return;
+      netflixDraft = {file:null,label:''};
     } else if (action==='preview-prime') {
       const generation = await createPrimeGeneration(request.signal);
-      await uploadPrimeArchive(generation.id,file,request.signal);
+      if (request.signal.aborted || !enabled) return;
+      prime = {...prime,building_generation:generation};
+      redraw();
+      const preview = await uploadPrimeArchive(generation.id,file,request.signal);
+      if (request.signal.aborted || !enabled) return;
+      prime = {...prime,building_generation:preview};
+      synchronizePrimePreview();
     } else if (action==='confirm-prime') await confirmPrimeSelection(prime.building_generation.id,selected,label,request.signal);
     else if (action==='cancel-prime') await cancelPrimeGeneration(prime.building_generation.id,request.signal);
     else if (action==='delete-prime') await deletePrimeProvider(request.signal);
@@ -341,8 +417,19 @@ async function perform(action,root,copy,locale) {
       document.body.append(link); link.click(); link.remove();
       window.setTimeout(()=>{URL.revokeObjectURL(url);objectURLs.delete(url);},1000);
     }
+  } catch (failure) {
+    if (controller===request && !request.signal.aborted && enabled) {
+      busy=false;
+      try { await refresh(); }
+      catch (refreshFailure) { throw new AggregateError([failure,refreshFailure],'media mutation and state reconciliation failed'); }
+    }
+    throw failure;
   } finally { if (controller===request) busy=false; }
   if (request.signal.aborted || !enabled) return;
-  cursor=''; cursors=[]; titlesCursor=''; titlesCursors=[];
+  if (['confirm-prime','cancel-prime','delete-prime'].includes(action)) {
+    primeDraft.file=null; primeDraft.datasets=[]; primeDraft.previewID='';
+    if (action==='delete-prime') primeDraft.label='';
+  }
+  resetPagination();
   await refresh();
 }
