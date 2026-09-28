@@ -74,6 +74,19 @@ Accepted TMDB identities join title history across services.
 Unresolved titles retain source identities for each provider in Titles and Top titles.
 A series match joins series history without confirmation of episode identity.
 
+Prime source identities include the source classification.
+A title without series evidence and a title with series evidence have different source identities.
+These identities keep each enrichment checkpoint within its applicable source evidence.
+
+The importer removes the `Season N` suffix and keeps the season number.
+Hyphens stay inside the complete series name during local analysis.
+In local analysis, combined titles have no episode identity.
+
+For these names, enrichment uses the complete name and one title interpretation that divides the name at its first hyphen.
+The matcher accepts an interpretation only when it has one exact series candidate and the other interpretation has none.
+Conflicting interpretations stay in review.
+An accepted episode interpretation supplies the episode name for counts and export.
+
 Enrichment requires explicit consent for title queries and the selected locale.
 The server owns the TMDB credential.
 Search text, dates, profile data, and source rows do not enter external queries.
@@ -100,6 +113,17 @@ Private records remain inside the authenticated user workspace.
 Logs, browser persistence, shared caches, and static artifacts exclude private records.
 Route changes and sign-out cancel browser requests and remove private confirmation dialogs.
 
+Form drafts keep import labels, files, dataset selections, and filter values through tab changes and automatic updates.
+The browser keeps these drafts only in memory.
+Route changes and sign-out remove the drafts.
+The browser shows a created generation before upload completes.
+After an upload failure, the browser retrieves provider state and keeps cancellation available.
+
+Prime persistence uses `prime-video-library-v2` and `prime-exact-title-matcher-v2`.
+The provider rejects the previous experimental persistence format.
+Remove previous experimental Prime data before the source archive import.
+Import the source archive again to use the current format.
+
 ## HTTP And Export
 
 All routes below require the existing TAuth session.
@@ -123,6 +147,10 @@ Report filters are `provider`, `timezone`, `start_date`, `end_date`, `title`, `t
 Activities use descending display dates and timestamps, then ascending source identities.
 Titles use descending activity counts, then ascending title identities.
 Cursors bind to the collection, active source revision, and filters.
+A cursor for a previous source revision returns HTTP 409 with `stale_cursor`.
+Malformed cursors and cursors for different filters or collections return HTTP 400 with `invalid_query`.
+The browser removes both cursors when an active generation changes.
+After `stale_cursor`, the browser retrieves provider state and the first report page.
 Measures describe the complete filtered data rather than one page.
 
 CSV export uses the same filters and includes every filtered source row.
