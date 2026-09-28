@@ -781,7 +781,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - `make test-browser`
   - `make ci`
 
-- [ ] [F023] (P1) {F007,F008,F011,F012} Add Prime Video analysis and a shared viewing history workspace
+- [x] [F023] (P1) {F007,F008,F011,F012} Add Prime Video analysis and a shared viewing history workspace
   Goal:
   Give users one private viewing history workspace for Netflix, Prime Video, and all imported services together.
   Keep the source evidence and measurement limits visible in every view.
@@ -794,6 +794,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - F012 supplies the Amazon export guide.
   - `docs/netflix-provider-plan.md` records the current Netflix input and lifecycle contracts.
   - `docs/user-authentication-plan.md` records the shared authentication and storage contracts.
+  - `docs/streaming-history-contract.md` records the combined report, Prime schemas, source units, and CSV contract.
 
   Source evidence:
   - Local inspection on 2026-09-27 found 5,163 records in `Viewing History.csv`, across 2011 through 2026.
@@ -891,8 +892,38 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Run `make test-browser`.
   - Run `make ci`.
 
-  Open Decisions:
-  - The canonical viewing history route and Prime provider identifier remain unspecified.
-  - The default content classifications and the supplementary Watch Events relationship require explicit contracts before aggregation.
-  - The default display timezone and episode-versus-series grouping require explicit product decisions before browser implementation.
+  Accepted contracts:
+  - Use `prime-video` as the Prime provider identifier and `#app/viewing-history` as the shared route.
+  - Use UTC as the default display timezone.
+  - Count content playback with positive recorded seconds in the default Prime activity measure.
+  - Keep Watch Events outside playback counts and recorded watch time.
+  - Keep each Netflix calendar date unchanged when the display timezone changes.
+  - Preserve unavailable source flags as unknown.
+  - Count episode identities within each provider without an accepted episode identity across services.
+  - Keep unresolved titles separate by provider in Titles and Top titles.
+
+  Implementation evidence, 2026-09-28:
+  - The initial HTTP test failed because the Prime generation route was absent.
+  - HTTP tests passed for import preview, dataset selection, combined reports, CSV export, date filters, pagination, and user isolation.
+  - HTTP tests passed for independent replacement, restart, cancellation, deletion, consent, and accepted title identities across services.
+  - Restart tests preserved a completed title checkpoint and resumed the remaining query without another completed-title request.
+  - Eleven synthetic matcher cases passed with precision 1.000 and recall 1.000.
+  - These matcher results describe the synthetic cases only.
+  - Private archive acceptance produced 8,861 selected records and 3,454 records in the default consumption measure.
+  - Private acceptance produced 87 rentals and 47 purchases.
+  - HTTP tests passed for source flags, episode counts, title pagination, archive limits, unsafe paths, and concurrent initial provider reads.
+  - HTTP tests passed for identical archive retries and query validation before domain operations.
+  - Browser checks passed for both imports, dataset selection, consent, accepted shared title history, filters, and downloaded CSV contents.
+  - Browser checks passed for independent cancellation and deletion, source privacy, route cleanup, keyboard controls, and invalid response rejection.
+  - Browser checks passed at 1440 and 360 pixels with English, Spanish, French, and Russian copy.
+  - The Russian language pipeline passed all new copy.
+  - Private archive acceptance passed again after the final source changes with the same aggregate counts.
+  - Final `make ci` passed, including both matcher evaluations, authentication checks, and existing Netflix browser contracts.
+  - The shared report and source rules are recorded in `docs/streaming-history-contract.md`.
+  - Changed prose passed the mechanical language review.
+  - The Governor check reports managed-content differences in eight unchanged guidance files.
+  - These differences remain outside F023.
+  - Implementation acceptance is local. Publication and production acceptance remain separate operations.
+
+  - The episode-versus-series counts require an explicit report contract before browser implementation.
   - Search-to-watch attribution remains a later feature with its own evidence and matching rules.
