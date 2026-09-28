@@ -53,6 +53,7 @@ check-frontend:
 	node --check scripts/browser-smoke.playwright.js
 	node --check scripts/netflix-browser-workspace.playwright.js
 	node --check scripts/media-browser-workspace.playwright.js
+	node --check scripts/media-browser-regressions.playwright.js
 	node --check scripts/shared-ui-auth.playwright.js
 	node --input-type=module --check < scripts/shared-ui-boundary.js
 
