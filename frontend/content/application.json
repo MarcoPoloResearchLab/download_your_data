@@ -1,4 +1,7 @@
 {
+  "title_links": {
+    "imdb": "https://www.imdb.com/title/"
+  },
   "credits": {
     "tmdb": {
       "notice": "This product uses the TMDB API but is not endorsed or certified by TMDB.",

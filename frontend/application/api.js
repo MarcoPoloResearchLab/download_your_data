@@ -545,6 +545,19 @@ function validateRecord(record) {
     assertString(record.metadata.media_type, 'record.metadata.media_type');
     assertArray(record.metadata.genres, 'record.metadata.genres');
     assertArray(record.metadata.origin_countries, 'record.metadata.origin_countries');
+    if (record.match?.status !== 'matched') {
+      throw new Error('accepted metadata requires a matched outcome');
+    }
+    if (record.metadata.imdb_id !== undefined) {
+      assertString(record.metadata.imdb_id, 'record.metadata.imdb_id');
+      if (record.metadata.imdb_id.length > 32 ||
+          !/^tt[0-9]{7,}$/.test(record.metadata.imdb_id) ||
+          record.metadata.imdb_id_source !== 'tmdb-external-ids') {
+        throw new Error('invalid IMDb title identity');
+      }
+    } else if (record.metadata.imdb_id_source !== undefined) {
+      throw new Error('IMDb source requires a title ID');
+    }
   }
 }
 

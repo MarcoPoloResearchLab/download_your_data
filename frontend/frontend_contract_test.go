@@ -11,10 +11,15 @@ import (
 )
 
 type frontendDataContract struct {
+	TitleLinks             frontendTitleLinksContract              `json:"title_links"`
 	Credits                frontendCreditsContract                 `json:"credits"`
 	ProviderRegistry       []frontendProviderDefinition            `json:"provider_registry"`
 	InstructionScreenshots map[string][]instructionScreenshotAsset `json:"instruction_screenshots"`
 	Strings                map[string]frontendLocalizedContract    `json:"strings"`
+}
+
+type frontendTitleLinksContract struct {
+	IMDb string `json:"imdb"`
 }
 
 type frontendCreditsContract struct {
@@ -90,6 +95,9 @@ func TestFrontendProviderWorkspaceContract(testContext *testing.T) {
 	}
 	if !reflect.DeepEqual(data.ProviderRegistry, expectedRegistry) {
 		testContext.Fatalf("provider registry = %#v; want %#v", data.ProviderRegistry, expectedRegistry)
+	}
+	if data.TitleLinks.IMDb != "https://www.imdb.com/title/" {
+		testContext.Fatal("IMDb links must use the canonical public title URL")
 	}
 	if data.Credits.TMDB.Notice !=
 		"This product uses the TMDB API but is not endorsed or certified by TMDB." ||

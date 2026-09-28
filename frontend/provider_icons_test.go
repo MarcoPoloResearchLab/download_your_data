@@ -71,6 +71,7 @@ type providerIconSize struct {
 
 type providerIconData struct {
 	Credits                json.RawMessage             `json:"credits"`
+	TitleLinks             json.RawMessage             `json:"title_links"`
 	ProviderRegistry       []providerIconRegistryEntry `json:"provider_registry"`
 	InstructionScreenshots json.RawMessage             `json:"instruction_screenshots"`
 	Strings                json.RawMessage             `json:"strings"`
