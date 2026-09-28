@@ -94,11 +94,14 @@ func TestFakeTMDBSearchAndDetailsUseOnlyBearerAuthenticatedTitleQueries(testCont
 			  ]
 			}`))
 		case "/3/movie/603":
-			if request.URL.Query().Get("language") != "en-US" || len(request.URL.Query()) != 1 {
+			if request.URL.Query().Get("language") != "en-US" ||
+				request.URL.Query().Get("append_to_response") != "external_ids" ||
+				len(request.URL.Query()) != 2 {
 				testContext.Errorf("unexpected details query %q", request.URL.RawQuery)
 			}
 			_, _ = responseWriter.Write([]byte(`{
 			  "id": 603,
+			  "external_ids": {"imdb_id": "tt0133093"},
 			  "title": "The Matrix",
 			  "overview": "A synthetic details response.",
 			  "genres": [{"name": "Science Fiction"}, {"name": "Action"}],
@@ -132,7 +135,8 @@ func TestFakeTMDBSearchAndDetailsUseOnlyBearerAuthenticatedTitleQueries(testCont
 	if detailsError != nil {
 		testContext.Fatalf("load fake TMDB details: %v", detailsError)
 	}
-	if details.TMDBID != 603 ||
+	if details.IMDbID == nil || details.IMDbID.String() != "tt0133093" ||
+		details.TMDBID != 603 ||
 		details.MatchedTitle != "The Matrix" ||
 		details.ReleaseDate != "1999-03-30" ||
 		len(details.Genres) != 2 ||

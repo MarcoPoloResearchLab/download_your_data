@@ -52,6 +52,8 @@ var (
 		"TMDBID",
 		"MatchedTitle",
 		"Description",
+		"imdb_id",
+		"imdb_id_source",
 	}
 )
 
@@ -503,6 +505,8 @@ func enrichedRow(record ActivityRecord) []string {
 		"",
 		"",
 		"",
+		"",
+		"",
 	}
 	metadata, hasMetadata := record.Metadata()
 	if !hasMetadata {
@@ -521,6 +525,8 @@ func enrichedRow(record ActivityRecord) []string {
 	row[27] = strconv.FormatInt(metadata.TMDBID(), 10)
 	row[28] = metadata.MatchedTitle()
 	row[29] = metadata.Description()
+	row[30] = metadata.IMDbID()
+	row[31] = metadata.IMDbIDSource()
 	return row
 }
 
@@ -630,7 +636,12 @@ func parseEnrichedRow(row []string) (ActivityRecord, error) {
 		return ActivityRecord{}, fmt.Errorf("parse TMDB ID: %w", identifierError)
 	}
 
+	imdbID, identifierError := ParseIMDbTitleID(row[30], row[31])
+	if identifierError != nil {
+		return ActivityRecord{}, identifierError
+	}
 	metadata, metadataError := NewTitleMetadata(TitleMetadataInput{
+		IMDbID:           imdbID,
 		MediaType:        mediaType,
 		Genres:           genres,
 		ReleaseDate:      row[19],

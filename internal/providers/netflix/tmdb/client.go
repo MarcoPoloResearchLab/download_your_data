@@ -86,6 +86,7 @@ type Candidate struct {
 
 // Details is one validated TMDB metadata response before Netflix domain construction.
 type Details struct {
+	IMDbID           netflix.IMDbTitleID
 	TMDBID           int64
 	MediaType        netflix.MediaType
 	Genres           []string
@@ -270,6 +271,7 @@ func (client *Client) Details(
 	queryValues := url.Values{}
 	queryValues.Set("language", locale.String())
 	mediaPath := "movie"
+	queryValues.Set("append_to_response", "external_ids")
 	if candidate.MediaType == netflix.MediaTypeSeries {
 		mediaPath = "tv"
 	}
@@ -377,22 +379,27 @@ type searchEntity struct {
 }
 
 type detailsResponse struct {
-	ID                  int64             `json:"id"`
-	Title               string            `json:"title"`
-	Name                string            `json:"name"`
-	Overview            string            `json:"overview"`
-	Genres              []genreResponse   `json:"genres"`
-	ReleaseDate         string            `json:"release_date"`
-	FirstAirDate        string            `json:"first_air_date"`
-	Runtime             *int              `json:"runtime"`
-	EpisodeRunTime      []int             `json:"episode_run_time"`
-	OriginalLanguage    string            `json:"original_language"`
-	VoteAverage         *float64          `json:"vote_average"`
-	VoteCount           *int              `json:"vote_count"`
-	OriginCountry       []string          `json:"origin_country"`
-	ProductionCountries []countryResponse `json:"production_countries"`
-	NumberOfSeasons     *int              `json:"number_of_seasons"`
-	NumberOfEpisodes    *int              `json:"number_of_episodes"`
+	ExternalIDs         *externalIDsResponse `json:"external_ids"`
+	ID                  int64                `json:"id"`
+	Title               string               `json:"title"`
+	Name                string               `json:"name"`
+	Overview            string               `json:"overview"`
+	Genres              []genreResponse      `json:"genres"`
+	ReleaseDate         string               `json:"release_date"`
+	FirstAirDate        string               `json:"first_air_date"`
+	Runtime             *int                 `json:"runtime"`
+	EpisodeRunTime      []int                `json:"episode_run_time"`
+	OriginalLanguage    string               `json:"original_language"`
+	VoteAverage         *float64             `json:"vote_average"`
+	VoteCount           *int                 `json:"vote_count"`
+	OriginCountry       []string             `json:"origin_country"`
+	ProductionCountries []countryResponse    `json:"production_countries"`
+	NumberOfSeasons     *int                 `json:"number_of_seasons"`
+	NumberOfEpisodes    *int                 `json:"number_of_episodes"`
+}
+
+type externalIDsResponse struct {
+	IMDbID json.RawMessage `json:"imdb_id"`
 }
 
 type genreResponse struct {
@@ -459,6 +466,20 @@ func decodeDetails(candidate Candidate, decoded detailsResponse) (Details, error
 	if decoded.ID != candidate.TMDBID {
 		return Details{}, errors.New("details TMDB ID does not match the requested candidate")
 	}
+	var imdbID netflix.IMDbTitleID
+	if decoded.ExternalIDs != nil && len(decoded.ExternalIDs.IMDbID) != 0 {
+		var value string
+		if decodeError := json.Unmarshal(decoded.ExternalIDs.IMDbID, &value); decodeError != nil {
+			return Details{}, errors.New("external IMDb title ID must be a string or null")
+		}
+		if value != "" {
+			var identifierError error
+			imdbID, identifierError = netflix.NewIMDbTitleID(value)
+			if identifierError != nil {
+				return Details{}, identifierError
+			}
+		}
+	}
 	if len(decoded.Genres) > maxGenres {
 		return Details{}, errors.New("genre limit exceeded")
 	}
@@ -471,6 +492,7 @@ func decodeDetails(candidate Candidate, decoded detailsResponse) (Details, error
 	}
 
 	details := Details{
+		IMDbID:           imdbID,
 		TMDBID:           candidate.TMDBID,
 		MediaType:        candidate.MediaType,
 		Genres:           genres,

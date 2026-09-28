@@ -118,6 +118,7 @@ type resourceReference struct {
 
 type applicationResourceData struct {
 	Credits                json.RawMessage                     `json:"credits"`
+	TitleLinks             json.RawMessage                     `json:"title_links"`
 	ProviderRegistry       []applicationProviderDefinition     `json:"provider_registry"`
 	InstructionScreenshots map[string][]applicationScreenshot  `json:"instruction_screenshots"`
 	Strings                map[string]applicationLocalizedData `json:"strings"`

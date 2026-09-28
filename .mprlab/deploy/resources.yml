@@ -9,6 +9,7 @@ mprlab_resources:
       bindings:
         google-web-client-id: DOWNLOAD_YOUR_DATA_GOOGLE_CLIENT_ID
         tauth-jwt-signing-key: DOWNLOAD_YOUR_DATA_TAUTH_JWT_SIGNING_KEY
+        tmdb-read-token: DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN
     - kind: compose_project
       id: runtime
       images:
@@ -55,6 +56,9 @@ mprlab_resources:
             DOWNLOAD_YOUR_DATA_TAUTH_URL:
               resource: public-api
               output: origin
+            DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN:
+              resource: private
+              output: tmdb-read-token
           mounts:
             - volume: data
               target: /var/lib/download-your-data

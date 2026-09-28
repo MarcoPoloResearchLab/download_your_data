@@ -380,6 +380,7 @@ func (service *Service) enrichOne(
 		)
 	}
 	metadata, metadataError := netflix.NewTitleMetadata(netflix.TitleMetadataInput{
+		IMDbID:           details.IMDbID,
 		MediaType:        details.MediaType,
 		Genres:           details.Genres,
 		ReleaseDate:      details.ReleaseDate,

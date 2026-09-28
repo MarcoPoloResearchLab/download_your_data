@@ -15,7 +15,7 @@ import (
 
 const (
 	enrichmentOutcomesDirectory = "enrichment-outcomes"
-	enrichmentOutcomeContract   = "netflix-enrichment-outcome-v1"
+	enrichmentOutcomeContract   = "netflix-enrichment-outcome-v2"
 )
 
 type enrichmentCheckpoint struct {

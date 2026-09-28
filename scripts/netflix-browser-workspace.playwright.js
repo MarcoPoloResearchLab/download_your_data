@@ -36,6 +36,19 @@ async page => {
   };
   const isCurrentLoopAwareRequest = (rawURL) =>
     rawURL === loopAwarePixelURL || rawURL.startsWith(loopAwareVisitURLPrefix);
+  const authenticateBrowser = async () => {
+    await page.waitForFunction(() => window.MPRUI?.testing);
+    await page.evaluate(() => {
+      window.MPRUI.testing.authenticate(document.querySelector('#app-header'), {
+        user_id: 'browser-netflix-user',
+        user_email: 'browser-contract@example.invalid',
+        user_display_name: 'Browser Contract',
+        user_avatar_url: 'https://lh3.googleusercontent.com/a/browser-contract',
+        display: 'Browser Contract',
+        avatar_url: 'https://lh3.googleusercontent.com/a/browser-contract'
+      });
+    });
+  };
   const snapshot = async () =>
     page.evaluate(async () => {
       const response = await fetch('/api/providers/netflix', {
@@ -157,16 +170,7 @@ Another Film,2/3/26
       sameSite: 'Lax'
     }
   ]);
-  await page.evaluate(() => {
-    window.MPRUI.testing.authenticate(document.querySelector('#app-header'), {
-      user_id: 'browser-netflix-user',
-      user_email: 'browser-contract@example.invalid',
-      user_display_name: 'Browser Contract',
-      user_avatar_url: 'https://lh3.googleusercontent.com/a/browser-contract',
-      display: 'Browser Contract',
-      avatar_url: 'https://lh3.googleusercontent.com/a/browser-contract'
-    });
-  });
+  await authenticateBrowser();
 
   for (const locale of ['en', 'es', 'fr', 'ru']) {
     await selectLanguage(locale);
@@ -392,6 +396,44 @@ Another Film,2/3/26
   );
 
   const readyTMDBID = readyTMDB.active_generation.id;
+  await page.getByRole('tab', {name: 'Catalog'}).click();
+  await page.waitForFunction(() => document.querySelectorAll('tbody .record-title').length === 4);
+  for (const [identifier, expectedCount] of [['tt0133093', 1], ['tt12345678', 2]]) {
+    const links = page.locator(`tbody a[href="https://www.imdb.com/title/${identifier}/"]`);
+    assert(await links.count() === expectedCount, `IMDb links missing for ${identifier}`);
+    assert(await links.first().getAttribute('rel') === 'noopener noreferrer', 'IMDb link exposes a referrer');
+  }
+  assert(await page.getByRole('link', {name: 'IMDb', exact: true}).count() === 3,
+    'unmatched title acquired an IMDb link');
+  const statesBeforeReload = await page.evaluate(() => window.__downloadYourDataObservedStates);
+  await page.route(`${baseURL}/auth/session`, (requestRoute) => requestRoute.fulfill({
+    json: {user_id: 'browser-netflix-user', user_email: 'browser-contract@example.invalid', display: 'Browser Contract'}
+  }));
+  await page.reload({waitUntil: 'domcontentloaded'});
+  await page.locator('.workspace').waitFor();
+  await page.evaluate((previousStates) => {
+    window.__downloadYourDataObservedStates = previousStates;
+    new MutationObserver(() => {
+      document.querySelectorAll('.state-chip, .progress-meta span:first-child, .alert p').forEach((node) => {
+        const text = node.textContent.trim();
+        if (text && !window.__downloadYourDataObservedStates.includes(text)) {
+          window.__downloadYourDataObservedStates.push(text);
+        }
+      });
+    }).observe(document.querySelector('#app'), {childList: true, subtree: true});
+  }, statesBeforeReload);
+  await page.getByRole('tab', {name: 'Catalog'}).click();
+  await page.waitForFunction(() => document.querySelectorAll('tbody a[href^="https://www.imdb.com/title/"]').length === 3);
+  const imdbDownloadPromise = page.waitForEvent('download');
+  await page.getByRole('link', {name: 'Export enriched CSV'}).click();
+  const imdbDownload = await imdbDownloadPromise;
+  const imdbStream = await imdbDownload.createReadStream();
+  let imdbCSV = '';
+  for await (const chunk of imdbStream) {
+    imdbCSV += chunk.toString('utf8');
+  }
+  assert(imdbCSV.includes('imdb_id,imdb_id_source') && imdbCSV.includes('tt0133093,tmdb-external-ids') &&
+    imdbCSV.includes('tt12345678,tmdb-external-ids'), 'downloaded CSV lost IMDb identities');
   await page.locator('#netflix-file').setInputFiles(viewingCSV);
   dialog = page.getByRole('dialog', {name: 'Replace the active Netflix library?'});
   await dialog.waitFor();
@@ -476,6 +518,9 @@ Another Film,2/3/26
 
   await page.getByRole('button', {name: 'Clear', exact: true}).click();
   await page.getByRole('tab', {name: 'Catalog'}).click();
+  await page.waitForFunction(() => document.querySelectorAll('tbody .record-title').length === 4);
+  assert(await page.getByRole('link', {name: 'IMDb', exact: true}).count() === 0,
+    'absent IMDb IDs created browser links');
   await page.waitForFunction(() => document.querySelectorAll('.dimension-grid .chart-panel').length === 9);
   const genresByYear = page.locator('.chart-panel').filter({hasText: 'Genres by viewing year'});
   assert(

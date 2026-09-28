@@ -253,6 +253,7 @@ const (
 
 // TitleMetadataInput is the boundary input for one accepted metadata record.
 type TitleMetadataInput struct {
+	IMDbID           IMDbTitleID
 	MediaType        MediaType
 	Genres           []string
 	ReleaseDate      string
@@ -270,6 +271,7 @@ type TitleMetadataInput struct {
 
 // TitleMetadata is one validated accepted metadata snapshot.
 type TitleMetadata struct {
+	imdbID           IMDbTitleID
 	mediaType        MediaType
 	genres           []string
 	releaseDate      string
@@ -376,6 +378,7 @@ func NewTitleMetadata(input TitleMetadataInput) (TitleMetadata, error) {
 	}
 
 	return TitleMetadata{
+		imdbID:           input.IMDbID,
 		mediaType:        input.MediaType,
 		genres:           genres,
 		releaseDate:      input.ReleaseDate,
@@ -448,6 +451,22 @@ func (metadata TitleMetadata) Episodes() (int, bool) {
 // TMDBID returns the accepted TMDB identifier.
 func (metadata TitleMetadata) TMDBID() int64 {
 	return metadata.tmdbID
+}
+
+// IMDbID returns the optional IMDb title ID supplied by TMDB.
+func (metadata TitleMetadata) IMDbID() string {
+	if metadata.imdbID == nil {
+		return ""
+	}
+	return metadata.imdbID.String()
+}
+
+// IMDbIDSource returns the source identity only when an IMDb ID exists.
+func (metadata TitleMetadata) IMDbIDSource() string {
+	if metadata.imdbID == nil {
+		return ""
+	}
+	return IMDbIDSource
 }
 
 // MatchedTitle returns the accepted TMDB title.

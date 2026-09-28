@@ -32,7 +32,7 @@ const (
 
 	cacheSchemaOwner    = "download_your_data"
 	cacheSchemaVersion  = "1"
-	cacheSchemaContract = "netflix-tmdb-enrichment-cache-v1"
+	cacheSchemaContract = "netflix-tmdb-enrichment-cache-v2"
 )
 
 const cacheConnectionPragmasSQL = `
@@ -51,7 +51,7 @@ CREATE TABLE schema_metadata (
 INSERT INTO schema_metadata(key, value) VALUES
     ('schema_owner', 'download_your_data'),
     ('schema_version', '1'),
-    ('schema_contract', 'netflix-tmdb-enrichment-cache-v1');
+    ('schema_contract', 'netflix-tmdb-enrichment-cache-v2');
 
 CREATE TABLE cache_entries (
     cache_key TEXT PRIMARY KEY,
@@ -142,6 +142,8 @@ type cacheMatchPayload struct {
 }
 
 type cacheMetadataPayload struct {
+	IMDbID           string            `json:"imdb_id,omitempty"`
+	IMDbIDSource     string            `json:"imdb_id_source,omitempty"`
 	MediaType        netflix.MediaType `json:"media_type"`
 	Genres           []string          `json:"genres"`
 	ReleaseDate      string            `json:"release_date,omitempty"`
@@ -776,6 +778,8 @@ func metadataPayloadFromDomain(metadata netflix.TitleMetadata) cacheMetadataPayl
 	seasons, hasSeasons := metadata.Seasons()
 	episodes, hasEpisodes := metadata.Episodes()
 	return cacheMetadataPayload{
+		IMDbID:           metadata.IMDbID(),
+		IMDbIDSource:     metadata.IMDbIDSource(),
 		MediaType:        metadata.MediaType(),
 		Genres:           metadata.Genres(),
 		ReleaseDate:      metadata.ReleaseDate(),
@@ -793,7 +797,12 @@ func metadataPayloadFromDomain(metadata netflix.TitleMetadata) cacheMetadataPayl
 }
 
 func (payload cacheMetadataPayload) domain() (netflix.TitleMetadata, error) {
+	imdbID, identifierError := netflix.ParseIMDbTitleID(payload.IMDbID, payload.IMDbIDSource)
+	if identifierError != nil {
+		return netflix.TitleMetadata{}, identifierError
+	}
 	return netflix.NewTitleMetadata(netflix.TitleMetadataInput{
+		IMDbID:           imdbID,
 		MediaType:        payload.MediaType,
 		Genres:           payload.Genres,
 		ReleaseDate:      payload.ReleaseDate,

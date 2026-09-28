@@ -1518,6 +1518,15 @@ function catalogRecordRow(record) {
       document.createTextNode(record.title),
       record.derived_title !== record.title
         ? element('span', {class: 'record-detail', text: record.derived_title})
+        : null,
+      metadata?.imdb_id
+        ? element('a', {
+          class: 'record-detail',
+          text: 'IMDb',
+          href: `${state.data.title_links.imdb}${metadata.imdb_id}/`,
+          target: '_blank',
+          rel: 'noopener noreferrer'
+        })
         : null
     ),
     element('td', {text: metadata ? translateDimension(metadata.media_type) : ui().unknown}),
@@ -2346,6 +2355,14 @@ function providerDefinition(providerID) {
 
 function validateAppData(data) {
   assertObject(data, 'content/application.json');
+  assertObject(data.title_links, 'title_links');
+  assertString(data.title_links.imdb, 'title_links.imdb');
+  const imdbTitleURL = new URL(data.title_links.imdb);
+  if (imdbTitleURL.protocol !== 'https:' || imdbTitleURL.hostname !== 'www.imdb.com' ||
+      imdbTitleURL.pathname !== '/title/' || imdbTitleURL.port || imdbTitleURL.search ||
+      imdbTitleURL.hash || imdbTitleURL.username || imdbTitleURL.password) {
+    throw new Error('title_links.imdb must use the official IMDb title URL');
+  }
   assertObject(data.credits, 'credits');
   assertObject(data.credits.tmdb, 'credits.tmdb');
   assertString(data.credits.tmdb.notice, 'credits.tmdb.notice');

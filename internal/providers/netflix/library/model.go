@@ -16,7 +16,7 @@ const (
 	stateSchemaOwner    = "download_your_data"
 	stateSchemaVersion  = "1"
 	stateSchemaContract = "netflix-generation-library-v1"
-	recordsContract     = "netflix-generation-records-v1"
+	recordsContract     = "netflix-generation-records-v2"
 	analyticsContract   = "netflix-generation-analytics-v1"
 	generationIDPrefix  = "ng_"
 
@@ -236,6 +236,8 @@ type Match struct {
 
 // Metadata is one accepted reader-facing TMDB metadata snapshot.
 type Metadata struct {
+	IMDbID           string            `json:"imdb_id,omitempty"`
+	IMDbIDSource     string            `json:"imdb_id_source,omitempty"`
 	MediaType        netflix.MediaType `json:"media_type"`
 	Genres           []string          `json:"genres"`
 	ReleaseDate      string            `json:"release_date,omitempty"`
@@ -511,6 +513,8 @@ func metadataSnapshot(metadata netflix.TitleMetadata) Metadata {
 	seasons, hasSeasons := metadata.Seasons()
 	episodes, hasEpisodes := metadata.Episodes()
 	return Metadata{
+		IMDbID:           metadata.IMDbID(),
+		IMDbIDSource:     metadata.IMDbIDSource(),
 		MediaType:        metadata.MediaType(),
 		Genres:           metadata.Genres(),
 		ReleaseDate:      metadata.ReleaseDate(),
@@ -528,7 +532,12 @@ func metadataSnapshot(metadata netflix.TitleMetadata) Metadata {
 }
 
 func (metadata Metadata) domain() (netflix.TitleMetadata, error) {
+	imdbID, identifierError := netflix.ParseIMDbTitleID(metadata.IMDbID, metadata.IMDbIDSource)
+	if identifierError != nil {
+		return netflix.TitleMetadata{}, identifierError
+	}
 	return netflix.NewTitleMetadata(netflix.TitleMetadataInput{
+		IMDbID:           imdbID,
 		MediaType:        metadata.MediaType,
 		Genres:           metadata.Genres,
 		ReleaseDate:      metadata.ReleaseDate,

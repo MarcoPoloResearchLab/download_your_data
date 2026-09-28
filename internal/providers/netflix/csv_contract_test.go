@@ -315,8 +315,8 @@ func TestEnrichedActivityCSVRoundTrip(testContext *testing.T) {
 
 func TestEnrichedActivityCSVRejectsStaleIdentity(testContext *testing.T) {
 	limits := mustCSVLimits(testContext, 10, 512, 4096)
-	header := "Title,Date,DerivedTitle,TitleIdentity,TitleIdentityVersion,MatchStatus,MatcherIdentity,MatchMediaType,MatchTMDBID,MatchNormalizedQuery,MatchBestCandidateTitle,MatchBestScore,MatchRunnerUpScore,MatchMargin,MatchExactCandidateCount,MatchCandidatesConsidered,MatchReason,MediaType,Genres,ReleaseDate,RuntimeMinutes,OriginalLanguage,VoteAverage,VoteCount,OriginCountries,Seasons,Episodes,TMDBID,MatchedTitle,Description\n"
-	row := "Example,1/2/26,Example,stale,netflix-title-v0,unmatched,netflix-tmdb-matcher-v1,,,example,,0,0,0,0,0,no_candidates,,,,,,,,,,,,,\n"
+	header := "Title,Date,DerivedTitle,TitleIdentity,TitleIdentityVersion,MatchStatus,MatcherIdentity,MatchMediaType,MatchTMDBID,MatchNormalizedQuery,MatchBestCandidateTitle,MatchBestScore,MatchRunnerUpScore,MatchMargin,MatchExactCandidateCount,MatchCandidatesConsidered,MatchReason,MediaType,Genres,ReleaseDate,RuntimeMinutes,OriginalLanguage,VoteAverage,VoteCount,OriginCountries,Seasons,Episodes,TMDBID,MatchedTitle,Description,imdb_id,imdb_id_source\n"
+	row := "Example,1/2/26,Example,stale,netflix-title-v0,unmatched,netflix-tmdb-matcher-v1,,,example,,0,0,0,0,0,no_candidates,,,,,,,,,,,,,,,\n"
 	_, readError := netflix.ReadEnrichedActivity(
 		context.Background(),
 		strings.NewReader(header+row),

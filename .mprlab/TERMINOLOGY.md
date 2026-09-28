@@ -99,6 +99,26 @@ Add repository-specific technical nouns below this line.
 
 - `provider map`: The explicit Google, Apple, and password entries in shared authentication configuration.
 - `migration`: A bounded change from an obsolete contract to the current contract.
+- `viewing history`: The workspace that presents imported screen-media activity from supported services.
+- `activity entry`: One title and calendar date supplied by the Netflix export.
+- `playback record`: One record of playback supplied by the Prime Video export.
+- `recorded watch time`: The seconds of playback supplied by a service, with known source coverage.
+- `date precision`: Whether a source supplies a calendar date or an exact timestamp.
+- `profile type`: The adult or child classification supplied by Prime Video.
+- `source reference`: The provider, file, and row that supplied an imported value.
+- `title identity`: The versioned identity of a movie, series, or episode used for title grouping.
+- `title match`: The accepted, review, or unmatched result of a title lookup.
+- `metadata`: Descriptive title data supplied by an accepted external title match.
+- `TMDB`: The external title service used for consent-based metadata enrichment.
+- `IMDb title ID`: The identifier that IMDb assigns to a movie or series, supplied here through TMDB external IDs.
+- `checkpoint`: A persisted result that lets an interrupted generation continue after restart.
+- `enrichment`: The operation that adds accepted external title metadata to imported activity.
+- `generation`: One immutable provider dataset with its lifecycle state and source identity.
+- `import preview`: The list of detected datasets and counts shown before import confirmation.
+- `dataset`: A collection of source records selected for import and analysis.
+- `capability`: A declared operation or measure that a provider can supply.
+- `ZIP archive`: The compressed file container accepted at the Prime Video import boundary.
+- `CSV`: The tabular text format used by the current Netflix and Prime Video exports.
 
 ```text
 - `term`: Definition with one meaning.

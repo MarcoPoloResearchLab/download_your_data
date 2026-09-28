@@ -18,7 +18,7 @@ const (
 	OfficialBaseURL = "https://api.themoviedb.org/3"
 
 	// ClientIdentity changes whenever request or response semantics change.
-	ClientIdentity = "tmdb-v3-bearer-client-v1"
+	ClientIdentity = "tmdb-v3-bearer-client-v2"
 
 	// DefaultLocale is the first canonical TMDB query locale.
 	DefaultLocale = "en-US"
