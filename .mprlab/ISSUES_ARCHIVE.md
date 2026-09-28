@@ -577,6 +577,77 @@ Identifier reconciliation:
 
 ## Improvements
 
+- [x] [I016] (P1) Add IMDb title IDs to Netflix enrichment
+  Goal:
+  Add one IMDb title ID to accepted Netflix metadata when TMDB supplies the ID.
+  TMDB remains the sole title-match authority.
+
+  Source decision:
+  - Use TMDB `external_ids` as the sole IMDb title ID source for this issue.
+  - Keep this implementation independent from an IMDb data subscription.
+  - Add a separate improvement before the application consumes licensed IMDb data.
+  - Use `github.com/tyemirov/utils/scheduler` as the canonical worker for that daily data synchronization.
+  - Persist the schedule, claim, retry, result, and snapshot identity in the application repository.
+  - Activate a downloaded snapshot only after source validation and checksum validation.
+  - Keep the last valid snapshot active after a failed synchronization.
+  - Run the worker with the application context and the application shutdown sequence.
+  - Use the [IMDb data-use rules](https://help.imdb.com/article/imdb/general-information/can-i-use-imdb-data-in-my-software/G5JTRESSHJBBHTGX) for the authorization boundary.
+  - Use the [IMDb bulk product documentation](https://developer.imdb.com/documentation/bulk-data-documentation/) for licensed daily data.
+
+  Requirements:
+  - Request `external_ids` through `append_to_response` on each existing TMDB details request.
+  - Accept `imdb_id` only for an accepted TMDB movie or series match.
+  - Represent the IMDb title ID as one optional validated domain value.
+  - Accept an absent IMDb title ID as a valid TMDB result.
+  - Reject each nonempty malformed IMDb title ID as an invalid TMDB response.
+  - Keep the current TMDB title search and deterministic matcher as the sole title resolution path.
+  - Keep the current explicit TMDB title-query authorization contract.
+  - Use the existing TMDB server configuration for the external ID request.
+  - Send no Netflix title, date, row, or user data to IMDb.
+  - Record TMDB external IDs as the source of each IMDb title ID.
+  - Add `imdb_id` to metadata, API records, persisted artifacts, and the enriched CSV.
+  - Render an IMDb title link only when a valid IMDb title ID exists.
+  - Bump the TMDB client identity and each changed persisted artifact contract.
+  - Make each earlier TMDB generation stale after the identity change.
+  - Build each new enriched generation with the current metadata contract.
+  - Limit this improvement to TMDB-provided IMDb title IDs.
+  - Complete this issue with the request-time TMDB path.
+
+  Deliverables:
+  - Validated IMDb title ID domain value and strict TMDB response decoder.
+  - Updated metadata, cache payload, generation record, API, CSV, and browser contracts.
+  - Updated client and artifact identities with stale-generation rejection.
+  - Deterministic movie, series, absent-ID, and malformed-ID fixtures.
+  - Recorded boundary for a later scheduler-backed IMDb data source.
+
+  Validation:
+  - Prove that each details request asks TMDB for `external_ids`.
+  - Prove that valid movie and series IDs persist through records, restart, cache, and export.
+  - Prove that an absent ID creates no IMDb link and no invalid metadata state.
+  - Prove that a malformed nonempty ID fails the replacement generation atomically.
+  - Prove that review and unmatched outcomes contain no IMDb title ID.
+  - Prove that the matcher evaluation result does not change.
+  - Run `make eval-netflix-matcher`.
+  - Run `make test-browser`.
+  - Run `make ci`.
+
+  Resolution (2026-09-27):
+  - Added validated IMDb title IDs and the `tmdb-external-ids` source to accepted metadata.
+  - Added IDs to cache payloads, generation records, restart checkpoints, API responses, enriched CSV exports, and Catalog links.
+  - Added the server-only TMDB read-token binding to the production manifest.
+  - Updated the current client and artifact identities.
+  - The initial HTTP test failed because details requests omitted `external_ids`.
+  - The initial deployment test failed because the manifest omitted the TMDB binding.
+  - Restart, checkpoint, cache, CSV, stale-generation, and malformed-response tests passed.
+  - Automated browser tests verified links, reload, export, absent IDs, and the external-request boundary.
+  - `make ci` passed after the final source change.
+  - Matcher precision and recall remained `1.000`.
+  - Updated `docs/netflix-provider-plan.md` and `docs/production-deployment.md` before archival.
+  - Release, publication, deployment, and live TMDB acceptance remain pending in the production runbook.
+  - Daily IMDb data synchronization remains separate work.
+  - The Governor check reported existing guide drift and no selected manifest finding.
+  - Language review covered the changed prose. Unchanged documentation findings remain.
+
 - [x] [I001] (P1) Establish the canonical local server and validation foundation
   Goal:
   Replace the backendless Pages runtime with the first forward-only local application boundary.
