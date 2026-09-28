@@ -52,6 +52,109 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Verify that a ready deterministic inference server completes the same workflow.
   - `make test`
 
+- [x] [B029] (P2) {F023} Keep title hints in Prime enrichment
+  Goal:
+  Source titles with different source classifications have different title identities.
+  Expected: Each title keeps its applicable match evidence.
+  Actual: A series match also accepted a title without series evidence.
+  Requirements:
+  - Include the source classification in the title identity.
+  - Keep each checkpoint within that identity.
+  Validation:
+  - Verify both source orders through authenticated HTTP.
+  - Run `make ci`.
+  Implementation:
+  - Added the source classification to each Prime title identity.
+  Validation evidence:
+  - `TestPrimeHTTPTitleHintsKeepAmbiguousMatchesSeparate` failed before the change and passed after the change.
+  - Both source orders passed for series names and combined titles.
+  - `make ci` passed after the final source change.
+
+- [x] [B030] (P2) {F023} Keep hyphens in Prime series names
+  Goal:
+  Series names stay complete until one title interpretation supplies sufficient episode evidence.
+  Expected: `The X-Files Season 1` keeps the series name `The X-Files`.
+  Actual: The importer created the series `Files` and the episode `The X`.
+  Requirements:
+  - Keep the complete source name before enrichment.
+  - Accept an episode split only through one exact title interpretation.
+  - Keep conflicting interpretations in review.
+  Validation:
+  - Verify names, episode counts, and match outcomes through authenticated HTTP.
+  - Run `make eval-prime-matcher`.
+  - Run `make ci`.
+  Implementation:
+  - Kept the complete series name during local analysis.
+  - Added exact title interpretation acceptance before episode assignment.
+  - Changed Prime persistence and matcher identities to version 2.
+  Validation evidence:
+  - `TestPrimeHTTPHyphenatedNamesRequireUniqueInterpretation` failed before the change and passed after the change.
+  - Hyphens with spaces, hyphens without spaces, and conflicting interpretations passed through authenticated HTTP.
+  - CSV export kept confirmed episode evidence.
+  - `make eval-prime-matcher` and `make ci` passed.
+
+- [x] [B031] (P2) {F023} Remove shared report cursors after generation changes
+  Goal:
+  Pagination and automatic updates continue after a replacement becomes active.
+  Expected: The report shows the completed generation.
+  Actual: A cursor for the previous generation caused HTTP 400 and stopped automatic updates.
+  Requirements:
+  - When an active generation changes, remove both cursors.
+  - After a revision conflict, retrieve provider state and the first report page.
+  Validation:
+  - With cursors for both report collections, complete enrichment.
+  - Verify the result through HTTP and an automated browser.
+  - Run `make ci`.
+  Implementation:
+  - Added HTTP 409 `stale_cursor` for revision conflicts.
+  - Removed both cursors after activation and retrieved the first page after a revision conflict.
+  Validation evidence:
+  - `TestMediaHTTPReportsRevisionConflictsForBothCursors` failed before the change and passed after the change.
+  - The browser completed enrichment with both cursors and showed the first page after a real HTTP 409 response.
+  - `make ci` passed after the final source change.
+
+- [x] [B032] (P2) {F023} Keep viewing history form values
+  Goal:
+  Entered values stay available through tab changes and automatic updates.
+  Expected: Form drafts keep the import label through preview and filter values through automatic updates.
+  Actual: The browser removed these values during render.
+  Requirements:
+  - Keep labels, files, dataset selections, and filter values in form drafts.
+  - When the route changes or the user signs out, remove private form drafts.
+  Validation:
+  - Verify form values through preview, tab changes, and enrichment updates in an automated browser.
+  - Run `make ci`.
+  Implementation:
+  - Added form drafts for labels, files, dataset selections, and filter values.
+  - Removed private form drafts on route changes and sign-out.
+  Validation evidence:
+  - `TestMediaBrowserWorkspaceContract/drafts` failed before the change and passed after the change.
+  - Preview, tab changes, and automatic updates kept the entered values.
+  - The browser imported the file with its label after an automatic update.
+  - Route navigation removed the private form draft.
+  - `make ci` passed after the final source change.
+
+- [x] [B033] (P2) {F023} Show the pending import after upload failure
+  Goal:
+  Cancellation stays available after generation creation succeeds and archive upload fails.
+  Expected: The user can cancel the pending import and submit another archive.
+  Actual: HTTP 413 hid the pending generation and later imports returned HTTP 409 until reload.
+  Requirements:
+  - Keep each created generation in browser memory.
+  - After a failed mutation, retrieve provider state.
+  Validation:
+  - Reject an upload in an automated browser.
+  - Cancel its pending generation.
+  - Import another archive without reload.
+  - Run `make ci`.
+  Implementation:
+  - Showed each created generation before upload completion.
+  - Retrieved provider state after failed mutations.
+  Validation evidence:
+  - `TestMediaBrowserWorkspaceContract/upload-recovery` failed before the change and passed after the change.
+  - After HTTP 413, the browser canceled the pending generation and imported another archive without reload.
+  - `make ci` passed after the final source change.
+
 ## Improvements
 
 - [!] [I017] (P1) Adopt the current shared authentication contract

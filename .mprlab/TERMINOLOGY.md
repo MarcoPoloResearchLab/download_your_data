@@ -119,6 +119,13 @@ Add repository-specific technical nouns below this line.
 - `capability`: A declared operation or measure that a provider can supply.
 - `ZIP archive`: The compressed file container accepted at the Prime Video import boundary.
 - `CSV`: The tabular text format used by the current Netflix and Prime Video exports.
+- `source classification`: The series evidence, or absence of type evidence, supplied by an imported title.
+- `title interpretation`: One division of a source title into query, series, and episode fields.
+- `cursor`: A report position that identifies its collection, active source revision, and filters.
+- `form draft`: Browser memory that contains input values before the user submits an action.
+- `title candidate`: One TMDB search result before title match acceptance.
+- `provider state`: The active generation, pending generation, and capabilities of one provider.
+- `revision conflict`: A report request whose cursor identifies a previous source revision.
 
 ```text
 - `term`: Definition with one meaning.
