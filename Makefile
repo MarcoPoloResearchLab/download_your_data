@@ -5,7 +5,7 @@ CGO_ENABLED ?= 1
 
 export CGO_ENABLED
 
-.PHONY: build check-frontend ci clean deploy down eval-netflix-matcher fmt fmt-check lint publish release test test-browser test-shared-ui test-local-lifecycle test-production-artifacts up validate-instruction-screenshots validate-provider-icons validate-tool-screenshots
+.PHONY: build check-frontend ci clean deploy down eval-netflix-matcher eval-prime-matcher fmt fmt-check lint publish release test test-browser test-shared-ui test-local-lifecycle test-production-artifacts up validate-instruction-screenshots validate-provider-icons validate-tool-screenshots
 
 build:
 	@mkdir -p build
@@ -47,9 +47,13 @@ check-frontend:
 		frontend/application/dom.js \
 		frontend/application/provider-links.js \
 		frontend/application/routing.js \
+		frontend/application/media-workspace.js \
+		frontend/application/media-copy.js \
 		frontend/tools/google-authenticator/tool.js
 	node --check scripts/browser-smoke.playwright.js
 	node --check scripts/netflix-browser-workspace.playwright.js
+	node --check scripts/media-browser-workspace.playwright.js
+	node --check scripts/media-browser-regressions.playwright.js
 	node --check scripts/shared-ui-auth.playwright.js
 	node --input-type=module --check < scripts/shared-ui-boundary.js
 
@@ -62,6 +66,9 @@ test-local-lifecycle: build
 eval-netflix-matcher:
 	$(GO) test ./internal/providers/netflix -run '^TestMatcherEvaluationGate$$' -count=1 -v
 
+eval-prime-matcher:
+	$(GO) test ./internal/httpapi -run '^TestPrimeMatcherEvaluationGate$$' -count=1 -v
+
 test-shared-ui:
 	DOWNLOAD_YOUR_DATA_RUN_BROWSER_CONTRACT=1 PLAYWRIGHT_CLI_VERSION=$(PLAYWRIGHT_CLI_VERSION) $(GO) test ./internal/httpapi -run '^TestSharedUI' -count=1 -v
 
@@ -69,7 +76,7 @@ test-browser: build test-shared-ui
 	PLAYWRIGHT_CLI_VERSION=$(PLAYWRIGHT_CLI_VERSION) ./scripts/browser-smoke.sh ./build/download-your-data
 	DOWNLOAD_YOUR_DATA_RUN_BROWSER_CONTRACT=1 \
 		PLAYWRIGHT_CLI_VERSION=$(PLAYWRIGHT_CLI_VERSION) \
-		$(GO) test ./internal/httpapi -run '^TestNetflixBrowserWorkspaceContract$$' -count=1
+		$(GO) test ./internal/httpapi -run '^Test(Netflix|Media)BrowserWorkspaceContract$$' -count=1
 
 test-production-artifacts:
 	./scripts/test-production-artifacts.sh
@@ -94,4 +101,4 @@ release publish deploy:
 	$(MAKE) --no-print-directory -C "$${gateway_root}" "app-$@" \
 		MPRLAB_APP_ROOT="$${application_root}"
 
-ci: fmt-check lint check-frontend eval-netflix-matcher test test-local-lifecycle validate-instruction-screenshots validate-provider-icons validate-tool-screenshots test-production-artifacts test-browser
+ci: fmt-check lint check-frontend eval-netflix-matcher eval-prime-matcher test test-local-lifecycle validate-instruction-screenshots validate-provider-icons validate-tool-screenshots test-production-artifacts test-browser

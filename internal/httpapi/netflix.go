@@ -81,6 +81,22 @@ func registerNetflixRoutes(
 		"DELETE "+netflixProviderPath,
 		withNetflixWorkspace(registry, logger, deleteNetflixProvider),
 	)
+	routes.HandleFunc("PUT "+netflixGenerationsPath+"/{generationID}/profile-label", withNetflixWorkspace(registry, logger, func(workspace *netflixlibrary.Workspace, logger *slog.Logger) http.HandlerFunc {
+		return func(writer http.ResponseWriter, request *http.Request) {
+			var payload struct {
+				Label string `json:"label"`
+			}
+			if err := decodeJSONRequest(writer, request, &payload); err != nil {
+				writeJSONRequestError(writer, err)
+				return
+			}
+			if err := workspace.SetProfileLabel(request.PathValue("generationID"), payload.Label); err != nil {
+				writeNetflixLibraryError(writer, logger, err)
+				return
+			}
+			writeJSON(writer, logger, http.StatusOK, payload)
+		}
+	}))
 }
 
 type netflixHandlerFactory func(

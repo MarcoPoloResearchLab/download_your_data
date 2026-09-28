@@ -52,6 +52,109 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Verify that a ready deterministic inference server completes the same workflow.
   - `make test`
 
+- [x] [B029] (P2) {F023} Keep title hints in Prime enrichment
+  Goal:
+  Source titles with different source classifications have different title identities.
+  Expected: Each title keeps its applicable match evidence.
+  Actual: A series match also accepted a title without series evidence.
+  Requirements:
+  - Include the source classification in the title identity.
+  - Keep each checkpoint within that identity.
+  Validation:
+  - Verify both source orders through authenticated HTTP.
+  - Run `make ci`.
+  Implementation:
+  - Added the source classification to each Prime title identity.
+  Validation evidence:
+  - `TestPrimeHTTPTitleHintsKeepAmbiguousMatchesSeparate` failed before the change and passed after the change.
+  - Both source orders passed for series names and combined titles.
+  - `make ci` passed after the final source change.
+
+- [x] [B030] (P2) {F023} Keep hyphens in Prime series names
+  Goal:
+  Series names stay complete until one title interpretation supplies sufficient episode evidence.
+  Expected: `The X-Files Season 1` keeps the series name `The X-Files`.
+  Actual: The importer created the series `Files` and the episode `The X`.
+  Requirements:
+  - Keep the complete source name before enrichment.
+  - Accept an episode split only through one exact title interpretation.
+  - Keep conflicting interpretations in review.
+  Validation:
+  - Verify names, episode counts, and match outcomes through authenticated HTTP.
+  - Run `make eval-prime-matcher`.
+  - Run `make ci`.
+  Implementation:
+  - Kept the complete series name during local analysis.
+  - Added exact title interpretation acceptance before episode assignment.
+  - Changed Prime persistence and matcher identities to version 2.
+  Validation evidence:
+  - `TestPrimeHTTPHyphenatedNamesRequireUniqueInterpretation` failed before the change and passed after the change.
+  - Hyphens with spaces, hyphens without spaces, and conflicting interpretations passed through authenticated HTTP.
+  - CSV export kept confirmed episode evidence.
+  - `make eval-prime-matcher` and `make ci` passed.
+
+- [x] [B031] (P2) {F023} Remove shared report cursors after generation changes
+  Goal:
+  Pagination and automatic updates continue after a replacement becomes active.
+  Expected: The report shows the completed generation.
+  Actual: A cursor for the previous generation caused HTTP 400 and stopped automatic updates.
+  Requirements:
+  - When an active generation changes, remove both cursors.
+  - After a revision conflict, retrieve provider state and the first report page.
+  Validation:
+  - With cursors for both report collections, complete enrichment.
+  - Verify the result through HTTP and an automated browser.
+  - Run `make ci`.
+  Implementation:
+  - Added HTTP 409 `stale_cursor` for revision conflicts.
+  - Removed both cursors after activation and retrieved the first page after a revision conflict.
+  Validation evidence:
+  - `TestMediaHTTPReportsRevisionConflictsForBothCursors` failed before the change and passed after the change.
+  - The browser completed enrichment with both cursors and showed the first page after a real HTTP 409 response.
+  - `make ci` passed after the final source change.
+
+- [x] [B032] (P2) {F023} Keep viewing history form values
+  Goal:
+  Entered values stay available through tab changes and automatic updates.
+  Expected: Form drafts keep the import label through preview and filter values through automatic updates.
+  Actual: The browser removed these values during render.
+  Requirements:
+  - Keep labels, files, dataset selections, and filter values in form drafts.
+  - When the route changes or the user signs out, remove private form drafts.
+  Validation:
+  - Verify form values through preview, tab changes, and enrichment updates in an automated browser.
+  - Run `make ci`.
+  Implementation:
+  - Added form drafts for labels, files, dataset selections, and filter values.
+  - Removed private form drafts on route changes and sign-out.
+  Validation evidence:
+  - `TestMediaBrowserWorkspaceContract/drafts` failed before the change and passed after the change.
+  - Preview, tab changes, and automatic updates kept the entered values.
+  - The browser imported the file with its label after an automatic update.
+  - Route navigation removed the private form draft.
+  - `make ci` passed after the final source change.
+
+- [x] [B033] (P2) {F023} Show the pending import after upload failure
+  Goal:
+  Cancellation stays available after generation creation succeeds and archive upload fails.
+  Expected: The user can cancel the pending import and submit another archive.
+  Actual: HTTP 413 hid the pending generation and later imports returned HTTP 409 until reload.
+  Requirements:
+  - Keep each created generation in browser memory.
+  - After a failed mutation, retrieve provider state.
+  Validation:
+  - Reject an upload in an automated browser.
+  - Cancel its pending generation.
+  - Import another archive without reload.
+  - Run `make ci`.
+  Implementation:
+  - Showed each created generation before upload completion.
+  - Retrieved provider state after failed mutations.
+  Validation evidence:
+  - `TestMediaBrowserWorkspaceContract/upload-recovery` failed before the change and passed after the change.
+  - After HTTP 413, the browser canceled the pending generation and imported another archive without reload.
+  - `make ci` passed after the final source change.
+
 ## Improvements
 
 - [!] [I017] (P1) Adopt the current shared authentication contract
@@ -781,7 +884,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - `make test-browser`
   - `make ci`
 
-- [ ] [F023] (P1) {F007,F008,F011,F012} Add Prime Video analysis and a shared viewing history workspace
+- [x] [F023] (P1) {F007,F008,F011,F012} Add Prime Video analysis and a shared viewing history workspace
   Goal:
   Give users one private viewing history workspace for Netflix, Prime Video, and all imported services together.
   Keep the source evidence and measurement limits visible in every view.
@@ -794,6 +897,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - F012 supplies the Amazon export guide.
   - `docs/netflix-provider-plan.md` records the current Netflix input and lifecycle contracts.
   - `docs/user-authentication-plan.md` records the shared authentication and storage contracts.
+  - `docs/streaming-history-contract.md` records the combined report, Prime schemas, source units, and CSV contract.
 
   Source evidence:
   - Local inspection on 2026-09-27 found 5,163 records in `Viewing History.csv`, across 2011 through 2026.
@@ -891,8 +995,38 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Run `make test-browser`.
   - Run `make ci`.
 
-  Open Decisions:
-  - The canonical viewing history route and Prime provider identifier remain unspecified.
-  - The default content classifications and the supplementary Watch Events relationship require explicit contracts before aggregation.
-  - The default display timezone and episode-versus-series grouping require explicit product decisions before browser implementation.
+  Accepted contracts:
+  - Use `prime-video` as the Prime provider identifier and `#app/viewing-history` as the shared route.
+  - Use UTC as the default display timezone.
+  - Count content playback with positive recorded seconds in the default Prime activity measure.
+  - Keep Watch Events outside playback counts and recorded watch time.
+  - Keep each Netflix calendar date unchanged when the display timezone changes.
+  - Preserve unavailable source flags as unknown.
+  - Count episode identities within each provider without an accepted episode identity across services.
+  - Keep unresolved titles separate by provider in Titles and Top titles.
+
+  Implementation evidence, 2026-09-28:
+  - The initial HTTP test failed because the Prime generation route was absent.
+  - HTTP tests passed for import preview, dataset selection, combined reports, CSV export, date filters, pagination, and user isolation.
+  - HTTP tests passed for independent replacement, restart, cancellation, deletion, consent, and accepted title identities across services.
+  - Restart tests preserved a completed title checkpoint and resumed the remaining query without another completed-title request.
+  - Eleven synthetic matcher cases passed with precision 1.000 and recall 1.000.
+  - These matcher results describe the synthetic cases only.
+  - Private archive acceptance produced 8,861 selected records and 3,454 records in the default consumption measure.
+  - Private acceptance produced 87 rentals and 47 purchases.
+  - HTTP tests passed for source flags, episode counts, title pagination, archive limits, unsafe paths, and concurrent initial provider reads.
+  - HTTP tests passed for identical archive retries and query validation before domain operations.
+  - Browser checks passed for both imports, dataset selection, consent, accepted shared title history, filters, and downloaded CSV contents.
+  - Browser checks passed for independent cancellation and deletion, source privacy, route cleanup, keyboard controls, and invalid response rejection.
+  - Browser checks passed at 1440 and 360 pixels with English, Spanish, French, and Russian copy.
+  - The Russian language pipeline passed all new copy.
+  - Private archive acceptance passed again after the final source changes with the same aggregate counts.
+  - Final `make ci` passed, including both matcher evaluations, authentication checks, and existing Netflix browser contracts.
+  - The shared report and source rules are recorded in `docs/streaming-history-contract.md`.
+  - Changed prose passed the mechanical language review.
+  - The Governor check reports managed-content differences in eight unchanged guidance files.
+  - These differences remain outside F023.
+  - Implementation acceptance is local. Publication and production acceptance remain separate operations.
+
+  - The episode-versus-series counts require an explicit report contract before browser implementation.
   - Search-to-watch attribution remains a later feature with its own evidence and matching rules.

@@ -20,12 +20,15 @@ import {
 import {countChart, seriesChart} from './charts.js';
 import {element} from './dom.js';
 import {instructionLinkURL} from './provider-links.js';
+import {clearMediaWorkspace,hydrateMediaWorkspace,renderMediaWorkspace} from './media-workspace.js';
+import {MEDIA_COPY} from './media-copy.js';
 import {
   GUIDE_ONLY_PROVIDER_IDS,
   isWorkspaceRoute,
   navigate,
   parseRoute,
-  WORKSPACE_PROVIDER_IDS
+  WORKSPACE_PROVIDER_IDS,
+  VIEWING_HISTORY_ROUTE
 } from './routing.js';
 
 const STORAGE_KEYS = Object.freeze({
@@ -349,7 +352,7 @@ async function openAuthenticatedSurface() {
 async function hydrateWorkspace(providerID) {
   if (
     state.sharedAuthStatus !== 'authenticated' ||
-    !WORKSPACE_PROVIDER_IDS.includes(providerID)
+    !isWorkspaceRoute({name:providerID})
   ) {
     return;
   }
@@ -370,8 +373,10 @@ async function hydrateWorkspace(providerID) {
     state.capabilities = await initializeAPI(controller.signal);
     if (providerID === 'netflix') {
       state.netflix = await getNetflixProvider(controller.signal);
-    } else {
+    } else if (providerID === 'openai') {
       state.openai = await getOpenAIProvider(controller.signal);
+    } else {
+      await hydrateMediaWorkspace(controller.signal);
     }
     if (
       controller.signal.aborted ||
@@ -575,6 +580,9 @@ function render() {
     renderNetflixWorkspace();
   } else if (state.route.name === 'openai') {
     renderOpenAIWorkspace();
+  } else if (state.route.name === VIEWING_HISTORY_ROUTE) {
+    setHeaderContext(MEDIA_COPY[state.locale].heading);
+    replaceApp(renderMediaWorkspace(ui(),state.locale,render));
   } else if (state.route.name === 'guide') {
     renderGuide(state.route.provider);
   } else if (state.route.name === 'credits') {
@@ -585,7 +593,7 @@ function render() {
 }
 
 function renderWorkspaceGate(providerID) {
-  const provider = localizedProvider(providerID);
+  const provider = providerID === VIEWING_HISTORY_ROUTE ? {title:MEDIA_COPY[state.locale].heading} : localizedProvider(providerID);
   setHeaderContext(provider.title);
   const root = element('div', {class: 'workspace-gate'});
   const heading = element('div', {class: 'page-heading'});
@@ -650,6 +658,7 @@ function renderCatalog() {
   const copy = element('div');
   copy.append(element('h1', {text: ui().private_workspace}));
   heading.append(copy);
+  heading.append(element('a',{class:'button button-primary',href:`#app/${VIEWING_HISTORY_ROUTE}`,text:MEDIA_COPY[state.locale].heading}));
 
   const grid = element('section', {
     class: 'catalog-grid',
@@ -692,6 +701,8 @@ function renderCatalog() {
           })
         )
       );
+    } else if (providerDefinition.id === 'amazon') {
+      cardCopy.append(element('div',{class:'provider-card-meta'},providerName,actionButton(ui().data_analysis,{'data-route':VIEWING_HISTORY_ROUTE,class:'button button-primary provider-analysis-action'})));
     } else {
       cardCopy.append(providerName);
     }
@@ -1085,6 +1096,7 @@ function renderNetflixWorkspace() {
       'data-route': 'guide',
       'data-provider': 'netflix'
     }),
+    element('a',{class:'button',href:`#app/${VIEWING_HISTORY_ROUTE}`,text:MEDIA_COPY[state.locale].heading}),
     stateChip(presentation.label, presentation.tone)
   );
   heading.append(title, actions);
@@ -2155,6 +2167,7 @@ function cleanupWorkspaceRequest() {
 }
 
 function clearProtectedWorkspace() {
+  clearMediaWorkspace();
   window.clearTimeout(state.pollTimer);
   state.pollTimer = 0;
   cleanupPoll();
@@ -2447,6 +2460,14 @@ function validateAppData(data) {
   });
 
   LOCALES.forEach((locale) => {
+    const mediaCopy = MEDIA_COPY[locale];
+    assertObject(mediaCopy, `media copy.${locale}`);
+    const mediaKeys = Object.keys(MEDIA_COPY.en);
+    if (Object.keys(mediaCopy).length!==mediaKeys.length) throw new Error('media copy keys differ');
+    for (const key of mediaKeys) {
+      assertString(mediaCopy[key], `media copy.${locale}.${key}`);
+      if (!mediaCopy[key].trim()) throw new Error('media copy is empty');
+    }
     const strings = data.strings[locale];
     assertObject(strings, `strings.${locale}`);
     assertString(strings.site_title, `strings.${locale}.site_title`);

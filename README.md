@@ -20,6 +20,11 @@ provider remains entirely on that provider's own site.
 | Authenticator tool | `/tools/google-authenticator/` | No | No |
 | Credits | `#credits` | No | No |
 | Provider application | `#app/{provider}` | Shared TAuth session | Yes |
+| Shared viewing history | `#app/viewing-history` | Shared TAuth session | Yes |
+
+The [shared viewing history contract](docs/streaming-history-contract.md) defines combined Netflix and Prime Video reports and CSV export.
+Each service retains its source records, counting units, and date precision.
+F023 implementation requires local acceptance before publication.
 
 There is no `#provider/{provider}` compatibility route and no end-user
 operator CLI. The executable accepts only `serve`.

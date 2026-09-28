@@ -8,6 +8,14 @@ Source: `/Users/tyemirov/Development/netflix` at `e4079718730533aa15141b567fa378
 
 Target: `/Users/tyemirov/Development/download_your_data`
 
+## Shared Viewing History
+
+F023 adds the [shared viewing history contract](streaming-history-contract.md).
+The Netflix CSV, lifecycle, and provider workspace remain under this document.
+The shared report retains Netflix calendar dates and activity entry units.
+An optional import label identifies the supplied Netflix profile.
+Accepted title identities connect Netflix and Prime Video history.
+
 ## Outcome
 
 `download_your_data` becomes the sole maintained owner of the Netflix viewing-history workflow. One authenticated browser application and one user-scoped provider service own Netflix import, private analysis, optional TMDB enrichment, dashboarding, enriched CSV export, replacement, restart, cancellation, and deletion.

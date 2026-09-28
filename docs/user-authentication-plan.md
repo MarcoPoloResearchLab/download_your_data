@@ -42,7 +42,13 @@ Authentication to the external provider remains outside this product:
 | Provider catalog | `#catalog` | Not required | No protected request |
 | Provider guide | `#guide/{provider}` | Not required | No protected request |
 | Provider application | `#app/{provider}` | Shared TAuth session | Required after authentication |
+| Shared viewing history | `#app/viewing-history` | Shared TAuth session | Required after authentication |
 | Credits and privacy | Static routes | Not required | No protected request |
+
+The [shared viewing history contract](streaming-history-contract.md) applies this authentication boundary to Prime Video and combined media reports.
+Prime imports, title checkpoints, reports, and exports remain inside the authenticated user workspace.
+Prime and Netflix retain independent active generations.
+Complete workspace deletion removes both providers.
 
 The current `#provider/{provider}` application route is replaced by
 `#app/{provider}`. No route alias or compatibility redirect is retained.
