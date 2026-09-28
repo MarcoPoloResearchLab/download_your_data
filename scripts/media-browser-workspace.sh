@@ -19,7 +19,8 @@ cleanup() {
   rm -rf "${playwright_directory}"
 }
 trap cleanup EXIT
-scenario="$(<"${script_directory}/media-browser-workspace.playwright.js")"
+scenario="$(<"${1:-${script_directory}/media-browser-workspace.playwright.js}")"
+scenario="${scenario/__REGRESSION__/${DOWNLOAD_YOUR_DATA_BROWSER_REGRESSION:-}}"
 scenario="${scenario/__BASE_URL__/${base_url}}"
 scenario="${scenario/__VIEWING_CSV__/${viewing_csv}}"
 scenario="${scenario//__PRIME_ZIP__/${prime_zip}}"
