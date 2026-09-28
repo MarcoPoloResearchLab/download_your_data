@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://dyd.mprlab.com/sitemap.xml
