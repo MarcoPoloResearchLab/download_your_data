@@ -2,11 +2,9 @@
 
 ## Status
 
-Download Your Data has one complete repository-owned versionless selected
-manifest. As of 2026-08-02, it has not been released, published, or deployed.
-The existing DNS records point the intended frontend to GitHub Pages and the
-API hostname to the MPR gateway host, but neither hostname is serving this
-application yet.
+Download Your Data has one repository-owned versionless selected manifest.
+I016 changes the TMDB credential binding and the persisted Netflix contracts.
+The I016 implementation requires release, publication, and deployment before production uses the new behavior.
 
 The actual activation remains three distinct operator-owned lifecycle steps:
 
@@ -56,8 +54,8 @@ callback route.
 The selected application asks the sibling gateway to reconcile only these
 typed resources:
 
-1. Two app-private values: the Google web client ID and an independent TAuth
-   JWT signing key.
+1. Three app-private values: the Google web client ID, an independent TAuth
+   JWT signing key, and the TMDB read token.
 2. One public Linux/AMD64 API image and one retained user-data volume, placed
    once on the `gateway` inventory group.
 3. The same-host `download-your-data.http` runtime capability on port `8787`.
@@ -93,13 +91,14 @@ non-root user. The standard Docker client is the artifact authority.
 
 ## Private Input
 
-The sole private deployment input is `.mprlab/deploy/.env`. It must remain
-untracked, ignored, mode `0600`, and excluded by `.dockerignore`. It contains
-exactly:
+The sole private deployment input is `.mprlab/deploy/.env`.
+Keep this file untracked, ignored, and excluded by `.dockerignore`.
+It contains these assignments:
 
 ```text
 DOWNLOAD_YOUR_DATA_GOOGLE_CLIENT_ID=<the public client ID above>
 DOWNLOAD_YOUR_DATA_TAUTH_JWT_SIGNING_KEY=<independent private signing key>
+DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN=<TMDB API Read Access Token>
 ```
 
 Release and publication do not read this file. Deployment reads it to generate
@@ -109,16 +108,29 @@ registry, or lifecycle receipt.
 
 ## Current Capability Boundary
 
-The current production manifest deliberately declares no inference provider
-and no TMDB secret. Therefore:
+The current production manifest declares a server-only TMDB read token.
+The deployment requires the token in the private input above.
+The browser receives only the TMDB capability state.
 
-- public guides and the authenticated shell are deployable;
-- raw Netflix import, analytics, records, and CSV export are deployable;
-- optional Netflix TMDB enrichment is unavailable;
-- OpenAI archive upload and indexing remain unavailable.
+- Public guides and the authenticated shell remain available.
+- Raw Netflix import, analytics, records, and CSV export remain available.
+- Optional TMDB enrichment uses the configured token after deployment.
+- IMDb title IDs use the existing TMDB details request and consent.
+- OpenAI archive upload and indexing remain unavailable because the manifest declares no inference provider.
 
-Do not infer an inference hostname or copy an operator secret into this app.
-Add those capabilities only after their exact current contracts are frozen.
+### I016 Persisted-Data Transition
+
+The current Netflix contracts do not accept earlier generation records, TMDB cache databases, checkpoints, or TMDB client identities.
+This implementation supplies no automatic migration.
+An earlier workspace can fail to open under the current runtime.
+
+Before deployment, prepare a bounded migration or obtain approval for a workspace reset and reimport.
+Keep existing private data until the approved transition is completed.
+Use `docs/netflix-provider-plan.md` for the current artifact identities.
+After deployment, verify import, consent, enrichment, IMDb links, restart, and enriched CSV export with an authenticated browser.
+
+The I016 implementation checks passed on 2026-09-27 with controlled TMDB responses and automated browsers.
+Release, publication, deployment, and live TMDB acceptance remain pending for this change.
 
 ## Non-Mutating Verification
 

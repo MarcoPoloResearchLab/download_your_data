@@ -48,12 +48,12 @@ The current target-owned enrichment contracts are:
 | Boundary | Current identity |
 | --- | --- |
 | Derived Netflix title | `netflix-title-v1` |
-| TMDB client | `tmdb-v3-bearer-client-v1` |
+| TMDB client | `tmdb-v3-bearer-client-v2` |
 | Deterministic matcher | `netflix-tmdb-matcher-v1` |
 | Cache freshness | `tmdb-cache-30d-v1` |
-| Cache schema | `download_your_data/1`, `netflix-tmdb-enrichment-cache-v1` |
+| Cache schema | `download_your_data/1`, `netflix-tmdb-enrichment-cache-v2` |
 | Explicit title-query authorization | `tmdb-derived-title-queries-v1` |
-| Per-title restart checkpoint | `netflix-enrichment-outcome-v1` |
+| Per-title restart checkpoint | `netflix-enrichment-outcome-v2` |
 
 Production uses TMDB's documented [API Read Access Token as a Bearer credential](https://developer.themoviedb.org/docs/authentication-application) and the fixed [multi-search operation](https://developer.themoviedb.org/reference/search-multi). One response is limited to 2 MiB, one cache result to 256 KiB, one search to 20 candidates, concurrent title work to four workers, request pacing to four requests per second, attempts to three, and `Retry-After` to 30 seconds. These values are product constants, not user settings.
 
@@ -66,11 +66,39 @@ The target owns the current lifecycle through these persisted identities:
 | Boundary | Current identity |
 | --- | --- |
 | Provider repository | `netflix-generation-library-v1` |
-| Generation records | `netflix-generation-records-v1` |
+| Generation records | `netflix-generation-records-v2` |
 | Generation analytics | `netflix-generation-analytics-v1` |
 | Record cursor | `netflix-record-cursor-v3` |
 
 F011 moves the state and lease paths beneath the authenticated user's provider root. Within that root they remain `providers/netflix/library.json` and `providers/netflix/library.lock`, and immutable ready artifacts remain under `providers/netflix/generations/{generationID}`. The state document and every artifact are validated against the exact current contract on open and read; foreign, permissive, incomplete, stale, or cross-user persisted shapes are rejected.
+
+### IMDb title IDs
+
+I016 adds optional IMDb title IDs to accepted TMDB metadata.
+Each movie or series details request uses `append_to_response=external_ids`.
+TMDB remains the sole title-match authority.
+The existing title-query consent controls these requests.
+
+The TMDB decoder accepts a missing, null, or empty `imdb_id` as metadata without an IMDb title ID.
+A nonempty ID must contain `tt` followed by at least seven decimal digits, with a maximum length of 32 characters.
+Malformed IDs fail the replacement generation.
+The active generation stays unchanged after this failure.
+
+Metadata records contain `imdb_id` and `imdb_id_source` together, or neither field.
+The source value is `tmdb-external-ids`.
+Cache payloads, restart checkpoints, API records, and CSV exports keep this pair.
+The enriched CSV adds `imdb_id` and `imdb_id_source` after `Description`.
+Review and unmatched outcomes contain neither field.
+
+The Catalog shows an IMDb link only for metadata with an IMDb title ID.
+The application sends no request to IMDb during import, enrichment, or analysis.
+The browser opens the IMDb title page only after the user selects the link.
+IMDb bulk data and daily synchronization require a separate issue.
+
+The current client and artifact identities do not accept earlier TMDB generations, cache databases, checkpoints, or generation records.
+These identity changes apply to local generation records too.
+The rollout requires an explicit persisted-data transition before the current runtime can open an earlier workspace.
+This implementation supplies no automatic migration.
 
 One uncompressed CSV is limited to 64 MiB, 250,000 activity rows, 100,000 unique title identities, 8 KiB titles, 16 KiB fields, and 512 MiB of generation working data. The provider permits one building generation, retains at most 256 lifecycle events per generation and 256 generation entries, and returns at most 200 records per page. Dates must resolve between Netflix's 1997 launch year and the server's current UTC date. These are product constants exposed by the provider capability payload, not user settings.
 
