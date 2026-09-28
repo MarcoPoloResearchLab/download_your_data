@@ -121,7 +121,15 @@ func (store *Store) Checkpoint(ctx context.Context, id string, result media.Reco
 		}
 		value.MatchStatus = outcome.MatchStatus
 		value.Metadata = outcome.Metadata
-		pending.Records[index] = value
+		value.SearchTitle = outcome.SearchTitle
+		value.SeriesTitle = outcome.SeriesTitle
+		value.EpisodeTitle = outcome.EpisodeTitle
+		value.EpisodeIdentity = ""
+		record, err := media.NewRecord(value)
+		if err != nil {
+			return newError("invalid_persistence", 0, err)
+		}
+		pending.Records[index] = record.Snapshot()
 	}
 	pending.Generation.CompletedTitles++
 	next := store.state

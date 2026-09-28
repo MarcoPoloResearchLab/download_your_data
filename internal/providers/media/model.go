@@ -175,7 +175,11 @@ func NewRecord(value Activity) (Record, error) {
 		value.SearchTitle = value.Title
 	}
 	if value.TitleIdentity == "" {
-		identityInput := string(value.Provider) + "\x00" + value.SearchTitle
+		classification := "unclassified"
+		if value.SeriesTitle != "" {
+			classification = "series"
+		}
+		identityInput := string(value.Provider) + "\x00" + classification + "\x00" + value.SearchTitle
 		if value.TitleStatus == "unavailable" {
 			identityInput += fmt.Sprintf("\x00%s\x00%d\x00%s", value.Source.File, value.Source.Row, value.SourceDate)
 		}

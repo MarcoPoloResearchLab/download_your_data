@@ -15,11 +15,12 @@ import (
 )
 
 type primeMatcherCase struct {
-	title      string
-	query      string
-	candidates []tmdb.Candidate
-	acceptedID int64
-	status     string
+	title           string
+	query           string
+	unresolvedQuery string
+	candidates      []tmdb.Candidate
+	acceptedID      int64
+	status          string
 }
 type primeQualificationClient struct{ cases map[string]primeMatcherCase }
 
@@ -47,7 +48,7 @@ func TestPrimeMatcherEvaluationGate(testContext *testing.T) {
 		{title: "La película", query: "La película", candidates: []tmdb.Candidate{{TMDBID: 6, MediaType: netflix.MediaTypeMovie, Title: "The Film", OriginalTitle: "La película"}}, acceptedID: 6, status: "matched"},
 		{title: "Remake", query: "Remake", candidates: []tmdb.Candidate{candidate(7, netflix.MediaTypeMovie, "Remake"), candidate(8, netflix.MediaTypeMovie, "Remake")}, status: "review"},
 		{title: "Collision", query: "Collision", candidates: []tmdb.Candidate{candidate(9, netflix.MediaTypeMovie, "Collision"), candidate(10, netflix.MediaTypeSeries, "Collision")}, status: "review"},
-		{title: "Pilot-Wrong Kind Season 1", query: "Wrong Kind", candidates: []tmdb.Candidate{candidate(11, netflix.MediaTypeMovie, "Wrong Kind")}, status: "review"},
+		{title: "Pilot-Wrong Kind Season 1", query: "Wrong Kind", unresolvedQuery: "Pilot-Wrong Kind", candidates: []tmdb.Candidate{candidate(11, netflix.MediaTypeMovie, "Wrong Kind")}, status: "review"},
 		{title: "Popular Near Match", query: "Popular Near Match", candidates: []tmdb.Candidate{candidate(12, netflix.MediaTypeMovie, "Popular Near Match 2")}, status: "review"},
 		{title: "A B", query: "A B", candidates: []tmdb.Candidate{candidate(13, netflix.MediaTypeMovie, "AB")}, status: "review"},
 		{title: "Missing Title", query: "Missing Title", status: "unmatched"},
@@ -58,6 +59,9 @@ func TestPrimeMatcherEvaluationGate(testContext *testing.T) {
 		client.cases[fixture.query] = fixture
 		rows = append(rows, map[string]string{"Title": fixture.title, "Playback Start Datetime (UTC)": "2026-02-02T01:00:00Z", "Playback End Datetime (UTC)": "2026-02-02T01:01:00Z", "Seconds Viewed": "60", "Material Type Description": "Feature", "Profile Type": "ADULT", "Is Autoplay": "No", "Is Deleted": "No"})
 	}
+	client.cases["Pilot-Synthetic Series"] = primeMatcherCase{}
+	client.cases["Pilot-Wrong Kind"] = primeMatcherCase{}
+	client.cases["Episode - Another-Series"] = primeMatcherCase{}
 	config := testRuntimeConfig(testContext)
 	handler, err := newApplicationHandlerWithNetflixMetadata(config, slog.New(slog.NewTextHandler(io.Discard, nil)), client)
 	if err != nil {
@@ -87,7 +91,11 @@ func TestPrimeMatcherEvaluationGate(testContext *testing.T) {
 		if fixture.acceptedID > 0 {
 			positives++
 		}
-		if record.MatchStatus != fixture.status || record.SearchTitle != fixture.query {
+		expectedQuery := fixture.query
+		if fixture.unresolvedQuery != "" {
+			expectedQuery = fixture.unresolvedQuery
+		}
+		if record.MatchStatus != fixture.status || record.SearchTitle != expectedQuery {
 			testContext.Fatalf("matcher outcome for %q: %+v", fixture.title, record)
 		}
 		if record.Metadata != nil {
@@ -96,7 +104,7 @@ func TestPrimeMatcherEvaluationGate(testContext *testing.T) {
 				correct++
 			}
 		}
-		if fixture.query != fixture.title && (record.SeasonNumber == 0 || record.EpisodeIdentity == "") {
+		if fixture.status == "matched" && fixture.query != fixture.title && (record.SeasonNumber == 0 || record.EpisodeIdentity == "") {
 			testContext.Fatal("episode identity evidence missing")
 		}
 	}

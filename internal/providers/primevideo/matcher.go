@@ -3,6 +3,7 @@ package primevideo
 import (
 	"context"
 	"errors"
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -15,7 +16,7 @@ import (
 )
 
 // MatcherIdentity identifies the current Prime derivation and acceptance rules.
-const MatcherIdentity = "prime-exact-title-matcher-v1"
+const MatcherIdentity = "prime-exact-title-matcher-v2"
 
 var seasonPattern = regexp.MustCompile(`^(.+?) Season ([1-9][0-9]{0,2})$`)
 
@@ -26,13 +27,25 @@ func deriveTitle(value *media.Activity) {
 		return
 	}
 	series := strings.TrimSpace(parts[1])
-	if episode, title, found := strings.Cut(series, "-"); found && strings.TrimSpace(episode) != "" && strings.TrimSpace(title) != "" {
-		value.EpisodeTitle = strings.TrimSpace(episode)
-		series = strings.TrimSpace(title)
-	}
 	value.SeriesTitle = series
 	value.SearchTitle = series
 	value.SeasonNumber, _ = strconv.Atoi(parts[2])
+}
+
+type titleInterpretation struct {
+	query   string
+	series  string
+	episode string
+}
+
+func titleInterpretations(value media.Activity) []titleInterpretation {
+	result := []titleInterpretation{{query: value.SearchTitle, series: value.SeriesTitle, episode: value.EpisodeTitle}}
+	if value.SeriesTitle != "" && value.EpisodeTitle == "" {
+		if episode, series, found := strings.Cut(value.SeriesTitle, "-"); found && strings.TrimSpace(episode) != "" && strings.TrimSpace(series) != "" {
+			result = append(result, titleInterpretation{query: strings.TrimSpace(series), series: strings.TrimSpace(series), episode: strings.TrimSpace(episode)})
+		}
+	}
+	return result
 }
 
 func matchKey(value string) string {
@@ -60,36 +73,44 @@ func ResolveTitle(ctx context.Context, authorization enrichment.Authorization, r
 	if value.SearchTitle == "" || value.Kind == media.Search || value.Kind == media.Trailer || value.ContentType == "promotion" || value.ContentType == "trailer" {
 		return record, nil
 	}
-	candidates, err := client.Search(ctx, value.SearchTitle, locale)
-	if err != nil {
-		return media.Record{}, newError("remote_failed", 0, err)
+	type interpretedCandidate struct {
+		candidate      tmdb.Candidate
+		interpretation titleInterpretation
 	}
-	unique := map[string]tmdb.Candidate{}
-	for _, candidate := range candidates {
-		if value.SeriesTitle != "" && candidate.MediaType != netflix.MediaTypeSeries {
-			continue
+	unique := map[string]interpretedCandidate{}
+	hasCandidates := false
+	for index, interpretation := range titleInterpretations(value) {
+		candidates, err := client.Search(ctx, interpretation.query, locale)
+		if err != nil {
+			return media.Record{}, newError("remote_failed", 0, err)
 		}
-		if matchKey(candidate.Title) == matchKey(value.SearchTitle) || matchKey(candidate.OriginalTitle) == matchKey(value.SearchTitle) {
-			key := string(candidate.MediaType) + ":" + strconv.FormatInt(candidate.TMDBID, 10)
-			unique[key] = candidate
+		hasCandidates = hasCandidates || len(candidates) > 0
+		for _, candidate := range candidates {
+			if interpretation.series != "" && candidate.MediaType != netflix.MediaTypeSeries {
+				continue
+			}
+			if matchKey(candidate.Title) == matchKey(interpretation.query) || matchKey(candidate.OriginalTitle) == matchKey(interpretation.query) {
+				key := fmt.Sprintf("%d:%s:%d", index, candidate.MediaType, candidate.TMDBID)
+				unique[key] = interpretedCandidate{candidate: candidate, interpretation: interpretation}
+			}
 		}
 	}
 	value.MatchStatus = "unmatched"
-	if len(candidates) > 0 {
+	if hasCandidates {
 		value.MatchStatus = "review"
 	}
 	if len(unique) != 1 {
 		return media.NewRecord(value)
 	}
-	var accepted tmdb.Candidate
+	var accepted interpretedCandidate
 	for _, candidate := range unique {
 		accepted = candidate
 	}
-	details, err := client.Details(ctx, accepted, locale)
+	details, err := client.Details(ctx, accepted.candidate, locale)
 	if err != nil {
 		return media.Record{}, newError("remote_failed", 0, err)
 	}
-	if details.TMDBID != accepted.TMDBID || details.MediaType != accepted.MediaType {
+	if details.TMDBID != accepted.candidate.TMDBID || details.MediaType != accepted.candidate.MediaType {
 		return media.Record{}, newError("remote_failed", 0, errors.New("metadata identity changed"))
 	}
 	metadata, err := netflix.NewTitleMetadata(netflix.TitleMetadataInput{TMDBID: details.TMDBID, MediaType: details.MediaType, MatchedTitle: details.MatchedTitle, IMDbID: details.IMDbID, Genres: details.Genres, ReleaseDate: details.ReleaseDate, RuntimeMinutes: details.RuntimeMinutes, OriginalLanguage: details.OriginalLanguage, VoteAverage: details.VoteAverage, VoteCount: details.VoteCount, OriginCountries: details.OriginCountries, Seasons: details.Seasons, Episodes: details.Episodes, Description: details.Description})
@@ -97,6 +118,9 @@ func ResolveTitle(ctx context.Context, authorization enrichment.Authorization, r
 		return media.Record{}, newError("remote_failed", 0, err)
 	}
 	value.MatchStatus = "matched"
+	value.SearchTitle = accepted.interpretation.query
+	value.SeriesTitle = accepted.interpretation.series
+	value.EpisodeTitle = accepted.interpretation.episode
 	value.Metadata = &media.Metadata{TMDBID: metadata.TMDBID(), MediaType: string(metadata.MediaType()), Title: metadata.MatchedTitle(), IMDbID: metadata.IMDbID(), Genres: metadata.Genres(), ReleaseDate: metadata.ReleaseDate(), OriginalLanguage: metadata.OriginalLanguage()}
 	if minutes, present := metadata.RuntimeMinutes(); present {
 		value.Metadata.RuntimeMinutes = &minutes

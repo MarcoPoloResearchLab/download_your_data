@@ -16,6 +16,16 @@ func TestMediaBrowserWorkspaceContract(testContext *testing.T) {
 	if os.Getenv("DOWNLOAD_YOUR_DATA_RUN_BROWSER_CONTRACT") != "1" {
 		testContext.Skip("enable browser contracts through make test-browser")
 	}
+	testContext.Run("existing", testMediaBrowserWorkspaceContract)
+	for _, scenario := range []string{"drafts", "pagination", "upload-recovery"} {
+		testContext.Run(scenario, func(testContext *testing.T) { testMediaBrowserReviewRegression(testContext, scenario) })
+	}
+}
+
+func testMediaBrowserWorkspaceContract(testContext *testing.T) {
+	if os.Getenv("DOWNLOAD_YOUR_DATA_RUN_BROWSER_CONTRACT") != "1" {
+		testContext.Skip("enable browser contracts through make test-browser")
+	}
 	server := httptest.NewUnstartedServer(nil)
 	origin := "http://" + server.Listener.Addr().String()
 	config := loadTestRuntimeConfig(testContext, map[string]string{"DOWNLOAD_YOUR_DATA_PUBLIC_ORIGIN": origin, "DOWNLOAD_YOUR_DATA_API_ORIGIN": origin, "DOWNLOAD_YOUR_DATA_TAUTH_URL": origin})

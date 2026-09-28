@@ -243,6 +243,10 @@ func registerMediaRoutes(routes *http.ServeMux, operations *primeOperations, reg
 			}
 			report, err := media.Build(records, filter, request.URL.Query().Get("cursor"), request.URL.Query().Get("titles_cursor"), limit)
 			if err != nil {
+				if errors.Is(err, media.ErrStaleCursor) {
+					writeRequestError(writer, http.StatusConflict, "stale_cursor")
+					return
+				}
 				writeRequestError(writer, http.StatusBadRequest, "invalid_query")
 				return
 			}

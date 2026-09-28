@@ -255,6 +255,9 @@ func Build(records []Record, filter Filter, cursor string, titleCursor string, l
 	return report, nil
 }
 
+// ErrStaleCursor identifies a collection revision conflict.
+var ErrStaleCursor = errors.New("media.stale_cursor")
+
 type recordCursor struct {
 	Revision   string `json:"revision"`
 	Filter     string `json:"filter"`
@@ -271,7 +274,13 @@ func pageOffset(cursor, revision, filter, collection string, total int) (int, er
 		return 0, errors.New("media.invalid_cursor")
 	}
 	var value recordCursor
-	if err = json.Unmarshal(encoded, &value); err != nil || value.Revision != revision || value.Filter != filter || value.Collection != collection || value.Offset < 0 || value.Offset > total {
+	if err = json.Unmarshal(encoded, &value); err != nil || value.Filter != filter || value.Collection != collection || value.Offset < 0 || value.Revision == "" {
+		return 0, errors.New("media.invalid_cursor")
+	}
+	if value.Revision != revision {
+		return 0, ErrStaleCursor
+	}
+	if value.Offset > total {
 		return 0, errors.New("media.invalid_cursor")
 	}
 	return value.Offset, nil

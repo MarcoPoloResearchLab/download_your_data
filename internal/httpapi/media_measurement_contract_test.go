@@ -10,11 +10,13 @@ import (
 	"testing"
 
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/media"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix/tmdb"
 )
 
 func TestMediaHTTPPreservesUnknownFlagsAndSeparatesEpisodeCounts(testContext *testing.T) {
 	rows := []map[string]string{}
-	for _, title := range []string{"Pilot-Synthetic Series Season 1", "Pilot-Synthetic Series Season 1", "Finale-Synthetic Series Season 1", "Not Available"} {
+	for _, title := range []string{"Pilot - Synthetic Series Season 1", "Pilot - Synthetic Series Season 1", "Finale - Synthetic Series Season 1", "Not Available"} {
 		rows = append(rows, map[string]string{"Title": title, "Playback Start Datetime (UTC)": "2026-02-02T01:00:00Z", "Seconds Viewed": "60", "Material Type Description": "Feature"})
 	}
 	config := testRuntimeConfig(testContext)
@@ -46,7 +48,7 @@ func TestMediaHTTPPreservesUnknownFlagsAndSeparatesEpisodeCounts(testContext *te
 			testContext.Fatal("unavailable flags became false")
 		}
 	}
-	if payload.Overview.EpisodeCount != 2 || payload.Overview.SeriesTitles != 1 || payload.Overview.UnavailableTitles != 1 || payload.Overview.UniqueTitles != 1 {
+	if payload.Overview.EpisodeCount != 0 || payload.Overview.SeriesTitles != 2 || payload.Overview.UnavailableTitles != 1 || payload.Overview.UniqueTitles != 2 {
 		testContext.Fatalf("episode and title counts: %+v", payload.Overview)
 	}
 	for _, title := range payload.Overview.TopTitles {
@@ -58,15 +60,20 @@ func TestMediaHTTPPreservesUnknownFlagsAndSeparatesEpisodeCounts(testContext *te
 
 func TestMediaHTTPExportRetainsPlaybackAndEpisodeEvidence(testContext *testing.T) {
 	config := testRuntimeConfig(testContext)
-	handler, err := newApplicationHandler(config, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	client := &primeQualificationClient{cases: map[string]primeMatcherCase{
+		"Pilot - Synthetic Series": {},
+		"Synthetic Series":         {candidates: []tmdb.Candidate{{TMDBID: 21, MediaType: netflix.MediaTypeSeries, Title: "Synthetic Series"}}},
+	}}
+	handler, err := newApplicationHandlerWithNetflixMetadata(config, slog.New(slog.NewTextHandler(io.Discard, nil)), client)
 	if err != nil {
 		testContext.Fatal(err)
 	}
 	defer handler.Close()
 	server := newAuthenticatedTestServer(testContext, config, handler, defaultTestUserID)
 	defer server.Close()
-	rows := []map[string]string{{"Title": "Pilot-Synthetic Series Season 1", "Playback Start Datetime (UTC)": "2026-02-02T01:00:00Z", "Playback End Datetime (UTC)": "2026-02-02T01:02:00Z", "Seconds Viewed": "120", "Material Type Description": "Feature", "Is Autoplay": "Yes", "Is Deleted": "No", "Device Model": "Synthetic device", "Audio Language Code": "en"}}
-	importPrimeForTest(testContext, config, server.URL, syntheticPrimeArchiveWithRows(testContext, rows), []string{"viewing", "playback_details"})
+	rows := []map[string]string{{"Title": "Pilot - Synthetic Series Season 1", "Playback Start Datetime (UTC)": "2026-02-02T01:00:00Z", "Playback End Datetime (UTC)": "2026-02-02T01:02:00Z", "Seconds Viewed": "120", "Material Type Description": "Feature", "Is Autoplay": "Yes", "Is Deleted": "No", "Device Model": "Synthetic device", "Audio Language Code": "en"}}
+	active := importPrimeForTest(testContext, config, server.URL, syntheticPrimeArchiveWithRows(testContext, rows), []string{"viewing", "playback_details"})
+	enrichPrimeForTest(testContext, config, server.URL, active.ID)
 	var report media.Report
 	decodeResponse(testContext, getResponse(testContext, server.URL+"/api/viewing-history?timezone=America%2FLos_Angeles"), &report)
 	if len(report.Sources) != 1 || report.Sources[0].StartDate != "2026-02-01" || report.Sources[0].EndDate != "2026-02-01" {

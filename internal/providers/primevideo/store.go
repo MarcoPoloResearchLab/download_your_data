@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	storeContract              = "prime-video-library-v1"
+	storeContract              = "prime-video-library-v2"
 	providerDirectory          = "providers/prime-video"
 	statePath                  = providerDirectory + "/library.json"
 	leasePath                  = providerDirectory + "/library.lock"
