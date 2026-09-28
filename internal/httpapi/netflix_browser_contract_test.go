@@ -306,10 +306,23 @@ func (client *browserLifecycleMetadataClient) Details(
 	}
 	voteAverage := 7.8
 	voteCount := 900
+	var imdbID netflix.IMDbTitleID
+	if locale.String() == "en-US" {
+		identifier := "tt0133093"
+		if candidate.TMDBID == 2002 {
+			identifier = "tt12345678"
+		}
+		var identifierError error
+		imdbID, identifierError = netflix.NewIMDbTitleID(identifier)
+		if identifierError != nil {
+			return tmdb.Details{}, identifierError
+		}
+	}
 	switch candidate.TMDBID {
 	case 2001:
 		runtimeMinutes := 98
 		return tmdb.Details{
+			IMDbID:           imdbID,
 			TMDBID:           candidate.TMDBID,
 			MediaType:        candidate.MediaType,
 			Genres:           []string{"Documentary"},
@@ -327,6 +340,7 @@ func (client *browserLifecycleMetadataClient) Details(
 		seasons := 1
 		episodes := 8
 		return tmdb.Details{
+			IMDbID:           imdbID,
 			TMDBID:           candidate.TMDBID,
 			MediaType:        candidate.MediaType,
 			Genres:           []string{"Drama"},

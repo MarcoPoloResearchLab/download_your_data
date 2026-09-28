@@ -192,7 +192,8 @@ func TestDeploymentManifestMatchesTheProductionProfile(testContext *testing.T) {
 	}
 
 	private := requireDeploymentResource(testContext, manifest, "private_values", "private")
-	if len(private.Bindings) != 2 ||
+	if len(private.Bindings) != 3 ||
+		private.Bindings["tmdb-read-token"] != "DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN" ||
 		private.Bindings["google-web-client-id"] != "DOWNLOAD_YOUR_DATA_GOOGLE_CLIENT_ID" ||
 		private.Bindings["tauth-jwt-signing-key"] != "DOWNLOAD_YOUR_DATA_TAUTH_JWT_SIGNING_KEY" {
 		testContext.Fatalf("private-value bindings drifted: %+v", private.Bindings)
@@ -237,6 +238,7 @@ func TestDeploymentManifestMatchesTheProductionProfile(testContext *testing.T) {
 	assertEnvironmentReference(testContext, service, "DOWNLOAD_YOUR_DATA_TAUTH_JWT_SIGNING_KEY", "authentication", "jwt-signing-key")
 	assertEnvironmentReference(testContext, service, "DOWNLOAD_YOUR_DATA_TAUTH_SESSION_COOKIE_NAME", "authentication", "session-cookie-name")
 	assertEnvironmentReference(testContext, service, "DOWNLOAD_YOUR_DATA_TAUTH_REFRESH_COOKIE_NAME", "authentication", "refresh-cookie-name")
+	assertEnvironmentReference(testContext, service, "DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN", "private", "tmdb-read-token")
 
 	capability := requireDeploymentResource(testContext, manifest, "runtime_capability", "http")
 	if capability.Name != "download-your-data.http" || capability.Version != 1 ||
