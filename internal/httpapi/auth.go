@@ -111,6 +111,7 @@ func requireAuthenticatedUser(
 
 func deleteAuthenticatedWorkspace(
 	registry *netflixWorkspaceRegistry,
+	primeOperations *primeOperations,
 	logger *slog.Logger,
 ) http.HandlerFunc {
 	return func(responseWriter http.ResponseWriter, request *http.Request) {
@@ -137,6 +138,7 @@ func deleteAuthenticatedWorkspace(
 			writeRequestError(responseWriter, http.StatusInternalServerError, "internal_error")
 			return
 		}
+		primeOperations.cancelUser(user)
 		if deleteError := registry.deleteUser(user); deleteError != nil {
 			if errors.Is(deleteError, errWorkspaceInUse) {
 				writeRequestError(responseWriter, http.StatusConflict, "workspace_in_use")

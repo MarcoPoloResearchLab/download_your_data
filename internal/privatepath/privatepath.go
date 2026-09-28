@@ -131,7 +131,18 @@ func (root Root) EnsureDirectory(relativePath string) (Directory, error) {
 			}
 		case errors.Is(statError, os.ErrNotExist):
 			if createError := os.Mkdir(currentPath, privateDirectoryMode); createError != nil {
-				return Directory{}, fmt.Errorf("create private directory %q: %w", currentPath, createError)
+				if !errors.Is(createError, os.ErrExist) {
+					return Directory{}, fmt.Errorf("create private directory %q: %w", currentPath, createError)
+				}
+				// Another provider can create the shared parent concurrently.
+				// Lstat rejects a symlink or any other filesystem object.
+				createdInfo, inspectError := os.Lstat(currentPath)
+				if inspectError != nil {
+					return Directory{}, fmt.Errorf("inspect concurrent directory %q: %w", currentPath, inspectError)
+				}
+				if !createdInfo.IsDir() {
+					return Directory{}, fmt.Errorf("create private directory %q: existing object is not a directory", currentPath)
+				}
 			}
 		default:
 			return Directory{}, fmt.Errorf("inspect private directory %q: %w", currentPath, statError)

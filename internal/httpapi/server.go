@@ -88,6 +88,7 @@ type requestErrorPayload struct {
 type applicationHandler struct {
 	handler           http.Handler
 	workspaceRegistry *netflixWorkspaceRegistry
+	primeOperations   *primeOperations
 }
 
 // Handler is the complete application HTTP boundary and owns any resources
@@ -115,6 +116,9 @@ func (handler *applicationHandler) ServeHTTP(
 func (handler *applicationHandler) Close() error {
 	if handler == nil || handler.workspaceRegistry == nil {
 		return nil
+	}
+	if handler.primeOperations != nil {
+		handler.primeOperations.close()
 	}
 	return handler.workspaceRegistry.close()
 }
@@ -199,15 +203,17 @@ func newApplicationHandlerWithNetflixMetadata(
 		return nil, registryError
 	}
 
+	requestCoordinator := &userRequestCoordinator{}
+	primeOperations := newPrimeOperations(config, metadataClient, requestCoordinator, logger)
 	protectedRoutes := http.NewServeMux()
 	protectedRoutes.HandleFunc("GET "+capabilitiesPath, writeCapabilities(config, logger))
 	registerOpenAIRoutes(protectedRoutes, config, logger)
 	registerNetflixRoutes(protectedRoutes, workspaceRegistry, logger)
+	registerMediaRoutes(protectedRoutes, primeOperations, workspaceRegistry, logger)
 	protectedRoutes.HandleFunc(
 		"DELETE "+userWorkspacePath,
-		deleteAuthenticatedWorkspace(workspaceRegistry, logger),
+		deleteAuthenticatedWorkspace(workspaceRegistry, primeOperations, logger),
 	)
-	requestCoordinator := &userRequestCoordinator{}
 	routes := http.NewServeMux()
 	routes.HandleFunc("GET "+healthPath, writeHealth(logger))
 	routes.HandleFunc("GET "+uiConfigPath, writeUIConfig(uiConfigDocument, logger))
@@ -247,6 +253,7 @@ func newApplicationHandlerWithNetflixMetadata(
 			applyRequestBoundary(config, routes),
 		),
 		workspaceRegistry: workspaceRegistry,
+		primeOperations:   primeOperations,
 	}, nil
 }
 
