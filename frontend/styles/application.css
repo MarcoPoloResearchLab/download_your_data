@@ -1626,6 +1626,147 @@ code {
   }
 }
 
+.media-workspace {
+  display: grid;
+  min-width: 0;
+  gap: 18px;
+}
+
+.media-workspace [role="tabpanel"] {
+  display: grid;
+  min-width: 0;
+  gap: 14px;
+}
+
+.media-workspace .workspace-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.media-workspace [aria-selected="true"] {
+  color: var(--accent-contrast);
+  background: var(--accent);
+}
+
+.media-filters,
+.media-chart-grid,
+.media-imports {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-width: 0;
+  gap: 14px;
+}
+
+.media-filters {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: end;
+}
+
+.media-imports > section {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.media-workspace input,
+.media-workspace select {
+  width: 100%;
+  min-width: 0;
+}
+
+.media-workspace input[type="text"] {
+  min-height: 31px;
+  padding: 5px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  background: var(--surface-raised);
+  color: var(--text);
+  font-size: 12px;
+}
+
+.media-workspace .kpi-label {
+  overflow: visible;
+  white-space: normal;
+}
+
+.media-workspace button.back-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.media-chart {
+  min-width: 0;
+  margin: 0;
+}
+
+.media-chart figcaption {
+  color: var(--text);
+  font-weight: 650;
+  font-size: 14px;
+}
+
+.media-workspace .table-scroll {
+  max-width: 100%;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.media-chart .table-scroll {
+  max-height: 360px;
+}
+
+.media-workspace td,
+.media-workspace th {
+  max-width: 320px;
+  overflow-wrap: anywhere;
+}
+
+.media-records {
+  min-width: 64rem;
+}
+
+.media-records > tbody > tr > td,
+.media-records > thead > tr > th {
+  min-width: 7rem;
+  overflow-wrap: normal;
+}
+
+.media-workspace meter {
+  width: 65px;
+  margin-right: 8px;
+  accent-color: var(--accent);
+}
+
+.media-dataset {
+  display: flex;
+  align-items: start;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.media-dataset input {
+  width: auto;
+}
+
+.media-pagination {
+  display: flex;
+  gap: 12px;
+}
+
+@media (max-width: 760px) {
+  .media-filters,
+  .media-chart-grid,
+  .media-imports,
+  .media-workspace .kpi-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
