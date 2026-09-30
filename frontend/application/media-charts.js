@@ -452,7 +452,9 @@ function plot({
       );
       const index = Math.min(
         labels.length - 1,
-        Math.round((position / plotWidth) * (labels.length - 1))
+        kind === 'bar'
+          ? Math.floor(position / bandWidth)
+          : Math.round((position / plotWidth) * (labels.length - 1))
       );
       guide.setAttribute('x1', String(left + position));
       guide.setAttribute('x2', String(left + position));

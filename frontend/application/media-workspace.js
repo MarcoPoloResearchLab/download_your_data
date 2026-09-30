@@ -145,24 +145,29 @@ function schedulePoll() {
     }, 750);
 }
 async function advanceAnalysis(signal) {
-  const pending = prime?.building_generation;
-  if (pending?.state === 'awaiting_confirmation') {
-    const datasets = pending.preview.datasets
-      .filter((dataset) => ['viewing', 'playback_details'].includes(dataset.id))
-      .map((dataset) => dataset.id);
-    if (!datasets.includes('viewing'))
-      throw new Error('viewing dataset is required');
-    await confirmPrimeSelection(pending.id, datasets, '', signal);
-    updateProviders(
-      await Promise.all([getPrimeProvider(signal), getNetflixProvider(signal)])
-    );
-  } else if (pending?.state === 'enriching' && !resumed.has(pending.id)) {
-    resumed.add(pending.id);
-    await createPrimeGeneration(signal, {
-      analysis_level: 'tmdb',
-      source_generation_id: pending.source_generation_id,
-      locale: pending.locale
-    });
+  try {
+    const pending = prime?.building_generation;
+    if (pending?.state === 'awaiting_confirmation') {
+      const datasets = pending.preview.datasets
+        .filter((dataset) => ['viewing', 'playback_details'].includes(dataset.id))
+        .map((dataset) => dataset.id);
+      if (!datasets.includes('viewing'))
+        throw new Error('viewing dataset is required');
+      await confirmPrimeSelection(pending.id, datasets, '', signal);
+      updateProviders(
+        await Promise.all([getPrimeProvider(signal), getNetflixProvider(signal)])
+      );
+    } else if (pending?.state === 'enriching' && !resumed.has(pending.id)) {
+      resumed.add(pending.id);
+      await createPrimeGeneration(signal, {
+        analysis_level: 'tmdb',
+        source_generation_id: pending.source_generation_id,
+        locale: pending.locale
+      });
+    }
+  } catch (failure) {
+    if (failure.name === 'AbortError') throw failure;
+    error = 'analysis_failed';
   }
   for (const provider of ['netflix', 'prime-video']) {
     const snapshot = provider === 'netflix' ? netflix : prime;

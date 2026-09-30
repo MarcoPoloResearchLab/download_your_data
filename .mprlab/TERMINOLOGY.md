@@ -101,6 +101,7 @@ Give each term one meaning. Use the same term for the same concept in all docume
 - `file picker`: The browser control that selects source files for import.
 - `source coverage`: The records, dates, and measures that the imported files supply.
 - `chart`: A visual representation of report measures.
+- `chart tooltip`: The chart text that shows the label and count at a pointer position.
 - `analysis`: The operations that classify titles and calculate report measures.
 
 Add repository-specific technical nouns below this line.

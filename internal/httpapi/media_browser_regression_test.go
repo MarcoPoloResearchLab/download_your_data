@@ -72,6 +72,13 @@ func testMediaBrowserReviewRegression(testContext *testing.T, scenario string) {
 				rows[index]["Playback Start Datetime (UTC)"] = "2026-01-02T01:00:00Z"
 			}
 		}
+		if scenario == "chart-inspection" && index < 3 {
+			rows[index]["Title"] = "Synthetic Film"
+			rows[index]["Playback Start Datetime (UTC)"] = "2026-03-03T01:00:00Z"
+			if index == 0 {
+				rows[index]["Playback Start Datetime (UTC)"] = "2026-01-05T01:00:00Z"
+			}
+		}
 	}
 	fixtureRoot := testContext.TempDir()
 	primePath := filepath.Join(fixtureRoot, "prime.zip")

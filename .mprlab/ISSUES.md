@@ -155,6 +155,48 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - After HTTP 413, the browser canceled the pending generation and imported another archive without reload.
   - `make ci` passed after the final source change.
 
+- [x] [B034] (P2) {F024} Analyze Netflix when Prime selection fails
+  Goal:
+  A Prime selection failure does not stop Netflix title analysis.
+  Expected: Netflix analysis completes while Prime selection requests fail.
+  Actual: Each Prime selection error exits before the Netflix analysis step.
+  Requirements:
+  - Report Prime transition errors through the existing analysis notice.
+  - Continue Netflix analysis after a Prime selection or resume error.
+  - Keep cancellation and automatic Prime selection available.
+  - Stop canceled browser requests.
+  Validation:
+  - Reproduce the failure through the shared browser workspace before production edits.
+  - Reject Prime selection requests and verify complete Netflix chart results.
+  - Verify the error notice and Prime cancellation control.
+  - Run `make ci` after the final code change.
+  Evidence:
+  - `TestMediaBrowserWorkspaceContract/selection-failure` failed before the production change and passed after the change.
+  - Netflix analysis completed while Prime selection requests returned HTTP 503.
+  - The browser showed the analysis error notice and the Prime cancellation control.
+  - `make ci` passed after the final code and test changes.
+
+- [x] [B035] (P2) {F024} Show the correct weekday in chart tooltips
+  Goal:
+  Weekday chart tooltips identify the selected bar and its count.
+  Expected: A pointer inside the Monday bar shows Monday data.
+  Actual: A pointer near the Monday bar edge shows Tuesday data.
+  Requirements:
+  - Use the containing category for bar chart pointers.
+  - Keep the nearest-point behavior for line and area charts.
+  - Keep pointer positions within the available chart categories.
+  Validation:
+  - Reproduce the incorrect weekday through the browser before production edits.
+  - Verify bar labels and counts at desktop and mobile widths.
+  - Verify that monthly line charts keep their existing pointer behavior.
+  - Run `make ci` after the final code change.
+  Evidence:
+  - `TestMediaBrowserWorkspaceContract/chart-inspection` showed Tuesday data inside the Monday bar before the production change.
+  - The corrected browser test passed at 1440px and 320px viewport widths.
+  - The browser showed Monday, Tuesday, and Sunday counts of 1, 2, and 0.
+  - The monthly line chart kept its February counts of 0 and 117.
+  - `make ci` passed after the final code and test changes.
+
 ## Improvements
 
 - [!] [I017] (P1) Adopt the current shared authentication contract
