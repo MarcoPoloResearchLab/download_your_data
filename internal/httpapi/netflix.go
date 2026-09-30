@@ -22,7 +22,6 @@ const (
 	netflixProviderPath       = "/api/providers/netflix"
 	netflixGenerationsPath    = "/api/providers/netflix/generations"
 	netflixDeleteConfirmation = "delete-netflix-provider"
-	netflixTMDBQueryConsent   = "authorize-tmdb-title-queries"
 )
 
 type generationResponse struct {
@@ -30,10 +29,9 @@ type generationResponse struct {
 }
 
 type createNetflixGenerationRequest struct {
-	AnalysisLevel         netflixlibrary.AnalysisLevel `json:"analysis_level"`
-	SourceGenerationID    string                       `json:"source_generation_id,omitempty"`
-	Locale                string                       `json:"locale,omitempty"`
-	TMDBTitleQueryConsent string                       `json:"tmdb_title_query_consent,omitempty"`
+	AnalysisLevel      netflixlibrary.AnalysisLevel `json:"analysis_level"`
+	SourceGenerationID string                       `json:"source_generation_id,omitempty"`
+	Locale             string                       `json:"locale,omitempty"`
 }
 
 type deleteNetflixProviderRequest struct {
@@ -171,8 +169,7 @@ func createNetflixGeneration(
 		switch payload.AnalysisLevel {
 		case netflixlibrary.AnalysisLevelLocal:
 			if payload.SourceGenerationID != "" ||
-				payload.Locale != "" ||
-				payload.TMDBTitleQueryConsent != "" {
+				payload.Locale != "" {
 				writeRequestError(
 					responseWriter,
 					http.StatusUnprocessableEntity,
@@ -182,14 +179,6 @@ func createNetflixGeneration(
 			}
 			generation, createError = workspace.CreateLocalGeneration()
 		case netflixlibrary.AnalysisLevelTMDB:
-			if payload.TMDBTitleQueryConsent != netflixTMDBQueryConsent {
-				writeRequestError(
-					responseWriter,
-					http.StatusUnprocessableEntity,
-					string(netflixlibrary.ErrorConsentRequired),
-				)
-				return
-			}
 			locale, localeError := tmdb.NewLocale(payload.Locale)
 			if localeError != nil {
 				writeRequestError(

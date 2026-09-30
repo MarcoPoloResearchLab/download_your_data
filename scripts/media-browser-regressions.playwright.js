@@ -1,104 +1,65 @@
 async page => {
-  const baseURL = '__BASE_URL__';
-  const scenario = '__REGRESSION__';
-  const assert = (condition,message) => { if (!condition) throw new Error(message); };
+  const baseURL='__BASE_URL__',scenario='__REGRESSION__';
+  const errors=[];page.on('pageerror',error=>errors.push(error.message));
+  const assert=(condition,message)=>{if(!condition)throw new Error(message);};
+  const activities=expected=>page.waitForFunction(expected=>document.querySelector('[data-media-kpi="activities"]')?.textContent===String(expected),expected).catch(async failure=>{throw new Error(`Expected ${expected} activities: ${await page.locator('.media-workspace').innerText()}`);});
+  await page.context().addCookies([{name:'__SESSION_COOKIE__',value:'__SESSION_TOKEN__',url:baseURL,httpOnly:true,sameSite:'Lax'}]);
   await page.goto(`${baseURL}/#app/viewing-history`,{waitUntil:'domcontentloaded'});
   await page.waitForFunction(()=>window.MPRUI?.testing);
-  await page.locator('[data-auth-state]').waitFor();
-  await page.context().addCookies([{name:'__SESSION_COOKIE__',value:'__SESSION_TOKEN__',url:baseURL,httpOnly:true,sameSite:'Lax'}]);
-  await page.evaluate(()=>window.MPRUI.testing.authenticate(document.querySelector('#app-header'),{user_id:'browser-media-user',user_email:'browser@example.invalid',user_display_name:'Regression fixture',display:'Regression fixture',avatar_url:'https://lh3.googleusercontent.com/a/browser-contract',user_avatar_url:'https://lh3.googleusercontent.com/a/browser-contract'}));
+  await page.evaluate(()=>window.MPRUI.testing.authenticate(document.querySelector('#app-header'),{user_id:'browser-media-user',user_email:'browser@example.invalid',user_display_name:'Media contract',user_avatar_url:'https://lh3.googleusercontent.com/a/browser-contract',display:'Media contract',avatar_url:'https://lh3.googleusercontent.com/a/browser-contract'}));
   await page.locator('.media-workspace').waitFor();
-  await page.locator('#media-prime-file').setInputFiles('__PRIME_ZIP__');
-  if (scenario==='upload-recovery') {
-    const archivePattern = `${baseURL}/api/providers/prime-video/generations/*/archive`;
-    await page.route(archivePattern,route=>route.fulfill({status:413,contentType:'application/json',json:{error:{code:'upload_too_large'}}}));
-    await page.locator('[data-media-action="preview-prime"]').click();
-    await page.waitForFunction(()=>document.querySelector('.media-workspace [role="alert"]')?.textContent.includes('upload_too_large'));
-    assert(await page.locator('[data-media-action="cancel-prime"]').count()===1,'failed upload hid pending cancellation');
-    await page.locator('[data-media-action="cancel-prime"]').click();
-    await page.waitForFunction(()=>!document.querySelector('[data-media-action="cancel-prime"]'));
-    await page.unroute(archivePattern);
-    await page.locator('#media-prime-file').setInputFiles('__PRIME_ZIP__');
-    await page.locator('[data-media-action="preview-prime"]').click();
-    await page.locator('.media-preview').waitFor();
-    await page.locator('[data-media-action="confirm-prime"]').click();
-    await page.waitForFunction(()=>document.querySelector('[data-media-kpi="activities"]')?.textContent==='120');
-    return;
-  }
-  await page.locator('#media-prime-label').fill('Prime household');
-  await page.locator('[data-media-action="preview-prime"]').click();
-  await page.locator('.media-preview').waitFor();
-  if (scenario==='drafts') {
-    assert(await page.locator('#media-prime-label').inputValue()==='Prime household','preview discarded the import label');
-    await page.locator('input[name="dataset"][value="searches"]').check();
-    await page.locator('[data-media-view="sources"]').click();
-    assert(await page.locator('input[name="dataset"][value="searches"]').isChecked(),'tab change discarded dataset selection');
-  }
-  await page.locator('[data-media-action="confirm-prime"]').click();
-  await page.locator('[data-media-view="overview"]').click();
-  await page.waitForFunction(()=>document.querySelector('[data-media-kpi="activities"]')?.textContent==='120');
-  await page.locator('[data-media-action="enrich-prime"]').click();
-  await page.locator('[data-media-confirm="true"]').click();
-  await page.locator('[data-media-action="resume-prime"]').waitFor();
-  if (scenario==='drafts') {
-    await page.locator('#media-netflix-file').setInputFiles('__VIEWING_CSV__');
-    await page.locator('#media-netflix-label').fill('Netflix profile');
-    await page.locator('#media-title-filter').fill('Unapplied draft');
-    const poll = page.waitForResponse(response=>response.url().includes('/api/viewing-history?') && response.status()===200);
-    await (await poll).finished();
-    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
-    assert(await page.locator('#media-title-filter').inputValue()==='Unapplied draft','poll discarded the filter draft');
-    assert(await page.locator('#media-netflix-label').inputValue()==='Netflix profile','poll discarded the Netflix label');
-    assert(await page.locator('#media-netflix-file').evaluate(input=>input.files.length)===1,'poll discarded the selected file');
-    await page.locator('[data-media-action="cancel-prime"]').click();
-    await page.locator('[data-media-action="import-netflix"]').click();
-    await page.waitForFunction(()=>document.querySelector('[data-media-kpi="activities"]')?.textContent==='121');
-    await page.locator('[data-media-view="activity"]').click();
-    await page.locator('#media-provider').selectOption('netflix');
-    await page.locator('#media-title-filter').fill('');
-    await page.locator('[data-media-action="apply-filters"]').click();
-    await page.waitForFunction(()=>document.querySelector('.media-records')?.textContent.includes('Netflix profile'));
-    await page.evaluate(()=>{location.hash='#catalog';});
-    await page.locator('.catalog-grid').waitFor();
-    await page.evaluate(()=>{location.hash='#app/viewing-history';});
-    await page.locator('.media-workspace').waitFor();
-    assert(await page.locator('#media-netflix-label').inputValue()==='','route change retained a private draft');
-    return;
-  }
-  assert(scenario==='pagination','unknown regression scenario');
-  await page.locator('[data-media-view="titles"]').click();
-  await page.locator('[data-media-action="next-titles"]').click();
-  await page.waitForFunction(()=>document.querySelectorAll('.media-titles > tbody > tr').length===20);
-  await page.locator('[data-media-view="activity"]').click();
-  await page.locator('[data-media-action="next"]').click();
-  await page.waitForFunction(()=>document.querySelectorAll('.media-records > tbody > tr').length===20);
-  let conflict = false;
-  let released = false;
-  let conflictStatus = 0;
-  await page.route(`${baseURL}/api/viewing-history?*`,async route=>{
-    if (!released && /[?&]cursor=/.test(route.request().url())) {
-      released = true;
-      await page.request.get(`${baseURL}/fixture/release-enrichment`);
-      await page.evaluate(async baseURL=>{
-        const deadline = Date.now()+10000;
-        while (Date.now()<deadline) {
-          const snapshot = await (await fetch(`${baseURL}/api/providers/prime-video`,{credentials:'include'})).json();
-          if (snapshot.active_generation?.analysis_level==='tmdb' && snapshot.building_generation===null) return;
-          await new Promise(resolve=>setTimeout(resolve,25));
-        }
-        throw new Error('fixture enrichment did not complete');
-      },baseURL);
-      const response = await route.fetch();
-      conflictStatus = response.status();
-      conflict = response.status()===409 && (await response.json()).error.code==='stale_cursor';
+  if(scenario==='analysis-start-failure'){
+    await page.route(`${baseURL}/api/providers/netflix/generations`,route=>route.request().method()==='POST'&&route.request().postDataJSON().analysis_level==='tmdb'?route.fulfill({status:503,json:{error:{code:'analysis_unavailable'}}}):route.continue());
+    await page.route(`${baseURL}/api/providers/netflix/generations/*/viewing-activity`,async route=>{
+      const response=await route.fetch();
+      const deadline=Date.now()+10000;
+      while(true){const snapshot=await page.request.get(`${baseURL}/api/providers/netflix`);const state=await snapshot.json();if(state.active_generation?.state==='ready')break;assert(Date.now()<deadline,'raw Netflix fixture did not activate');}
       await route.fulfill({response});
-    } else await route.continue();
-  });
-  await page.waitForFunction(()=>!document.querySelector('[data-media-action="resume-prime"]') && document.querySelectorAll('.media-records > tbody > tr').length===100);
-  assert(conflict,`generation race did not return the canonical cursor conflict: released=${released}, status=${conflictStatus}`);
-  assert(await page.locator('.media-workspace [role="alert"]').count()===0,'cursor conflict stopped automatic updates');
-  assert(await page.locator('[data-media-action="previous"]').isDisabled(),'activity cursor stack was retained');
-  await page.locator('[data-media-view="titles"]').click();
-  assert(await page.locator('.media-titles > tbody > tr').count()===100,'title cursor was retained');
-  assert(await page.locator('[data-media-action="previous-titles"]').isDisabled(),'title cursor stack was retained');
+    });
+    await page.evaluate(async baseURL=>{const response=await fetch(`${baseURL}/fixture/release-enrichment`);if(!response.ok)throw new Error('fixture release failed');},baseURL);
+    const primeAnalyzed=page.waitForResponse(async response=>response.url()===`${baseURL}/api/providers/prime-video`&&response.status()===200&&(await response.json()).active_generation?.analysis_level==='tmdb');
+    await page.locator('#media-files').setInputFiles(['__VIEWING_CSV__','__PRIME_ZIP__']);
+    await activities(121);
+    await primeAnalyzed;
+    assert(await page.locator('[data-media-chart="genres"] .bar-value').innerText()==='1','one service failure blocked independent title analysis');
+    assert(await page.locator('.media-workspace [role="alert"]').count()===1,'analysis failure is not visible');
+    assert(errors.length===0,errors.join('; '));return;
+  }
+  if(scenario==='upload-recovery'){
+    let reject=true;await page.route(`${baseURL}/api/providers/prime-video/generations/*/archive`,route=>{if(reject){reject=false;return route.fulfill({status:413,json:{error:{code:'upload_too_large'}}});}return route.continue();});
+    await page.locator('#media-files').setInputFiles('__PRIME_ZIP__');await page.locator('[role="alert"]').waitFor();
+    await page.locator('[data-media-action="cancel-prime-video"]').click();await page.locator('.media-processing').waitFor({state:'detached'});
+  }
+  await page.locator('[data-media-action="add-files"]').click();await page.locator('#media-files').setInputFiles('__PRIME_ZIP__');await activities(120);
+  const release=()=>page.evaluate(async baseURL=>{const response=await fetch(`${baseURL}/fixture/release-enrichment`);if(!response.ok)throw new Error('fixture release failed');},baseURL);
+  if(scenario==='drafts'){
+    await page.locator('#media-title-filter').fill('Synthetic Title');await activities(119);
+    await page.locator('.media-more summary').click();await page.locator('#media-timezone').fill('America/Los_Angeles');
+    await page.locator('[data-media-view="history"]').click();await page.locator('[data-media-view="overview"]').click();
+    await release();await page.locator('.media-processing').waitFor({state:'detached'});
+    assert(await page.locator('#media-title-filter').inputValue()==='Synthetic Title','title filter lost during automatic update');
+    assert(await page.locator('#media-timezone').inputValue()==='America/Los_Angeles','timezone lost during automatic update');
+    await page.locator('#media-title-filter').fill('Synthetic Title 01');await activities(10);
+    assert(await page.locator('#media-title-filter').evaluate(node=>node===document.activeElement),'filter redraw lost keyboard focus');
+  }else if(scenario==='pagination'){
+    await page.locator('[data-media-view="history"]').click();assert(await page.locator('.media-records > tbody > tr').count()===100,'first page incomplete');
+    await page.locator('[data-media-action="next"]').click();await page.waitForFunction(()=>document.querySelectorAll('.media-records > tbody > tr').length===20);
+    await release();await page.locator('.media-processing').waitFor({state:'detached'});await page.waitForFunction(()=>document.querySelectorAll('.media-records > tbody > tr').length===100);
+    await page.locator('[data-media-view="overview"]').click();await activities(120);
+    assert(await page.locator('[data-media-chart="media-types"]').innerText().then(text=>text.includes('120')),'chart totals use the page size');
+  }else if(scenario==='charts'){
+    await release();await page.locator('.media-processing').waitFor({state:'detached'});
+    const monthly=await page.locator('[data-media-chart="monthly"] .chart-data tbody tr').evaluateAll(rows=>rows.map(row=>Array.from(row.querySelectorAll('td')).reduce((sum,cell)=>sum+Number(cell.textContent),0)));assert(monthly.join(',')==='40,0,80','monthly chart lost activity counts or a zero-activity month');
+    await page.locator('.media-more summary').click();await page.locator('#media-start').fill('2026-01-01');await page.locator('#media-end').fill('2026-01-31');await activities(40);
+    assert(await page.locator('[data-media-chart="monthly"] svg desc').textContent().then(text=>!text.includes('Mar')),'monthly graph ignores date filter');
+    await page.locator('#media-type').selectOption('movie');await activities(1);
+    assert(await page.locator('[data-media-chart="genres"] .bar-value').innerText()==='1','genre counts ignore content filter');
+    await page.locator('[data-media-action="clear-filters"]').click();await activities(120);
+    await page.locator('#media-title-filter').fill('No matching title');await activities(0);
+    assert(await page.locator('[data-media-chart] .empty-copy').count()===6,'empty charts retain values');
+    await page.locator('#media-title-filter').fill('');await activities(120);
+    await page.setViewportSize({width:320,height:800});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),'chart page overflows');
+    await page.screenshot({path:'__SCREENSHOT_ROOT__/f024-charts-narrow.png',fullPage:true});
+  }else await release();
+  assert(errors.length===0,errors.join('; '));
 }

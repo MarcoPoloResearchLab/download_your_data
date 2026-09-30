@@ -91,7 +91,8 @@ export function resetAPI() {
 /** @typedef {{id:string,provider:string,kind:string,title:string,raw_title:string,title_status:string,date:string,date_precision:string,timestamp?:string,end_timestamp?:string,interval_status?:string,recorded_seconds:number|null,completion:string,content_type:string,profile_type:string,profile_label?:string,autoplay:boolean|null,deleted:boolean|null,device?:string,audio_language?:string,subtitle_language?:string,offer_type?:string,description?:string,source:MediaSource,search_title:string,title_identity:string,match_status:string,series_title?:string,season_number?:number,episode_title?:string,episode_identity?:string,metadata?:{tmdb_id:number,media_type:string,title:string,runtime_minutes?:number}}} MediaActivity */
 /** @typedef {{label:string,count:number}} MediaCount */
 /** @typedef {{id:string,title:string,media_type:string,match_status:string,activities:number,providers:string[]}} MediaTitle */
-/** @typedef {{contract:string,filter:Record<string,string>,overview:{activity_count:number,source_record_count:number,unique_title_count:number,accepted_title_count:number,unresolved_title_count:number,movie_titles:number,series_titles:number,episode_count:number,unavailable_title_records:number,recorded_seconds:number,timed_records:number,unknown_duration_records:number,zero_duration_records:number,rentals:number,purchases:number,purchase_records_with_playback:number,services:{provider:string,unit:string,activities:number,recorded_seconds:number,timed_records:number}[],months:{month:string,provider:string,count:number}[],weekdays:MediaCount[],top_titles:MediaTitle[],genres:MediaCount[],match_coverage:MediaCount[],exclusions:MediaCount[],devices:MediaCount[],audio_languages:MediaCount[],subtitle_languages:MediaCount[]},titles:MediaTitle[],sources:{provider:string,generation_id:string,records:number,start_date:string,end_date:string}[],records:MediaActivity[],next_cursor:string,next_titles_cursor:string,revision:string}} MediaReport */
+/** @typedef {{period:string,label:string,count:number}} MediaPeriodCount */
+/** @typedef {{contract:string,filter:Record<string,string>,overview:{activity_count:number,source_record_count:number,unique_title_count:number,accepted_title_count:number,unresolved_title_count:number,movie_titles:number,series_titles:number,episode_count:number,unavailable_title_records:number,recorded_seconds:number,timed_records:number,unknown_duration_records:number,zero_duration_records:number,rentals:number,purchases:number,purchase_records_with_playback:number,services:{provider:string,unit:string,activities:number,recorded_seconds:number,timed_records:number}[],months:{month:string,provider:string,count:number}[],media_types:MediaCount[],monthly_media:MediaPeriodCount[],genres_by_weekday:MediaPeriodCount[],genres_by_year:MediaPeriodCount[],original_languages:MediaCount[],weekdays:MediaCount[],top_titles:MediaTitle[],genres:MediaCount[],match_coverage:MediaCount[],exclusions:MediaCount[],devices:MediaCount[],audio_languages:MediaCount[],subtitle_languages:MediaCount[]},titles:MediaTitle[],sources:{provider:string,generation_id:string,records:number,start_date:string,end_date:string}[],records:MediaActivity[],next_cursor:string,next_titles_cursor:string,revision:string}} MediaReport */
 /** @typedef {{id:string,file:string,rows:number,start_date?:string,end_date?:string}} PrimeDataset */
 /** @typedef {{id:string,state:string,analysis_level:string,datasets:string[],profile_label:string,record_count:number,completed_titles:number,total_titles:number,source_generation_id?:string,locale?:string,failure?:string,preview?:{datasets:PrimeDataset[],unsupported_files:string[],source_hash:string}}} PrimeGeneration */
 /** @typedef {{active_generation:PrimeGeneration|null,building_generation:PrimeGeneration|null,max_upload_bytes:number,max_expanded_bytes:number,tmdb_configured:boolean}} PrimeSnapshot */
@@ -106,8 +107,10 @@ const MEDIA_MATCHES = new Set(['not_enriched',...MATCH_STATUSES]);
 const MEDIA_CONTENT_TYPES = new Set(['content','promotion','trailer','live','unknown']);
 const MEDIA_PROFILE_TYPES = new Set(['adult','child','unknown']);
 const MEDIA_TITLE_TYPES = new Set(['movie','series','unknown']);
+const MEDIA_WEEKDAYS = new Set(['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']);
 const MEDIA_TITLE_ID = /^(tmdb:(movie|series):[1-9][0-9]{0,18}|(netflix|prime-video):[a-f0-9]{64})$/;
 
+/** @param {string} value @param {Set<string>} values @param {string} subject */
 function requireMember(value, values, subject) {
   if (!values.has(value)) throw new Error(`invalid ${subject}`);
 }
@@ -241,13 +244,13 @@ export async function getMediaReport(filter,signal,cursor = '',titlesCursor = ''
   if (titlesCursor) parameters.set('titles_cursor',titlesCursor);
   const payload = await requestJSON(`${HISTORY_PATH}?${parameters}`,{signal});
   assertObject(payload,'media report');
-  if (payload.contract !== 'viewing-history-report-v1') throw new Error('invalid media report contract');
+  if (payload.contract !== 'viewing-history-report-v2') throw new Error('invalid media report contract');
   assertObject(payload.filter,'media filter');
-  for (const key of ['provider','timezone','start_date','end_date','title','title_id','kind','match_status']) assertString(payload.filter[key],`media filter ${key}`);
+  for (const key of ['provider','timezone','start_date','end_date','title','title_id','kind','match_status','media_type']) assertString(payload.filter[key],`media filter ${key}`);
   assertObject(payload.overview,'media overview');
   for (const key of ['activity_count','source_record_count','unique_title_count','accepted_title_count','unresolved_title_count','movie_titles','series_titles','episode_count','unavailable_title_records','timed_records','unknown_duration_records','zero_duration_records','rentals','purchases','purchase_records_with_playback']) assertCount(payload.overview[key],`media ${key}`);
   assertFiniteNumber(payload.overview.recorded_seconds,'media recorded seconds');
-  for (const key of ['services','months','weekdays','top_titles','genres','match_coverage','exclusions','devices','audio_languages','subtitle_languages']) assertArray(payload.overview[key],`media ${key}`);
+  for (const key of ['services','months','media_types','monthly_media','genres_by_weekday','genres_by_year','original_languages','weekdays','top_titles','genres','match_coverage','exclusions','devices','audio_languages','subtitle_languages']) assertArray(payload.overview[key],`media ${key}`);
   for (const service of payload.overview.services) {
     assertObject(service,'media service');
     requireMember(service.provider,MEDIA_PROVIDERS,'media service provider');
@@ -261,13 +264,29 @@ export async function getMediaReport(filter,signal,cursor = '',titlesCursor = ''
     assertString(month.month,'media month');
     assertCount(month.count,'media month count');
   }
-  for (const key of ['weekdays','genres','match_coverage','exclusions','devices','audio_languages','subtitle_languages']) {
+  for (const key of ['media_types','original_languages','weekdays','genres','match_coverage','exclusions','devices','audio_languages','subtitle_languages']) {
     for (const count of payload.overview[key]) {
       assertObject(count,`media ${key} count`);
       assertString(count.label,`media ${key} label`);
       assertCount(count.count,`media ${key} count`);
     }
   }
+  for (const key of ['monthly_media','genres_by_weekday','genres_by_year']) {
+    for (const item of payload.overview[key]) {
+      assertObject(item,`media ${key}`);
+      assertString(item.period,`media ${key} period`);
+      assertString(item.label,`media ${key} label`);
+      assertCount(item.count,`media ${key} count`);
+    }
+  }
+  for (const item of payload.overview.media_types) requireMember(item.label,MEDIA_TITLE_TYPES,'media content type');
+  for (const item of payload.overview.monthly_media) {
+    requireMember(item.label,MEDIA_TITLE_TYPES,'monthly content type');
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(item.period)) throw new Error('invalid media month period');
+  }
+  for (const item of payload.overview.genres_by_weekday) requireMember(item.period,MEDIA_WEEKDAYS,'genre weekday');
+  for (const item of payload.overview.genres_by_year) if (!/^\d{4}$/.test(item.period)) throw new Error('invalid genre year');
+  for (const item of payload.overview.original_languages) if (!/^[a-z]{2,3}$/.test(item.label)) throw new Error('invalid original language');
   for (const title of payload.overview.top_titles) validateMediaTitle(title);
   for (const key of ['titles','sources','records']) assertArray(payload[key],`media ${key}`);
   assertString(payload.next_cursor,'media cursor');
@@ -372,8 +391,7 @@ export async function createTMDBGeneration(sourceGenerationID, locale, signal) {
     {
       analysis_level: 'tmdb',
       source_generation_id: sourceGenerationID,
-      locale,
-      tmdb_title_query_consent: 'authorize-tmdb-title-queries'
+      locale
     },
     signal
   );

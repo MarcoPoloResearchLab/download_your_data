@@ -71,7 +71,7 @@ func TestPrimeMatcherEvaluationGate(testContext *testing.T) {
 	server := newAuthenticatedTestServer(testContext, config, handler, defaultTestUserID)
 	defer server.Close()
 	active := importPrimeForTest(testContext, config, server.URL, syntheticPrimeArchiveWithRows(testContext, rows), []string{"viewing"})
-	response := mutateNetflix(testContext, config, server.URL+testPrimeProviderPath+"/generations", http.MethodPost, "application/json", `{"analysis_level":"tmdb","source_generation_id":"`+active.ID+`","locale":"en-US","tmdb_title_query_consent":"authorize-tmdb-title-queries"}`)
+	response := mutateNetflix(testContext, config, server.URL+testPrimeProviderPath+"/generations", http.MethodPost, "application/json", `{"analysis_level":"tmdb","source_generation_id":"`+active.ID+`","locale":"en-US"}`)
 	if response.StatusCode != http.StatusAccepted {
 		testContext.Fatal(readBody(testContext, response))
 	}

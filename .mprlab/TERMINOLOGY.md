@@ -95,6 +95,14 @@ Give each term one meaning. Use the same term for the same concept in all docume
 
 ## Repository Technical Nouns
 
+- `dashboard`: The browser view that presents related analysis charts and measures.
+- `content type`: The movie, series, or unknown classification used in shared report filters.
+- `original language`: The original language of a title supplied by accepted metadata.
+- `file picker`: The browser control that selects source files for import.
+- `source coverage`: The records, dates, and measures that the imported files supply.
+- `chart`: A visual representation of report measures.
+- `analysis`: The operations that classify titles and calculate report measures.
+
 Add repository-specific technical nouns below this line.
 
 - `provider map`: The explicit Google, Apple, and password entries in shared authentication configuration.
@@ -109,7 +117,7 @@ Add repository-specific technical nouns below this line.
 - `title identity`: The versioned identity of a movie, series, or episode used for title grouping.
 - `title match`: The accepted, review, or unmatched result of a title lookup.
 - `metadata`: Descriptive title data supplied by an accepted external title match.
-- `TMDB`: The external title service used for consent-based metadata enrichment.
+- `TMDB`: The external title service used for automatic metadata enrichment.
 - `IMDb title ID`: The identifier that IMDb assigns to a movie or series, supplied here through TMDB external IDs.
 - `checkpoint`: A persisted result that lets an interrupted generation continue after restart.
 - `enrichment`: The operation that adds accepted external title metadata to imported activity.
@@ -162,6 +170,8 @@ Add repository-specific technical nouns below this line.
 Use the simple present, simple past, simple future, imperative, or infinitive form of these verbs.
 
 ## Repository Technical Verbs
+
+- `aggregate`: Calculate complete report measures from the filtered source records.
 
 Add repository-specific technical verbs below this line.
 

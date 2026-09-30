@@ -4,25 +4,25 @@ mprlab_resources:
   release:
     scheme: semver
   resources:
-    - kind: private_values
-      id: private
+    private:
+      kind: private_values
       bindings:
         google-web-client-id: DOWNLOAD_YOUR_DATA_GOOGLE_CLIENT_ID
         tauth-jwt-signing-key: DOWNLOAD_YOUR_DATA_TAUTH_JWT_SIGNING_KEY
         tmdb-read-token: DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN
-    - kind: compose_project
-      id: runtime
+    runtime:
+      kind: compose_project
       images:
-        - id: api-image
+        api-image:
           repository: ghcr.io/marcopoloresearchlab/download-your-data
           build:
             context: .
             dockerfile: Dockerfile
             target: api
             platforms:
-              - linux/amd64
+            - linux/amd64
       services:
-        - id: download-your-data-api
+        download-your-data-api:
           image: api-image
           placement:
             group: gateway
@@ -60,22 +60,22 @@ mprlab_resources:
               resource: private
               output: tmdb-read-token
           mounts:
-            - volume: data
-              target: /var/lib/download-your-data
+            /var/lib/download-your-data:
+              volume: data
               read_only: false
           ports:
-            - container_port: 8787
+            '8787': {}
           readiness:
             protocol: http
             port: 8787
             path: /api/health
             expected_status: 200
       volumes:
-        - id: data
+        data:
           name: mprlab-download-your-data-data
           retention: retain
-    - kind: runtime_capability
-      id: http
+    http:
+      kind: runtime_capability
       name: download-your-data.http
       version: 1
       project: runtime
@@ -89,12 +89,12 @@ mprlab_resources:
         protocol: http
         path: /api/health
         expected_status: 200
-    - kind: caddy_route
-      id: public-api
+    public-api:
+      kind: caddy_route
       hostname: dyd-api.mprlab.com
       listener: https
       handlers:
-        - id: shared-auth
+        shared-auth:
           path_prefix: /auth
           upstream: tauth.http
           transport:
@@ -102,7 +102,7 @@ mprlab_resources:
             dial_timeout_seconds: 10
             response_header_timeout_seconds: 30
             read_timeout_seconds: 80
-        - id: shared-profile
+        shared-profile:
           path_prefix: /me
           upstream: tauth.http
           transport:
@@ -110,7 +110,7 @@ mprlab_resources:
             dial_timeout_seconds: 10
             response_header_timeout_seconds: 30
             read_timeout_seconds: 80
-        - id: default
+        default:
           path_prefix: /
           upstream: download-your-data.http
           transport:
@@ -124,13 +124,13 @@ mprlab_resources:
         rate_limit:
           events: 300
           window_seconds: 10
-    - kind: health_check
-      id: public-health
+    public-health:
+      kind: health_check
       protocol: http
       url: https://dyd-api.mprlab.com/api/health
       expected_status: 200
-    - kind: github_pages
-      id: website
+    website:
+      kind: github_pages
       repository: marcopoloresearchlab/download_your_data
       branch: gh-pages
       domain: dyd.mprlab.com
@@ -142,15 +142,15 @@ mprlab_resources:
         target: pages
       verification:
         path: /.mprlab-release.json
-    - kind: tauth_tenant
-      id: authentication
+    authentication:
+      kind: tauth_tenant
       capability: tauth.tenants
       version: 1
       tenant:
         id: download-your-data
         display_name: Download Your Data
         origins:
-          - https://dyd.mprlab.com
+        - https://dyd.mprlab.com
         google_web_client_id:
           resource: private
           output: google-web-client-id

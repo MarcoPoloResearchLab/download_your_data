@@ -28,7 +28,7 @@ curl --fail --silent --show-error "${base_url}/api/health" >/dev/null
 
 scenario="$(<"${script_directory}/netflix-browser-workspace.playwright.js")"
 scenario="${scenario/__BASE_URL__/${base_url}}"
-scenario="${scenario/__VIEWING_CSV__/${viewing_csv}}"
+scenario="${scenario//__VIEWING_CSV__/${viewing_csv}}"
 scenario="${scenario/__SESSION_COOKIE__/${session_cookie}}"
 scenario="${scenario/__SESSION_TOKEN__/${session_token}}"
 

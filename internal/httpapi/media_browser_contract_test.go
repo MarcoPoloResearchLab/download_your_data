@@ -16,8 +16,8 @@ func TestMediaBrowserWorkspaceContract(testContext *testing.T) {
 	if os.Getenv("DOWNLOAD_YOUR_DATA_RUN_BROWSER_CONTRACT") != "1" {
 		testContext.Skip("enable browser contracts through make test-browser")
 	}
-	testContext.Run("existing", testMediaBrowserWorkspaceContract)
-	for _, scenario := range []string{"drafts", "pagination", "upload-recovery"} {
+	testContext.Run("dashboard", testMediaBrowserWorkspaceContract)
+	for _, scenario := range []string{"drafts", "pagination", "upload-recovery", "charts", "analysis-start-failure"} {
 		testContext.Run(scenario, func(testContext *testing.T) { testMediaBrowserReviewRegression(testContext, scenario) })
 	}
 }
@@ -61,6 +61,6 @@ func testMediaBrowserWorkspaceContract(testContext *testing.T) {
 	}
 	queries := client.searchCallSnapshot()
 	if len(queries) != 1 || queries["Synthetic Film"] != 2 {
-		testContext.Fatal("browser enrichment sent a query outside the consented title contract")
+		testContext.Fatal("browser enrichment sent a query outside the derived title contract")
 	}
 }

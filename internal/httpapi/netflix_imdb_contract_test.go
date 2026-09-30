@@ -105,7 +105,7 @@ func createIMDbEnrichmentHTTP(testContext *testing.T, config runtimeconfig.Confi
 	testContext.Helper()
 	response := mutateNetflix(testContext, config, serverURL+netflixGenerationsPath,
 		http.MethodPost, "application/json", `{"analysis_level":"tmdb","source_generation_id":"`+sourceID+
-			`","locale":"en-US","tmdb_title_query_consent":"`+netflixTMDBQueryConsent+`"}`)
+			`","locale":"en-US"}`)
 	if response.StatusCode != http.StatusCreated {
 		testContext.Fatalf("create IMDb enrichment: %s", readBody(testContext, response))
 	}

@@ -41,7 +41,7 @@ inventory, evidence model, indexing rules, and publication boundary.
 
 | Platform | Surface Type | Primary Input / Scope | Capabilities & Status |
 | --- | --- | --- | --- |
-| **Netflix** | Interactive Workspace & Guide | Viewing activity CSV (`Title`, `Date`) | **Live Workspace (`#app/netflix`) & Guide (`#guide/netflix`)** — Per-profile CSV import, raw activity analytics, date/weekday filtering, paged records, optional TMDB enrichment, enriched CSV export, and provider data deletion. |
+| **Netflix** | Interactive Workspace & Guide | Viewing activity CSV (`Title`, `Date`) | **Shared Workspace (`#app/viewing-history`) & Guide (`#guide/netflix`)** — Automatic CSV import and title analysis, six charts, shared filters, history, CSV export, and provider deletion. |
 | **OpenAI** | Interactive Workspace & Guide | ChatGPT Data Export ZIP (`conversations.json`) | **Live Guide (`#guide/openai`) & Workspace in Progress (`#app/openai`)** — Step-by-step export guide live; user-owned archive ingest, indexing, and hybrid semantic search engine contract in active development. |
 | **Facebook** | Visual Export Guide | Meta Accounts Center Information Archive | **Live Guide (`#guide/facebook`)** — Product-specific visual export walkthrough, Accounts Center navigation, file format/media options, and first-party help links. |
 | **Instagram** | Visual Export Guide | Meta Accounts Center Information Archive | **Live Guide (`#guide/instagram`)** — Product-specific visual export walkthrough, Accounts Center download steps, data type selection, and first-party help links. |
@@ -53,7 +53,7 @@ inventory, evidence model, indexing rules, and publication boundary.
 | **YouTube** | Visual Export Guide | Google Takeout YouTube Archive | **Live Guide (`#guide/youtube`)** — Visual export guide for selecting YouTube & YouTube Music data, configuring delivery options, and downloading Takeout archives. |
 | **Google** | Visual Export Guide | Google Takeout Multi-Service Archive | **Live Guide (`#guide/google`)** — Visual export guide for configuring Google Takeout multi-service exports, export frequencies, file sizes, and destination options. |
 | **Google Authenticator** | Browser Conversion Tool | Google Authenticator export QR screenshots | **Live Tool (`/tools/google-authenticator/`)** — Simulated walkthrough and local browser conversion from export QR screenshots to setup keys for Apple Passwords. |
-| **Amazon** | Visual Export Guide | Order History Reports & Personal Data Archive | **Live Guide (`#guide/amazon`)** — Product-specific visual export walkthrough for requesting Amazon order reports, Kindle content, and Prime Video history. |
+| **Amazon** | Shared Workspace & Guide | Order History Reports & Personal Data Archive | **Shared Workspace (`#app/viewing-history`) & Guide (`#guide/amazon`)** — Automatic Prime Video import and title analysis, six charts, shared filters, history, CSV export, and provider deletion. Order and Kindle export guides remain available. |
 | **Apple Passwords** | Visual Export and Import Guide | Passwords CSV (`name`, `url`, `username`, `password`, `note`) | **Live Guide (`#guide/apple-passwords`)** — Export all passwords from Passwords on Mac, review duplicate records, and import the final CSV without uploading it. |
 
 ## Authentication boundary
@@ -180,7 +180,7 @@ request failures use the existing application error contract.
 The [I017 migration record](docs/mpr-ui-migration.md) describes validation and publication gates.
 
 Netflix supports user-owned CSV import, analytics, records, progress,
-replacement, optional TMDB enrichment, export, provider deletion, and complete
+replacement, automatic title analysis, export, provider deletion, and complete
 workspace deletion. OpenAI snapshots and search are user-scoped; browser
 archive import and indexing remain unavailable until their authenticated job
 lifecycle is implemented.

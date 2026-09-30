@@ -64,7 +64,6 @@ func registerMediaRoutes(routes *http.ServeMux, operations *primeOperations, reg
 			AnalysisLevel      string `json:"analysis_level"`
 			SourceGenerationID string `json:"source_generation_id"`
 			Locale             string `json:"locale"`
-			Consent            string `json:"tmdb_title_query_consent"`
 		}
 		if err := decodeJSONRequest(writer, request, &payload); err != nil {
 			writeJSONRequestError(writer, err)
@@ -75,16 +74,12 @@ func registerMediaRoutes(routes *http.ServeMux, operations *primeOperations, reg
 		status := http.StatusCreated
 		switch payload.AnalysisLevel {
 		case "", "local":
-			if payload.SourceGenerationID != "" || payload.Locale != "" || payload.Consent != "" {
+			if payload.SourceGenerationID != "" || payload.Locale != "" {
 				writeRequestError(writer, http.StatusUnprocessableEntity, "invalid_generation_request")
 				return
 			}
 			generation, err = store.Create(request.Context())
 		case "tmdb":
-			if payload.Consent != netflixTMDBQueryConsent {
-				writeRequestError(writer, http.StatusUnprocessableEntity, "tmdb_consent_required")
-				return
-			}
 			if operations.client == nil {
 				writeRequestError(writer, http.StatusUnprocessableEntity, "tmdb_not_configured")
 				return
@@ -258,11 +253,11 @@ func registerMediaRoutes(routes *http.ServeMux, operations *primeOperations, reg
 }
 
 func mediaFilter(request *http.Request) (media.Filter, error) {
-	if err := requireQueryKeys(request, []string{"provider", "timezone", "start_date", "end_date", "title", "title_id", "kind", "match_status", "limit", "cursor", "titles_cursor"}); err != nil {
+	if err := requireQueryKeys(request, []string{"provider", "timezone", "start_date", "end_date", "title", "title_id", "kind", "match_status", "media_type", "limit", "cursor", "titles_cursor"}); err != nil {
 		return media.Filter{}, err
 	}
 	query := request.URL.Query()
-	return media.NewFilter(query.Get("provider"), query.Get("timezone"), query.Get("start_date"), query.Get("end_date"), query.Get("title"), query.Get("kind"), query.Get("match_status"), query.Get("title_id"))
+	return media.NewFilter(query.Get("provider"), query.Get("timezone"), query.Get("start_date"), query.Get("end_date"), query.Get("title"), query.Get("kind"), query.Get("match_status"), query.Get("title_id"), query.Get("media_type"))
 }
 
 func netflixMediaRecords(request *http.Request, workspace *netflixlibrary.Workspace) ([]media.Record, error) {

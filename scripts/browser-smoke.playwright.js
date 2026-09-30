@@ -252,12 +252,7 @@ async page => {
     'Apple Passwords guide must expose export and import instructions'
   );
   await route('#credits', '.credits');
-  assert(
-    (await page.locator('.tmdb-credit').textContent()).includes(
-      'This product uses the TMDB API but is not endorsed or certified by TMDB.'
-    ),
-    'public Credits must render its static TMDB attribution'
-  );
+  assert(!(await page.locator('.credits').innerText()).includes('TMDB'), 'Credits exposes title-service setup');
   assert(
     protectedRequests().length === 0,
     `public guides or Credits made protected requests: ${protectedRequests().join(', ')}`
@@ -389,7 +384,8 @@ async page => {
     await page.evaluate(() => window.location.hash) === '#provider/netflix',
     'obsolete provider route must not be rewritten into a compatibility alias'
   );
-  await route('#app/netflix', '.workspace-gate');
+  await route('#app/netflix', '.catalog');
+  await route('#app/viewing-history', '.workspace-gate');
   assert(
     ['pending', 'unauthenticated'].includes(
       await page.locator('.workspace-gate-panel').getAttribute('data-auth-state')
@@ -414,10 +410,10 @@ async page => {
     });
   });
   await setSharedAuth(true);
-  await page.locator('.workspace').waitFor();
+  await page.locator('.media-workspace').waitFor();
   await page.waitForFunction(() => window.__downloadYourDataReadyEvents === 1);
   assert(
-    await page.locator('.workspace h1').textContent() === 'Netflix',
+    await page.locator('.media-workspace h1').textContent() === 'Viewing history',
     'authenticated lifecycle did not hydrate the Netflix workspace'
   );
   assert(
@@ -428,7 +424,7 @@ async page => {
     'authenticated lifecycle did not make the required protected requests'
   );
 
-  await page.locator('#netflix-file').setInputFiles(validCSV);
+  await page.locator('#media-files').setInputFiles(validCSV);
   const readySnapshot = await waitForSnapshot(
     (value) => value.active_generation?.state === 'ready',
     'ready Netflix generation'
@@ -438,7 +434,8 @@ async page => {
     'Netflix import did not produce the private base analysis generation'
   );
   await page.getByRole('tab', {name: 'Overview'}).waitFor();
-  await page.waitForFunction(() => document.querySelectorAll('.kpi').length === 4);
+  assert(await page.locator('.media-workspace [role=alert]').count() === 1, 'unavailable title analysis must retain the raw report and show an analysis error');
+  await page.waitForFunction(expected => document.querySelector('[data-media-kpi="activities"]')?.textContent === String(expected),readySnapshot.active_generation.activity_count);
   await page.setViewportSize({width: 390, height: 844});
   await assertNoHorizontalOverflow('authenticated Netflix workspace');
   await page.setViewportSize({width: 1440, height: 1000});
@@ -448,7 +445,7 @@ async page => {
     '.workspace-gate-panel[data-auth-state="unauthenticated"]'
   ).waitFor();
   assert(
-    await page.locator('.workspace, .kpi, #netflix-file').count() === 0,
+    await page.locator('.media-workspace, .media-metrics, #media-files').count() === 0,
     'shared unauthenticated lifecycle did not clear protected workspace UI'
   );
   const requestCountAfterLogout = protectedRequests().length;

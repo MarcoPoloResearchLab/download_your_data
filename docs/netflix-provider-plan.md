@@ -18,7 +18,7 @@ Accepted title identities connect Netflix and Prime Video history.
 
 ## Outcome
 
-`download_your_data` becomes the sole maintained owner of the Netflix viewing-history workflow. One authenticated browser application and one user-scoped provider service own Netflix import, private analysis, optional TMDB enrichment, dashboarding, enriched CSV export, replacement, restart, cancellation, and deletion.
+`download_your_data` becomes the sole maintained owner of the Netflix viewing-history workflow. One authenticated browser application and one user-scoped provider service own Netflix import, private analysis, automatic title analysis, charts, CSV export, replacement, restart, cancellation, and deletion.
 
 The target must not depend on the standalone checkout through a Go module, local replacement, subprocess, HTTP sidecar, copied database, compatibility package, or runtime filesystem path. The standalone repository remains unchanged until target-owned parity is released and the operator explicitly approves its removal.
 
@@ -39,15 +39,15 @@ The importer validates file content rather than depending on a filename. The cur
 ## Canonical Product Decisions
 
 1. Raw viewing-history import and raw analytics require no third-party enrichment service. The source upload enters only the authenticated user's private Download Your Data workspace.
-2. TMDB enrichment is an explicit, separately initiated operation. The app discloses that unique derived title queries will be sent to TMDB; viewing dates, profile information, the source CSV, and complete viewing rows are never sent.
+2. The browser starts title analysis automatically after import. External queries contain derived titles only. Dates, profile information, CSV files, and source rows remain private.
 3. A missing TMDB credential does not make the authenticated application or raw Netflix provider invalid. It is a typed `not_configured` capability state, and an enrichment request is rejected until configured.
 4. The TMDB read token is server-only configuration named `DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN`. The browser receives only a configured/not-configured capability value.
 5. TMDB authentication uses the current Bearer-token contract, not an API key in a query string. Production calls use the fixed official HTTPS API origin; tests inject a local fake server.
 6. The application owns concurrency, rate limiting, retry, and cancellation. Users do not choose worker counts. Retries honor `Retry-After`, remain bounded, and stop with the request context.
-7. A raw generation is activated before optional enrichment. Enrichment builds a replacement generation from the active raw generation so the usable library remains available until the complete enriched replacement is ready.
+7. A raw generation becomes active before automatic title analysis. Title analysis builds a replacement generation from the active raw generation. The active library stays available until the replacement is ready.
 8. Matching has closed `matched`, `review`, and `unmatched` outcomes. Ambiguous or low-confidence candidates never become accepted metadata merely because they are popular.
 9. Ready analytics label Netflix rows as activity entries or plays, not completed views. Raw titles and local calendar dates are preserved exactly; derived title identity is versioned and auditable.
-10. The browser loads MPRLab shell assets only through the literal `mpr-ui@latest` contract. Provider icons, guide screenshots, charts, and personal-data payloads remain application-owned. TMDB attribution appears in the product Credits surface using approved assets and the notice required by the current [TMDB FAQ](https://developer.themoviedb.org/docs/faq).
+10. The browser loads MPRLab shell assets only through the literal `mpr-ui@latest` contract. Provider icons, guide screenshots, charts, and personal-data payloads remain application-owned. The browser workflow contains no title-service names or permission prompts.
 
 ### Implemented TMDB boundary identities
 
@@ -85,7 +85,7 @@ F011 moves the state and lease paths beneath the authenticated user's provider r
 I016 adds optional IMDb title IDs to accepted TMDB metadata.
 Each movie or series details request uses `append_to_response=external_ids`.
 TMDB remains the sole title-match authority.
-The existing title-query consent controls these requests.
+The server starts these requests as part of automatic title analysis.
 
 The TMDB decoder accepts a missing, null, or empty `imdb_id` as metadata without an IMDb title ID.
 A nonempty ID must contain `tt` followed by at least seven decimal digits, with a maximum length of 32 characters.
@@ -157,7 +157,7 @@ Canonical HTTP surface:
 | Method and path | Contract |
 | --- | --- |
 | `GET /api/providers/netflix` | Active/building generation snapshot, capabilities, counts, and typed last failure. |
-| `POST /api/providers/netflix/generations` | Create either `{"analysis_level":"local"}` or a TMDB replacement with the active local `source_generation_id`, an exact locale, and `tmdb_title_query_consent:"authorize-tmdb-title-queries"`. |
+| `POST /api/providers/netflix/generations` | Create either `{"analysis_level":"local"}` or a TMDB replacement with the active local `source_generation_id`, an exact locale. |
 | `PUT /api/providers/netflix/generations/{generationID}/viewing-activity` | Stream one bounded CSV into a receiving generation. |
 | `GET /api/providers/netflix/generations/{generationID}/events` | Ordered resumable progress events owned by the backend. |
 | `GET /api/providers/netflix/generations/{generationID}/analytics` | Validated analytics for one ready generation with the shared optional `start_date`, `end_date`, and `match_status` filter. |
@@ -170,59 +170,36 @@ All routes are protected by the shared TAuth session and resolve state beneath t
 
 ## User Experience
 
-### Application shell
+F024 defines the current browser workflow.
+Both Netflix and Amazon analysis actions open `#app/viewing-history`.
+The shared authentication lifecycle controls access before private requests start.
 
-Replace the wrapping platform-link masthead and marketing hero with a compact provider catalog and workspace shell:
+Use one file picker for Netflix CSV files and Prime Video ZIP archives.
+Start import and title analysis after file selection.
+Show actual progress, errors, cancellation, and retry without title-service setup controls.
+Keep source records and the active report available during analysis.
 
-- centered `960px` catalog and `1180px` provider workspace;
-- compact header with product identity, provider switcher, language, theme, and provider state;
-- dark-first charcoal surfaces, thin borders, restrained semantic accents, and small controls;
-- one main work surface plus a `210px` state/action rail at wide viewport widths;
-- the rail becomes an inline status panel on small screens.
+Overview shows viewing activity, unique titles, and recorded watch time with source coverage.
+Netflix supplies no recorded watch time.
+History shows paged source records with expandable details.
+File management contains replacement and provider deletion controls.
+About this report contains source coverage and exclusion rules.
 
-Every compact provider card opens its permanent anonymous visual download guide. A separate Data analysis action opens `#app/netflix` and waits for the shared `mpr-ui`/TAuth lifecycle before hydrating the workspace. The catalog does not duplicate transient provider state; the Netflix workspace itself owns backend states such as `NO DATA`, `READY LOCAL`, `ENRICHING`, `READY + TMDB`, and `ACTION NEEDED`. OpenAI becomes workspace-capable only when its separate lifecycle and browser issues deliver that backend contract, using the same TAuth session.
+The overview contains six chart types from the source Netflix dashboard:
 
-### Empty state and import
+- Monthly activity by content type.
+- Films and series.
+- Genres.
+- Original languages.
+- Genres by weekday.
+- Genres by year.
 
-The Netflix empty state is a compact three-step panel:
-
-1. Open Netflix account settings, choose a profile, open Viewing activity, and select Download all.
-2. Select or drop the CSV. Show accepted content, size limit, and the authenticated private-workspace disclosure.
-3. Validate and import. Announce progress through an accessible live region and never simulate progress.
-
-The import panel includes keyboard-operable file selection, an exact validation failure, and one clear retry. It does not request a TMDB credential or send title data to TMDB during raw import.
-
-### Ready workspace
-
-```text
-┌ Download Your Data / Netflix  [READY + TMDB]       Replace  Export  Delete ┐
-├ All time  Start date  End date  Match status      2,481 activities · 96%  ┤
-├───────────────────────────────────────────────────────┬────────────────────┤
-│ Activities  Unique titles  Date range  Match coverage │ DATA STATE         │
-│                                                       │ Active generation  │
-│ Activity over time                                    │ Imported date      │
-│                                                       │ Source row count   │
-│ Top genres                 Weekday rhythm             │                     │
-│                                                       │ TMDB               │
-│ Media / language / year    Top titles                 │ Configured         │
-│                                                       │ Privacy disclosure │
-│ Match quality: matched · review · unmatched           │ Enrich / Cancel    │
-└───────────────────────────────────────────────────────┴────────────────────┘
-```
-
-The workspace has three compact views:
-
-- **Overview:** activity count, unique titles, date range, monthly activity, weekday rhythm, top titles, and match coverage.
-- **Catalog:** media types, genres, genres by viewing year, original languages, origin countries, release years, ratings, runtimes, seasons, and episodes.
-- **Match quality:** deterministic matched/review/unmatched counts and a paged evidence table. Review and unmatched rows remain visible but do not silently acquire metadata.
-
-Date filters affect every metric and chart from one source of truth. Every chart has a concise text summary and an accessible data-table alternative. Replace, TMDB enrichment, CSV export, cancellation, and full deletion remain separate controls.
-
-### Enrichment
-
-The state rail shows whether TMDB is configured and explains exactly what crosses the boundary. Starting enrichment requires a deliberate action after the raw generation is ready. The raw generation remains active while the replacement builds.
-
-If TMDB is not configured, the UI gives the concrete server configuration name and restart instruction. It never accepts or stores the token in browser state. The Credits surface includes the approved TMDB logo, source link, and required non-endorsement notice.
+Shared filters update every chart and CSV export automatically.
+Charts contain text summaries and accessible data tables.
+Unknown title details remain explicit.
+All four locales use the same workflow.
+The layout supports widths down to 320 pixels.
+The browser owns chart code and assets without external chart dependencies.
 
 ## Privacy, Security, And Data Retention
 
@@ -240,7 +217,7 @@ If TMDB is not configured, the UI gives the concrete server configuration name a
 1. **I007 — Netflix domain incorporation:** target-owned CSV, title identity, aggregation, synthetic fixtures, and behavioral inventory; no network or UI.
 2. **I008 — TMDB boundary and matching quality:** server-only config, injected client, rate/retry/cancellation, cache, match evaluation, attribution contract, and deterministic fake-server tests.
 3. **F006 — Netflix generation lifecycle:** private persistence, upload API, raw analytics, progress, atomic activation, replacement-safe storage, cancellation, and deletion.
-4. **F007 — TMDB generation and export lifecycle:** explicit consent, enriched replacement, completeness, cache provenance, enriched CSV, restart, and failure behavior.
+4. **F007 — TMDB generation and export lifecycle:** replacement, completeness, cache provenance, enriched CSV, restart, and failure behavior. F024 makes title analysis automatic.
 5. **F008 — Netflix provider workspace:** catalog entry in all locales, import flow, progress, dashboard, match-quality view, controls, Credits, accessibility, responsive behavior, and exact shared-shell browser-network proof.
 6. **M409 — Standalone checkout retirement:** prove independent target parity and release, resolve any untracked/private data, then request explicit approval before removing `/Users/tyemirov/Development/netflix`.
 7. **F011 — Authenticated user migration:** replace the process-global workspace and packaged local product boundary with the shared TAuth user, user-scoped persistence, static Pages application, and two-user isolation proof. The former end-user command surface is retired rather than carried into this boundary.
@@ -257,7 +234,7 @@ Retirement remains blocked on the first target-owned release, explicit dispositi
 
 Netflix incorporation is complete only when:
 
-- every maintained source capability is present through the authenticated target browser application;
+- The authenticated browser application shows all six approved chart types.
 - `go list -m all`, repository search, builds, tests, and runtime checks have no dependency on `github.com/tyemirov/netflix` or `/Users/tyemirov/Development/netflix`;
 - a synthetic viewing-history CSV passes import, raw analytics, fake-TMDB enrichment, restart, replacement, export, cancellation, and deletion through public entry points;
 - matching evaluation meets its recorded precision and review-coverage thresholds;

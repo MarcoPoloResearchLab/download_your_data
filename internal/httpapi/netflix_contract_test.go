@@ -431,25 +431,6 @@ func TestNetflixHTTPEnrichesFiltersAndStreamsCanonicalCSV(
 		http.StatusConflict,
 		string(netflixlibrary.ErrorInvalidState),
 	)
-	missingConsent := mutateNetflix(
-		testContext,
-		config,
-		server.URL+netflixGenerationsPath,
-		http.MethodPost,
-		"application/json",
-		`{"analysis_level":"tmdb","source_generation_id":"`+
-			local.Generation.ID+`","locale":"en-US"}`,
-	)
-	assertRequestError(
-		testContext,
-		missingConsent,
-		http.StatusUnprocessableEntity,
-		string(netflixlibrary.ErrorConsentRequired),
-	)
-	if calls := metadataClient.searchCallSnapshot(); len(calls) != 0 {
-		testContext.Fatalf("missing consent reached TMDB: %#v", calls)
-	}
-
 	createTMDB := mutateNetflix(
 		testContext,
 		config,
@@ -458,8 +439,7 @@ func TestNetflixHTTPEnrichesFiltersAndStreamsCanonicalCSV(
 		"application/json",
 		`{"analysis_level":"tmdb","source_generation_id":"`+
 			local.Generation.ID+
-			`","locale":"en-US","tmdb_title_query_consent":"`+
-			netflixTMDBQueryConsent+`"}`,
+			`","locale":"en-US"}`,
 	)
 	if createTMDB.StatusCode != http.StatusCreated {
 		testContext.Fatalf(

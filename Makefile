@@ -44,6 +44,7 @@ check-frontend:
 		frontend/application/app.js \
 		frontend/application/api.js \
 		frontend/application/charts.js \
+		frontend/application/media-charts.js \
 		frontend/application/dom.js \
 		frontend/application/provider-links.js \
 		frontend/application/routing.js \
