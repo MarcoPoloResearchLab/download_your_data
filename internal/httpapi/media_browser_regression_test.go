@@ -66,6 +66,12 @@ func testMediaBrowserReviewRegression(testContext *testing.T, scenario string) {
 			title = "Synthetic Film"
 		}
 		rows = append(rows, map[string]string{"Title": title, "Playback Start Datetime (UTC)": "2026-02-02T01:00:00Z", "Seconds Viewed": "60", "Material Type Description": "Feature"})
+		if scenario == "charts" {
+			rows[index]["Playback Start Datetime (UTC)"] = "2026-03-02T01:00:00Z"
+			if index < 40 {
+				rows[index]["Playback Start Datetime (UTC)"] = "2026-01-02T01:00:00Z"
+			}
+		}
 	}
 	fixtureRoot := testContext.TempDir()
 	primePath := filepath.Join(fixtureRoot, "prime.zip")

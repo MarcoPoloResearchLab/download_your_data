@@ -121,7 +121,7 @@ func enrichPrimeReviewTitles(testContext *testing.T, titles []string, client *pr
 
 func enrichPrimeForTest(testContext *testing.T, config runtimeconfig.Config, baseURL, sourceID string) {
 	testContext.Helper()
-	response := mutateNetflix(testContext, config, baseURL+primeGenerationsPath, http.MethodPost, "application/json", `{"analysis_level":"tmdb","source_generation_id":"`+sourceID+`","locale":"en-US","tmdb_title_query_consent":"authorize-tmdb-title-queries"}`)
+	response := mutateNetflix(testContext, config, baseURL+primeGenerationsPath, http.MethodPost, "application/json", `{"analysis_level":"tmdb","source_generation_id":"`+sourceID+`","locale":"en-US"}`)
 	if response.StatusCode != http.StatusAccepted {
 		testContext.Fatal(readBody(testContext, response))
 	}

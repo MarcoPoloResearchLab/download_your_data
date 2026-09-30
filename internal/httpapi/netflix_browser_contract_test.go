@@ -48,7 +48,7 @@ func TestNetflixBrowserWorkspaceContract(testContext *testing.T) {
 	}
 	defer application.Close()
 
-	tracker := &browserConsentTracker{
+	tracker := &browserAnalysisTracker{
 		next:   application,
 		client: metadataClient,
 	}
@@ -116,11 +116,11 @@ func TestNetflixBrowserWorkspaceContract(testContext *testing.T) {
 			authorizedCount,
 		)
 	}
-	preConsentCalls, calls := metadataClient.snapshot()
-	if preConsentCalls != 0 {
+	unstartedCalls, calls := metadataClient.snapshot()
+	if unstartedCalls != 0 {
 		testContext.Fatalf(
-			"metadata client calls before explicit browser consent = %d",
-			preConsentCalls,
+			"metadata client calls before analysis creation = %d",
+			unstartedCalls,
 		)
 	}
 	for _, expected := range []string{
@@ -166,7 +166,7 @@ func TestNetflixBrowserWorkspaceContract(testContext *testing.T) {
 	}
 }
 
-type browserConsentTracker struct {
+type browserAnalysisTracker struct {
 	mutex               sync.Mutex
 	next                http.Handler
 	client              *browserLifecycleMetadataClient
@@ -174,7 +174,7 @@ type browserConsentTracker struct {
 	authorizedCreations int
 }
 
-func (tracker *browserConsentTracker) ServeHTTP(
+func (tracker *browserAnalysisTracker) ServeHTTP(
 	responseWriter http.ResponseWriter,
 	request *http.Request,
 ) {
@@ -185,13 +185,12 @@ func (tracker *browserConsentTracker) ServeHTTP(
 		if readError == nil && len(body) <= 4096 {
 			var payload struct {
 				AnalysisLevel string `json:"analysis_level"`
-				Consent       string `json:"tmdb_title_query_consent"`
 			}
 			if json.Unmarshal(body, &payload) == nil &&
 				payload.AnalysisLevel == "tmdb" {
 				tracker.mutex.Lock()
 				tracker.tmdbCreations++
-				if payload.Consent == netflixTMDBQueryConsent {
+				if payload.AnalysisLevel == "tmdb" {
 					tracker.authorizedCreations++
 					tracker.client.setAttempt(tracker.authorizedCreations)
 				}
@@ -202,17 +201,17 @@ func (tracker *browserConsentTracker) ServeHTTP(
 	tracker.next.ServeHTTP(responseWriter, request)
 }
 
-func (tracker *browserConsentTracker) snapshot() (int, int) {
+func (tracker *browserAnalysisTracker) snapshot() (int, int) {
 	tracker.mutex.Lock()
 	defer tracker.mutex.Unlock()
 	return tracker.tmdbCreations, tracker.authorizedCreations
 }
 
 type browserLifecycleMetadataClient struct {
-	mutex           sync.Mutex
-	attempt         int
-	preConsentCalls int
-	calls           map[string]int
+	mutex          sync.Mutex
+	attempt        int
+	unstartedCalls int
+	calls          map[string]int
 }
 
 func newBrowserLifecycleMetadataClient() *browserLifecycleMetadataClient {
@@ -237,14 +236,14 @@ func (client *browserLifecycleMetadataClient) Search(
 	client.mutex.Lock()
 	attempt := client.attempt
 	if attempt == 0 {
-		client.preConsentCalls++
+		client.unstartedCalls++
 	}
 	client.calls[fmt.Sprintf("%d|%s|%s", attempt, locale.String(), query)]++
 	client.mutex.Unlock()
 
 	switch attempt {
 	case 0:
-		return nil, errors.New("metadata query reached the client without explicit consent")
+		return nil, errors.New("metadata query reached the client without an analysis operation")
 	case 1:
 		<-ctx.Done()
 		return nil, ctx.Err()
@@ -367,7 +366,7 @@ func (client *browserLifecycleMetadataClient) snapshot() (int, map[string]int) {
 	for key, count := range client.calls {
 		calls[key] = count
 	}
-	return client.preConsentCalls, calls
+	return client.unstartedCalls, calls
 }
 
 type browserTMDBFailure struct {

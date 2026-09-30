@@ -29,11 +29,12 @@ type Filter struct {
 	TitleID     string `json:"title_id"`
 	Kind        string `json:"kind"`
 	MatchStatus string `json:"match_status"`
+	MediaType   string `json:"media_type"`
 	location    *time.Location
 }
 
 // NewFilter validates the shared filter contract.
-func NewFilter(provider, timezone, start, end, title, kind, matchStatus, titleID string) (Filter, error) {
+func NewFilter(provider, timezone, start, end, title, kind, matchStatus, titleID, mediaType string) (Filter, error) {
 	if provider == "" {
 		provider = "all"
 	}
@@ -77,7 +78,13 @@ func NewFilter(provider, timezone, start, end, title, kind, matchStatus, titleID
 	default:
 		return Filter{}, errors.New("media.invalid_filter")
 	}
-	return Filter{Provider: provider, Timezone: timezone, StartDate: start, EndDate: end, Title: title, Kind: kind, MatchStatus: matchStatus, TitleID: titleID, location: location}, nil
+	if mediaType == "" {
+		mediaType = "all"
+	}
+	if mediaType != "all" && mediaType != "movie" && mediaType != "series" && mediaType != "unknown" {
+		return Filter{}, errors.New("media.invalid_filter")
+	}
+	return Filter{MediaType: mediaType, Provider: provider, Timezone: timezone, StartDate: start, EndDate: end, Title: title, Kind: kind, MatchStatus: matchStatus, TitleID: titleID, location: location}, nil
 }
 
 var titleIDPattern = regexp.MustCompile(`^(tmdb:(movie|series):[1-9][0-9]{0,18}|(netflix|prime-video):[a-f0-9]{64})$`)
@@ -104,6 +111,13 @@ type Month struct {
 	Count    int      `json:"count"`
 }
 
+// PeriodCount is a categorical activity count within one calendar period.
+type PeriodCount struct {
+	Period string `json:"period"`
+	Label  string `json:"label"`
+	Count  int    `json:"count"`
+}
+
 // Title groups only accepted identities across services.
 type Title struct {
 	ID          string     `json:"id"`
@@ -117,32 +131,37 @@ type Title struct {
 
 // Overview labels default measurement coverage and exclusion counts.
 type Overview struct {
-	ActivityCount               int       `json:"activity_count"`
-	SourceRecordCount           int       `json:"source_record_count"`
-	UniqueTitleCount            int       `json:"unique_title_count"`
-	AcceptedTitleCount          int       `json:"accepted_title_count"`
-	UnresolvedTitleCount        int       `json:"unresolved_title_count"`
-	MovieTitles                 int       `json:"movie_titles"`
-	SeriesTitles                int       `json:"series_titles"`
-	EpisodeCount                int       `json:"episode_count"`
-	UnavailableTitleRecords     int       `json:"unavailable_title_records"`
-	RecordedSeconds             float64   `json:"recorded_seconds"`
-	TimedRecords                int       `json:"timed_records"`
-	UnknownDurationRecords      int       `json:"unknown_duration_records"`
-	ZeroDurationRecords         int       `json:"zero_duration_records"`
-	Rentals                     int       `json:"rentals"`
-	Purchases                   int       `json:"purchases"`
-	PurchaseRecordsWithPlayback int       `json:"purchase_records_with_playback"`
-	MatchCoverage               []Count   `json:"match_coverage"`
-	Exclusions                  []Count   `json:"exclusions"`
-	Services                    []Service `json:"services"`
-	Months                      []Month   `json:"months"`
-	Weekdays                    []Count   `json:"weekdays"`
-	TopTitles                   []Title   `json:"top_titles"`
-	Genres                      []Count   `json:"genres"`
-	Devices                     []Count   `json:"devices"`
-	AudioLanguages              []Count   `json:"audio_languages"`
-	SubtitleLanguages           []Count   `json:"subtitle_languages"`
+	MediaTypes                  []Count       `json:"media_types"`
+	MonthlyMedia                []PeriodCount `json:"monthly_media"`
+	GenresByWeekday             []PeriodCount `json:"genres_by_weekday"`
+	GenresByYear                []PeriodCount `json:"genres_by_year"`
+	OriginalLanguages           []Count       `json:"original_languages"`
+	ActivityCount               int           `json:"activity_count"`
+	SourceRecordCount           int           `json:"source_record_count"`
+	UniqueTitleCount            int           `json:"unique_title_count"`
+	AcceptedTitleCount          int           `json:"accepted_title_count"`
+	UnresolvedTitleCount        int           `json:"unresolved_title_count"`
+	MovieTitles                 int           `json:"movie_titles"`
+	SeriesTitles                int           `json:"series_titles"`
+	EpisodeCount                int           `json:"episode_count"`
+	UnavailableTitleRecords     int           `json:"unavailable_title_records"`
+	RecordedSeconds             float64       `json:"recorded_seconds"`
+	TimedRecords                int           `json:"timed_records"`
+	UnknownDurationRecords      int           `json:"unknown_duration_records"`
+	ZeroDurationRecords         int           `json:"zero_duration_records"`
+	Rentals                     int           `json:"rentals"`
+	Purchases                   int           `json:"purchases"`
+	PurchaseRecordsWithPlayback int           `json:"purchase_records_with_playback"`
+	MatchCoverage               []Count       `json:"match_coverage"`
+	Exclusions                  []Count       `json:"exclusions"`
+	Services                    []Service     `json:"services"`
+	Months                      []Month       `json:"months"`
+	Weekdays                    []Count       `json:"weekdays"`
+	TopTitles                   []Title       `json:"top_titles"`
+	Genres                      []Count       `json:"genres"`
+	Devices                     []Count       `json:"devices"`
+	AudioLanguages              []Count       `json:"audio_languages"`
+	SubtitleLanguages           []Count       `json:"subtitle_languages"`
 }
 
 // SourceSummary describes one imported provider and its available date coverage.
@@ -189,6 +208,9 @@ func FilterRecords(records []Record, filter Filter) []Record {
 			continue
 		}
 		if filter.TitleID != "" && identity(value) != filter.TitleID {
+			continue
+		}
+		if filter.MediaType != "all" && mediaType(value) != filter.MediaType {
 			continue
 		}
 		titleText := value.Title + " " + value.SearchTitle
@@ -241,7 +263,7 @@ func Build(records []Record, filter Filter, cursor string, titleCursor string, l
 		return Report{}, err
 	}
 	titleEnd := min(titleOffset+limit, len(groups))
-	report := Report{Contract: "viewing-history-report-v1", Filter: filter, Overview: aggregate(filtered), Sources: sourceSummaries(records, filter), Titles: groups[titleOffset:titleEnd], Records: []Activity{}, Revision: revision}
+	report := Report{Contract: "viewing-history-report-v2", Filter: filter, Overview: aggregate(filtered), Sources: sourceSummaries(records, filter), Titles: groups[titleOffset:titleEnd], Records: []Activity{}, Revision: revision}
 	if titleEnd < len(groups) {
 		report.NextTitlesCursor = nextPageCursor(revision, filterIdentity, "titles", titleEnd)
 	}
@@ -337,7 +359,12 @@ func titles(records []Record) []Title {
 	return result
 }
 func aggregate(records []Record) Overview {
-	result := Overview{SourceRecordCount: len(records), Services: []Service{}, Months: []Month{}, MatchCoverage: []Count{}, Exclusions: []Count{}, Weekdays: []Count{}, TopTitles: []Title{}, Genres: []Count{}, Devices: []Count{}, AudioLanguages: []Count{}, SubtitleLanguages: []Count{}}
+	result := Overview{MediaTypes: []Count{}, MonthlyMedia: []PeriodCount{}, GenresByWeekday: []PeriodCount{}, GenresByYear: []PeriodCount{}, OriginalLanguages: []Count{}, SourceRecordCount: len(records), Services: []Service{}, Months: []Month{}, MatchCoverage: []Count{}, Exclusions: []Count{}, Weekdays: []Count{}, TopTitles: []Title{}, Genres: []Count{}, Devices: []Count{}, AudioLanguages: []Count{}, SubtitleLanguages: []Count{}}
+	mediaTypes := map[string]int{}
+	monthlyMedia := map[string]int{}
+	weekdayGenres := map[string]int{}
+	yearlyGenres := map[string]int{}
+	languages := map[string]int{}
 	services := map[Provider]*Service{}
 	months := map[string]int{}
 	weekdays := map[string]int{}
@@ -415,10 +442,17 @@ func aggregate(records []Record) Overview {
 		date, _ := time.Parse(time.DateOnly, value.Date)
 		weekdays[date.Weekday().String()]++
 		matches[value.MatchStatus]++
+		mediaTypes[mediaType(value)]++
+		monthlyMedia[value.Date[:7]+"|"+mediaType(value)]++
 		if value.Metadata != nil {
 			for _, genre := range value.Metadata.Genres {
 				genres[genre]++
+				weekdayGenres[date.Weekday().String()+"|"+genre]++
+				yearlyGenres[value.Date[:4]+"|"+genre]++
 			}
+		}
+		if value.Metadata != nil && value.Metadata.OriginalLanguage != "" {
+			languages[value.Metadata.OriginalLanguage]++
 		}
 		if value.Device != "" {
 			devices[value.Device]++
@@ -457,6 +491,11 @@ func aggregate(records []Record) Overview {
 	slices.SortFunc(result.Months, func(left, right Month) int {
 		return strings.Compare(left.Month+string(left.Provider), right.Month+string(right.Provider))
 	})
+	result.MediaTypes = counts(mediaTypes)
+	result.MonthlyMedia = periodCounts(monthlyMedia)
+	result.GenresByWeekday = periodCounts(weekdayGenres)
+	result.GenresByYear = periodCounts(yearlyGenres)
+	result.OriginalLanguages = counts(languages)
 	result.MatchCoverage = counts(matches)
 	result.Exclusions = counts(exclusions)
 	result.Weekdays = counts(weekdays)
@@ -465,6 +504,26 @@ func aggregate(records []Record) Overview {
 	result.Devices = counts(devices)
 	result.AudioLanguages = counts(audio)
 	result.SubtitleLanguages = counts(subtitles)
+	return result
+}
+func mediaType(value Activity) string {
+	if value.Metadata != nil {
+		return value.Metadata.MediaType
+	}
+	if value.SeriesTitle != "" {
+		return "series"
+	}
+	return "unknown"
+}
+func periodCounts(values map[string]int) []PeriodCount {
+	result := []PeriodCount{}
+	for key, count := range values {
+		period, label, _ := strings.Cut(key, "|")
+		result = append(result, PeriodCount{Period: period, Label: label, Count: count})
+	}
+	slices.SortFunc(result, func(left, right PeriodCount) int {
+		return strings.Compare(left.Period+"|"+left.Label, right.Period+"|"+right.Label)
+	})
 	return result
 }
 func counts(values map[string]int) []Count {

@@ -97,7 +97,7 @@ func TestPrimeHTTPEnrichmentRestartCancellationAndFailurePreserveActive(testCont
 				activities = 2
 			}
 			active := importPrimeForTest(testContext, config, server.URL, archive, []string{"viewing"})
-			payload := `{"analysis_level":"tmdb","source_generation_id":"` + active.ID + `","locale":"en-US","tmdb_title_query_consent":"authorize-tmdb-title-queries"}`
+			payload := `{"analysis_level":"tmdb","source_generation_id":"` + active.ID + `","locale":"en-US"}`
 			response := mutateNetflix(testContext, config, server.URL+testPrimeProviderPath+"/generations", http.MethodPost, "application/json", payload)
 			if response.StatusCode != http.StatusAccepted {
 				testContext.Fatal(readBody(testContext, response))
@@ -187,7 +187,7 @@ func TestPrimeHTTPEnrichmentRestartCancellationAndFailurePreserveActive(testCont
 	}
 }
 
-func TestPrimeHTTPEnrichmentRequiresConsentAndJoinsAcceptedNetflixIdentity(testContext *testing.T) {
+func TestPrimeHTTPAnalysisJoinsAcceptedNetflixIdentity(testContext *testing.T) {
 	config := testRuntimeConfig(testContext)
 	client := newHTTPMetadataClient()
 	handler, err := newApplicationHandlerWithNetflixMetadata(config, slog.New(slog.NewTextHandler(io.Discard, nil)), client)
@@ -199,11 +199,6 @@ func TestPrimeHTTPEnrichmentRequiresConsentAndJoinsAcceptedNetflixIdentity(testC
 	defer server.Close()
 	prime := importPrimeForTest(testContext, config, server.URL, syntheticPrimeArchive(testContext), []string{"viewing", "searches", "purchases"})
 	url := server.URL + testPrimeProviderPath + "/generations"
-	denied := mutateNetflix(testContext, config, url, http.MethodPost, "application/json", `{"analysis_level":"tmdb","source_generation_id":"`+prime.ID+`","locale":"en-US"}`)
-	assertRequestError(testContext, denied, http.StatusUnprocessableEntity, "tmdb_consent_required")
-	if len(client.searchCallSnapshot()) != 0 {
-		testContext.Fatal("query before consent")
-	}
 	created := mutateNetflix(testContext, config, server.URL+netflixGenerationsPath, http.MethodPost, "application/json", `{"analysis_level":"local"}`)
 	var local generationResponse
 	decodeResponse(testContext, created, &local)
@@ -222,7 +217,7 @@ func TestPrimeHTTPEnrichmentRequiresConsentAndJoinsAcceptedNetflixIdentity(testC
 	if len(rawReport.Overview.TopTitles) != 2 || rawReport.Overview.TopTitles[0].ID == rawReport.Overview.TopTitles[1].ID || len(rawReport.Overview.TopTitles[0].Providers) != 1 {
 		testContext.Fatal("top titles joined source names before an accepted identity")
 	}
-	netflixEnrichment := mutateNetflix(testContext, config, server.URL+netflixGenerationsPath, http.MethodPost, "application/json", `{"analysis_level":"tmdb","source_generation_id":"`+local.Generation.ID+`","locale":"en-US","tmdb_title_query_consent":"authorize-tmdb-title-queries"}`)
+	netflixEnrichment := mutateNetflix(testContext, config, server.URL+netflixGenerationsPath, http.MethodPost, "application/json", `{"analysis_level":"tmdb","source_generation_id":"`+local.Generation.ID+`","locale":"en-US"}`)
 	if netflixEnrichment.StatusCode != http.StatusCreated {
 		testContext.Fatal(readBody(testContext, netflixEnrichment))
 	}
@@ -230,7 +225,7 @@ func TestPrimeHTTPEnrichmentRequiresConsentAndJoinsAcceptedNetflixIdentity(testC
 	waitForHTTPSnapshot(testContext, server.URL, func(snapshot netflixlibrary.Snapshot) bool {
 		return snapshot.Active != nil && snapshot.Active.AnalysisLevel == netflixlibrary.AnalysisLevelTMDB
 	})
-	enriched := mutateNetflix(testContext, config, url, http.MethodPost, "application/json", `{"analysis_level":"tmdb","source_generation_id":"`+prime.ID+`","locale":"en-US","tmdb_title_query_consent":"authorize-tmdb-title-queries"}`)
+	enriched := mutateNetflix(testContext, config, url, http.MethodPost, "application/json", `{"analysis_level":"tmdb","source_generation_id":"`+prime.ID+`","locale":"en-US"}`)
 	if enriched.StatusCode != http.StatusAccepted {
 		testContext.Fatalf("Prime enrichment = %d: %s", enriched.StatusCode, readBody(testContext, enriched))
 	}
