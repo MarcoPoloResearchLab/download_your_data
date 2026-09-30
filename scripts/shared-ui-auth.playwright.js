@@ -60,7 +60,7 @@ async page => {
   });
   for (const width of [390, 1280]) {
     await page.setViewportSize({width,height:900});
-    await page.goto(`${baseURL}/#app/netflix`, {waitUntil:'domcontentloaded'});
+    await page.goto(`${baseURL}/#app/viewing-history`, {waitUntil:'domcontentloaded'});
     await page.locator('[data-fixture-google]').waitFor().catch(async error => { throw new Error(error.message + JSON.stringify({errors, state:await page.evaluate(() => ({auth:document.querySelector('#app-header')?.getAttribute('auth-config'), google:!!window.google, mpr:!!window.MPRUI}))})); });
     assert(await page.locator('.workspace-gate').count() === 1, 'anonymous workspace stays gated');
     const auth = JSON.parse(await page.locator('#app-header').getAttribute('auth-config'));
@@ -69,7 +69,7 @@ async page => {
     const attemptsBefore = protectedAttempts;
     const sessionsBefore = recoveryRequests;
     await page.locator('[data-fixture-google]').click();
-    await page.locator('.workspace').waitFor();
+    await page.locator('.media-workspace').waitFor();
     assert(protectedAttempts - attemptsBefore === 2, 'protected read retries once after recovery');
     assert(recoveryRequests > sessionsBefore, 'shared session endpoint performs recovery');
     mutationPending = true;
@@ -85,7 +85,7 @@ async page => {
     assert(mutationAttempts - mutationsBefore === 2, 'mutation retries once after authorization recovery');
     assert(recoveryRequests > mutationRecoveryBefore, 'mutation uses shared session recovery');
     await page.reload({waitUntil:'domcontentloaded'});
-    await page.locator('.workspace').waitFor();
+    await page.locator('.media-workspace').waitFor();
     const bounds = await page.evaluate(() => ({width:innerWidth,document:document.documentElement.scrollWidth}));
     assert(bounds.document <= bounds.width, `viewport overflow ${width}`);
     assert(await page.locator('mpr-footer a[href="/resources/"]').count() === 1, 'footer keeps resource link');
@@ -93,7 +93,7 @@ async page => {
     await page.locator('mpr-user [data-mpr-user="logout"]').click();
     await page.locator('[data-fixture-google]').waitFor({state:'visible'});
     assert(!authenticated, 'logout clears the external session');
-    assert(await page.locator('.workspace').count() === 0, 'logout clears private workspace');
+    assert(await page.locator('.media-workspace').count() === 0, 'logout clears private workspace');
   }
   assert(googleExchanges === 2, 'both viewport flows exchange a Google credential');
   assert(errors.length === 0, `browser errors: ${errors.join('; ')}`);
