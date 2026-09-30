@@ -1,14 +1,15 @@
 # Shared Viewing History Contract
 
-F023 adds one private report for Netflix and Prime Video.
+F024 defines one private dashboard for Netflix and Prime Video.
 Open `#app/viewing-history` after shared authentication.
-The workspace provides Overview, Titles, Activity, and Data sources views.
+The workspace provides Overview and History views.
+File management and source details use expandable controls.
 Select all services or one service with the same date and title filters.
 
 ## Inputs
 
 Netflix accepts a profile CSV with the current `Title` and `Date` columns.
-A user can attach a label to the import.
+The browser uses one file picker for Netflix CSV files and Prime Video ZIP archives.
 Netflix retains each supplied calendar date.
 
 Prime accepts one ZIP archive with the exact schemas in [headers.json](../internal/providers/primevideo/headers.json).
@@ -25,8 +26,9 @@ Archive text is input data.
 | `purchases` | `Your Prime Video Library & Purchases/Purchases and Rentals.csv` | Rental and purchase records |
 | `trailers` | `Your Prime Video Viewing Activity/Promotional Trailers Viewed.csv` | Promotional trailer records |
 
-The preview shows dataset counts, UTC date coverage, and unsupported filenames.
-Confirm the selected datasets before activation.
+The importer supplies dataset counts, UTC date coverage, and unsupported filenames.
+The browser automatically selects available viewing and playback-detail datasets.
+The browser confirms this selection without a dataset form.
 Playback details require the viewing dataset.
 The active generation retains only selected records and their source references.
 
@@ -65,13 +67,13 @@ Purchase records supply counts without prices or spending totals.
 UTC is the default display timezone.
 Prime calendar analysis uses the selected timezone.
 Netflix calendar dates remain unchanged.
-Data sources shows complete selected coverage with dates in the display timezone.
+About this report shows complete selected coverage with dates in the display timezone.
 Import preview dates remain in UTC.
 
-## Title Identity And Consent
+## Title Identity And Automatic Analysis
 
 Accepted TMDB identities join title history across services.
-Unresolved titles retain source identities for each provider in Titles and Top titles.
+Unresolved titles retain source identities for each provider.
 A series match joins series history without confirmation of episode identity.
 
 Prime source identities include the source classification.
@@ -87,7 +89,9 @@ The matcher accepts an interpretation only when it has one exact series candidat
 Conflicting interpretations stay in review.
 An accepted episode interpretation supplies the episode name for counts and export.
 
-Enrichment requires explicit consent for title queries and the selected locale.
+After import, the browser starts title analysis automatically with the current locale.
+The generation request has no permission field.
+The API rejects obsolete permission fields as unknown JSON properties.
 The server owns the TMDB credential.
 Search text, dates, profile data, and source rows do not enter external queries.
 The Prime matcher accepts one exact normalized title candidate with the required media type.
@@ -103,7 +107,8 @@ Prime and Netflix generations remain independent.
 A validated replacement becomes active atomically.
 The active report remains available during import or enrichment.
 A repeat of the same Prime archive bytes and selection creates no duplicate activity.
-Enrichment retains completed title checkpoints for explicit resume after restart.
+Enrichment keeps completed title checkpoints.
+The browser resumes pending Prime analysis automatically after restart.
 Cancellation removes pending data and preserves the active generation.
 Provider deletion removes Prime records and title results.
 Complete workspace deletion removes both providers for the authenticated user.
@@ -113,9 +118,10 @@ Private records remain inside the authenticated user workspace.
 Logs, browser persistence, shared caches, and static artifacts exclude private records.
 Route changes and sign-out cancel browser requests and remove private confirmation dialogs.
 
-Form drafts keep import labels, files, dataset selections, and filter values through tab changes and automatic updates.
-The browser keeps these drafts only in memory.
-Route changes and sign-out remove the drafts.
+Filter values remain available through tab changes and automatic updates.
+The browser keeps filters only in memory.
+Route changes and sign-out remove the filters.
+The browser supplies progress, cancellation, and retry without title-service names or setup prompts.
 The browser shows a created generation before upload completes.
 After an upload failure, the browser retrieves provider state and keeps cancellation available.
 
@@ -132,7 +138,7 @@ Mutations require the current Origin and CSRF authorization.
 | Method | Resource | Result |
 | --- | --- | --- |
 | `GET` | `/api/providers/prime-video` | Provider state and configured capabilities |
-| `POST` | `/api/providers/prime-video/generations` | Local import or consented enrichment generation |
+| `POST` | `/api/providers/prime-video/generations` | Local import or automatic enrichment generation |
 | `GET` | `/api/providers/prime-video/generations/{id}` | Current generation state |
 | `PUT` | `/api/providers/prime-video/generations/{id}/archive` | Validated import preview |
 | `PUT` | `/api/providers/prime-video/generations/{id}/selection` | Atomic activation of selected datasets |
@@ -142,7 +148,7 @@ Mutations require the current Origin and CSRF authorization.
 | `GET` | `/api/viewing-history` | Filtered report with separate activity and title cursors |
 | `GET` | `/api/viewing-history/export` | Complete filtered CSV |
 
-Report filters are `provider`, `timezone`, `start_date`, `end_date`, `title`, `title_id`, `kind`, and `match_status`.
+Report filters are `provider`, `timezone`, `start_date`, `end_date`, `title`, `title_id`, `kind`, `match_status`, and `media_type`.
 `limit` defaults to 100 and has a maximum of 200.
 Activities use descending display dates and timestamps, then ascending source identities.
 Titles use descending activity counts, then ascending title identities.
@@ -157,7 +163,8 @@ CSV export uses the same filters and includes every filtered source row.
 It includes provider, counting unit, date precision, timezone, recorded seconds, source references, title identity, and match status.
 It also retains playback flags, interval evidence, episode fields, selected playback details, and accepted metadata runtime.
 Select one provider for a separate CSV.
-The existing Netflix workspace and its generation export remain available at `#app/netflix`.
+Netflix and Amazon analysis actions open `#app/viewing-history`.
+The obsolete `#app/netflix` route has no application handler.
 
 ## Validation Boundary
 
@@ -166,3 +173,34 @@ Use authenticated HTTP and automated browsers for acceptance.
 Run `make eval-netflix-matcher`, `make eval-prime-matcher`, `make test-browser`, and `make ci`.
 Keep private export acceptance limited to aggregate counts.
 Local acceptance does not establish publication or production availability.
+
+## Dashboard Datasets
+
+The current report identity is `viewing-history-report-v2`.
+The API and browser accept this identity only.
+All chart datasets describe complete filtered consumption activity before pagination.
+
+| Dataset | Measure |
+| --- | --- |
+| `media_types` | Count included activities by accepted or source-supported content type. |
+| `monthly_media` | Count included activities by month and content type. |
+| `genres` | Count included activities for each accepted genre. |
+| `original_languages` | Count included activities for each accepted original language. |
+| `genres_by_weekday` | Count included activities by weekday and accepted genre. |
+| `genres_by_year` | Count included activities by year and accepted genre. |
+
+Period datasets use `period`, `label`, and `count` fields.
+Unknown content types remain explicit.
+An activity with multiple genres contributes once to each supplied genre.
+The dashboard identifies this overlap.
+The yearly chart identifies partial date coverage.
+The original-language chart excludes playback audio and subtitle languages.
+The recorded watch time measure uses supplied Prime seconds only.
+
+The browser applies service, title, date, content-type, and timezone filters automatically.
+The `media_type` filter accepts `all`, `movie`, `series`, and `unknown`.
+The same filter applies to reports, pagination, and CSV export.
+The monthly chart shows a continuous period of up to 12 months.
+Months with no activity have zero counts.
+Charts include summaries and accessible data tables.
+The dashboard supports keyboard controls and widths down to 320 pixels.
