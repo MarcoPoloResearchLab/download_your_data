@@ -360,7 +360,7 @@ func TestFrontendAssetsUseCurrentMPRShell(testContext *testing.T) {
 		}
 	}
 	if !strings.Contains(appScript, "from './api.js'") ||
-		!strings.Contains(appScript, "from './charts.js'") ||
+		!strings.Contains(appScript, "from './media-workspace.js'") ||
 		!strings.Contains(appScript, "from './dom.js'") ||
 		!strings.Contains(appScript, "from './provider-links.js'") ||
 		!strings.Contains(appScript, "from './routing.js'") ||

@@ -2,7 +2,7 @@
 
 export const WORKSPACE_PROVIDER_IDS = Object.freeze(['netflix', 'openai']);
 export const VIEWING_HISTORY_ROUTE = 'viewing-history';
-const WORKSPACE_ROUTE_IDS = Object.freeze([...WORKSPACE_PROVIDER_IDS, VIEWING_HISTORY_ROUTE]);
+const WORKSPACE_ROUTE_IDS = Object.freeze(['openai', VIEWING_HISTORY_ROUTE]);
 export const GUIDE_ONLY_PROVIDER_IDS = Object.freeze([
   'facebook',
   'instagram',

@@ -1,65 +1,96 @@
 // @ts-check
 
-import {cancelPrimeGeneration,confirmPrimeSelection,createLocalGeneration,createPrimeGeneration,createTMDBGeneration,deletePrimeProvider,exportMediaCSV,getMediaReport,getNetflixProvider,getPrimeProvider,setNetflixProfileLabel,uploadPrimeArchive,uploadViewingActivity} from './api.js';
+import {
+  cancelGeneration,
+  cancelPrimeGeneration,
+  confirmPrimeSelection,
+  createLocalGeneration,
+  createPrimeGeneration,
+  createTMDBGeneration,
+  deleteNetflixProvider,
+  deletePrimeProvider,
+  exportMediaCSV,
+  getMediaReport,
+  getNetflixProvider,
+  getPrimeProvider,
+  uploadPrimeArchive,
+  uploadViewingActivity
+} from './api.js';
 import {element} from './dom.js';
 import {MEDIA_COPY} from './media-copy.js';
+import {dashboardCharts, observeDashboardCharts} from './media-charts.js';
 
 /** @type {import('./api.js').MediaReport|null} */
 let report = null;
 /** @type {import('./api.js').PrimeSnapshot|null} */
 let prime = null;
 let netflix = null;
-/** @type {Record<string,string>} */
 let filter = newFilter();
-/** @type {Record<string,string>} */
-let filterDraft = {...filter};
-/** @type {{file:File|null,label:string}} */
-let netflixDraft = {file:null,label:''};
-/** @type {{file:File|null,label:string,previewID:string,datasets:string[]}} */
-let primeDraft = {file:null,label:'',previewID:'',datasets:[]};
-let view = 'overview';
-let busy = false;
-let error = '';
-let enabled = false;
-let pollTimer = 0;
+let view = 'overview',
+  busy = false,
+  error = '',
+  enabled = false,
+  uploadOpen = false,
+  manageOpen = false,
+  moreOpen = false,
+  aboutOpen = false;
+let pollTimer = 0,
+  filterTimer = 0;
 /** @type {AbortController|null} */
 let controller = null;
-let redraw = () => {};
+let redraw = () => {},
+  disposeCharts = () => {};
+let locale = 'en';
+let cursor = '';
 /** @type {string[]} */
 let cursors = [];
-let cursor = '';
-let titlesCursor = '';
-/** @type {string[]} */
-let titlesCursors = [];
+const attempted = new Set();
+const suspended = new Set();
+const resumed = new Set();
 const objectURLs = new Set();
-const pendingConfirmations = new Set();
-const VIEWS = ['overview','titles','activity','sources'];
-const LOCALE_TO_TMDB = {en:'en-US',es:'es-ES',fr:'fr-FR',ru:'ru-RU'};
-
-function newFilter() { return {provider:'all',timezone:'UTC',title:'',start_date:'',end_date:'',kind:'all',match_status:'all'}; }
-function resetPagination() { cursors=[]; cursor=''; titlesCursor=''; titlesCursors=[]; }
-
-function synchronizePrimePreview() {
-  const pending = prime?.building_generation;
-  if (pending?.state==='awaiting_confirmation' && pending.id!==primeDraft.previewID) {
-    primeDraft.previewID=pending.id;
-    primeDraft.datasets=pending.preview.datasets.filter(dataset=>['viewing','playback_details'].includes(dataset.id)).map(dataset=>dataset.id);
-  }
+const dialogs = new Set();
+const LOCALE_TO_TITLE_LANGUAGE = {
+  en: 'en-US',
+  es: 'es-ES',
+  fr: 'fr-FR',
+  ru: 'ru-RU'
+};
+const VIEWS = ['overview', 'history'];
+function newFilter() {
+  return {
+    provider: 'all',
+    timezone: 'UTC',
+    title: '',
+    start_date: '',
+    end_date: '',
+    kind: 'all',
+    match_status: 'all',
+    media_type: 'all'
+  };
 }
-
+function resetPagination() {
+  cursor = '';
+  cursors = [];
+}
+function providerName(provider) {
+  return provider === 'netflix' ? 'Netflix' : 'Prime Video';
+}
 function updateProviders(providers) {
-  if (prime?.active_generation?.id!==providers[0].active_generation?.id || netflix?.active_generation?.id!==providers[1].active_generation?.id) resetPagination();
-  [prime,netflix]=providers;
-  synchronizePrimePreview();
+  if (
+    prime?.active_generation?.id !== providers[0].active_generation?.id ||
+    netflix?.active_generation?.id !== providers[1].active_generation?.id
+  )
+    resetPagination();
+  [prime, netflix] = providers;
 }
-
 export function clearMediaWorkspace() {
   enabled = false;
-  for (const dismiss of pendingConfirmations) dismiss();
   controller?.abort();
   controller = null;
   window.clearTimeout(pollTimer);
-  pollTimer = 0;
+  window.clearTimeout(filterTimer);
+  disposeCharts();
+  for (const dismiss of dialogs) dismiss();
   for (const url of objectURLs) URL.revokeObjectURL(url);
   objectURLs.clear();
   report = null;
@@ -68,368 +99,882 @@ export function clearMediaWorkspace() {
   busy = false;
   error = '';
   view = 'overview';
-  resetPagination();
   filter = newFilter();
-  filterDraft = {...filter};
-  netflixDraft = {file:null,label:''};
-  primeDraft = {file:null,label:'',previewID:'',datasets:[]};
+  resetPagination();
+  attempted.clear();
+  suspended.clear();
+  resumed.clear();
+  uploadOpen = false;
+  manageOpen = false;
+  moreOpen = false;
+  aboutOpen = false;
 }
-
-export async function hydrateMediaWorkspace(signal) {
+export async function hydrateMediaWorkspace(signal, currentLocale) {
   enabled = true;
-  const providers = await Promise.all([getPrimeProvider(signal),getNetflixProvider(signal)]);
-  const currentReport = await getMediaReport(filter,signal);
+  locale = currentLocale;
+  const providers = await Promise.all([
+    getPrimeProvider(signal),
+    getNetflixProvider(signal)
+  ]);
   if (signal.aborted || !enabled) return;
   updateProviders(providers);
-  primeDraft.label=prime.active_generation?.profile_label || '';
+  const currentReport = await getMediaReport(filter, signal);
+  if (signal.aborted || !enabled) return;
   report = currentReport;
+  try {
+    await advanceAnalysis(signal);
+  } catch (failure) {
+    if (failure.name === 'AbortError') throw failure;
+    error = 'analysis_failed';
+  }
   schedulePoll();
 }
-
+function running() {
+  return Boolean(
+    (prime?.building_generation &&
+      prime.building_generation.state !== 'failed') ||
+      (netflix?.building_generation &&
+        netflix.building_generation.state !== 'failed')
+  );
+}
 function schedulePoll() {
   window.clearTimeout(pollTimer);
-  if (!enabled) return;
-  const running = prime?.building_generation?.state === 'enriching' || (netflix?.building_generation && !['failed','receiving'].includes(netflix.building_generation.state));
-  if (running) pollTimer = window.setTimeout(() => { void refresh().catch(showError); },1000);
+  if (enabled && running())
+    pollTimer = window.setTimeout(() => {
+      void refresh().catch(showError);
+    }, 750);
 }
-
+async function advanceAnalysis(signal) {
+  const pending = prime?.building_generation;
+  if (pending?.state === 'awaiting_confirmation') {
+    const datasets = pending.preview.datasets
+      .filter((dataset) => ['viewing', 'playback_details'].includes(dataset.id))
+      .map((dataset) => dataset.id);
+    if (!datasets.includes('viewing'))
+      throw new Error('viewing dataset is required');
+    await confirmPrimeSelection(pending.id, datasets, '', signal);
+    updateProviders(
+      await Promise.all([getPrimeProvider(signal), getNetflixProvider(signal)])
+    );
+  } else if (pending?.state === 'enriching' && !resumed.has(pending.id)) {
+    resumed.add(pending.id);
+    await createPrimeGeneration(signal, {
+      analysis_level: 'tmdb',
+      source_generation_id: pending.source_generation_id,
+      locale: pending.locale
+    });
+  }
+  for (const provider of ['netflix', 'prime-video']) {
+    const snapshot = provider === 'netflix' ? netflix : prime;
+    const active = snapshot?.active_generation;
+    const failed =
+      provider === 'netflix'
+        ? snapshot?.latest_failed_generation
+        : snapshot?.building_generation;
+    if (
+      !active ||
+      active.analysis_level !== 'local' ||
+      snapshot.building_generation ||
+      suspended.has(provider) ||
+      attempted.has(active.id)
+    )
+      continue;
+    if (
+      failed?.state === 'failed' &&
+      failed.source_generation_id === active.id
+    ) {
+      error = 'analysis_failed';
+      continue;
+    }
+    attempted.add(active.id);
+    const configured =
+      provider === 'netflix'
+        ? snapshot.capabilities.tmdb_configured
+        : snapshot.tmdb_configured;
+    if (!configured) {
+      error = 'analysis_failed';
+      continue;
+    }
+    try {
+      if (provider === 'netflix')
+        await createTMDBGeneration(
+          active.id,
+          LOCALE_TO_TITLE_LANGUAGE[locale],
+          signal
+        );
+      else {
+        const generation = await createPrimeGeneration(signal, {
+          analysis_level: 'tmdb',
+          source_generation_id: active.id,
+          locale: LOCALE_TO_TITLE_LANGUAGE[locale]
+        });
+        resumed.add(generation.id);
+      }
+    } catch (failure) {
+      if (failure.name === 'AbortError') throw failure;
+      error = 'analysis_failed';
+    }
+  }
+  updateProviders(
+    await Promise.all([getPrimeProvider(signal), getNetflixProvider(signal)])
+  );
+}
 async function refresh() {
-  if (!enabled || busy) { schedulePoll(); return; }
+  if (!enabled || busy) {
+    schedulePoll();
+    return;
+  }
   controller?.abort();
   const request = new AbortController();
   controller = request;
-  const providers = await Promise.all([getPrimeProvider(request.signal),getNetflixProvider(request.signal)]);
+  const providers = await Promise.all([
+    getPrimeProvider(request.signal),
+    getNetflixProvider(request.signal)
+  ]);
   if (request.signal.aborted || !enabled) return;
   updateProviders(providers);
+  try {
+    await advanceAnalysis(request.signal);
+  } catch (failure) {
+    if (failure.name === 'AbortError') throw failure;
+    error = 'analysis_failed';
+  }
+  if (request.signal.aborted || !enabled) return;
   let currentReport;
   try {
-    currentReport = await getMediaReport(filter,request.signal,cursor,titlesCursor);
+    currentReport = await getMediaReport(filter, request.signal, cursor);
   } catch (failure) {
-    if (failure.code!=='stale_cursor' || (!cursor && !titlesCursor)) throw failure;
+    if (failure.code !== 'stale_cursor' || !cursor) throw failure;
     resetPagination();
-    const currentProviders = await Promise.all([getPrimeProvider(request.signal),getNetflixProvider(request.signal)]);
-    if (request.signal.aborted || !enabled) return;
-    updateProviders(currentProviders);
-    currentReport = await getMediaReport(filter,request.signal);
+    currentReport = await getMediaReport(filter, request.signal);
   }
   if (request.signal.aborted || !enabled) return;
   report = currentReport;
-  error = '';
+  if (error === 'request_failed') error = '';
   redraw();
   schedulePoll();
 }
-
 function showError(failure) {
   if (!enabled || failure.name === 'AbortError') return;
-  error = failure.code || 'request_failed';
+  error = 'request_failed';
   redraw();
+  schedulePoll();
 }
-
-function button(text,action,attributes = {}) {
-  return element('button',{type:'button',class:'button','data-media-action':action,disabled:busy,...attributes},text);
+function button(text, action, attributes = {}) {
+  return element(
+    'button',
+    {
+      type: 'button',
+      class: 'button',
+      'data-media-action': action,
+      disabled: busy,
+      ...attributes
+    },
+    text
+  );
 }
-function field(text,id,node) {
-  return element('label',{class:'field',for:id},element('span',{text}),node);
+function field(text, id, node) {
+  return element(
+    'label',
+    {class: 'field', for: id},
+    element('span', {text}),
+    node
+  );
 }
-function textInput(id,name,value,type='text') { return element('input',{id,name,type,value}); }
-function fileInput(id,accept,file) {
-  const input = /** @type {HTMLInputElement} */(element('input',{id,type:'file',accept}));
-  if (file) {
-    const transfer = new DataTransfer();
-    transfer.items.add(file);
-    input.files=transfer.files;
-  }
-  return input;
+function input(id, name, value, type = 'text') {
+  return element('input', {id, name, type, value});
 }
-
-function updateDraft(event) {
-  const input = /** @type {HTMLInputElement} */(event.target);
-  if (input.closest('#media-filter-form')) { filterDraft[input.name]=input.value; return; }
-  switch (input.id) {
-    case 'media-netflix-label': netflixDraft.label=input.value; return;
-    case 'media-prime-label': primeDraft.label=input.value; return;
-    case 'media-netflix-file': netflixDraft.file=input.files[0] || null; return;
-    case 'media-prime-file': primeDraft.file=input.files[0] || null; return;
-  }
-  if (input.name==='dataset') {
-    primeDraft.datasets=primeDraft.datasets.filter(dataset=>dataset!==input.value);
-    if (input.checked) primeDraft.datasets.push(input.value);
-  }
+function table(headers, rows, className = '') {
+  return element(
+    'div',
+    {class: 'table-scroll', tabindex: '0'},
+    element(
+      'table',
+      {class: className},
+      element(
+        'thead',
+        {},
+        element(
+          'tr',
+          {},
+          ...headers.map((text) => element('th', {scope: 'col', text}))
+        )
+      ),
+      element(
+        'tbody',
+        {},
+        ...rows.map((row) =>
+          element('tr', {}, ...row.map((value) => element('td', {}, value)))
+        )
+      )
+    )
+  );
 }
-function providerName(provider) { return provider==='netflix' ? 'Netflix' : 'Prime Video'; }
-function statusLabel(status,copy) {
-  const names = {not_enriched:copy.notEnriched,receiving:copy.state_receiving,validating:copy.state_validating,awaiting_confirmation:copy.readyPreview,importing:copy.state_importing,enriching:copy.state_enriching,ready:copy.state_ready_private,failed:copy.state_failed,watch_summary:copy.watchEvents,search:copy.searches,purchase:copy.purchases,deleted:copy.deleted,unknown_duration:copy.unknownDuration,zero_duration:`${copy.seconds}: 0`};
-  const label = names[status] ?? copy[status];
-  if (typeof label!=='string') throw new Error('media classification has no localized label');
-  return label;
+function duration(seconds) {
+  const minutes = Math.floor(seconds / 60);
+  return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
 }
-
-/** Render validated report state and attach intent handlers to this workspace only. */
-export function renderMediaWorkspace(common,locale,onRender) {
-  const copy = {...common,...MEDIA_COPY[locale]};
+function number(value) {
+  return new Intl.NumberFormat(locale).format(value);
+}
+function metric(text, value, key, note = '') {
+  return element(
+    'article',
+    {},
+    element('p', {class: 'kpi-label', text}),
+    element('p', {
+      class: 'kpi-value',
+      'data-media-kpi': key,
+      text: String(value)
+    }),
+    note ? element('small', {text: note}) : null
+  );
+}
+export function renderMediaWorkspace(common, currentLocale, onRender) {
+  locale = currentLocale;
+  const copy = {...common, ...MEDIA_COPY[locale]};
+  disposeCharts();
   redraw = () => {
     const active = document.activeElement;
-    const restoreFocus = active instanceof HTMLInputElement && Boolean(active.closest('.media-workspace'));
-    const selection = restoreFocus ? [active.selectionStart,active.selectionEnd] : null;
+    const restore =
+      active instanceof HTMLInputElement &&
+      Boolean(active.closest('.media-workspace'));
+    const selection = restore
+      ? [active.selectionStart, active.selectionEnd]
+      : null;
     onRender();
-    if (restoreFocus) {
-      const replacement = /** @type {HTMLInputElement|null} */(document.getElementById(active.id));
-      replacement?.focus({preventScroll:true});
-      if (replacement && selection[0]!==null && selection[1]!==null) replacement.setSelectionRange(selection[0],selection[1]);
+    if (restore) {
+      const replacement = /** @type {HTMLInputElement|null} */ (
+        document.getElementById(active.id)
+      );
+      replacement?.focus({preventScroll: true});
+      if (replacement && selection[0] !== null && selection[1] !== null)
+        replacement.setSelectionRange(selection[0], selection[1]);
     }
   };
-  const root = element('div',{class:'media-workspace'});
-  root.append(element('div',{class:'page-heading'},element('div',{},element('a',{class:'back-link',href:'#catalog',text:`← ${copy.back_catalog}`}),element('h1',{text:copy.heading}),element('p',{class:'lede',text:copy.intro})),element('div',{class:'page-heading-actions'},element('a',{class:'button',href:'#app/netflix',text:'Netflix'}),element('a',{class:'button',href:'#guide/amazon',text:copy.primeGuide}),button(copy.exportCombined,'export',{disabled:busy || !report?.overview.source_record_count}))));
-  if (error) root.append(element('p',{class:'notice',role:'alert',text:`${copy.error_notice} · ${error}`}));
-  root.append(element('p',{class:'sr-only',role:'status','aria-live':'polite',text:busy?copy.loading:copy.filters_applied}));
-  const tabs = element('nav',{class:'workspace-tabs',role:'tablist','aria-label':copy.heading});
-  const labels = {overview:copy.overview,titles:copy.titlesView,activity:copy.activityView,sources:copy.sourcesView};
-  for (const name of VIEWS) tabs.append(element('button',{type:'button',role:'tab',id:`media-tab-${name}`,'aria-controls':`media-panel-${name}`,'aria-selected':name===view,'data-media-view':name,tabindex:name===view?'0':'-1',class:'button',text:labels[name]}));
-  root.append(tabs,renderFilters(copy));
-  const panel = element('section',{id:`media-panel-${view}`,'data-media-panel':view,role:'tabpanel','aria-labelledby':`media-tab-${view}`});
-  if (!report) panel.append(element('p',{text:copy.loading}));
-  else if (view==='overview') renderOverview(panel,copy,locale);
-  else if (view==='titles') renderTitles(panel,copy);
-  else if (view==='activity') renderActivity(panel,copy);
-  else renderSources(panel,copy);
-  root.append(panel,renderImports(copy,prime.tmdb_configured));
-  root.addEventListener('click',event => {
+  const root = element('div', {class: 'media-workspace'});
+  root.append(
+    element(
+      'div',
+      {class: 'page-heading'},
+      element(
+        'div',
+        {},
+        element('a', {
+          class: 'back-link',
+          href: '#catalog',
+          text: `← ${copy.back_catalog}`
+        }),
+        element('h1', {text: copy.heading})
+      ),
+      element(
+        'div',
+        {class: 'page-heading-actions'},
+        button(copy.addFiles, 'add-files', {
+          class: 'button button-primary',
+          disabled: false
+        }),
+        button(copy.exportCombined, 'export', {
+          disabled: busy || !report?.overview.source_record_count
+        })
+      )
+    )
+  );
+  if (error) {
+    const text =
+      error === 'analysis_failed'
+        ? copy.analysisFailed
+        : error === 'invalid_files'
+          ? copy.invalidFiles
+          : error === 'request_failed'
+            ? copy.error_notice
+            : copy.importFailed;
+    root.append(element('p', {class: 'notice', role: 'alert', text}));
+    if (error === 'analysis_failed')
+      root.append(button(copy.retry, 'retry-analysis'));
+  }
+  const failed =
+    prime?.building_generation?.state === 'failed' ||
+    Boolean(
+      netflix?.latest_failed_generation &&
+        netflix.latest_failed_generation.source_generation_id ===
+          netflix?.active_generation?.id
+    );
+  if (failed && !error)
+    root.append(
+      element('p', {
+        class: 'notice',
+        role: 'alert',
+        text: copy.analysisFailed
+      }),
+      button(copy.retry, 'retry-analysis')
+    );
+  if (uploadOpen || !report?.sources.length) root.append(renderUpload(copy));
+  if (busy || running()) {
+    const progress = element(
+      'section',
+      {
+        class: 'panel media-processing',
+        role: 'status',
+        'aria-live': 'polite'
+      },
+      element('strong', {text: copy.analyzing}),
+      element('progress', {'aria-label': copy.analyzing})
+    );
+    for (const [provider, snapshot] of [
+      ['netflix', netflix],
+      ['prime-video', prime]
+    ])
+      if (snapshot?.building_generation)
+        progress.append(
+          button(
+            `${copy.cancel} · ${providerName(provider)}`,
+            `cancel-${provider}`,
+            {disabled: false}
+          )
+        );
+    root.append(progress);
+  }
+  if (report?.sources.length) {
+    root.append(
+      element(
+        'div',
+        {class: 'media-import-status'},
+        element('span', {
+          text: report.sources
+            .map((source) => providerName(source.provider))
+            .join(' + ')
+        }),
+        button(copy.manageFiles, 'manage-files', {
+          class: 'button button-quiet'
+        })
+      )
+    );
+    if (manageOpen) root.append(renderManagement(copy));
+    root.append(renderFilters(copy));
+    const tabs = element('nav', {
+      class: 'workspace-tabs',
+      role: 'tablist',
+      'aria-label': copy.heading
+    });
+    for (const name of VIEWS)
+      tabs.append(
+        element('button', {
+          type: 'button',
+          role: 'tab',
+          id: `media-tab-${name}`,
+          'aria-controls': `media-panel-${name}`,
+          'aria-selected': name === view,
+          'data-media-view': name,
+          tabindex: name === view ? '0' : '-1',
+          class: 'button',
+          text: name === 'overview' ? copy.overview : copy.history
+        })
+      );
+    root.append(tabs);
+    const panel = element('section', {
+      id: `media-panel-${view}`,
+      'data-media-panel': view,
+      role: 'tabpanel',
+      'aria-labelledby': `media-tab-${view}`
+    });
+    if (view === 'overview') {
+      const overview = report.overview;
+      const metrics = element(
+        'div',
+        {class: 'media-metrics', 'aria-live': 'polite'},
+        metric(copy.activities, number(overview.activity_count), 'activities'),
+        metric(
+          copy.unique_titles,
+          number(overview.unique_title_count),
+          'titles'
+        )
+      );
+      if (
+        filter.provider !== 'netflix' &&
+        report.sources.some((source) => source.provider === 'prime-video')
+      )
+        metrics.append(
+          metric(
+            copy.watchTime,
+            duration(overview.recorded_seconds),
+            'watch-time',
+            'Prime Video'
+          )
+        );
+      panel.append(metrics, dashboardCharts(overview, copy, locale));
+    } else renderHistory(panel, copy);
+    root.append(panel, renderAbout(copy));
+  }
+  root.addEventListener('click', (event) => {
     const target = /** @type {Element} */ (event.target);
     const tab = target.closest('[data-media-view]');
     if (tab) {
       view = tab.getAttribute('data-media-view');
       redraw();
-      document.querySelector(`#media-tab-${view}`)?.['focus']();
+      document.getElementById(`media-tab-${view}`)?.focus();
       return;
     }
-    const title = target.closest('[data-media-title]');
-    if (title) {
-      filter = {...filter,title_id:title.getAttribute('data-media-title'),title:''};
-      filterDraft = {...filter};
-      view = 'activity'; resetPagination();
+    const provider = target.closest('[data-media-provider]');
+    if (provider) {
+      filter = {
+        ...filter,
+        provider: provider.getAttribute('data-media-provider')
+      };
+      resetPagination();
       void refresh().catch(showError);
       return;
     }
     const action = target.closest('[data-media-action]');
-    if (action && action.getAttribute('type')!=='submit') void perform(action.getAttribute('data-media-action'),root,copy,locale).catch(showError);
+    if (action)
+      void perform(action.getAttribute('data-media-action'), copy).catch(
+        showError
+      );
   });
-  root.addEventListener('submit',event => {
-    if (/** @type {Element} */(event.target).id !== 'media-filter-form') return;
-    event.preventDefault();
-    void perform('apply-filters',root,copy,locale).catch(showError);
+  root.addEventListener('input', (event) => {
+    const target = /** @type {HTMLInputElement} */ (event.target);
+    if (!target.matches('[data-media-filter]')) return;
+    filter = {...filter, [target.name]: target.value};
+    delete filter['title_id'];
+    resetPagination();
+    window.clearTimeout(filterTimer);
+    filterTimer = window.setTimeout(() => {
+      void refresh().catch(showError);
+    }, 250);
   });
-  root.addEventListener('input',updateDraft);
-  root.addEventListener('change',updateDraft);
+  root.addEventListener('change', (event) => {
+    const target = /** @type {HTMLInputElement} */ (event.target);
+    if (target.id === 'media-files' && target.files?.length) {
+      const files = Array.from(target.files);
+      void uploadFiles(files).catch(showError);
+    } else if (target.matches('select[data-media-filter]')) {
+      filter = {...filter, [target.name]: target.value};
+      resetPagination();
+      void refresh().catch(showError);
+    }
+  });
+  root.querySelector('.media-more')?.addEventListener('toggle', (event) => {
+    moreOpen = /** @type {HTMLDetailsElement} */ (event.target).open;
+  });
+  root.querySelector('.media-about')?.addEventListener('toggle', (event) => {
+    aboutOpen = /** @type {HTMLDetailsElement} */ (event.target).open;
+  });
+  queueMicrotask(() => {
+    if (root.isConnected && enabled)
+      disposeCharts = observeDashboardCharts(root);
+  });
   return root;
 }
-
-function renderFilters(copy) {
-  const form = element('form',{id:'media-filter-form',class:'panel media-filters'});
-  const providers = element('select',{id:'media-provider',name:'provider'});
-  for (const [id,name] of [['all',copy.allServices],['netflix','Netflix'],['prime-video','Prime Video']]) providers.append(element('option',{value:id,selected:filterDraft.provider===id,text:name}));
-  const kinds = element('select',{id:'media-kind',name:'kind'});
-  for (const [id,name] of [['all',copy.allServices],['activity',copy.netflixUnit],['playback',copy.primeUnit],['watch_summary',copy.watchEvents],['search',copy.searches],['purchase',copy.purchases],['trailer',copy.trailers]]) kinds.append(element('option',{value:id,selected:filterDraft.kind===id,text:name}));
-  const statuses = element('select',{id:'media-match-status',name:'match_status'});
-  for (const id of ['all','not_enriched','matched','review','unmatched']) statuses.append(element('option',{value:id,selected:filterDraft.match_status===id,text:id==='all'?copy.all_statuses:statusLabel(id,copy)}));
-  form.append(field(copy.provider,'media-provider',providers),field(copy.start_date,'media-start',textInput('media-start','start_date',filterDraft.start_date,'date')),field(copy.end_date,'media-end',textInput('media-end','end_date',filterDraft.end_date,'date')),field(copy.timezone,'media-timezone',textInput('media-timezone','timezone',filterDraft.timezone)),field(copy.titleFilter,'media-title-filter',textInput('media-title-filter','title',filterDraft.title)),field(copy.type,'media-kind',kinds),field(copy.match_status,'media-match-status',statuses),element('button',{type:'submit',class:'button button-primary','data-media-action':'apply-filters',disabled:busy,text:copy.applyFilters}),button(copy.clear_filters,'clear-filters'));
-  return form;
-}
-
-function table(headers,rows,className='') {
-  const result = element('table',{class:className},element('thead',{},element('tr',{},...headers.map(text=>element('th',{scope:'col',text})))),element('tbody',{},...rows.map(row=>element('tr',{},...row.map(value=>element('td',{},value))))));
-  return element('div',{class:'table-scroll',tabindex:'0'},result);
-}
-function metric(text,value,key='') {
-  return element('article',{class:'panel kpi-card'},element('p',{class:'kpi-label',text}),element('p',{class:'kpi-value','data-media-kpi':key,text:String(value)}));
-}
-function countPanel(text,values,copy,translate=false) {
-  const maximum = Math.max(1,...values.map(item=>item.count));
-  return element('figure',{class:'panel media-chart'},element('figcaption',{text}),element('p',{class:'panel-copy',text:`${copy.count}: ${values.reduce((sum,item)=>sum+item.count,0)}`}),table([copy.title,copy.count],values.map(item=>[translate?statusLabel(item.label,copy):item.label,element('span',{},element('meter',{min:0,max:maximum,value:item.count,'aria-hidden':'true'}),String(item.count))])));
-}
-function renderOverview(panel,copy,locale) {
-  const overview = report.overview;
-  if (!overview.source_record_count) panel.append(element('p',{class:'notice',text:copy.empty}));
-  panel.append(element('div',{class:'kpi-grid'},metric(copy.activities,overview.activity_count,'activities'),metric(copy.unique_titles,overview.unique_title_count),metric(copy.watchTime,!overview.timed_records && overview.activity_count ? copy.unknown : new Intl.NumberFormat(locale,{maximumFractionDigits:0}).format(overview.recorded_seconds)),metric(copy.source_rows,overview.source_record_count)),element('p',{class:'panel-copy',text:copy.sourceNote}),element('p',{class:'panel-copy',text:`Prime Video: ${copy.watchNote}`}),element('p',{class:'panel-copy',text:copy.timeNote}),element('p',{class:'panel-copy',text:`${copy.recordedCoverage}: ${overview.timed_records} / ${overview.activity_count}. ${copy.unknownDuration}: ${overview.unknown_duration_records}.`}),table([copy.provider,copy.unit,copy.activities,copy.seconds],overview.services.map(service=>[providerName(service.provider),service.provider==='netflix'?copy.netflixUnit:copy.primeUnit,String(service.activities),service.timed_records?String(service.recorded_seconds):copy.unknown])));
-  panel.append(element('div',{class:'kpi-grid'},metric(`${copy.unique_titles} · ${copy.matched}`,overview.accepted_title_count),metric(`${copy.unique_titles} · ${copy.review} / ${copy.unmatched} / ${copy.notEnriched}`,overview.unresolved_title_count),metric(copy.unknownTitle,overview.unavailable_title_records)));
-  const charts = element('div',{class:'media-chart-grid'});
-  charts.append(element('figure',{class:'panel media-chart'},element('figcaption',{text:copy.monthly_activity}),element('p',{class:'panel-copy',text:copy.sourceNote}),table([copy.date,copy.provider,copy.count],overview.months.map(month=>[month.month,providerName(month.provider),String(month.count)]))),element('figure',{class:'panel media-chart'},element('figcaption',{text:copy.top_titles}),table([copy.title,copy.provider,copy.count],overview.top_titles.map(title=>[element('button',{type:'button',class:'back-link','data-media-title':title.id,text:title.title}),title.providers.map(providerName).join(', '),String(title.activities)]))),countPanel(copy.match_coverage,overview.match_coverage,copy,true),countPanel(copy.exclusions,overview.exclusions,copy,true),countPanel(copy.genres,overview.genres,copy),countPanel(copy.devices,overview.devices,copy),countPanel(copy.audioLanguages,overview.audio_languages,copy),countPanel(copy.subtitleLanguages,overview.subtitle_languages,copy));
-  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  const localizedWeekdays = overview.weekdays.map(item=>({...item,label:new Intl.DateTimeFormat(locale,{weekday:'long',timeZone:'UTC'}).format(new Date(Date.UTC(2026,1,1+days.indexOf(item.label))))}));
-  charts.append(countPanel(copy.weekdayActivity,localizedWeekdays,copy));
-  panel.append(charts,element('div',{class:'kpi-grid'},metric(copy.rentals,overview.rentals),metric(copy.purchases,overview.purchases),metric(copy.playbackEvidence,overview.purchase_records_with_playback)),element('p',{class:'panel-copy',text:copy.runtimeNote}));
-}
-function renderTitles(panel,copy) {
-  panel.append(element('div',{class:'kpi-grid'},metric(copy.movie,report.overview.movie_titles),metric(copy.series,report.overview.series_titles),metric(copy.episodes,report.overview.episode_count)));
-  panel.append(element('p',{class:'panel-copy',text:copy.titleNote}),element('p',{class:'panel-copy',text:copy.episodeNote}),table([copy.title,copy.type,copy.provider,copy.activities,copy.match_status],report.titles.map(title=>[element('button',{type:'button',class:'back-link','data-media-title':title.id,text:title.title || copy.unknownTitle}),statusLabel(title.media_type,copy),title.providers.map(providerName).join(', '),String(title.activities),statusLabel(title.match_status,copy)]),'media-titles'));
-  panel.append(element('div',{class:'media-pagination'},button(copy.previous,'previous-titles',{disabled:busy || !titlesCursors.length}),button(copy.next,'next-titles',{disabled:busy || !report.next_titles_cursor})));
-}
-function booleanLabel(value,copy) { return value===null?copy.unknown:value?copy.yes:copy.no; }
-function renderActivity(panel,copy) {
-  const rows = report.records.map(record => {
-    const kind = {activity:copy.netflixUnit,playback:copy.primeUnit,watch_summary:copy.watchEvents,search:copy.searches,purchase:copy.purchases,trailer:copy.trailers}[record.kind];
-    const details = element('details',{},
-      element('summary',{text:copy.details}),
-      table([copy.title,copy.outcome],[
-        [copy.sourceFile,record.source.file],
-        [copy.sourceRow,String(record.source.row)],
-        [copy.title,record.raw_title],
-        [copy.date,record.timestamp || record.date],
-        [copy.interval,record.end_timestamp || copy.unknown],
-        [copy.series,record.series_title || copy.unknown],
-        [copy.seasons,record.season_number ? String(record.season_number) : copy.unknown],
-        [copy.episodes,record.episode_title || copy.unknown],
-        [copy.type,statusLabel(record.content_type,copy)],
-        [copy.profileType,statusLabel(record.profile_type,copy)],
-        [copy.autoplay,booleanLabel(record.autoplay,copy)],
-        [copy.deleted,booleanLabel(record.deleted,copy)],
-        [copy.completion,copy.unknown],
-        [copy.runtime,record.metadata?.runtime_minutes===undefined?copy.unknown:String(record.metadata.runtime_minutes)],
-        [copy.devices,record.device || copy.unknown],
-        [copy.audioLanguages,record.audio_language || copy.unknown],
-        [copy.subtitleLanguages,record.subtitle_language || copy.unknown]
-      ])
-    );
-    return [record.date,providerName(record.provider),record.title || copy.unknownTitle,kind,record.recorded_seconds===null?copy.unknown:String(record.recorded_seconds),record.profile_label || copy.unknown,statusLabel(record.match_status,copy),details];
+function renderUpload(copy) {
+  const files = element('input', {
+    id: 'media-files',
+    type: 'file',
+    accept: '.csv,.zip,text/csv,application/zip',
+    multiple: true,
+    disabled: busy
   });
-  panel.append(
-    element('p',{class:'panel-copy',text:copy.runtimeNote}),
-    table([copy.date,copy.provider,copy.title,copy.type,copy.seconds,copy.profileLabel,copy.match_status,copy.details],rows,'media-records'),
-    element('div',{class:'media-pagination'},button(copy.previous,'previous',{disabled:busy || !cursors.length}),button(copy.next,'next',{disabled:busy || !report.next_cursor}))
+  return element(
+    'section',
+    {class: 'panel media-upload', 'aria-label': copy.uploadTitle},
+    element(
+      'div',
+      {class: 'media-upload-heading'},
+      element('h2', {text: copy.uploadTitle}),
+      report?.sources.length
+        ? button(copy.close, 'close-upload', {class: 'button button-quiet'})
+        : null
+    ),
+    field(copy.uploadHint, 'media-files', files),
+    element(
+      'div',
+      {class: 'media-guides'},
+      element('a', {href: '#guide/netflix', text: copy.netflixGuide}),
+      element('a', {href: '#guide/amazon', text: copy.primeGuide})
+    )
   );
 }
-function renderSources(panel,copy) {
-  panel.append(element('h2',{text:copy.sourceCoverage}),element('p',{class:'panel-copy',text:copy.coverageNote}),element('p',{class:'panel-copy',text:copy.timeNote}),element('p',{class:'panel-copy',text:copy.profileNote}),element('p',{class:'panel-copy',text:`Prime Video: ${copy.watchNote}`}),table([copy.provider,copy.source_rows,copy.start_date,copy.end_date],report.sources.map(source=>[providerName(source.provider),String(source.records),source.start_date,source.end_date])));
-  const preview = prime?.active_generation?.preview;
-  if (preview) panel.append(element('h3',{text:'Prime Video'}),table([copy.datasets,copy.sourceFile,copy.source_rows,copy.date_range],preview.datasets.map(dataset=>[datasetName(dataset.id,copy),dataset.file,String(dataset.rows),`${dataset.start_date || ''} — ${dataset.end_date || ''}`])));
-}
-function datasetName(id,copy) {
-  return {viewing:copy.primeUnit,playback_details:copy.playbackDetails,watch_events:copy.watchEvents,searches:copy.searches,purchases:copy.purchases,trailers:copy.trailers}[id];
-}
-function renderImports(copy,tmdbConfigured) {
-  const root = element('section',{class:'media-imports','aria-label':copy.import});
-  const netflixForm = element('section',{class:'panel'});
-  netflixForm.append(element('h2',{text:copy.netflixImport}),element('p',{class:'panel-copy',text:copy.private_import_privacy}),field(copy.choose_csv,'media-netflix-file',fileInput('media-netflix-file','.csv,text/csv',netflixDraft.file)),field(copy.profileLabel,'media-netflix-label',textInput('media-netflix-label','profile_label',netflixDraft.label)),button(copy.import,'import-netflix',{class:'button button-primary'}));
-  if (netflix?.active_generation) netflixForm.append(button(copy.enrich,'enrich-netflix',{disabled:busy || !tmdbConfigured || Boolean(netflix.building_generation)}));
-  if (netflix?.building_generation) netflixForm.append(element('p',{role:'status',text:statusLabel(netflix.building_generation.state,copy)}));
-  root.append(netflixForm);
-  const primeForm = element('section',{class:'panel'});
-  primeForm.append(element('h2',{text:copy.primeImport}),element('p',{class:'panel-copy',text:copy.privacy_footer}),field(copy.primeImport,'media-prime-file',fileInput('media-prime-file','.zip,application/zip',primeDraft.file)),field(copy.profileLabel,'media-prime-label',textInput('media-prime-label','profile_label',primeDraft.label)),button(copy.primePreview,'preview-prime',{class:'button button-primary',disabled:busy || Boolean(prime?.building_generation && prime.building_generation.state!=='failed')}));
-  const pending = prime?.building_generation;
-  if (pending) {
-    primeForm.append(element('p',{role:'status',text:`${statusLabel(pending.state,copy)} · ${pending.completed_titles}/${pending.total_titles}`}));
-    if (pending.state==='awaiting_confirmation') {
-      const preview = element('section',{class:'media-preview'},element('h3',{text:copy.readyPreview}));
-      for (const dataset of pending.preview.datasets) preview.append(element('label',{class:'media-dataset'},element('input',{type:'checkbox',name:'dataset',value:dataset.id,checked:primeDraft.datasets.includes(dataset.id)}),`${datasetName(dataset.id,copy)} · ${dataset.rows} · ${dataset.start_date || ''} — ${dataset.end_date || ''}`));
-      preview.append(element('p',{class:'panel-copy',text:`Prime Video: ${copy.watchNote}`}),element('p',{class:'panel-copy',text:copy.coverageNote}));
-      if (pending.preview.unsupported_files.length) preview.append(element('p',{text:`${copy.unsupported}: ${pending.preview.unsupported_files.join(', ')}`}));
-      preview.append(button(copy.confirmImport,'confirm-prime',{class:'button button-primary'}));
-      primeForm.append(preview);
-    }
-    primeForm.append(button(copy.cancel,'cancel-prime',{disabled:false}));
-    if (pending.state==='enriching') primeForm.append(button(copy.retry,'resume-prime',{disabled:busy || !tmdbConfigured}));
-  }
-  if (prime?.active_generation) primeForm.append(button(copy.enrich,'enrich-prime',{disabled:busy || !tmdbConfigured || Boolean(pending)}),button(copy.confirmDeletePrime,'delete-prime',{class:'button button-danger'}));
-  root.append(primeForm);
+function renderFilters(copy) {
+  const root = element('section', {
+    class: 'media-filters',
+    'aria-label': copy.filters
+  });
+  const services = element('div', {
+    class: 'media-services',
+    'aria-label': copy.provider
+  });
+  for (const [id, name] of [
+    ['all', copy.allServices],
+    ['netflix', 'Netflix'],
+    ['prime-video', 'Prime Video']
+  ])
+    services.append(
+      element('button', {
+        type: 'button',
+        class: 'button',
+        'data-media-provider': id,
+        'aria-pressed': filter.provider === id,
+        text: name
+      })
+    );
+  const title = input('media-title-filter', 'title', filter.title, 'search');
+  title.setAttribute('data-media-filter', '');
+  title.setAttribute('placeholder', copy.titleFilter);
+  const dates = element(
+    'details',
+    {class: 'media-more', open: moreOpen ? true : undefined},
+    element('summary', {text: copy.moreFilters})
+  );
+  const type = element('select', {
+    id: 'media-type',
+    name: 'media_type',
+    'data-media-filter': ''
+  });
+  for (const [id, name] of [
+    ['all', copy.allTitles],
+    ['movie', copy.films],
+    ['series', copy.series],
+    ['unknown', copy.unknown]
+  ])
+    type.append(
+      element('option', {
+        value: id,
+        selected: filter.media_type === id,
+        text: name
+      })
+    );
+  const start = input('media-start', 'start_date', filter.start_date, 'date'),
+    end = input('media-end', 'end_date', filter.end_date, 'date');
+  start.setAttribute('data-media-filter', '');
+  end.setAttribute('data-media-filter', '');
+  const timezone = input('media-timezone', 'timezone', filter.timezone);
+  timezone.setAttribute('data-media-filter', '');
+  dates.append(
+    element(
+      'div',
+      {class: 'media-advanced'},
+      field(copy.start_date, 'media-start', start),
+      field(copy.end_date, 'media-end', end),
+      field(copy.type, 'media-type', type),
+      field(copy.timezone, 'media-timezone', timezone)
+    )
+  );
+  root.append(
+    services,
+    field(copy.titleFilter, 'media-title-filter', title),
+    dates
+  );
+  if (
+    filter.title ||
+    filter.start_date ||
+    filter.end_date ||
+    filter.media_type !== 'all' ||
+    filter.timezone !== 'UTC'
+  )
+    root.append(
+      button(copy.clear_filters, 'clear-filters', {
+        class: 'button button-quiet'
+      })
+    );
   return root;
 }
-
-async function confirmIntent(title,body,confirmText,copy) {
-  return new Promise(resolve=>{
+function renderHistory(panel, copy) {
+  panel.append(
+    table(
+      [copy.date, copy.provider, copy.title, copy.watchTime, copy.details],
+      report.records.map((record) => [
+        record.date,
+        providerName(record.provider),
+        record.metadata?.title || record.title || copy.unknownTitle,
+        record.recorded_seconds === null
+          ? copy.unknown
+          : duration(record.recorded_seconds),
+        element(
+          'details',
+          {},
+          element('summary', {text: copy.details}),
+          table(
+            [copy.title, copy.outcome],
+            [
+              [copy.sourceFile, record.source.file],
+              [copy.sourceRow, String(record.source.row)],
+              [copy.title, record.raw_title],
+              [copy.devices, record.device || copy.unknown],
+              [copy.audioLanguages, record.audio_language || copy.unknown],
+              [copy.subtitleLanguages, record.subtitle_language || copy.unknown]
+            ]
+          )
+        )
+      ]),
+      'media-records'
+    ),
+    element(
+      'div',
+      {class: 'media-pagination'},
+      button(copy.previous, 'previous', {disabled: busy || !cursors.length}),
+      button(copy.next, 'next', {disabled: busy || !report.next_cursor})
+    )
+  );
+}
+function renderManagement(copy) {
+  const root = element('section', {
+    class: 'panel media-management',
+    'aria-label': copy.manageFiles
+  });
+  for (const [provider, snapshot] of [
+    ['netflix', netflix],
+    ['prime-video', prime]
+  ])
+    if (snapshot?.active_generation)
+      root.append(
+        element(
+          'div',
+          {class: 'media-file'},
+          element(
+            'span',
+            {},
+            element('strong', {text: providerName(provider)}),
+            element('small', {
+              text: snapshot.active_generation.profile_label || ''
+            })
+          ),
+          button(copy.replaceFile, 'add-files'),
+          button(copy.deleteData, `delete-${provider}`, {
+            class: 'button button-danger'
+          })
+        )
+      );
+  return root;
+}
+function renderAbout(copy) {
+  const details = element(
+    'details',
+    {class: 'media-about', open: aboutOpen ? true : undefined},
+    element('summary', {text: copy.aboutReport}),
+    element('p', {text: copy.sourceNote}),
+    element('p', {text: copy.watchNote}),
+    element('p', {text: copy.timeNote}),
+    table(
+      [copy.provider, copy.source_rows, copy.start_date, copy.end_date],
+      report.sources.map((source) => [
+        providerName(source.provider),
+        String(source.records),
+        source.start_date,
+        source.end_date
+      ])
+    ),
+    table(
+      [copy.exclusions, copy.count],
+      report.overview.exclusions.map((item) => [
+        copy[item.label] || copy.unknown,
+        String(item.count)
+      ])
+    )
+  );
+  return details;
+}
+async function confirmDeletion(copy, provider) {
+  return new Promise((resolve) => {
     const trigger = document.activeElement;
-    const dialog = element('dialog',{'aria-labelledby':'media-confirm-title'},element('h2',{id:'media-confirm-title',text:title}),element('p',{class:'panel-copy',text:body}));
-    const accept = element('button',{type:'button',class:'button button-primary','data-media-confirm':'true',text:confirmText});
-    const cancel = element('button',{type:'button',class:'button',text:copy.cancel});
-    dialog.append(cancel,accept);
-    const dismiss = () => complete(false);
-    const complete = accepted => {
-      pendingConfirmations.delete(dismiss);
+    const dialog = element(
+      'dialog',
+      {'aria-label': copy.deleteData},
+      element('h2', {
+        text: `${copy.deleteData} · ${providerName(provider)}?`
+      }),
+      element('p', {text: copy.deleteBody})
+    );
+    const cancel = button(copy.cancel, 'unused', {disabled: false}),
+      accept = button(copy.deleteData, 'unused', {
+        class: 'button button-danger',
+        disabled: false,
+        'data-media-confirm': 'true'
+      });
+    dialog.append(cancel, accept);
+    const complete = (accepted) => {
+      dialogs.delete(dismiss);
       dialog.close();
       dialog.remove();
-      if (trigger instanceof HTMLElement && trigger.isConnected) trigger.focus();
+      if (trigger instanceof HTMLElement && trigger.isConnected)
+        trigger.focus();
       resolve(accepted);
     };
-    accept.addEventListener('click',()=>complete(true));
-    cancel.addEventListener('click',()=>complete(false));
-    dialog.addEventListener('cancel',event=>{event.preventDefault();complete(false);});
-    pendingConfirmations.add(dismiss);
-    document.body.append(dialog); dialog.showModal(); cancel.focus();
+    const dismiss = () => complete(false);
+    dialogs.add(dismiss);
+    cancel.addEventListener('click', dismiss);
+    accept.addEventListener('click', () => complete(true));
+    dialog.addEventListener('cancel', (event) => {
+      event.preventDefault();
+      dismiss();
+    });
+    document.body.append(dialog);
+    dialog.showModal();
+    cancel.focus();
   });
 }
-
-async function perform(action,root,copy,locale) {
-  if (busy && action!=='cancel-prime') return;
-  if (action==='apply-filters' || action==='clear-filters') {
-    filter = action==='apply-filters' ? {...filterDraft} : newFilter();
-    delete filter.title_id;
-    filterDraft = {...filter};
-    resetPagination(); await refresh(); return;
+async function uploadFiles(files) {
+  if (busy) return;
+  const providers = files.map((file) =>
+    file.name.toLowerCase().endsWith('.csv')
+      ? 'netflix'
+      : file.name.toLowerCase().endsWith('.zip')
+        ? 'prime-video'
+        : 'invalid'
+  );
+  if (
+    providers.includes('invalid') ||
+    new Set(providers).size !== providers.length
+  ) {
+    error = 'invalid_files';
+    redraw();
+    return;
   }
-  if (action==='next' || action==='previous') {
-    if (action==='next') { cursors.push(cursor); cursor=report.next_cursor; }
-    else cursor=cursors.pop();
-    await refresh(); return;
-  }
-  if (action==='next-titles' || action==='previous-titles') {
-    if (action==='next-titles') { titlesCursors.push(titlesCursor); titlesCursor=report.next_titles_cursor; }
-    else titlesCursor=titlesCursors.pop();
-    await refresh(); return;
-  }
-  if (action.startsWith('enrich-') || action==='resume-prime') {
-    if (!await confirmIntent(copy.enrich_title,`${copy.enrich_disclosure} ${copy.enrich_query_only}`,copy.confirm_enrich,copy)) return;
-  }
-  if (action==='delete-prime' && !await confirmIntent(copy.deletePrimeTitle,copy.deletePrimeBody,copy.confirmDeletePrime,copy)) return;
-  const draft = action==='import-netflix'?netflixDraft:primeDraft;
-  const file = draft.file;
-  const label = draft.label;
-  const selected = [...primeDraft.datasets];
-  if ((action==='import-netflix' || action==='preview-prime') && !file) { error='file_required'; redraw(); return; }
-  busy=true; error=''; redraw();
+  busy = true;
+  error = '';
+  uploadOpen = false;
   controller?.abort();
-  const request = new AbortController(); controller=request;
+  const request = new AbortController();
+  controller = request;
+  redraw();
   try {
-    if (action==='import-netflix') {
-      const generation = await createLocalGeneration(request.signal);
-      if (request.signal.aborted || !enabled) return;
-      netflix = {...netflix,building_generation:generation};
-      redraw();
-      await setNetflixProfileLabel(generation.id,label,request.signal);
-      await uploadViewingActivity(generation.id,file,request.signal);
-      if (request.signal.aborted || !enabled) return;
-      netflixDraft = {file:null,label:''};
-    } else if (action==='preview-prime') {
-      const generation = await createPrimeGeneration(request.signal);
-      if (request.signal.aborted || !enabled) return;
-      prime = {...prime,building_generation:generation};
-      redraw();
-      const preview = await uploadPrimeArchive(generation.id,file,request.signal);
-      if (request.signal.aborted || !enabled) return;
-      prime = {...prime,building_generation:preview};
-      synchronizePrimePreview();
-    } else if (action==='confirm-prime') await confirmPrimeSelection(prime.building_generation.id,selected,label,request.signal);
-    else if (action==='cancel-prime') await cancelPrimeGeneration(prime.building_generation.id,request.signal);
-    else if (action==='delete-prime') await deletePrimeProvider(request.signal);
-    else if (action==='enrich-netflix') await createTMDBGeneration(netflix.active_generation.id,LOCALE_TO_TMDB[locale],request.signal);
-    else if (action==='enrich-prime' || action==='resume-prime') await createPrimeGeneration(request.signal,{analysis_level:'tmdb',source_generation_id:action==='resume-prime'?prime.building_generation.source_generation_id:prime.active_generation.id,locale:action==='resume-prime'?prime.building_generation.locale:LOCALE_TO_TMDB[locale],tmdb_title_query_consent:'authorize-tmdb-title-queries'});
-    else if (action==='export') {
-      const blob = await exportMediaCSV(filter,request.signal);
-      const url = URL.createObjectURL(blob); objectURLs.add(url);
-      const link = element('a',{href:url,download:'viewing-history.csv'});
-      document.body.append(link); link.click(); link.remove();
-      window.setTimeout(()=>{URL.revokeObjectURL(url);objectURLs.delete(url);},1000);
+    for (let index = 0; index < files.length; index++) {
+      const provider = providers[index];
+      suspended.delete(provider);
+      if (provider === 'netflix') {
+        const generation = await createLocalGeneration(request.signal);
+        if (request.signal.aborted || !enabled) return;
+        netflix = {...netflix, building_generation: generation};
+        redraw();
+        await uploadViewingActivity(
+          generation.id,
+          files[index],
+          request.signal
+        );
+      } else {
+        const generation = await createPrimeGeneration(request.signal);
+        if (request.signal.aborted || !enabled) return;
+        prime = {...prime, building_generation: generation};
+        redraw();
+        await uploadPrimeArchive(generation.id, files[index], request.signal);
+      }
     }
   } catch (failure) {
-    if (controller===request && !request.signal.aborted && enabled) {
-      busy=false;
-      try { await refresh(); }
-      catch (refreshFailure) { throw new AggregateError([failure,refreshFailure],'media mutation and state reconciliation failed'); }
-    }
-    throw failure;
-  } finally { if (controller===request) busy=false; }
-  if (request.signal.aborted || !enabled) return;
-  if (['confirm-prime','cancel-prime','delete-prime'].includes(action)) {
-    primeDraft.file=null; primeDraft.datasets=[]; primeDraft.previewID='';
-    if (action==='delete-prime') primeDraft.label='';
+    if (failure.name === 'AbortError') return;
+    error = 'import_failed';
+  } finally {
+    if (controller === request) busy = false;
   }
-  resetPagination();
-  await refresh();
+  if (!request.signal.aborted && enabled) await refresh();
+}
+async function perform(action, copy) {
+  if (action === 'add-files') {
+    uploadOpen = true;
+    redraw();
+    document.getElementById('media-files')?.focus();
+    return;
+  }
+  if (action === 'close-upload') {
+    uploadOpen = false;
+    redraw();
+    return;
+  }
+  if (action === 'manage-files') {
+    manageOpen = !manageOpen;
+    redraw();
+    return;
+  }
+  if (action === 'clear-filters') {
+    window.clearTimeout(filterTimer);
+    filter = newFilter();
+    resetPagination();
+    await refresh();
+    return;
+  }
+  if (action === 'next' || action === 'previous') {
+    if (action === 'next') {
+      cursors.push(cursor);
+      cursor = report.next_cursor;
+    } else cursor = cursors.pop();
+    await refresh();
+    return;
+  }
+  if (busy && !action.startsWith('cancel-')) return;
+  const provider = action.endsWith('netflix') ? 'netflix' : 'prime-video';
+  if (action.startsWith('delete-') && !(await confirmDeletion(copy, provider)))
+    return;
+  controller?.abort();
+  const request = new AbortController();
+  controller = request;
+  busy = true;
+  error = '';
+  redraw();
+  try {
+    if (action.startsWith('cancel-')) {
+      suspended.add(provider);
+      const id = (provider === 'netflix' ? netflix : prime).building_generation
+        .id;
+      if (provider === 'netflix') await cancelGeneration(id, request.signal);
+      else await cancelPrimeGeneration(id, request.signal);
+    } else if (action.startsWith('delete-')) {
+      suspended.add(provider);
+      if (provider === 'netflix') await deleteNetflixProvider(request.signal);
+      else await deletePrimeProvider(request.signal);
+    } else if (action === 'retry-analysis') {
+      suspended.clear();
+      attempted.clear();
+      resumed.clear();
+      if (prime?.building_generation?.state === 'failed')
+        await cancelPrimeGeneration(
+          prime.building_generation.id,
+          request.signal
+        );
+      for (const snapshot of [netflix, prime])
+        if (snapshot?.active_generation)
+          attempted.delete(snapshot.active_generation.id);
+      if (
+        netflix?.active_generation?.analysis_level === 'local' &&
+        !netflix?.building_generation
+      )
+        netflix = {...netflix, latest_failed_generation: null};
+      updateProviders(
+        await Promise.all([
+          getPrimeProvider(request.signal),
+          getNetflixProvider(request.signal)
+        ])
+      );
+      if (
+        netflix?.active_generation?.analysis_level === 'local' &&
+        !netflix?.building_generation &&
+        netflix.capabilities.tmdb_configured
+      ) {
+        attempted.add(netflix.active_generation.id);
+        await createTMDBGeneration(
+          netflix.active_generation.id,
+          LOCALE_TO_TITLE_LANGUAGE[locale],
+          request.signal
+        );
+      }
+      await advanceAnalysis(request.signal);
+    } else if (action === 'export') {
+      const blob = await exportMediaCSV(filter, request.signal);
+      const url = URL.createObjectURL(blob);
+      objectURLs.add(url);
+      const link = element('a', {href: url, download: 'viewing-history.csv'});
+      document.body.append(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => {
+        URL.revokeObjectURL(url);
+        objectURLs.delete(url);
+      }, 1000);
+    }
+  } catch (failure) {
+    if (failure.name === 'AbortError') return;
+    error = 'analysis_failed';
+  } finally {
+    if (controller === request) busy = false;
+  }
+  if (!request.signal.aborted && enabled) {
+    resetPagination();
+    await refresh();
+  }
 }
