@@ -1030,3 +1030,84 @@ Format: `- [ ] [B042] (P1) {I007} Title`
 
   - The episode-versus-series counts require an explicit report contract before browser implementation.
   - Search-to-watch attribution remains a later feature with its own evidence and matching rules.
+
+- [x] [F024] (P1) {F023} Add automatic import and a complete analysis dashboard
+  Goal:
+  The viewing history workspace uses the approved dashboard design.
+  Users upload files and receive complete analysis without additional setup.
+  Reference:
+  - Use the six chart types in `MarcoPoloResearchLab/netflix`, at `cmd/web/templates/dashboard.html`.
+  - Use the approved proposal from 2026-09-29 for layout and workflow.
+  Requirements:
+  - Use one workspace for Netflix and Prime Video.
+  - Accept Netflix CSV files and Prime Video ZIP archives through one file picker.
+  - Start import and title analysis automatically after file selection.
+  - Select the available viewing and playback-detail datasets automatically.
+  - Remove title-service names, permission prompts, dataset forms, and manual analysis controls from the user workflow.
+  - Keep the title-service credential on the server.
+  - Show progress, errors, cancellation, and retry through general analysis controls.
+  - Keep the active report available during independent provider replacement.
+  - Keep each provider analysis independent when another provider analysis fails.
+  - Show Overview and History views with one shared filter set.
+  - Apply service, date, title, and content-type filters automatically to all report measures and export.
+  - Show three measures: viewing activity, unique titles, and recorded watch time with source coverage.
+  - Show monthly activity by content type, films and series, genres, original languages, genres by weekday, and genres by year.
+  - Show all six charts in Overview without additional user actions.
+  - Aggregate all filtered activity before pagination.
+  - Show months with no activity on the monthly axis.
+  - Keep unknown content types explicit and keep unresolved titles separate by provider.
+  - Use accepted metadata for genre and original-language measures.
+  - Keep metadata runtime separate from recorded watch time.
+  - Identify partial periods and overlapping genre counts.
+  - Put file replacement, provider deletion, and source details behind expandable controls.
+  - Keep authentication, user isolation, cancellation, restart, source evidence, and CSV export.
+  - Supply localized text, keyboard controls, chart summaries, and accessible data tables.
+  - Remove obsolete browser paths and permission payloads instead of adding compatibility code.
+  Deliverables:
+  - Implement the approved dashboard with real report data.
+  - Extend the shared report with the six complete chart datasets.
+  - Update current API clients, documentation, and integration tests together.
+  - Add HTTP and browser tests for automatic analysis and shared filters.
+  Implementation contract:
+  - Use `#app/viewing-history` as the sole streaming history browser route.
+  - Use `viewing-history-report-v2` for the shared report contract.
+  - Supply `media_types`, `monthly_media`, `genres`, `original_languages`, `genres_by_weekday`, and `genres_by_year` datasets.
+  - Accept `all`, `movie`, `series`, and `unknown` in the `media_type` filter.
+  - Build application-owned SVG charts with accessible data tables.
+  - Keep chart data independent of the history cursor.
+  Validation:
+  - Record the expected integration-test failure before production edits.
+  - Verify both imports without permission dialogs or manual analysis actions.
+  - Verify chart counts, incomplete metadata, empty results, filters, pagination, and downloaded CSV contents.
+  - Verify independent replacement, cancellation, failure, retry, and route cleanup through the real browser.
+  - Verify English, Spanish, French, and Russian text.
+  - Verify wide layouts and widths down to 320 pixels through automated browsers.
+  - Run `make ci` after the final code change.
+  Contract change:
+  - This issue replaces the manual preview and permission workflow in F007, F008, F011, and F023.
+  - Publication and deployment remain separate operations.
+
+  Implementation evidence, 2026-09-29:
+  - The initial HTTP test failed with `tmdb_consent_required` for the automatic analysis request.
+  - The initial browser test failed because the shared file picker was absent.
+  - Browser tests also reproduced a blocked provider analysis and a missing month on the chart axis.
+  - These failures remain in local test logs outside source control.
+  - HTTP tests passed for the current report schema, complete chart counts, shared filters, pagination, and empty results.
+  - Browser tests passed for both automatic imports, six charts, all shared filters, and downloaded CSV contents.
+  - Browser tests passed for replacement, cancellation, failure, retry, provider deletion, and route cleanup.
+  - A rejected Netflix analysis request did not prevent automatic Prime analysis.
+  - The monthly chart included a zero count between January and March activity.
+  - The browser kept raw activity available when title analysis was unavailable.
+  - Authentication tests passed with the same origin and separate origins.
+  - Browser checks passed for English, Spanish, French, and Russian text.
+  - Playwright browser checks passed at 1440, 736, 360, and 320 pixels.
+  - Final `make ci` passed after the last code change.
+  - The complete gate included both matcher evaluations, frontend checks, lifecycle tests, and production artifact checks.
+  - Tests used synthetic source files and controlled title-service responses.
+  - The current contracts are recorded in `docs/streaming-history-contract.md` and `docs/netflix-provider-plan.md`.
+  - The language review covered changed prose against the verified ASD-STE100 Issue 9 reference.
+  - The checker found no mechanical errors in changed prose.
+  - Ninety findings remain in unchanged prose.
+  - The Governor check reports managed-content differences in nine unchanged files.
+  - These existing differences remain outside F024.
+  - Implementation acceptance is local.
