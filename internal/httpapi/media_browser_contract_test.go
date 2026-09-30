@@ -17,7 +17,7 @@ func TestMediaBrowserWorkspaceContract(testContext *testing.T) {
 		testContext.Skip("enable browser contracts through make test-browser")
 	}
 	testContext.Run("dashboard", testMediaBrowserWorkspaceContract)
-	for _, scenario := range []string{"drafts", "pagination", "upload-recovery", "charts", "analysis-start-failure"} {
+	for _, scenario := range []string{"drafts", "pagination", "upload-recovery", "charts", "analysis-start-failure", "selection-failure", "chart-inspection"} {
 		testContext.Run(scenario, func(testContext *testing.T) { testMediaBrowserReviewRegression(testContext, scenario) })
 	}
 }
