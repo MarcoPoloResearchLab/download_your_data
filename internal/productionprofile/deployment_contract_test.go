@@ -3,6 +3,7 @@ package productionprofile
 import (
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 
 	"gopkg.in/yaml.v3"
@@ -13,10 +14,10 @@ type deploymentManifest struct {
 }
 
 type deploymentResources struct {
-	SchemaVersion *int                 `yaml:"schema_version"`
-	Owner         string               `yaml:"owner"`
-	Release       deploymentRelease    `yaml:"release"`
-	Resources     []deploymentResource `yaml:"resources"`
+	SchemaVersion *int                          `yaml:"schema_version"`
+	Owner         string                        `yaml:"owner"`
+	Release       deploymentRelease             `yaml:"release"`
+	Resources     map[string]deploymentResource `yaml:"resources"`
 }
 
 type deploymentRelease struct {
@@ -24,37 +25,35 @@ type deploymentRelease struct {
 }
 
 type deploymentResource struct {
-	Kind       string                   `yaml:"kind"`
-	ID         string                   `yaml:"id"`
-	Bindings   map[string]string        `yaml:"bindings"`
-	Images     []deploymentImage        `yaml:"images"`
-	Services   []deploymentService      `yaml:"services"`
-	Volumes    []deploymentVolume       `yaml:"volumes"`
-	Name       string                   `yaml:"name"`
-	Version    int                      `yaml:"version"`
-	Project    string                   `yaml:"project"`
-	Service    string                   `yaml:"service"`
-	Endpoint   deploymentEndpoint       `yaml:"endpoint"`
-	Health     deploymentHealth         `yaml:"health"`
-	Hostname   string                   `yaml:"hostname"`
-	Listener   string                   `yaml:"listener"`
-	Handlers   []deploymentHandler      `yaml:"handlers"`
-	Protocol   string                   `yaml:"protocol"`
-	URL        string                   `yaml:"url"`
-	Repository string                   `yaml:"repository"`
-	Branch     string                   `yaml:"branch"`
-	Domain     string                   `yaml:"domain"`
-	Source     deploymentSource         `yaml:"source"`
-	Capability string                   `yaml:"capability"`
-	Tenant     deploymentAuthentication `yaml:"tenant"`
-	Access     deploymentAccess         `yaml:"access"`
-	TLS        deploymentTLS            `yaml:"tls"`
-	Verify     deploymentVerification   `yaml:"verification"`
-	Expected   int                      `yaml:"expected_status"`
+	Kind       string                       `yaml:"kind"`
+	Bindings   map[string]string            `yaml:"bindings"`
+	Images     map[string]deploymentImage   `yaml:"images"`
+	Services   map[string]deploymentService `yaml:"services"`
+	Volumes    map[string]deploymentVolume  `yaml:"volumes"`
+	Name       string                       `yaml:"name"`
+	Version    int                          `yaml:"version"`
+	Project    string                       `yaml:"project"`
+	Service    string                       `yaml:"service"`
+	Endpoint   deploymentEndpoint           `yaml:"endpoint"`
+	Health     deploymentHealth             `yaml:"health"`
+	Hostname   string                       `yaml:"hostname"`
+	Listener   string                       `yaml:"listener"`
+	Handlers   map[string]deploymentHandler `yaml:"handlers"`
+	Protocol   string                       `yaml:"protocol"`
+	URL        string                       `yaml:"url"`
+	Repository string                       `yaml:"repository"`
+	Branch     string                       `yaml:"branch"`
+	Domain     string                       `yaml:"domain"`
+	Source     deploymentSource             `yaml:"source"`
+	Capability string                       `yaml:"capability"`
+	Tenant     deploymentAuthentication     `yaml:"tenant"`
+	Access     deploymentAccess             `yaml:"access"`
+	TLS        deploymentTLS                `yaml:"tls"`
+	Verify     deploymentVerification       `yaml:"verification"`
+	Expected   int                          `yaml:"expected_status"`
 }
 
 type deploymentImage struct {
-	ID         string          `yaml:"id"`
 	Repository string          `yaml:"repository"`
 	Build      deploymentBuild `yaml:"build"`
 }
@@ -67,12 +66,11 @@ type deploymentBuild struct {
 }
 
 type deploymentService struct {
-	ID          string                     `yaml:"id"`
 	Image       string                     `yaml:"image"`
 	Placement   map[string]string          `yaml:"placement"`
 	Environment map[string]deploymentValue `yaml:"environment"`
-	Mounts      []deploymentMount          `yaml:"mounts"`
-	Ports       []map[string]int           `yaml:"ports"`
+	Mounts      map[string]deploymentMount `yaml:"mounts"`
+	Ports       map[string]map[string]int  `yaml:"ports"`
 	Readiness   deploymentHealth           `yaml:"readiness"`
 }
 
@@ -84,12 +82,10 @@ type deploymentValue struct {
 
 type deploymentMount struct {
 	Volume   string `yaml:"volume"`
-	Target   string `yaml:"target"`
 	ReadOnly bool   `yaml:"read_only"`
 }
 
 type deploymentVolume struct {
-	ID        string `yaml:"id"`
 	Name      string `yaml:"name"`
 	Retention string `yaml:"retention"`
 }
@@ -109,7 +105,6 @@ type deploymentHealth struct {
 }
 
 type deploymentHandler struct {
-	ID         string              `yaml:"id"`
 	PathPrefix string              `yaml:"path_prefix"`
 	Upstream   string              `yaml:"upstream"`
 	Transport  deploymentTransport `yaml:"transport"`
@@ -203,7 +198,7 @@ func TestDeploymentManifestMatchesTheProductionProfile(testContext *testing.T) {
 	if len(runtime.Images) != 1 || len(runtime.Services) != 1 || len(runtime.Volumes) != 1 {
 		testContext.Fatalf("runtime topology drifted: %+v", runtime)
 	}
-	image := runtime.Images[0]
+	image := runtime.Images["api-image"]
 	if image.Repository != "ghcr.io/marcopoloresearchlab/download-your-data" ||
 		image.Build.Context != "." ||
 		image.Build.Dockerfile != "Dockerfile" ||
@@ -212,8 +207,8 @@ func TestDeploymentManifestMatchesTheProductionProfile(testContext *testing.T) {
 		image.Build.Platforms[0] != "linux/amd64" {
 		testContext.Fatalf("production API image contract drifted: %+v", image)
 	}
-	service := runtime.Services[0]
-	if service.ID != "download-your-data-api" || service.Image != "api-image" ||
+	service := runtime.Services["download-your-data-api"]
+	if service.Image != "api-image" ||
 		service.Placement["group"] != "gateway" ||
 		service.Placement["cardinality"] != "one" ||
 		service.Environment["DOWNLOAD_YOUR_DATA_ADDRESS"].Value != "0.0.0.0:8787" ||
@@ -223,12 +218,12 @@ func TestDeploymentManifestMatchesTheProductionProfile(testContext *testing.T) {
 		service.Readiness.Path != profile.Runtime.HealthPath ||
 		service.Readiness.ExpectedStatus != 200 ||
 		len(service.Mounts) != 1 ||
-		service.Mounts[0] != (deploymentMount{Volume: "data", Target: profile.Runtime.DataMount}) ||
-		len(service.Ports) != 1 || service.Ports[0]["container_port"] != profile.Runtime.ContainerPort {
+		service.Mounts[profile.Runtime.DataMount] != (deploymentMount{Volume: "data"}) ||
+		len(service.Ports) != 1 || service.Ports[strconv.Itoa(profile.Runtime.ContainerPort)] == nil || len(service.Ports[strconv.Itoa(profile.Runtime.ContainerPort)]) != 0 {
 		testContext.Fatalf("production API service contract drifted: %+v", service)
 	}
-	if runtime.Volumes[0] != (deploymentVolume{ID: "data", Name: "mprlab-download-your-data-data", Retention: "retain"}) {
-		testContext.Fatalf("retained data volume drifted: %+v", runtime.Volumes[0])
+	if runtime.Volumes["data"] != (deploymentVolume{Name: "mprlab-download-your-data-data", Retention: "retain"}) {
+		testContext.Fatalf("retained data volume drifted: %+v", runtime.Volumes["data"])
 	}
 	assertEnvironmentReference(testContext, service, "DOWNLOAD_YOUR_DATA_PUBLIC_ORIGIN", "website", "origin")
 	assertEnvironmentReference(testContext, service, "DOWNLOAD_YOUR_DATA_API_ORIGIN", "public-api", "origin")
@@ -242,10 +237,10 @@ func TestDeploymentManifestMatchesTheProductionProfile(testContext *testing.T) {
 
 	capability := requireDeploymentResource(testContext, manifest, "runtime_capability", "http")
 	if capability.Name != "download-your-data.http" || capability.Version != 1 ||
-		capability.Project != "runtime" || capability.Service != service.ID ||
+		capability.Project != "runtime" || capability.Service != "download-your-data-api" ||
 		capability.Endpoint.Scope != "same_host" ||
 		capability.Endpoint.Scheme != "http" ||
-		capability.Endpoint.Alias != service.ID ||
+		capability.Endpoint.Alias != "download-your-data-api" ||
 		capability.Endpoint.Port != profile.Runtime.ContainerPort ||
 		capability.Health.Protocol != "http" ||
 		capability.Health.Path != profile.Runtime.HealthPath ||
@@ -258,9 +253,9 @@ func TestDeploymentManifestMatchesTheProductionProfile(testContext *testing.T) {
 		publicAPI.Listener != "https" || publicAPI.TLS.Mode != "automatic" ||
 		publicAPI.Access.RateLimit != (deploymentRateLimit{Events: 300, WindowSeconds: 10}) ||
 		len(publicAPI.Handlers) != 3 ||
-		publicAPI.Handlers[0] != expectedDeploymentHandler("shared-auth", "/auth", "tauth.http") ||
-		publicAPI.Handlers[1] != expectedDeploymentHandler("shared-profile", "/me", "tauth.http") ||
-		publicAPI.Handlers[2] != expectedDeploymentHandler("default", "/", "download-your-data.http") {
+		publicAPI.Handlers["shared-auth"] != expectedDeploymentHandler("/auth", "tauth.http") ||
+		publicAPI.Handlers["shared-profile"] != expectedDeploymentHandler("/me", "tauth.http") ||
+		publicAPI.Handlers["default"] != expectedDeploymentHandler("/", "download-your-data.http") {
 		testContext.Fatalf("public API route drifted: %+v", publicAPI)
 	}
 
@@ -295,9 +290,8 @@ func TestDeploymentManifestMatchesTheProductionProfile(testContext *testing.T) {
 	}
 }
 
-func expectedDeploymentHandler(id string, pathPrefix string, upstream string) deploymentHandler {
+func expectedDeploymentHandler(pathPrefix string, upstream string) deploymentHandler {
 	return deploymentHandler{
-		ID:         id,
 		PathPrefix: pathPrefix,
 		Upstream:   upstream,
 		Transport: deploymentTransport{
@@ -316,8 +310,8 @@ func requireDeploymentResource(
 	id string,
 ) deploymentResource {
 	testContext.Helper()
-	for _, resource := range manifest.Resources.Resources {
-		if resource.Kind == kind && resource.ID == id {
+	if resource, exists := manifest.Resources.Resources[id]; exists {
+		if resource.Kind == kind {
 			return resource
 		}
 	}
