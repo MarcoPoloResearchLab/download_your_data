@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Netflix Viewing History Analyzer | Download Your Data</title>
+  <meta name="description" content="Import a Netflix Title and Date CSV into a private workspace for viewing counts, date patterns, title review, and optional consent-based TMDB enrichment.">
+  <link rel="canonical" href="https://dyd.mprlab.com/resources/netflix-viewing-history-analyzer/">
+  <meta property="og:title" content="Netflix Viewing History Analyzer | Download Your Data">
+  <meta property="og:description" content="Import a Netflix Title and Date CSV into a private workspace for viewing counts, date patterns, title review, and optional consent-based TMDB enrichment.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://dyd.mprlab.com/resources/netflix-viewing-history-analyzer/">
+  <meta property="og:site_name" content="Download Your Data">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Netflix Viewing History Analyzer | Download Your Data">
+  <meta name="twitter:description" content="Import a Netflix Title and Date CSV into a private workspace for viewing counts, date patterns, title review, and optional consent-based TMDB enrichment.">
+  <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/images/favicon.png" sizes="32x32" type="image/png">
+  <link rel="stylesheet" href="/styles/resources.css">
+  <script id="structured-data" type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Article","author":{"@type":"Person","name":"Vadym Tyemirov","url":"https://github.com/tyemirov"},"dateModified":"2026-09-18","datePublished":"2026-09-18","description":"Import a Netflix Title and Date CSV into a private workspace for viewing counts, date patterns, title review, and optional consent-based TMDB enrichment.","headline":"Analyze a Netflix Viewing History CSV Privately","mainEntityOfPage":"https://dyd.mprlab.com/resources/netflix-viewing-history-analyzer/","publisher":{"@type":"Organization","name":"Marco Polo Research Lab","url":"https://mprlab.com/"},"url":"https://dyd.mprlab.com/resources/netflix-viewing-history-analyzer/"},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","item":"https://dyd.mprlab.com/","name":"Home","position":1},{"@type":"ListItem","item":"https://dyd.mprlab.com/resources/","name":"Resources","position":2},{"@type":"ListItem","item":"https://dyd.mprlab.com/resources/netflix-viewing-history-analyzer/","name":"Netflix","position":3}]},{"@type":"FAQPage","mainEntity":[{"@type":"Question","acceptedAnswer":{"@type":"Answer","text":"Yes. Raw import and analytics do not require TMDB. The workspace reports TMDB as a separate configured or not-configured capability."},"name":"Can the Netflix analyzer work without TMDB?"},{"@type":"Question","acceptedAnswer":{"@type":"Answer","text":"After explicit consent, the server sends only unique derived title queries and the selected locale. It does not send viewing dates, profile data, raw CSV bytes, or complete activity rows."},"name":"What does TMDB enrichment send?"},{"@type":"Question","acceptedAnswer":{"@type":"Answer","text":"The current ready library remains active while the replacement validates and imports. It is replaced only after the new generation completes."},"name":"What happens when I replace a Netflix CSV?"}]}]}</script>
+  <script defer src="https://loopaware.mprlab.com/pixel.js?site_id=5a6e13d5-7584-451e-b058-36b9ecef8e8d"></script>
+<link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <header class="site-header">
+    <a class="site-brand" href="/" aria-label="Download Your Data home">
+      <img class="brand-mark" src="/images/favicon.svg" alt="" width="30" height="30">
+      <span>Download Your Data</span>
+    </a>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a href="/#catalog">Provider catalog</a>
+      <a href="/resources/" aria-current="page">Resources</a>
+      <a href="https://github.com/MarcoPoloResearchLab/download_your_data" rel="noopener noreferrer">GitHub</a>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">Home</a></li>
+        <li><a href="/resources/">Resources</a></li>
+        <li aria-current="page">Netflix</li>
+      </ol>
+    </nav>
+
+    <article>
+      <header class="resource-hero">
+        <div class="resource-hero-copy">
+          <p class="eyebrow">Netflix resource</p>
+          <h1>Analyze a Netflix Viewing History CSV Privately</h1>
+          <p class="lede">The Download Your Data Netflix viewing history analyzer turns a per-profile Title and Date CSV into a private activity library with raw analytics, records, replacement, export, and deletion controls.</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="/#app/netflix">Open Netflix Data analysis</a>
+            <a class="button" href="#export-steps">See the workflow</a>
+          </div>
+        </div>
+        <aside class="quick-verdict" aria-labelledby="quick-verdict-title">
+          <h2 id="quick-verdict-title">Quick verdict</h2>
+          <dl>
+            <div>
+              <dt>Best for</dt>
+              <dd>Reviewing viewing volume and patterns without uploading a full Netflix archive</dd>
+            </div>
+            <div>
+              <dt>Required input</dt>
+              <dd>A per-profile Netflix Viewing activity CSV with Title and Date columns</dd>
+            </div>
+            <div>
+              <dt>Product fit</dt>
+              <dd>Private authenticated analysis works without TMDB; enrichment is optional</dd>
+            </div>
+          </dl>
+        </aside>
+      </header>
+
+      <section class="resource-section" aria-labelledby="problem-title">
+        <p class="eyebrow">The decision that matters</p>
+        <h2 id="problem-title">Choose the right export before you start</h2>
+        <p>A raw Netflix CSV is easy to download but awkward to inspect over months or years. This workspace validates the exact CSV at the boundary, builds raw analytics first, and keeps optional metadata enrichment separate so a missing TMDB configuration never blocks the base analysis.</p>
+      </section>
+
+      <section class="resource-section" id="export-steps" aria-labelledby="steps-title">
+        <p class="eyebrow">Current workflow</p>
+        <h2 id="steps-title">How the private Netflix analysis works</h2>
+        <ol class="steps">
+          
+          <li>
+            <span class="step-number" aria-hidden="true">1</span>
+            <p>Download the per-profile Viewing activity CSV from Netflix.</p>
+            
+          </li>
+          
+          <li>
+            <span class="step-number" aria-hidden="true">2</span>
+            <p>Sign in to the shared Download Your Data workspace and open Netflix Data analysis.</p>
+            
+          </li>
+          
+          <li>
+            <span class="step-number" aria-hidden="true">3</span>
+            <p>Choose the CSV and let the workspace validate and import it into a private user-owned generation.</p>
+            
+          </li>
+          
+          <li>
+            <span class="step-number" aria-hidden="true">4</span>
+            <p>Review raw overview metrics, activity trends, weekday rhythm, top titles, and paged records.</p>
+            
+          </li>
+          
+          <li>
+            <span class="step-number" aria-hidden="true">5</span>
+            <p>Optionally start TMDB enrichment after reviewing the disclosure when the server reports TMDB configured.</p>
+            
+          </li>
+          
+          <li>
+            <span class="step-number" aria-hidden="true">6</span>
+            <p>Export the enriched CSV when needed, replace the active library safely, or delete the Netflix or complete workspace data.</p>
+            
+          </li>
+          
+        </ol>
+      </section>
+
+      
+      <section class="resource-section" aria-labelledby="visuals-title">
+        <p class="eyebrow">Reviewed visual references</p>
+        <h2 id="visuals-title">Match the current first-party screens</h2>
+        <div class="visual-grid">
+          
+          <figure>
+            <a href="https://help.netflix.com/en/node/101917" rel="noopener noreferrer">
+              <img
+                src="/images/instructions/netflix-viewing-activity-help.png"
+                alt="Netflix Help Center viewing activity and Download all instructions"
+                width="910"
+                height="470"
+                loading="lazy"
+                decoding="async"
+              >
+            </a>
+            <figcaption>Netflix and the Netflix Help Center are trademarks and content of Netflix, Inc.; shown accurately for independent instructional reference without affiliation, sponsorship, or endorsement.</figcaption>
+          </figure>
+          
+        </div>
+      </section>
+      
+
+      <div class="two-column-sections">
+        <section class="resource-section" aria-labelledby="coverage-title">
+          <p class="eyebrow">What this workflow covers</p>
+          <h2 id="coverage-title">Useful output and next steps</h2>
+          <ul class="check-list">
+            <li>Activity count, unique titles, date range, monthly activity, weekday rhythm, and top raw titles</li><li>Paged viewing records and a replacement flow that keeps the current library active until the new import completes</li><li>Optional TMDB matching, enriched CSV export, provider deletion, and complete workspace deletion</li>
+          </ul>
+        </section>
+
+        <section class="resource-section" aria-labelledby="limits-title">
+          <p class="eyebrow">Objections and limits</p>
+          <h2 id="limits-title">What this resource does not promise</h2>
+          <ul class="limit-list">
+            <li>The workspace rejects the separate full Netflix account archive.</li><li>TMDB enrichment requires server-side configuration and explicit user consent.</li><li>When enrichment runs, only unique derived title queries and the selected locale are sent; dates, profile data, raw CSV bytes, and complete activity rows are not sent.</li>
+          </ul>
+        </section>
+      </div>
+
+      <section class="resource-section evidence-section" aria-labelledby="evidence-title">
+        <p class="eyebrow">Repository evidence</p>
+        <h2 id="evidence-title">Supported CSV shape from the repository fixture</h2>
+        <pre><code>Title,Date
+The Clockmaker,1/2/26</code></pre>
+        <p>This exact route or input shape is maintained in <a href="https://github.com/MarcoPoloResearchLab/download_your_data/blob/master/internal/providers/netflix/testdata/viewing_activity.csv" rel="noopener noreferrer">internal/providers/netflix/testdata/viewing_activity.csv</a>.</p>
+      </section>
+
+      
+      <section class="resource-section" aria-labelledby="sources-title">
+        <p class="eyebrow">First-party sources</p>
+        <h2 id="sources-title">Verify the provider workflow</h2>
+        <ul class="source-list">
+          
+          <li><a href="https://help.netflix.com/en/node/101917" rel="noopener noreferrer">Netflix: How to see viewing history and device activity <span aria-hidden="true">↗</span></a></li>
+          
+        </ul>
+        <p class="callout">This workspace accepts the Viewing activity CSV only.</p>
+      </section>
+      
+
+      <section class="resource-section" aria-labelledby="faq-title">
+        <p class="eyebrow">Questions before you export</p>
+        <h2 id="faq-title">Frequently asked questions</h2>
+        <div class="faq-list">
+          
+          <details>
+            <summary>Can the Netflix analyzer work without TMDB?</summary>
+            <p>Yes. Raw import and analytics do not require TMDB. The workspace reports TMDB as a separate configured or not-configured capability.</p>
+          </details>
+          
+          <details>
+            <summary>What does TMDB enrichment send?</summary>
+            <p>After explicit consent, the server sends only unique derived title queries and the selected locale. It does not send viewing dates, profile data, raw CSV bytes, or complete activity rows.</p>
+          </details>
+          
+          <details>
+            <summary>What happens when I replace a Netflix CSV?</summary>
+            <p>The current ready library remains active while the replacement validates and imports. It is replaced only after the new generation completes.</p>
+          </details>
+          
+        </div>
+      </section>
+
+      <section class="resource-section" aria-labelledby="related-title">
+        <p class="eyebrow">Continue with the right provider</p>
+        <h2 id="related-title">Related data export resources</h2>
+        <div class="related-grid">
+          
+          <a href="/resources/netflix-viewing-history-csv/">
+            <span>Netflix</span>
+            <strong>How to Download Your Netflix Viewing History CSV</strong>
+          </a>
+          
+          <a href="/resources/google-takeout/">
+            <span>Google (All Account Data)</span>
+            <strong>How to Export Account Data with Google Takeout</strong>
+          </a>
+          
+          <a href="/resources/chatgpt-data-export/">
+            <span>OpenAI (ChatGPT)</span>
+            <strong>How to Export Your ChatGPT Data</strong>
+          </a>
+          
+        </div>
+      </section>
+
+      <footer class="article-footer">
+        <p>
+          Written and reviewed by
+          <a href="https://github.com/tyemirov" rel="author noopener noreferrer">Vadym Tyemirov</a>.
+          Published and verified against the repository on
+          <time datetime="2026-09-18">September 18, 2026</time>.
+        </p>
+        <a class="button button-primary" href="/#app/netflix">Open Netflix Data analysis</a>
+      </footer>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <p>Provider exports can contain sensitive information. Keep downloaded archives in a secure location.</p>
+    <nav aria-label="Footer navigation">
+      <a href="/">Download Your Data</a>
+      <a href="/resources/">Resources</a>
+      <a href="https://mprlab.com/" rel="noopener noreferrer">MPR Lab</a>
+      <a href="https://github.com/MarcoPoloResearchLab/download_your_data" rel="noopener noreferrer">Source</a>
+    </nav>
+  </footer>
+</body>
+</html>
