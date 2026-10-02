@@ -95,6 +95,13 @@ Give each term one meaning. Use the same term for the same concept in all docume
 
 ## Repository Technical Nouns
 
+- `password CSV`: A CSV file that contains exported or selected account passwords.
+- `password conflict`: Different nonempty passwords for the same website origin and username.
+- `password candidate`: One distinct password value and its source records in an account group.
+- `plaintext`: Data that a reader can use without decryption.
+- `setup URI`: A URI that contains verification code configuration data.
+- `website origin`: The scheme, host, and port of a website URL.
+
 - `dashboard`: The browser view that presents related analysis charts and measures.
 - `content type`: The movie, series, or unknown classification used in shared report filters.
 - `original language`: The original language of a title supplied by accepted metadata.
