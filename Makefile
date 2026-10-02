@@ -5,7 +5,7 @@ CGO_ENABLED ?= 1
 
 export CGO_ENABLED
 
-.PHONY: build check-frontend ci clean deploy down eval-netflix-matcher eval-prime-matcher fmt fmt-check lint publish release test test-browser test-shared-ui test-local-lifecycle test-production-artifacts up validate-instruction-screenshots validate-provider-icons validate-tool-screenshots
+.PHONY: test-password-merger-browser build check-frontend ci clean deploy down eval-netflix-matcher eval-prime-matcher fmt fmt-check lint publish release test test-browser test-shared-ui test-local-lifecycle test-production-artifacts up validate-instruction-screenshots validate-provider-icons validate-tool-screenshots
 
 build:
 	@mkdir -p build
@@ -50,8 +50,11 @@ check-frontend:
 		frontend/application/routing.js \
 		frontend/application/media-workspace.js \
 		frontend/application/media-copy.js \
-		frontend/tools/google-authenticator/tool.js
+		frontend/tools/google-authenticator/tool.js \
+		frontend/tools/password-merger/core.js \
+		frontend/tools/password-merger/tool.js
 	node --check scripts/browser-smoke.playwright.js
+	node --check scripts/password-merger-browser.playwright.js
 	node --check scripts/netflix-browser-workspace.playwright.js
 	node --check scripts/media-browser-workspace.playwright.js
 	node --check scripts/media-browser-regressions.playwright.js
@@ -73,7 +76,10 @@ eval-prime-matcher:
 test-shared-ui:
 	DOWNLOAD_YOUR_DATA_RUN_BROWSER_CONTRACT=1 PLAYWRIGHT_CLI_VERSION=$(PLAYWRIGHT_CLI_VERSION) $(GO) test ./internal/httpapi -run '^TestSharedUI' -count=1 -v
 
-test-browser: build test-shared-ui
+test-password-merger-browser: build
+	PLAYWRIGHT_CLI_VERSION=$(PLAYWRIGHT_CLI_VERSION) bash ./scripts/password-merger-browser.sh ./build/download-your-data
+
+test-browser: build test-shared-ui test-password-merger-browser
 	PLAYWRIGHT_CLI_VERSION=$(PLAYWRIGHT_CLI_VERSION) ./scripts/browser-smoke.sh ./build/download-your-data
 	DOWNLOAD_YOUR_DATA_RUN_BROWSER_CONTRACT=1 \
 		PLAYWRIGHT_CLI_VERSION=$(PLAYWRIGHT_CLI_VERSION) \
