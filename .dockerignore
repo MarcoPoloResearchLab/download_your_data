@@ -6,3 +6,4 @@
 .tidy-folder-snapshots
 build
 configs/.env
+tools/password-merger
