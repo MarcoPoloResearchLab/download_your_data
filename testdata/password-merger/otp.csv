@@ -1,0 +1,2 @@
+Title,URL,Username,Password,Notes,OTPAuth
+OTP,https://otp.test/,otp-user,otp-secret,otp-note,otpauth://totp/Synthetic?secret=JBSWY3DPEHPK3PXP&issuer=Synthetic

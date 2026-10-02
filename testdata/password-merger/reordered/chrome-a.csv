@@ -1,0 +1,6 @@
+﻿name,url,username,password,note
+Other account,https://example.test/,alice,synthetic-unicode-🔐,case-sensitive account
+Empty copy,https://example.test/path,Alice,,keep empty-copy metadata
+"First ""title""",https://EXAMPLE.test/login,Alice,"synthetic-A,""quoted""
+second line","chrome note, with comma
+second note line"
