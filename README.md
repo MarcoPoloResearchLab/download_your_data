@@ -18,9 +18,13 @@ provider remains entirely on that provider's own site.
 | Provider guide | `#guide/{provider}` | No | No |
 | Resource library | `/resources/` | No | No |
 | Authenticator tool | `/tools/google-authenticator/` | No | No |
+| Password Merger | `/tools/password-merger/` | No | No |
 | Credits | `#credits` | No | No |
 | Provider application | `#app/{provider}` | Shared TAuth session | Yes |
 | Shared viewing history | `#app/viewing-history` | Shared TAuth session | Yes |
+
+The [Password Merger contract](docs/password-merger.md) defines local CSV import, conflict selection, and export.
+This browser tool operates without an account and keeps credentials out of application servers.
 
 The [shared viewing history contract](docs/streaming-history-contract.md) defines combined Netflix and Prime Video reports and CSV export.
 Each service retains its source records, counting units, and date precision.
