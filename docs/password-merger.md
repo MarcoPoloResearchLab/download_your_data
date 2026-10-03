@@ -1,6 +1,12 @@
 # Password Merger
 
-Open `/tools/password-merger/` from the resource library or application footer.
+Open `/tools/password-merger/` from the Tools page at `/tools/`.
+The application footer links the Tools page.
+Tools contains the password tools. Resources contains manuals and export workflows.
+The catalog entry is named **Passwords** and opens this password tool.
+Its description names all five supported password sources.
+The Apple manual stays at `/resources/apple-passwords-export/` and links this tool.
+The separate `#guide/apple-passwords` browser route is removed.
 The tool operates without an account.
 It reads Chrome, Vivaldi, Firefox, Safari, and Apple Passwords CSV exports in the browser.
 The page contains export and import instructions with official help links.
