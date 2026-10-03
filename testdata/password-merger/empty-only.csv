@@ -1,0 +1,3 @@
+name,url,username,password,note
+A,https://empty.test/,user,,retained-one
+B,https://empty.test/path,user,,retained-two

@@ -1,0 +1,5 @@
+name,url,username,password,note
+A,https://first.test/,user,first-A,
+B,https://first.test/path,user,first-B,
+C,https://second.test/,user,second-A,
+D,https://second.test/path,user,second-B,

@@ -1,0 +1,4 @@
+﻿name,url,username,password,note
+Same secret copy,https://example.test:443/elsewhere,Alice,"synthetic-A,""quoted""
+second line",same-secret metadata
+Subdomain,https://sub.example.test/,Alice,synthetic-unicode-🔐,subdomain metadata

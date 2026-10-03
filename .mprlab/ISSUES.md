@@ -891,7 +891,7 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Browser tests verify `#guide/strava` opens clean instructions, visual step captures, and official help links.
   - `make ci`
 
-- [ ] [F022] (P1) Add browser-only password consolidation workflow
+- [x] [F022] (P1) Add browser-only password consolidation workflow
   Goal:
   Provide a browser-only workflow that creates one canonical password CSV from user-supplied exports.
 
@@ -925,6 +925,37 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - Documentation tests verify all five export guides and all five destination import guides.
   - `make test-browser`
   - `make ci`
+
+  Completion evidence (2026-10-02):
+  - The public route is `/tools/password-merger/`. See `docs/password-merger.md` for the current contract.
+  - The new browser contract first failed because the public route was absent.
+  - `make test-password-merger-browser` passed with synthetic CSV files and the real application server.
+  - Tests cover five sources, multiple files, five conflict candidates, exact values, metadata, empty passwords, errors, reset, and privacy.
+  - The native in-app browser produced a CSV with two resolved accounts. Its downloaded values matched the synthetic source files.
+  - `make ci` passed on the final full run. An earlier full run timed out in `TestNetflixBrowserWorkspaceContract`.
+  - That Netflix test passed alone and with the media test on the final full run. No source changes or timeout increases were necessary.
+  - All validation used automated browsers and local software. Actual password-manager records were unchanged.
+  - The compact layout kept all three actions visible without scroll at `1280x800` and `390x844`.
+  - Layout tests first failed on the prior page. The complete browser suite and `make ci` passed after the layout changes.
+  - Native browser review verified the compact file controls, adjacent conflict candidates, and expandable guides.
+  - Local application icons identify all five sources in file controls, guides, record counts, and conflict candidates.
+  - The icon sources and attribution are in `frontend/manifests/password-merger-icons.json`.
+  - File controls omit the native empty filename label. Selected filenames appear before the choose button.
+  - The new file-control test first failed on the visible native input. Browser tests passed after the change.
+  - Native browser review verified mouse and keyboard file selection with synthetic files.
+  - `make ci` passed after the icons and file-control changes, including the source-specific accessible button names.
+  - The `/tools/` page groups Password merger and the Authenticator converter under Password management.
+  - Tool breadcrumbs use Home, Tools, and the tool name. Resources contains manuals and export workflows.
+  - The navigation test first failed because Home had no Tools link. The browser suite passed after the change.
+  - The Tools navigation passed independent review, production artifact tests, and `make ci`.
+  - The Apple Passwords catalog entry and Apple manual action open the password merger.
+  - The separate Apple hash guide route is removed. Resources keeps all nine Apple export/import steps.
+  - Provider `catalog_path` values define current card destinations independently from manual content.
+  - The entry test first failed on the prior catalog link. The complete password browser suite passed after the change.
+  - The password entry change passed independent review and `make ci`.
+  - The catalog label is Passwords in English, with equivalent names in Spanish, French, and Russian.
+  - The catalog description names all five CSV sources. Actual Apple application names stay in the source controls and manuals.
+  - The label change passed browser review, independent review, and `make ci`.
 
 - [x] [F023] (P1) {F007,F008,F011,F012} Add Prime Video analysis and a shared viewing history workspace
   Goal:

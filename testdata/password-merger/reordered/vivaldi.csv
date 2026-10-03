@@ -1,0 +1,3 @@
+﻿name,url,username,password,note
+HTTP account,http://example.test/,Alice,synthetic-unicode-🔐,scheme metadata
+Vivaldi title,https://example.test/,Alice,synthetic-B,vivaldi metadata

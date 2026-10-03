@@ -171,8 +171,8 @@ async page => {
     'Google Authenticator provider must link to the local browser tool'
   );
   assert(
-    await page.locator('.provider-card[data-provider-id="apple-passwords"] a[href="#guide/apple-passwords"]').count() === 1,
-    'Apple Passwords provider must link to its public guide'
+    await page.locator('.provider-card[data-provider-id="apple-passwords"] a[href="/tools/password-merger/"]').count() === 1,
+    'Apple Passwords provider must link to the working password merger'
   );
   assert(
     await page.locator('.catalog .page-heading h1').textContent() ===
@@ -204,8 +204,7 @@ async page => {
     'x',
     'youtube',
     'google',
-    'amazon',
-    'apple-passwords'
+    'amazon'
   ]) {
     await route(`#guide/${providerID}`, `#${providerID}`);
     assert(
@@ -239,17 +238,6 @@ async page => {
         '#amazon .guide-refs a[href="https://www.amazon.com/hz/privacy-central/data-requests/preview.html"]'
       ).count() === 1,
     'Amazon guide must remain complete and public'
-  );
-  await route('#guide/apple-passwords', '#apple-passwords');
-  assert(
-    await page.locator('#apple-passwords .instruction-step').count() === 9 &&
-      await page.locator(
-        '#apple-passwords .guide-refs a[href="https://support.apple.com/en-ph/guide/passwords/mchl35b12625/2.0/mac/26"]'
-      ).count() === 1 &&
-      await page.locator(
-        '#apple-passwords .guide-refs a[href="https://support.apple.com/en-ph/guide/passwords/mchl2f1a184c/2.0/mac/26"]'
-      ).count() === 1,
-    'Apple Passwords guide must expose export and import instructions'
   );
   await route('#credits', '.credits');
   assert(!(await page.locator('.credits').innerText()).includes('TMDB'), 'Credits exposes title-service setup');
@@ -318,6 +306,10 @@ async page => {
 
   await page.setViewportSize({width: 390, height: 844});
   await page.goto(`${baseURL}/tools/google-authenticator/`, {waitUntil: 'domcontentloaded'});
+  assert(
+    JSON.stringify(await page.locator('.breadcrumbs a').allTextContents()) === JSON.stringify(['Home', 'Tools']),
+    'Authenticator breadcrumb must use Tools'
+  );
   assert(
     await page.locator('h1').textContent() ===
       'Google Authenticator to Apple Passwords' &&

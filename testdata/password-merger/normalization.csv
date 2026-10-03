@@ -1,0 +1,7 @@
+name,url,username,password,note
+Space,https://account.test/, spaced ,space-secret,
+Plain,https://account.test/,spaced,plain-secret,
+IDN,https://bücher.test/a,user,idn-secret,
+IDN copy,https://xn--bcher-kva.test/b,user,idn-secret,
+IPv6,https://[2001:db8::1]/a,user,ipv6-secret,
+IPv6 copy,https://[2001:0db8:0:0:0:0:0:1]/b,user,ipv6-secret,

@@ -1,0 +1,3 @@
+﻿url,username,password,httpRealm,formActionOrigin,guid,timeCreated,timeLastUsed,timePasswordChanged
+https://example.test:8443/,Alice,synthetic-unicode-🔐,,https://example.test:8443/action,port-guid,101,201,301
+https://example.test/,Alice,synthetic-C,,https://example.test/action,synthetic-guid,100,200,300

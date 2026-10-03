@@ -12,73 +12,86 @@
     {
       "id": "netflix",
       "surface": "workspace",
-      "icon_src": "images/providers/netflix.png"
+      "icon_src": "images/providers/netflix.png",
+      "catalog_path": "#guide/netflix"
     },
     {
       "id": "openai",
       "surface": "workspace",
-      "icon_src": "images/providers/openai.png"
+      "icon_src": "images/providers/openai.png",
+      "catalog_path": "#guide/openai"
     },
     {
       "id": "facebook",
       "surface": "guide",
-      "icon_src": "images/providers/facebook.png"
+      "icon_src": "images/providers/facebook.png",
+      "catalog_path": "#guide/facebook"
     },
     {
       "id": "instagram",
       "surface": "guide",
-      "icon_src": "images/providers/instagram.png"
+      "icon_src": "images/providers/instagram.png",
+      "catalog_path": "#guide/instagram"
     },
     {
       "id": "whatsapp",
       "surface": "guide",
-      "icon_src": "images/providers/whatsapp.png"
+      "icon_src": "images/providers/whatsapp.png",
+      "catalog_path": "#guide/whatsapp"
     },
     {
       "id": "threads",
       "surface": "guide",
-      "icon_src": "images/providers/threads.png"
+      "icon_src": "images/providers/threads.png",
+      "catalog_path": "#guide/threads"
     },
     {
       "id": "linkedin",
       "surface": "guide",
-      "icon_src": "images/providers/linkedin.png"
+      "icon_src": "images/providers/linkedin.png",
+      "catalog_path": "#guide/linkedin"
     },
     {
       "id": "tiktok",
       "surface": "guide",
-      "icon_src": "images/providers/tiktok.png"
+      "icon_src": "images/providers/tiktok.png",
+      "catalog_path": "#guide/tiktok"
     },
     {
       "id": "x",
       "surface": "guide",
-      "icon_src": "images/providers/x.png"
+      "icon_src": "images/providers/x.png",
+      "catalog_path": "#guide/x"
     },
     {
       "id": "youtube",
       "surface": "guide",
-      "icon_src": "images/providers/youtube.png"
+      "icon_src": "images/providers/youtube.png",
+      "catalog_path": "#guide/youtube"
     },
     {
       "id": "google",
       "surface": "guide",
-      "icon_src": "images/providers/google.png"
+      "icon_src": "images/providers/google.png",
+      "catalog_path": "#guide/google"
     },
     {
       "id": "google-authenticator",
       "surface": "tool",
-      "tool_path": "/tools/google-authenticator/",
-      "icon_src": "images/providers/google-authenticator.png"
+      "icon_src": "images/providers/google-authenticator.png",
+      "catalog_path": "/tools/google-authenticator/"
     },
     {
       "id": "amazon",
       "surface": "guide",
-      "icon_src": "images/providers/amazon.png"
+      "icon_src": "images/providers/amazon.png",
+      "catalog_path": "#guide/amazon"
     },
     {
       "id": "apple-passwords",
       "surface": "guide",
-      "icon_src": "images/providers/apple-passwords.png"
+      "icon_src": "images/providers/apple-passwords.png",
+      "catalog_path": "/tools/password-merger/"
     }
   ],
   "instruction_screenshots": {
@@ -487,7 +500,7 @@
         },
         {
           "id": "openai",
-          "nav": "OpenAI",
+          "nav": "OpenAI (ChatGPT)",
           "title": "OpenAI (ChatGPT)",
           "intro": "Request a ZIP containing your ChatGPT history and other account data.",
           "steps": [
@@ -934,7 +947,7 @@
         },
         {
           "id": "google",
-          "nav": "Google",
+          "nav": "Google (All Account Data)",
           "title": "Google (All Account Data)",
           "intro": "Export Gmail, Drive, Photos, Maps, YouTube, and more via Google Takeout.",
           "steps": [
@@ -996,7 +1009,7 @@
         },
         {
           "id": "amazon",
-          "nav": "Amazon",
+          "nav": "Amazon Order History & Personal Data",
           "title": "Amazon Order History & Personal Data",
           "intro": "Request your Amazon order reports, digital content purchases, Kindle highlights, and Prime Video history.",
           "steps": [
@@ -1045,9 +1058,9 @@
         },
         {
           "id": "apple-passwords",
-          "nav": "Apple Passwords",
+          "nav": "Passwords",
           "title": "Apple Passwords",
-          "intro": "Export passwords from the Mac Passwords app, review a merged CSV, and import the final file.",
+          "intro": "Merge password CSV exports from Chrome, Vivaldi, Firefox, Safari, and Apple Passwords in your browser.",
           "steps": [
             {
               "text": "Open the Passwords app on your Mac.",
@@ -1336,7 +1349,7 @@
         },
         {
           "id": "openai",
-          "nav": "OpenAI",
+          "nav": "OpenAI (ChatGPT)",
           "title": "OpenAI (ChatGPT)",
           "intro": "Solicita un ZIP con tu historial de ChatGPT y otros datos de la cuenta.",
           "steps": [
@@ -1783,7 +1796,7 @@
         },
         {
           "id": "google",
-          "nav": "Google",
+          "nav": "Google (Todos los datos)",
           "title": "Google (Todos los datos)",
           "intro": "Exporta Gmail, Drive, Fotos, Mapas, YouTube y más con Takeout.",
           "steps": [
@@ -1845,7 +1858,7 @@
         },
         {
           "id": "amazon",
-          "nav": "Amazon",
+          "nav": "Historial de pedidos y datos personales de Amazon",
           "title": "Historial de pedidos y datos personales de Amazon",
           "intro": "Solicita tus informes de pedidos de Amazon, compras de contenido digital, notas de Kindle e historial de Prime Video.",
           "steps": [
@@ -1894,9 +1907,9 @@
         },
         {
           "id": "apple-passwords",
-          "nav": "Apple Passwords",
+          "nav": "Contraseñas",
           "title": "Apple Passwords",
-          "intro": "Exporta las contraseñas de la app Passwords del Mac, revisa un CSV combinado e importa el archivo final.",
+          "intro": "Combina archivos CSV de contraseñas de Chrome, Vivaldi, Firefox, Safari y Apple Passwords en tu navegador.",
           "steps": [
             {
               "text": "Abre la app Passwords en el Mac.",
@@ -2185,7 +2198,7 @@
         },
         {
           "id": "openai",
-          "nav": "OpenAI",
+          "nav": "OpenAI (ChatGPT)",
           "title": "OpenAI (ChatGPT)",
           "intro": "Demandez un ZIP contenant votre historique ChatGPT et d’autres données du compte.",
           "steps": [
@@ -2632,7 +2645,7 @@
         },
         {
           "id": "google",
-          "nav": "Google",
+          "nav": "Google (Toutes les données)",
           "title": "Google (Toutes les données)",
           "intro": "Exportez Gmail, Drive, Photos, Maps, YouTube, etc.",
           "steps": [
@@ -2694,7 +2707,7 @@
         },
         {
           "id": "amazon",
-          "nav": "Amazon",
+          "nav": "Historique des commandes et données personnelles Amazon",
           "title": "Historique des commandes et données personnelles Amazon",
           "intro": "Demandez vos rapports de commandes Amazon, vos achats de contenus numériques, vos notes Kindle et votre historique Prime Video.",
           "steps": [
@@ -2743,9 +2756,9 @@
         },
         {
           "id": "apple-passwords",
-          "nav": "Apple Passwords",
+          "nav": "Mots de passe",
           "title": "Apple Passwords",
-          "intro": "Exportez les mots de passe de l’app Passwords sur Mac, vérifiez un CSV fusionné, puis importez le fichier final.",
+          "intro": "Fusionnez les fichiers CSV de mots de passe de Chrome, Vivaldi, Firefox, Safari et Apple Passwords dans votre navigateur.",
           "steps": [
             {
               "text": "Ouvrez l’app Passwords sur votre Mac.",
@@ -3034,7 +3047,7 @@
         },
         {
           "id": "openai",
-          "nav": "OpenAI",
+          "nav": "OpenAI (ChatGPT)",
           "title": "OpenAI (ChatGPT)",
           "intro": "Запросите ZIP-архив с историей ChatGPT и другими данными аккаунта.",
           "steps": [
@@ -3481,7 +3494,7 @@
         },
         {
           "id": "google",
-          "nav": "Google",
+          "nav": "Google (Все данные)",
           "title": "Google (Все данные)",
           "intro": "Экспорт Gmail, Drive, Photos, Maps, YouTube и др.",
           "steps": [
@@ -3543,7 +3556,7 @@
         },
         {
           "id": "amazon",
-          "nav": "Amazon",
+          "nav": "История заказов и персональные данные Amazon",
           "title": "История заказов и персональные данные Amazon",
           "intro": "Запросите отчёты о заказах Amazon, цифровых покупках, заметках Kindle и истории просмотров Prime Video.",
           "steps": [
@@ -3592,9 +3605,9 @@
         },
         {
           "id": "apple-passwords",
-          "nav": "Apple Passwords",
+          "nav": "Пароли",
           "title": "Apple Passwords",
-          "intro": "Экспортируйте пароли из приложения Passwords на Mac, проверьте объединённый CSV и импортируйте итоговый файл.",
+          "intro": "Объединяйте CSV-файлы с паролями из Chrome, Vivaldi, Firefox, Safari и Apple Passwords в браузере.",
           "steps": [
             {
               "text": "Откройте приложение Passwords на Mac.",

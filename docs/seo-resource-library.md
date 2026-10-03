@@ -29,7 +29,7 @@ guide or supported workspace action.
 | Instagram data export | Scope an Instagram Accounts Center export | `#guide/instagram` |
 | Threads data export | Export Threads through Instagram Accounts Center | `#guide/threads` |
 | Amazon order history & data export | Request Amazon order reports, Kindle, and Prime Video | `#guide/amazon` |
-| Apple Passwords export and import | Export, review, and import a local Passwords CSV | `#guide/apple-passwords` |
+| Apple Passwords export and import | Export, review, and import a local Passwords CSV | `/tools/password-merger/` |
 
 The cluster intentionally does not publish a ChatGPT browser-import page,
 full-Netflix-archive analyzer, or mandatory-TMDB page. Those claims do not

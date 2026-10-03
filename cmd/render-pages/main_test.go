@@ -66,9 +66,15 @@ func TestRenderBuildsTheCompleteProductionPagesArtifact(testContext *testing.T) 
 		"application/auth-lifecycle.js",
 		"styles/application.css",
 		"images/favicon.svg",
+		"tools/index.html",
+		"tools/styles.css",
 		"tools/google-authenticator/index.html",
 		"tools/google-authenticator/styles.css",
 		"tools/google-authenticator/tool.js",
+		"tools/password-merger/index.html",
+		"tools/password-merger/styles.css",
+		"tools/password-merger/core.js",
+		"tools/password-merger/tool.js",
 	} {
 		readRenderedFile(testContext, outputRoot, expectedAsset)
 	}

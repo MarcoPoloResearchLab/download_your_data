@@ -78,10 +78,10 @@ type providerIconData struct {
 }
 
 type providerIconRegistryEntry struct {
-	ID       string `json:"id"`
-	Surface  string `json:"surface"`
-	ToolPath string `json:"tool_path"`
-	IconSrc  string `json:"icon_src"`
+	ID          string `json:"id"`
+	Surface     string `json:"surface"`
+	CatalogPath string `json:"catalog_path"`
+	IconSrc     string `json:"icon_src"`
 }
 
 func TestProviderIconContract(testContext *testing.T) {

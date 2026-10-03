@@ -17,10 +17,15 @@ provider remains entirely on that provider's own site.
 | Provider catalog | `#catalog` | No | No |
 | Provider guide | `#guide/{provider}` | No | No |
 | Resource library | `/resources/` | No | No |
+| Tools | `/tools/` | No | No |
 | Authenticator tool | `/tools/google-authenticator/` | No | No |
+| Password Merger | `/tools/password-merger/` | No | No |
 | Credits | `#credits` | No | No |
 | Provider application | `#app/{provider}` | Shared TAuth session | Yes |
 | Shared viewing history | `#app/viewing-history` | Shared TAuth session | Yes |
+
+The [Password Merger contract](docs/password-merger.md) defines local CSV import, conflict selection, and export.
+This browser tool operates without an account and keeps credentials out of application servers.
 
 The [shared viewing history contract](docs/streaming-history-contract.md) defines combined Netflix and Prime Video reports and CSV export.
 Each service retains its source records, counting units, and date precision.
@@ -54,7 +59,7 @@ inventory, evidence model, indexing rules, and publication boundary.
 | **Google** | Visual Export Guide | Google Takeout Multi-Service Archive | **Live Guide (`#guide/google`)** — Visual export guide for configuring Google Takeout multi-service exports, export frequencies, file sizes, and destination options. |
 | **Google Authenticator** | Browser Conversion Tool | Google Authenticator export QR screenshots | **Live Tool (`/tools/google-authenticator/`)** — Simulated walkthrough and local browser conversion from export QR screenshots to setup keys for Apple Passwords. |
 | **Amazon** | Shared Workspace & Guide | Order History Reports & Personal Data Archive | **Shared Workspace (`#app/viewing-history`) & Guide (`#guide/amazon`)** — Automatic Prime Video import and title analysis, six charts, shared filters, history, CSV export, and provider deletion. Order and Kindle export guides remain available. |
-| **Apple Passwords** | Visual Export and Import Guide | Passwords CSV (`name`, `url`, `username`, `password`, `note`) | **Live Guide (`#guide/apple-passwords`)** — Export all passwords from Passwords on Mac, review duplicate records, and import the final CSV without uploading it. |
+| **Passwords** | Password merger and export/import manual | Passwords CSV (`name`, `url`, `username`, `password`, `note`) | The catalog opens `/tools/password-merger/`. Export/import instructions stay in `/resources/apple-passwords-export/`. |
 
 ## Authentication boundary
 
