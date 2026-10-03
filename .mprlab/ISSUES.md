@@ -944,6 +944,18 @@ Format: `- [ ] [B042] (P1) {I007} Title`
   - The new file-control test first failed on the visible native input. Browser tests passed after the change.
   - Native browser review verified mouse and keyboard file selection with synthetic files.
   - `make ci` passed after the icons and file-control changes, including the source-specific accessible button names.
+  - The `/tools/` page groups Password merger and the Authenticator converter under Password management.
+  - Tool breadcrumbs use Home, Tools, and the tool name. Resources contains manuals and export workflows.
+  - The navigation test first failed because Home had no Tools link. The browser suite passed after the change.
+  - The Tools navigation passed independent review, production artifact tests, and `make ci`.
+  - The Apple Passwords catalog entry and Apple manual action open the password merger.
+  - The separate Apple hash guide route is removed. Resources keeps all nine Apple export/import steps.
+  - Provider `catalog_path` values define current card destinations independently from manual content.
+  - The entry test first failed on the prior catalog link. The complete password browser suite passed after the change.
+  - The password entry change passed independent review and `make ci`.
+  - The catalog label is Passwords in English, with equivalent names in Spanish, French, and Russian.
+  - The catalog description names all five CSV sources. Actual Apple application names stay in the source controls and manuals.
+  - The label change passed browser review, independent review, and `make ci`.
 
 - [x] [F023] (P1) {F007,F008,F011,F012} Add Prime Video analysis and a shared viewing history workspace
   Goal:
