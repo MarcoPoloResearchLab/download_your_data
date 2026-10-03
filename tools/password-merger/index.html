@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="description" content="Merge password CSV exports and select conflicting passwords in your browser. Download one CSV for your password manager.">
+  <title>Password merger | Download Your Data</title>
+  <link rel="icon" href="../../images/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../../styles/resources.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <header class="site-header">
+    <a class="site-brand" href="../../"><span class="brand-mark" aria-hidden="true">DyD</span><span>Download Your Data</span></a>
+    <nav class="site-nav" aria-label="Primary navigation"><a href="../../#catalog">Provider catalog</a><a href="../">Tools</a><a href="../../resources/">Resources</a></nav>
+  </header>
+  <main id="main-content">
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li><a href="../../">Home</a></li><li><a href="../">Tools</a></li><li aria-current="page">Password merger</li></ol></nav>
+    <header class="tool-hero">
+      <h1>Password merger</h1>
+      <p class="lede">Add CSV exports, select conflicting passwords, and download one merged file.</p>
+      <p class="privacy-note" data-local-only>Files stay in this browser. No credentials are sent to servers.</p>
+    </header>
+
+    <section class="tool-section workspace" aria-labelledby="files-title">
+      <h2 id="files-title">1. Add password exports</h2>
+      <p class="field-help">Select one or more CSV files per source. Export guides are below.</p>
+      <div class="source-grid">
+        <div class="source-picker"><label class="source-name" for="source-chrome"><img class="source-icon" src="../../images/tools/password-merger/chrome.png" width="24" height="24" alt="" aria-hidden="true">Chrome</label><span class="source-files" id="selected-chrome" data-selected-source="chrome" aria-live="polite"></span><button class="source-choose" type="button" data-pick-source="chrome" aria-label="Choose files for Chrome" aria-describedby="selected-chrome">Choose files</button><input id="source-chrome" data-source="chrome" type="file" accept=".csv,text/csv" multiple hidden></div>
+        <div class="source-picker"><label class="source-name" for="source-vivaldi"><img class="source-icon" src="../../images/tools/password-merger/vivaldi.png" width="24" height="24" alt="" aria-hidden="true">Vivaldi</label><span class="source-files" id="selected-vivaldi" data-selected-source="vivaldi" aria-live="polite"></span><button class="source-choose" type="button" data-pick-source="vivaldi" aria-label="Choose files for Vivaldi" aria-describedby="selected-vivaldi">Choose files</button><input id="source-vivaldi" data-source="vivaldi" type="file" accept=".csv,text/csv" multiple hidden></div>
+        <div class="source-picker"><label class="source-name" for="source-firefox"><img class="source-icon" src="../../images/tools/password-merger/firefox.png" width="24" height="24" alt="" aria-hidden="true">Firefox</label><span class="source-files" id="selected-firefox" data-selected-source="firefox" aria-live="polite"></span><button class="source-choose" type="button" data-pick-source="firefox" aria-label="Choose files for Firefox" aria-describedby="selected-firefox">Choose files</button><input id="source-firefox" data-source="firefox" type="file" accept=".csv,text/csv" multiple hidden></div>
+        <div class="source-picker"><label class="source-name" for="source-safari"><img class="source-icon" src="../../images/tools/password-merger/safari.png" width="24" height="24" alt="" aria-hidden="true">Safari</label><span class="source-files" id="selected-safari" data-selected-source="safari" aria-live="polite"></span><button class="source-choose" type="button" data-pick-source="safari" aria-label="Choose files for Safari" aria-describedby="selected-safari">Choose files</button><input id="source-safari" data-source="safari" type="file" accept=".csv,text/csv" multiple hidden></div>
+        <div class="source-picker"><label class="source-name" for="source-apple"><img class="source-icon" src="../../images/tools/password-merger/apple.png" width="24" height="24" alt="" aria-hidden="true">Apple Passwords</label><span class="source-files" id="selected-apple" data-selected-source="apple" aria-live="polite"></span><button class="source-choose" type="button" data-pick-source="apple" aria-label="Choose files for Apple Passwords" aria-describedby="selected-apple">Choose files</button><input id="source-apple" data-source="apple" type="file" accept=".csv,text/csv" multiple hidden></div>
+      </div>
+      <div class="actions"><button class="button button-primary" id="merge" type="button">Merge files</button><button class="button button-primary" id="download" type="button" disabled>Download merged CSV</button><button class="button" id="reset" type="button">Clear files and results</button></div>
+      <p id="status" class="tool-status" role="status" aria-live="polite">Choose CSV files, then select Merge files.</p>
+      <p id="summary" aria-live="polite"></p>
+      <ul id="files" class="file-list" aria-label="Detected file records"></ul>
+      <p class="tool-warning"><strong>CSV files contain plaintext secrets.</strong> Keep exports and the final CSV private.</p>
+    </section>
+
+    <section class="tool-section review-section" aria-labelledby="conflicts-title">
+      <h2 id="conflicts-title">2. Select each password to keep</h2>
+      <p class="field-help">Export dates do not prove which password is newest. Distinct subdomains and usernames remain separate accounts.</p>
+      <div id="conflicts" aria-label="Password conflicts"></div>
+    </section>
+
+    <details class="tool-section guide-section" id="csv-details">
+      <summary><h2>CSV contents and limits</h2></summary>
+      <p>Your original credentials and application settings stay unchanged. This page does not operate your password manager.</p>
+      <p>Safari uses the Passwords app on current macOS. This tool accepts password CSV files, not Safari ZIP archives.</p>
+      <p>The final fields are <code>name,url,username,password,note</code>.</p>
+      <p>Anyone with access to the file can read its passwords and verification code setup data.</p>
+      <ul class="limit-list">
+        <li>Accounts with only empty passwords stay in the result. Some destinations can reject empty usernames or passwords.</li>
+        <li>The result keeps notes and other saved URLs in the note field. Destination imports can omit these notes.</li>
+        <li>Verification code setup URI (import separately): supplied setup URIs stay in notes. CSV import does not install verification codes.</li>
+        <li>Passkeys, shared items, and other records absent from the CSV need separate handling.</li>
+      </ul>
+      <p>After import, examine the destination records. Keep necessary backups until you verify the result. Then remove unnecessary plaintext files.</p>
+    </details>
+
+    <details class="tool-section guide-section" id="export-guides">
+      <summary><h2 id="export-title">Export from each application</h2></summary>
+      <div class="guide-grid">
+        <details data-export-guide="chrome"><summary><img class="source-icon" src="../../images/tools/password-merger/chrome.png" width="24" height="24" alt="" aria-hidden="true">Chrome export</summary><ol><li>Open Google Password Manager from Chrome.</li><li>Select Settings.</li><li>Under Export Passwords, select Download file.</li><li>Save the CSV.</li></ol><a href="https://support.google.com/chrome/answer/95606" rel="noreferrer noopener">Chrome export help</a></details>
+        <details data-export-guide="vivaldi"><summary><img class="source-icon" src="../../images/tools/password-merger/vivaldi.png" width="24" height="24" alt="" aria-hidden="true">Vivaldi export</summary><ol><li>From the Vivaldi menu, select File &gt; Export &gt; Export Passwords.</li><li>Complete the requested authentication.</li><li>Save the CSV.</li></ol><a href="https://help.vivaldi.com/desktop/privacy/password-management/" rel="noreferrer noopener">Vivaldi password help</a></details>
+        <details data-export-guide="firefox"><summary><img class="source-icon" src="../../images/tools/password-merger/firefox.png" width="24" height="24" alt="" aria-hidden="true">Firefox export</summary><ol><li>Open Passwords from the Firefox menu.</li><li>Open the three-dot menu.</li><li>Select Export Passwords….</li><li>Select Continue with export.</li><li>Complete the requested authentication.</li><li>Save the CSV.</li></ol><a href="https://support.mozilla.org/en-US/kb/export-login-data-firefox" rel="noreferrer noopener">Firefox export help</a></details>
+        <details data-export-guide="safari"><summary><img class="source-icon" src="../../images/tools/password-merger/safari.png" width="24" height="24" alt="" aria-hidden="true">Safari export</summary><p>Current Safari uses Passwords for password export.</p><ol><li>Open Passwords on your Mac.</li><li>Use the Apple Passwords export instructions below.</li><li>Select the resulting CSV in the Safari file picker above.</li></ol><a href="https://support.apple.com/en-bw/guide/safari/ibrw1015/mac" rel="noreferrer noopener">Safari password guidance</a></details>
+        <details data-export-guide="apple"><summary><img class="source-icon" src="../../images/tools/password-merger/apple.png" width="24" height="24" alt="" aria-hidden="true">Apple Passwords export</summary><ol><li>Open Passwords on your Mac.</li><li>Select File &gt; Export All Passwords to File.</li><li>Select Export Passwords.</li><li>Save the CSV.</li></ol><p>Apple excludes some records, such as Wi-Fi passwords and some shared passwords.</p><a href="https://support.apple.com/en-is/guide/passwords/mchl35b12625/mac" rel="noreferrer noopener">Apple export help</a></details>
+      </div>
+    </details>
+
+    <details class="tool-section guide-section" id="import-guides">
+      <summary><h2 id="import-title">Import the final CSV</h2></summary>
+      <div class="guide-grid">
+        <details data-import-guide="chrome"><summary><img class="source-icon" src="../../images/tools/password-merger/chrome.png" width="24" height="24" alt="" aria-hidden="true">Chrome import</summary><ol><li>Open Google Password Manager in Chrome.</li><li>Select Settings.</li><li>Under Import passwords, select Select file.</li><li>Select the final CSV.</li><li>Complete the import prompts.</li></ol><p>Chrome accepts up to 3,000 passwords per import.</p><a href="https://support.google.com/chrome/answer/13068232" rel="noreferrer noopener">Chrome import help</a></details>
+        <details data-import-guide="vivaldi"><summary><img class="source-icon" src="../../images/tools/password-merger/vivaldi.png" width="24" height="24" alt="" aria-hidden="true">Vivaldi import</summary><ol><li>Open <code>vivaldi:password-manager/settings</code> in Vivaldi.</li><li>Under Import passwords, select Select file.</li><li>Select the final CSV.</li><li>Select Open.</li></ol><a href="https://help.vivaldi.com/desktop/privacy/password-management/" rel="noreferrer noopener">Vivaldi import help</a></details>
+        <details data-import-guide="firefox"><summary><img class="source-icon" src="../../images/tools/password-merger/firefox.png" width="24" height="24" alt="" aria-hidden="true">Firefox import</summary><ol><li>Open Passwords from the Firefox menu.</li><li>Open the three-dot menu.</li><li>Select Import from a File….</li><li>Select the final CSV.</li><li>Select Open.</li><li>Select Done after the import.</li></ol><a href="https://support.mozilla.org/en-US/kb/import-login-data-file" rel="noreferrer noopener">Firefox import help</a></details>
+        <details data-import-guide="safari"><summary><img class="source-icon" src="../../images/tools/password-merger/safari.png" width="24" height="24" alt="" aria-hidden="true">Safari import</summary><p>Current Safari uses Passwords for password import.</p><ol><li>Open Passwords on your Mac.</li><li>Use the Apple Passwords import instructions below.</li></ol><a href="https://support.apple.com/en-bw/guide/safari/ibrw1015/mac" rel="noreferrer noopener">Safari import guidance</a></details>
+        <details data-import-guide="apple"><summary><img class="source-icon" src="../../images/tools/password-merger/apple.png" width="24" height="24" alt="" aria-hidden="true">Apple Passwords import</summary><ol><li>Open Passwords on your Mac.</li><li>Select File &gt; Import Passwords from File.</li><li>Select Choose File.</li><li>Select the final CSV.</li><li>Select Import.</li><li>Examine any records that Apple cannot import.</li></ol><p>Apple Passwords does not replace existing passwords during CSV import.</p><a href="https://support.apple.com/en-is/guide/passwords/mchl2f1a184c/mac" rel="noreferrer noopener">Apple import help</a></details>
+      </div>
+    </details>
+
+    <details class="tool-section guide-section apple-replacement" id="apple-replacement">
+      <summary><h2 id="apple-reset-title"><img class="source-icon" src="../../images/tools/password-merger/apple.png" width="24" height="24" alt="" aria-hidden="true">Optional: replace Apple website passwords</h2></summary>
+      <p>Normal CSV import keeps existing Apple passwords. Replacement requires manual removal of the website passwords you intend to replace.</p>
+      <p>This page does not remove passwords. Apple removal also affects iCloud Keychain. The All category can contain passkeys.</p>
+      <ol class="prerequisites"><li>Export the Apple website passwords you want to keep.</li><li>Keep the Apple CSV as a separate backup.</li><li>Select the backup under <strong>Apple Passwords</strong> above.</li><li>Select <strong>Merge files</strong>.</li><li>If conflicts appear, select one candidate per account under <strong>Select each password to keep</strong>.</li><li>When enabled, select <strong>Download merged CSV</strong>.</li><li>Handle excluded passkeys, shared items, and verification codes separately.</li></ol>
+      <p>The merger shows each candidate and its source. Download stays unavailable until every conflicting account has a selected password.</p>
+      <label class="acknowledgement" for="apple-reset-confirm"><input id="apple-reset-confirm" type="checkbox" aria-controls="apple-reset-steps"><span>I kept the Apple CSV backup and final CSV. I selected the result and handled excluded records. Show manual replacement steps.</span></label>
+      <div id="apple-reset-steps" hidden>
+        <h3>Manual replacement steps</h3>
+        <ol><li>Open Passwords on your Mac.</li><li>Select All.</li><li>Select only a website password account present in your backup and final CSV.</li><li>Make sure that the account is a website password, not a passkey or excluded record.</li><li>Select Edit.</li><li>Select Delete Password.</li><li>In the confirmation, select Delete Password again.</li><li>Repeat for each website password you intend to replace.</li><li>Use the Apple import instructions above to import the final CSV once.</li><li>Examine the imported records before you remove plaintext files.</li></ol>
+        <a href="https://support.apple.com/en-is/guide/passwords/mchl77e2cb66/mac" rel="noreferrer noopener">Apple removal and confirmation help</a>
+      </div>
+    </details>
+  </main>
+  <footer class="site-footer"><p>Private password file operations. Official application guides verified October 2, 2026.<br>Vivaldi icon: <a href="https://vivaldi.com/press/" rel="noreferrer noopener">Vivaldi Technologies</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="noreferrer noopener">CC BY 4.0</a>.</p><nav aria-label="Footer navigation"><a href="../../">Download Your Data</a><a href="../">Tools</a><a href="../../resources/">Resources</a></nav></footer>
+  <script type="module" src="tool.js"></script>
+</body>
+</html>
