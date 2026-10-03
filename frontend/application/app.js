@@ -538,22 +538,13 @@ function renderCatalog() {
     });
     const providerLink = element('a', {
       class: 'provider-card-guide',
-      href:
-        providerDefinition.surface === 'tool'
-          ? providerDefinition.tool_path
-          : `#guide/${providerDefinition.id}`,
-      'aria-label': localized.title,
-      ...(providerDefinition.surface === 'tool'
-        ? {'data-tool-route': providerDefinition.tool_path}
-        : {
-            'data-route': 'guide',
-            'data-provider': providerDefinition.id
-          })
+      href: providerDefinition.catalog_path,
+      'aria-label': localized.nav,
     });
     const cardCopy = element('div', {class: 'provider-card-copy'});
     const providerName = element('h2', {
       class: 'provider-name',
-      text: localized.title
+      text: localized.nav
     });
     if (providerDefinition.surface === 'workspace') {
       cardCopy.append(
@@ -577,7 +568,7 @@ function renderCatalog() {
     );
     card.append(
       providerLink,
-      providerMark(providerDefinition.id, localized.title, providerDefinition.icon_src),
+      providerMark(providerDefinition.id, localized.nav, providerDefinition.icon_src),
       cardCopy
     );
     grid.append(card);
@@ -1175,11 +1166,13 @@ function validateAppData(data) {
     ) {
       throw new Error(`provider ${provider.id} has invalid surface`);
     }
-    if (provider.surface === 'tool') {
-      assertString(provider.tool_path, `provider ${provider.id} tool_path`);
-      if (!provider.tool_path.startsWith('/tools/')) {
-        throw new Error(`provider ${provider.id} tool_path must use the local tool route`);
-      }
+    assertString(provider.catalog_path, `provider ${provider.id} catalog_path`);
+    if (![
+      ...(WORKSPACE_PROVIDER_IDS.includes(provider.id) || GUIDE_ONLY_PROVIDER_IDS.includes(provider.id) ? [`#guide/${provider.id}`] : []),
+      '/tools/google-authenticator/',
+      '/tools/password-merger/',
+    ].includes(provider.catalog_path)) {
+      throw new Error(`provider ${provider.id} catalog_path must use its guide or a canonical local tool route`);
     }
     return provider.id;
   });
@@ -1259,7 +1252,7 @@ function validateAppData(data) {
       throw new Error(`strings.${locale}.platforms must match provider_registry`);
     }
     strings.platforms.forEach((provider) => {
-      for (const key of ['id', 'title', 'intro']) {
+      for (const key of ['id', 'nav', 'title', 'intro']) {
         assertString(provider[key], `strings.${locale}.${provider.id}.${key}`);
       }
       assertArray(provider.steps, `${provider.id}.steps`);

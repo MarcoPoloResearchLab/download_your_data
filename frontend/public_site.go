@@ -125,10 +125,10 @@ type applicationResourceData struct {
 }
 
 type applicationProviderDefinition struct {
-	ID       string `json:"id"`
-	Surface  string `json:"surface"`
-	ToolPath string `json:"tool_path"`
-	IconSrc  string `json:"icon_src"`
+	ID          string `json:"id"`
+	Surface     string `json:"surface"`
+	CatalogPath string `json:"catalog_path"`
+	IconSrc     string `json:"icon_src"`
 }
 
 type applicationScreenshot struct {
@@ -469,6 +469,11 @@ func validateResourceRegistry(
 	}
 	providerIcons := make(map[string]string, len(applicationData.ProviderRegistry))
 	for _, provider := range applicationData.ProviderRegistry {
+		guidePath := "#guide/" + provider.ID
+		if provider.CatalogPath != "/tools/google-authenticator/" && provider.CatalogPath != "/tools/password-merger/" &&
+			(provider.CatalogPath != guidePath || provider.ID == "apple-passwords" || provider.Surface == "tool") {
+			return fmt.Errorf("validate public resource registry: provider %q has invalid catalog destination %q", provider.ID, provider.CatalogPath)
+		}
 		providerIcons[provider.ID] = provider.IconSrc
 	}
 	manifestAssets := make(map[string]screenshotManifestRecord, len(manifest.Screenshots))
@@ -776,6 +781,7 @@ func renderPublicSite(
 			registry,
 			resource,
 			provider,
+			providerDefinition.CatalogPath,
 			applicationData.InstructionScreenshots[resource.ProviderID],
 			manifestAssets,
 			resourcesBySlug,
@@ -858,6 +864,7 @@ func buildResourcePageData(
 	registry resourceRegistry,
 	resource resourceDefinition,
 	provider applicationLocalizedProvider,
+	catalogPath string,
 	screenshotAssets []applicationScreenshot,
 	manifestAssets map[string]screenshotManifestRecord,
 	resourcesBySlug map[string]resourceDefinition,
@@ -911,7 +918,10 @@ func buildResourcePageData(
 	if structuredDataError != nil {
 		return resourcePageData{}, structuredDataError
 	}
-	ctaURL := "/#guide/" + resource.ProviderID
+	ctaURL := catalogPath
+	if strings.HasPrefix(catalogPath, "#") {
+		ctaURL = "/" + catalogPath
+	}
 	if resource.Kind == "netflix-analysis" {
 		ctaURL = "/#app/netflix"
 	} else if resource.Kind == "browser-tool" {

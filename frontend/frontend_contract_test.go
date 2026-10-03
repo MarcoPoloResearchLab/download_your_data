@@ -32,10 +32,10 @@ type frontendTMDBCreditsContract struct {
 }
 
 type frontendProviderDefinition struct {
-	ID       string `json:"id"`
-	Surface  string `json:"surface"`
-	ToolPath string `json:"tool_path"`
-	IconSrc  string `json:"icon_src"`
+	ID          string `json:"id"`
+	Surface     string `json:"surface"`
+	CatalogPath string `json:"catalog_path"`
+	IconSrc     string `json:"icon_src"`
 }
 
 type frontendLocalizedContract struct {
@@ -78,20 +78,20 @@ func TestFrontendProviderWorkspaceContract(testContext *testing.T) {
 	}
 
 	expectedRegistry := []frontendProviderDefinition{
-		{ID: "netflix", Surface: "workspace", IconSrc: "images/providers/netflix.png"},
-		{ID: "openai", Surface: "workspace", IconSrc: "images/providers/openai.png"},
-		{ID: "facebook", Surface: "guide", IconSrc: "images/providers/facebook.png"},
-		{ID: "instagram", Surface: "guide", IconSrc: "images/providers/instagram.png"},
-		{ID: "whatsapp", Surface: "guide", IconSrc: "images/providers/whatsapp.png"},
-		{ID: "threads", Surface: "guide", IconSrc: "images/providers/threads.png"},
-		{ID: "linkedin", Surface: "guide", IconSrc: "images/providers/linkedin.png"},
-		{ID: "tiktok", Surface: "guide", IconSrc: "images/providers/tiktok.png"},
-		{ID: "x", Surface: "guide", IconSrc: "images/providers/x.png"},
-		{ID: "youtube", Surface: "guide", IconSrc: "images/providers/youtube.png"},
-		{ID: "google", Surface: "guide", IconSrc: "images/providers/google.png"},
-		{ID: "google-authenticator", Surface: "tool", ToolPath: "/tools/google-authenticator/", IconSrc: "images/providers/google-authenticator.png"},
-		{ID: "amazon", Surface: "guide", IconSrc: "images/providers/amazon.png"},
-		{ID: "apple-passwords", Surface: "guide", IconSrc: "images/providers/apple-passwords.png"},
+		{ID: "netflix", Surface: "workspace", CatalogPath: "#guide/netflix", IconSrc: "images/providers/netflix.png"},
+		{ID: "openai", Surface: "workspace", CatalogPath: "#guide/openai", IconSrc: "images/providers/openai.png"},
+		{ID: "facebook", Surface: "guide", CatalogPath: "#guide/facebook", IconSrc: "images/providers/facebook.png"},
+		{ID: "instagram", Surface: "guide", CatalogPath: "#guide/instagram", IconSrc: "images/providers/instagram.png"},
+		{ID: "whatsapp", Surface: "guide", CatalogPath: "#guide/whatsapp", IconSrc: "images/providers/whatsapp.png"},
+		{ID: "threads", Surface: "guide", CatalogPath: "#guide/threads", IconSrc: "images/providers/threads.png"},
+		{ID: "linkedin", Surface: "guide", CatalogPath: "#guide/linkedin", IconSrc: "images/providers/linkedin.png"},
+		{ID: "tiktok", Surface: "guide", CatalogPath: "#guide/tiktok", IconSrc: "images/providers/tiktok.png"},
+		{ID: "x", Surface: "guide", CatalogPath: "#guide/x", IconSrc: "images/providers/x.png"},
+		{ID: "youtube", Surface: "guide", CatalogPath: "#guide/youtube", IconSrc: "images/providers/youtube.png"},
+		{ID: "google", Surface: "guide", CatalogPath: "#guide/google", IconSrc: "images/providers/google.png"},
+		{ID: "google-authenticator", Surface: "tool", CatalogPath: "/tools/google-authenticator/", IconSrc: "images/providers/google-authenticator.png"},
+		{ID: "amazon", Surface: "guide", CatalogPath: "#guide/amazon", IconSrc: "images/providers/amazon.png"},
+		{ID: "apple-passwords", Surface: "guide", CatalogPath: "/tools/password-merger/", IconSrc: "images/providers/apple-passwords.png"},
 	}
 	if !reflect.DeepEqual(data.ProviderRegistry, expectedRegistry) {
 		testContext.Fatalf("provider registry = %#v; want %#v", data.ProviderRegistry, expectedRegistry)

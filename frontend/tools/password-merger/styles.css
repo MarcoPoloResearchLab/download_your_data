@@ -72,11 +72,9 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent-stro
   .site-brand { gap: 6px; font-size: .75rem; }
   .site-nav { width: auto; gap: 10px; }
   .site-nav a { font-size: .7rem; }
+  .site-nav a:first-child { display: none; }
   .file-list, #conflicts fieldset { grid-template-columns: 1fr; }
   .actions #reset { margin-left: 0; }
   .guide-grid { grid-template-columns: 1fr; }
   .site-footer { gap: 8px; }
-}
-@media (max-width: 360px) {
-  .site-nav a:first-child { display: none; }
 }

@@ -777,7 +777,7 @@
       "verdict": {
         "best_for": "People who need a local Apple Passwords CSV for review or migration",
         "required_input": "A Mac with the Passwords app and access to its File menu",
-        "product_fit": "Download Your Data provides the public guide and does not upload or import your password file"
+        "product_fit": "The password merger combines exported CSV files in the browser without uploading credentials."
       },
       "problem": "Apple provides separate export and import commands in the Passwords app. A careful workflow must preserve the CSV locally, resolve duplicate site records, and review skipped entries after import.",
       "coverage": [
@@ -795,9 +795,9 @@
       ],
       "workflow_steps": [],
       "snippet": {
-        "label": "Apple-compatible CSV columns",
-        "content": "name,url,username,password,note",
-        "source_path": "frontend/content/application.json"
+        "label": "Password tool entry point",
+        "content": "/tools/password-merger/",
+        "source_path": "frontend/tools/password-merger/index.html"
       },
       "faqs": [
         {
@@ -826,7 +826,7 @@
         "google-takeout",
         "chatgpt-data-export"
       ],
-      "cta_label": "Open the Apple Passwords visual guide"
+      "cta_label": "Open Password merger"
     }
   ]
 }
