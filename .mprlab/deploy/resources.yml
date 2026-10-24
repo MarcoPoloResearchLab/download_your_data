@@ -1,6 +1,9 @@
 ---
 mprlab_resources:
   owner: download-your-data
+  hosts:
+    tutosh:
+      ansible_become_password: DEPLOY_SUDO_PASSWORD_TUTOSH
   release:
     scheme: semver
   ci:
@@ -24,12 +27,20 @@ mprlab_resources:
         increment: 1s
         multiplier: 2
         attempt_limit: 120
-    release:
+    app-release:
       polling: *lifecycle-polling
-    publish:
+    app-publish:
       polling: *lifecycle-polling
-    deploy:
+    app-deploy:
       polling: *lifecycle-polling
+  environment_file: .mprlab/deploy/.env
+  inputs:
+    DOWNLOAD_YOUR_DATA_GOOGLE_CLIENT_ID: ${DOWNLOAD_YOUR_DATA_GOOGLE_CLIENT_ID}
+    DOWNLOAD_YOUR_DATA_TAUTH_JWT_SIGNING_KEY: ${DOWNLOAD_YOUR_DATA_TAUTH_JWT_SIGNING_KEY}
+    DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN: ${DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN}
+    DEPLOY_SUDO_PASSWORD_TUTOSH: ${DEPLOY_SUDO_PASSWORD_TUTOSH}
+    MPRLAB_TAUTH_MANAGEMENT_URL: ${MPRLAB_TAUTH_MANAGEMENT_URL}
+    MPRLAB_TAUTH_PROVISIONING_CREDENTIALS: ${MPRLAB_TAUTH_PROVISIONING_CREDENTIALS}
   resources:
     private:
       kind: private_values
