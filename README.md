@@ -218,12 +218,18 @@ make publish
 make deploy
 ```
 
-Each target delegates to the exact sibling `../mprlab-gateway`. Release seals
-the committed Pages and container artifacts, publish writes those immutable
-artifacts to GitHub Pages/GHCR, and deploy activates only the selected
-repository resources. The app-private `.mprlab/deploy/.env` is ignored,
-mode `0600`, excluded from Docker contexts, and read only during deployment.
+Each target calls the installed Gateway runtime with this repository's Git root through `--app-root`.
+Install `mprlab-gateway` on `PATH`, or set `MPRLAB_GATEWAY_EXECUTABLE` to the installed executable.
+Each wrapper sets `CI=1` and closes standard input.
+Release seals the declared Pages and container artifacts.
+Publication sends the container image to GHCR and the Pages files to a GitHub reference for the selected version.
+Deployment activates only the selected repository resources.
 
-The repository does not own a second dry-run command. Use the gateway's sealed
-`plan-app-release`, `plan-app-publish`, and `plan-app-deploy` targets when a
-non-mutating lifecycle proof is required. Only the user runs `make deploy`.
+The selected manifest explicitly declares `.mprlab/deploy/.env` with `environment_file`.
+This field is optional when the process supplies all declared inputs.
+Process values take precedence over values in the selected file.
+The private file is ignored and excluded from Docker contexts.
+
+Use the installed Gateway commands `app-plan-release`, `app-plan-publish`, and `app-plan-deploy` for non-mutating verification.
+Supply this repository through `--app-root`.
+Only the user runs `make deploy`.

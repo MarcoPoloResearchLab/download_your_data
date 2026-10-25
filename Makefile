@@ -61,7 +61,7 @@ check-frontend:
 	node --check scripts/shared-ui-auth.playwright.js
 	node --input-type=module --check < scripts/shared-ui-boundary.js
 
-test:
+test: test-installed-gateway
 	$(GO) test ./...
 
 test-local-lifecycle: build
@@ -97,15 +97,21 @@ validate-provider-icons:
 validate-tool-screenshots:
 	$(GO) test ./frontend -run '^TestToolScreenshotContract$$' -count=1
 
+MPRLAB_GATEWAY_EXECUTABLE ?= mprlab-gateway
+
 release publish deploy:
-	@application_root="$$(git rev-parse --show-toplevel)"; \
-	gateway_root="$$(dirname "$${application_root}")/mprlab-gateway"; \
-	if [ ! -d "$${gateway_root}" ]; then \
-		printf "required sibling gateway is missing: %s; clone mprlab-gateway at exactly %s\n" \
-			"$${gateway_root}" "$${gateway_root}" >&2; \
+	@set -eu; \
+	exec </dev/null; export CI=1; \
+	application_root="$$(git rev-parse --show-toplevel)"; \
+	if ! command -v "$(MPRLAB_GATEWAY_EXECUTABLE)" >/dev/null 2>&1; then \
+		printf 'Gateway runtime is unavailable: %s. Install a released runtime and add its command directory to PATH.\n' \
+			"$(MPRLAB_GATEWAY_EXECUTABLE)" >&2; \
 		exit 2; \
 	fi; \
-	$(MAKE) --no-print-directory -C "$${gateway_root}" "app-$@" \
-		MPRLAB_APP_ROOT="$${application_root}"
+	exec "$(MPRLAB_GATEWAY_EXECUTABLE)" "app-$@" --app-root "$${application_root}"
 
-ci: fmt-check lint check-frontend eval-netflix-matcher eval-prime-matcher test test-local-lifecycle validate-instruction-screenshots validate-provider-icons validate-tool-screenshots test-production-artifacts test-browser
+.PHONY: test-installed-gateway
+test-installed-gateway:
+	bash tests/installed-gateway.sh
+
+ci: test-installed-gateway fmt-check lint check-frontend eval-netflix-matcher eval-prime-matcher test test-local-lifecycle validate-instruction-screenshots validate-provider-icons validate-tool-screenshots test-production-artifacts test-browser

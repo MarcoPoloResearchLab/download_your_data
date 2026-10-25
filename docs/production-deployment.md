@@ -51,8 +51,7 @@ callback route.
 
 ## Resource Graph
 
-The selected application asks the sibling gateway to reconcile only these
-typed resources:
+The selected application asks the installed Gateway runtime to reconcile only these typed resources:
 
 1. Three app-private values: the Google web client ID, an independent TAuth
    JWT signing key, and the TMDB read token.
@@ -134,13 +133,14 @@ Release, publication, deployment, and live TMDB acceptance remain pending for th
 
 ## Non-Mutating Verification
 
-The gateway plan targets require clean committed sibling checkouts. From
-`mprlab-gateway`, run:
+Use a clean application checkout on its synchronized remote default branch.
+Install `mprlab-gateway` on `PATH`, or set `MPRLAB_GATEWAY_EXECUTABLE` to the installed executable.
+Run these installed Gateway commands:
 
 ```bash
-make plan-app-release MPRLAB_APP_ROOT=/absolute/path/to/download_your_data
-make plan-app-publish MPRLAB_APP_ROOT=/absolute/path/to/download_your_data
-make plan-app-deploy MPRLAB_APP_ROOT=/absolute/path/to/download_your_data
+"${MPRLAB_GATEWAY_EXECUTABLE:-mprlab-gateway}" app-plan-release --app-root /absolute/path/to/download_your_data
+"${MPRLAB_GATEWAY_EXECUTABLE:-mprlab-gateway}" app-plan-publish --app-root /absolute/path/to/download_your_data
+"${MPRLAB_GATEWAY_EXECUTABLE:-mprlab-gateway}" app-plan-deploy --app-root /absolute/path/to/download_your_data
 ```
 
 The deploy plan reads the private input and real operator inventory but does
