@@ -86,6 +86,18 @@ func TestRenderBuildsTheCompleteProductionPagesArtifact(testContext *testing.T) 
 	}
 }
 
+func TestRenderBindsToolsCanonicalToPublicOrigin(testContext *testing.T) {
+	outputRoot := filepath.Join(testContext.TempDir(), "pages")
+	if renderError := render(filepath.Join("..", "..", "configs", "production.yml"), outputRoot); renderError != nil {
+		testContext.Fatalf("render production Pages artifact: %v", renderError)
+	}
+	tools := string(readRenderedFile(testContext, outputRoot, "tools/index.html"))
+	canonical := `<link rel="canonical" href="https://dyd.mprlab.com/tools/">`
+	if strings.Count(tools, canonical) != 1 || strings.Contains(tools, frontend.PublicOriginMarker) {
+		testContext.Fatalf("Tools artifact lacks one bound public canonical %s", canonical)
+	}
+}
+
 func TestRenderRequiresAnEmptyAbsoluteOutputDirectory(testContext *testing.T) {
 	profilePath := filepath.Join("..", "..", "configs", "production.yml")
 	if renderError := render(profilePath, "relative-output"); renderError == nil {

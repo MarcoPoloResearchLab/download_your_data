@@ -20,7 +20,7 @@ func TestPublicSiteSEOContract(testContext *testing.T) {
 		testContext.Fatalf("load resource registry: %v", registryError)
 	}
 
-	expectedPathCount := len(registry.Resources) + 3
+	expectedPathCount := len(registry.Resources) + 4
 	if paths := site.Paths(); len(paths) != expectedPathCount {
 		testContext.Fatalf(
 			"public document path count = %d; want %d: %v",
