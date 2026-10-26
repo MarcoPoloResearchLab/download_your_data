@@ -22,6 +22,7 @@ import (
 
 const (
 	resourcesIndexPath = "/resources/"
+	toolsIndexPath     = "/tools/"
 	sitemapPath        = "/sitemap.xml"
 	robotsPath         = "/robots.txt"
 	englishLocale      = "en"
@@ -759,8 +760,8 @@ func renderPublicSite(
 		return nil, dateError
 	}
 
-	documents := make(map[string]publicDocument, len(registry.Resources)+3)
-	paths := make([]string, 0, len(registry.Resources)+3)
+	documents := make(map[string]publicDocument, len(registry.Resources)+4)
+	paths := make([]string, 0, len(registry.Resources)+4)
 	cards := make([]resourceCardData, 0, len(registry.Resources))
 	for _, resource := range registry.Resources {
 		provider := providers[resource.ProviderID]
@@ -831,6 +832,21 @@ func renderPublicSite(
 		contentType: "text/html; charset=utf-8",
 	}
 
+	toolsTemplate, toolsTemplateError := template.ParseFS(Assets(), "tools/index.html")
+	if toolsTemplateError != nil {
+		return nil, fmt.Errorf("parse public Tools template: %w", toolsTemplateError)
+	}
+	var renderedTools bytes.Buffer
+	if executeError := toolsTemplate.Execute(&renderedTools, struct{ CanonicalURL string }{
+		CanonicalURL: origin + toolsIndexPath,
+	}); executeError != nil {
+		return nil, fmt.Errorf("render public Tools document: %w", executeError)
+	}
+	documents[toolsIndexPath] = publicDocument{
+		body:        renderedTools.Bytes(),
+		contentType: "text/html; charset=utf-8",
+	}
+
 	sitemap, sitemapError := buildSitemap(origin, registry)
 	if sitemapError != nil {
 		return nil, sitemapError
@@ -848,7 +864,7 @@ func renderPublicSite(
 		contentType: "text/plain; charset=utf-8",
 	}
 
-	paths = append(paths, resourcesIndexPath)
+	paths = append(paths, resourcesIndexPath, toolsIndexPath)
 	for _, resource := range registry.Resources {
 		paths = append(paths, resourcePath(resource.Slug))
 	}
