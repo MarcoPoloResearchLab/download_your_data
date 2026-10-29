@@ -33,10 +33,10 @@ scenario="${scenario/__SESSION_COOKIE__/${session_cookie}}"
 scenario="${scenario/__SESSION_TOKEN__/${session_token}}"
 
 run_playwright open about:blank >/dev/null
-candidate_boundary="$(<"${script_directory}/shared-ui-boundary.js")"
-candidate_boundary="${candidate_boundary//__BASE_URL__/${base_url}}"
+candidate_boundary="$(node "${script_directory}/render-shared-ui-boundary.mjs" "${base_url}")"
 scenario="${scenario/async page => \{/async page => \{${candidate_boundary}}"
-scenario_output="$(run_playwright run-code "${scenario}")"
+printf '%s' "${scenario}" > "${playwright_directory}/scenario.js"
+scenario_output="$(run_playwright run-code --filename "${playwright_directory}/scenario.js")"
 if [[ "${scenario_output}" == *"### Error"* ]]; then
   printf '%s\n' "${scenario_output}" >&2
   exit 1

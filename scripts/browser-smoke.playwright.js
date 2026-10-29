@@ -162,6 +162,47 @@ async page => {
   await page.locator('.catalog').waitFor();
   await setSharedAuth(false);
 
+  for (const width of [320, 390, 659, 960, 1440]) {
+    await page.setViewportSize({width, height:1000});
+    for (const locale of ['en', 'es', 'fr', 'ru']) {
+      await page.locator(`[data-language="${locale}"]`).click();
+      const cards = await page.locator('.provider-card').evaluateAll((nodes) => nodes.map((card) => {
+        const bounds = card.getBoundingClientRect();
+        const action = card.querySelector('.provider-analysis-action');
+        const actionBounds = action?.getBoundingClientRect();
+        const titleBounds = card.querySelector('.provider-name').getBoundingClientRect();
+        return {
+          id:card.getAttribute('data-provider-id'),
+          primitive:card.localName,
+          layout:card.getAttribute('layout'),
+          top:actionBounds ? actionBounds.top - bounds.top : null,
+          right:actionBounds ? bounds.right - actionBounds.right : null,
+          overlapsTitle:actionBounds ? actionBounds.left < titleBounds.right && actionBounds.right > titleBounds.left && actionBounds.top < titleBounds.bottom && actionBounds.bottom > titleBounds.top : false
+        };
+      }));
+      const analysisCards = cards.filter((card) => card.top !== null);
+      assert(analysisCards.map((card) => card.id).sort().join(',') === 'amazon,netflix,openai', 'analysis actions stay on the three supported providers');
+      assert(Math.max(...analysisCards.map((card) => card.top)) - Math.min(...analysisCards.map((card) => card.top)) <= 1, `analysis actions have one top inset at ${width}/${locale}: ${JSON.stringify(analysisCards)}`);
+      assert(Math.max(...analysisCards.map((card) => card.right)) - Math.min(...analysisCards.map((card) => card.right)) <= 1, `analysis actions have one right inset at ${width}/${locale}`);
+      assert(analysisCards.every((card) => !card.overlapsTitle), `analysis actions do not overlap titles at ${width}/${locale}`);
+      assert(cards.every((card) => card.primitive === 'mpr-entity-card' && card.layout === 'tile'), 'provider cards express the shared tile DSL');
+      await assertNoHorizontalOverflow(`provider cards ${width}/${locale}`);
+    }
+  }
+  await page.locator('[data-language="en"]').click();
+  for (const [providerID, routeName] of [['netflix','viewing-history'], ['openai','openai'], ['amazon','viewing-history']]) {
+    await page.locator(`.provider-card[data-provider-id="${providerID}"] .provider-analysis-action`).click();
+    await page.locator('.workspace-gate').waitFor();
+    assert(await page.evaluate(() => location.hash) === `#app/${routeName}`, 'analysis action retains its workspace route');
+    await route('#catalog', '.catalog');
+  }
+  const netflixGuide = page.locator('.provider-card[data-provider-id="netflix"] .provider-card-guide');
+  await netflixGuide.focus();
+  await netflixGuide.press('Enter');
+  await page.locator('#netflix').waitFor();
+  assert(await page.evaluate(() => location.hash) === '#guide/netflix', 'provider guide keeps keyboard navigation');
+  await route('#catalog', '.catalog');
+
   assert(
     await page.locator('.provider-card[data-provider-id]').count() === 14,
     'anonymous provider catalog must contain fourteen canonical providers'

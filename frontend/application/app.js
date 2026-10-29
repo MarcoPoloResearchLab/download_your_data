@@ -532,45 +532,39 @@ function renderCatalog() {
   });
   for (const providerDefinition of state.data.provider_registry) {
     const localized = localizedProvider(providerDefinition.id);
-    const card = element('article', {
+    const card = element('mpr-entity-card', {
       class: 'provider-card',
+      layout: 'tile',
       'data-provider-id': providerDefinition.id
     });
     const providerLink = element('a', {
       class: 'provider-card-guide',
+      slot: 'title',
       href: providerDefinition.catalog_path,
       'aria-label': localized.nav,
     });
-    const cardCopy = element('div', {class: 'provider-card-copy'});
     const providerName = element('h2', {
       class: 'provider-name',
+      slot: 'title',
       text: localized.nav
     });
-    if (providerDefinition.surface === 'workspace') {
-      cardCopy.append(
-        element(
-          'div',
-          {class: 'provider-card-meta'},
-          providerName,
-          actionButton(ui().data_analysis, {
-            'data-route': providerDefinition.id==='netflix'?VIEWING_HISTORY_ROUTE:providerDefinition.id,
-            class: 'button button-primary provider-analysis-action'
-          })
-        )
-      );
-    } else if (providerDefinition.id === 'amazon') {
-      cardCopy.append(element('div',{class:'provider-card-meta'},providerName,actionButton(ui().data_analysis,{'data-route':VIEWING_HISTORY_ROUTE,class:'button button-primary provider-analysis-action'})));
-    } else {
-      cardCopy.append(providerName);
-    }
-    cardCopy.append(
-      element('p', {class: 'provider-summary', text: localized.intro})
-    );
+    const mark = providerMark(providerDefinition.id, localized.nav, providerDefinition.icon_src);
+    mark.setAttribute('slot', 'media');
     card.append(
       providerLink,
-      providerMark(providerDefinition.id, localized.nav, providerDefinition.icon_src),
-      cardCopy
+      mark,
+      providerName,
+      element('p', {class: 'provider-summary', slot: 'summary', text: localized.intro})
     );
+    if (providerDefinition.surface === 'workspace' || providerDefinition.id === 'amazon') {
+      const analysisRoute = ['netflix', 'amazon'].includes(providerDefinition.id)
+        ? VIEWING_HISTORY_ROUTE : providerDefinition.id;
+      card.append(actionButton(ui().data_analysis, {
+        slot: 'actions',
+        'data-route': analysisRoute,
+        class: 'button button-primary provider-analysis-action'
+      }));
+    }
     grid.append(card);
   }
   root.append(heading, grid);
@@ -1055,7 +1049,9 @@ function updateChrome() {
   const brand = document.querySelector('#brand');
   brand.setAttribute('aria-label', strings.site_title);
   document.querySelector('#brand-label').textContent = strings.site_title;
-  document.querySelector('#credits-button').textContent = ui().credits;
+  const creditsButton = document.querySelector('#credits-button');
+  creditsButton.textContent = ui().credits;
+  creditsButton.toggleAttribute('hidden', state.sharedAuthStatus !== 'authenticated');
   document.querySelector('#footer-local').textContent = ui().private_workspace;
   document.querySelector('#footer-privacy').textContent = ui().privacy_footer;
   document.querySelector('.skip-link').textContent = ui().skip_to_content;

@@ -60,6 +60,7 @@ check-frontend:
 	node --check scripts/media-browser-regressions.playwright.js
 	node --check scripts/shared-ui-auth.playwright.js
 	node --input-type=module --check < scripts/shared-ui-boundary.js
+	node --check scripts/render-shared-ui-boundary.mjs
 
 test: test-installed-gateway
 	$(GO) test ./...
