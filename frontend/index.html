@@ -77,8 +77,8 @@
       <span id="brand-label">Download Your Data</span>
     </a>
     <span class="header-context" slot="nav-left" id="header-context">Provider catalog</span>
-    <div class="header-actions" slot="aux">
-      <button class="button button-quiet" type="button" data-route="credits" id="credits-button">
+    <div class="header-actions" slot="nav-right">
+      <button class="button button-quiet" type="button" data-route="credits" id="credits-button" hidden>
         Credits
       </button>
       <div class="segmented" id="language-switcher" aria-label="Language">
@@ -87,15 +87,13 @@
         <button type="button" data-language="fr" aria-pressed="false">FR</button>
         <button type="button" data-language="ru" aria-pressed="false">RU</button>
       </div>
-      <button class="icon-button" id="theme-toggle" type="button" aria-label="Use light theme">
-        <span aria-hidden="true">◐</span>
-      </button>
-      <mpr-user
-        display-mode="avatar"
-        logout-url="#catalog"
-        logout-label="Sign out"
-      ></mpr-user>
     </div>
+    <mpr-user
+      slot="aux"
+      display-mode="avatar"
+      logout-url="#catalog"
+      logout-label="Sign out"
+    ></mpr-user>
   </mpr-header>
 
   <div class="sr-only" id="app-announcer" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -123,6 +121,9 @@
       </span>
       <span id="footer-local">Private workspace</span>
       <span id="footer-privacy">Your imported files stay in your authenticated workspace.</span>
+      <button class="icon-button" id="theme-toggle" type="button" aria-label="Use light theme">
+        <span aria-hidden="true">◐</span>
+      </button>
     </div>
   </mpr-footer>
 </body>
