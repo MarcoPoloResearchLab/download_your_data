@@ -27,10 +27,10 @@ scenario="${scenario//__PRIME_ZIP__/${prime_zip}}"
 scenario="${scenario/__SESSION_COOKIE__/${session_cookie}}"
 scenario="${scenario/__SESSION_TOKEN__/${session_token}}"
 scenario="${scenario//__SCREENSHOT_ROOT__/${screenshot_root}}"
-boundary="$(<"${script_directory}/shared-ui-boundary.js")"
-boundary="${boundary//__BASE_URL__/${base_url}}"
+boundary="$(node "${script_directory}/render-shared-ui-boundary.mjs" "${base_url}")"
 scenario="${scenario/async page => \{/async page => \{${boundary}}"
 run_playwright open about:blank >/dev/null
-output="$(run_playwright run-code "${scenario}")"
+printf '%s' "${scenario}" > "${playwright_directory}/scenario.js"
+output="$(run_playwright run-code --filename "${playwright_directory}/scenario.js")"
 if [[ "${output}" == *"### Error"* ]]; then printf '%s\n' "${output}" >&2; exit 1; fi
 echo "Shared viewing history browser contract passed"
