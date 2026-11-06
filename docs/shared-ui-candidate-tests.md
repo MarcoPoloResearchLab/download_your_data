@@ -18,9 +18,7 @@ It records their SHA-256 hashes and supplies those assets at the browser network
 An invalid path stops the test.
 This test configuration keeps the production asset URLs unchanged.
 
-Without this variable, the browser tests use the immutable candidate recorded in `scripts/shared-ui-boundary.js`.
-That candidate predates the tile layout.
-Use the local candidate command to validate this change before shared library publication.
+Without this variable, browser tests load the production MPR UI `@latest` URLs.
 
 ## Acceptance
 
