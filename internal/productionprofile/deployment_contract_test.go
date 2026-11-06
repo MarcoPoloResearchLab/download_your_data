@@ -73,11 +73,12 @@ func TestDeploymentManifestMatchesTheProductionProfile(testContext *testing.T) {
 	if currentContractMap(testContext, readiness["endpoint"])["port"] != profile.Runtime.ContainerPort {
 		testContext.Fatal("service readiness port changed")
 	}
+	const apiRouteID = "download-your-data-public-api"
 	routes := currentContractIndex(testContext, currentContractMap(testContext, currentContractMap(testContext, targets["ingress"])["caddy"])["routes"], "id")
-	if len(routes) != 1 || routes["public-api"] == nil {
+	if len(routes) != 1 || routes[apiRouteID] == nil {
 		testContext.Fatal("unexpected API routes")
 	}
-	route := currentContractDeclaration(testContext, currentContractMap(testContext, currentContractMap(testContext, targets["ingress"])["caddy"])["routes"], "public-api")
+	route := currentContractDeclaration(testContext, currentContractMap(testContext, currentContractMap(testContext, targets["ingress"])["caddy"])["routes"], apiRouteID)
 	requireCurrentContractYAML(testContext, "route.hostname", route["hostname"], `dyd-api.mprlab.com`)
 	requireCurrentContractYAML(testContext, "route.listener", route["listener"], `https`)
 	requireCurrentContractYAML(testContext, "route.tls", route["tls"], `mode: automatic`)
