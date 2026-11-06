@@ -54,6 +54,13 @@ mprlab_resources:
                   protocol: http
                   url: https://dyd-api.mprlab.com/api/health
         operations:
+            - name: app-plan-deploy
+              polling:
+                attempt_limit: 120
+                increment: 1s
+                initial: 1s
+                maximum: 10s
+                multiplier: 2
             - name: app-deploy
               polling:
                 attempt_limit: 120

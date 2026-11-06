@@ -26,6 +26,12 @@ func TestDeploymentManifestMatchesTheProductionProfile(testContext *testing.T) {
 	requireCurrentContractYAML(testContext, "release", manifest["release"], `scheme: semver`)
 	lifecycle := currentContractMap(testContext, manifest["lifecycle"])
 	requireCurrentContractYAML(testContext, "lifecycle.defaults", lifecycle["defaults"], `timeouts: {completion: 30m, readiness: 2m, request: 30s, shutdown: 30s, startup: 2m}`)
+	operations := currentContractIndex(testContext, lifecycle["operations"], "name")
+	deploymentPlan := operations["app-plan-deploy"]
+	if deploymentPlan == nil {
+		testContext.Fatal("deployment planning operation is missing")
+	}
+	requireCurrentContractYAML(testContext, "deployment plan polling", deploymentPlan["polling"], `{initial: 1s, maximum: 10s, increment: 1s, multiplier: 2, attempt_limit: 120}`)
 	environment := currentContractMap(testContext, manifest["environment"])
 	inputs := currentContractIndex(testContext, environment["private_inputs"], "id")
 	for id, variable := range map[string]string{"download-your-data-tmdb-read-token": "DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN", "download-your-data-google-client-id": "DOWNLOAD_YOUR_DATA_GOOGLE_CLIENT_ID", "download-your-data-tauth-jwt-signing-key": "DOWNLOAD_YOUR_DATA_TAUTH_JWT_SIGNING_KEY"} {
