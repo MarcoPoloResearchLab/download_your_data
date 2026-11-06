@@ -38,7 +38,6 @@ mprlab_resources:
                 - ci
             enabled: true
         defaults:
-            restart_delay: 5s
             timeouts:
                 completion: 30m
                 readiness: 2m
@@ -49,6 +48,9 @@ mprlab_resources:
             http:
                 - expected_status: 200
                   id: public-health
+                  operations:
+                    - name: app-deploy
+                      restart_delay: 5s
                   protocol: http
                   url: https://dyd-api.mprlab.com/api/health
         operations:
@@ -60,6 +62,7 @@ mprlab_resources:
                 maximum: 10s
                 multiplier: 2
             - name: app-publish
+              restart_delay: 5s
               polling:
                 attempt_limit: 120
                 increment: 1s
@@ -67,6 +70,7 @@ mprlab_resources:
                 maximum: 10s
                 multiplier: 2
             - name: app-release
+              restart_delay: 5s
               polling:
                 attempt_limit: 120
                 increment: 1s
@@ -74,6 +78,7 @@ mprlab_resources:
                 maximum: 10s
                 multiplier: 2
             - name: app_lifecycle.repository_read
+              restart_delay: 5s
               polling:
                 attempt_limit: 120
                 increment: 1s
@@ -81,7 +86,9 @@ mprlab_resources:
                 maximum: 10s
                 multiplier: 2
         private_inputs:
-            operations: []
+            operations:
+                - name: app-deploy
+                  restart_delay: 5s
     owner: download-your-data
     publications:
         ghcr:
@@ -109,6 +116,9 @@ mprlab_resources:
         docker_compose:
             projects:
                 - id: runtime
+                  operations:
+                    - name: app-deploy
+                      restart_delay: 5s
                   services:
                     - endpoints:
                         - endpoint:
@@ -122,6 +132,9 @@ mprlab_resources:
                             protocol: http
                           id: http
                           name: download-your-data.http
+                          operations:
+                            - name: app-deploy
+                              restart_delay: 5s
                           version: 1
                         - endpoint:
                             alias: runtime-download-your-data-api-readiness
@@ -134,6 +147,9 @@ mprlab_resources:
                             protocol: http
                           id: readiness
                           name: download-your-data.readiness.runtime.download-your-data-api
+                          operations:
+                            - name: app-deploy
+                              restart_delay: 5s
                           version: 1
                       environment:
                         - name: DOWNLOAD_YOUR_DATA_ADDRESS
@@ -180,6 +196,9 @@ mprlab_resources:
         github_pages:
             sites:
                 - id: website
+                  operations:
+                    - name: app-deploy
+                      restart_delay: 5s
                   publication: website
                   url: https://dyd.mprlab.com/
         ingress:
@@ -216,6 +235,17 @@ mprlab_resources:
                           upstream: tauth.http
                       hostname: dyd-api.mprlab.com
                       id: download-your-data-public-api
+                      operations:
+                        - name: app-deploy
+                          timeouts:
+                            startup: 1m
+                            readiness: 5m
+                          polling:
+                            initial: 1s
+                            maximum: 10s
+                            increment: 1s
+                            multiplier: 2
+                            attempt_limit: 200
                       listener: https
                       tls:
                         mode: automatic

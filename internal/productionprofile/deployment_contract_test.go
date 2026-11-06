@@ -24,6 +24,8 @@ func TestDeploymentManifestMatchesTheProductionProfile(testContext *testing.T) {
 	manifest := currentManifestContract(testContext, content)
 	requireCurrentContractYAML(testContext, "owner", manifest["owner"], `download-your-data`)
 	requireCurrentContractYAML(testContext, "release", manifest["release"], `scheme: semver`)
+	lifecycle := currentContractMap(testContext, manifest["lifecycle"])
+	requireCurrentContractYAML(testContext, "lifecycle.defaults", lifecycle["defaults"], `timeouts: {completion: 30m, readiness: 2m, request: 30s, shutdown: 30s, startup: 2m}`)
 	environment := currentContractMap(testContext, manifest["environment"])
 	inputs := currentContractIndex(testContext, environment["private_inputs"], "id")
 	for id, variable := range map[string]string{"download-your-data-tmdb-read-token": "DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN", "download-your-data-google-client-id": "DOWNLOAD_YOUR_DATA_GOOGLE_CLIENT_ID", "download-your-data-tauth-jwt-signing-key": "DOWNLOAD_YOUR_DATA_TAUTH_JWT_SIGNING_KEY"} {
@@ -66,7 +68,8 @@ func TestDeploymentManifestMatchesTheProductionProfile(testContext *testing.T) {
 	}
 	expectedEndpoint := map[string]any{"scope": "same_host", "scheme": "http", "alias": "download-your-data-api", "port": profile.Runtime.ContainerPort}
 	expectedHealth := map[string]any{"protocol": "http", "path": profile.Runtime.HealthPath, "expected_status": 200}
-	requireCurrentContractValue(testContext, "http", endpoints["http"], map[string]any{"id": "http", "name": "download-your-data.http", "version": 1, "endpoint": expectedEndpoint, "health": expectedHealth})
+	runtimeOperations := []any{map[string]any{"name": "app-deploy", "restart_delay": "5s"}}
+	requireCurrentContractValue(testContext, "http", endpoints["http"], map[string]any{"id": "http", "name": "download-your-data.http", "version": 1, "endpoint": expectedEndpoint, "health": expectedHealth, "operations": runtimeOperations})
 	readinessID := currentContractMap(testContext, service["readiness"])["endpoint"].(string)
 	readiness := endpoints[readinessID]
 	requireCurrentContractValue(testContext, "service.readiness.health", readiness["health"], expectedHealth)
@@ -82,6 +85,7 @@ func TestDeploymentManifestMatchesTheProductionProfile(testContext *testing.T) {
 	requireCurrentContractYAML(testContext, "route.hostname", route["hostname"], `dyd-api.mprlab.com`)
 	requireCurrentContractYAML(testContext, "route.listener", route["listener"], `https`)
 	requireCurrentContractYAML(testContext, "route.tls", route["tls"], `mode: automatic`)
+	requireCurrentContractYAML(testContext, "route.operations", route["operations"], `[{name: app-deploy, timeouts: {startup: 1m, readiness: 5m}, polling: {initial: 1s, maximum: 10s, increment: 1s, multiplier: 2, attempt_limit: 200}}]`)
 	requireCurrentContractYAML(testContext, "route.rate_limit", currentContractMap(testContext, route["access"])["rate_limit"], `{events: 300, window_seconds: 10}`)
 	handlers := currentContractIndex(testContext, route["handlers"], "id")
 	if len(handlers) != 3 {
@@ -95,10 +99,10 @@ func TestDeploymentManifestMatchesTheProductionProfile(testContext *testing.T) {
 		testContext.Fatal("unexpected public observations")
 	}
 	health := currentContractDeclaration(testContext, currentContractMap(testContext, currentContractMap(testContext, manifest["lifecycle"])["observations"])["http"], "public-health")
-	requireCurrentContractValue(testContext, "public health", health, map[string]any{"id": "public-health", "protocol": "http", "url": profile.Browser.APIOrigin + profile.Runtime.HealthPath, "expected_status": 200})
+	requireCurrentContractValue(testContext, "public health", health, map[string]any{"id": "public-health", "protocol": "http", "url": profile.Browser.APIOrigin + profile.Runtime.HealthPath, "expected_status": 200, "operations": runtimeOperations})
 	requireCurrentContractYAML(testContext, "website publication", publications["github_pages"], `sites: [{id: website, artifact: website, repository: marcopoloresearchlab/download_your_data, branch: gh-pages, domain: dyd.mprlab.com, marker: {path: /.mprlab-release.json}}]`)
 	requireCurrentContractYAML(testContext, "website source", artifacts["web_bundles"], `[{id: website, format: directory, source: {kind: container, context: ., dockerfile: Dockerfile, target: pages}}]`)
-	requireCurrentContractValue(testContext, "website target", targets["github_pages"], map[string]any{"sites": []any{map[string]any{"id": "website", "publication": "website", "url": profile.Browser.PublicOrigin + "/"}}})
+	requireCurrentContractValue(testContext, "website target", targets["github_pages"], map[string]any{"sites": []any{map[string]any{"id": "website", "publication": "website", "url": profile.Browser.PublicOrigin + "/", "operations": runtimeOperations}}})
 	if profile.Session.CookieDomain != ".mprlab.com" {
 		testContext.Fatal("production browser cookie domain changed")
 	}
