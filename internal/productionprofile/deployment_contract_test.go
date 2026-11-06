@@ -3,332 +3,234 @@ package productionprofile
 import (
 	"os"
 	"path/filepath"
-	"strconv"
+	"reflect"
+	"slices"
+	"strings"
 	"testing"
 
 	"gopkg.in/yaml.v3"
 )
 
-type deploymentManifest struct {
-	Resources deploymentResources `yaml:"mprlab_resources"`
-}
-
-type deploymentResources struct {
-	SchemaVersion *int                          `yaml:"schema_version"`
-	Owner         string                        `yaml:"owner"`
-	Release       deploymentRelease             `yaml:"release"`
-	Resources     map[string]deploymentResource `yaml:"resources"`
-}
-
-type deploymentRelease struct {
-	Scheme string `yaml:"scheme"`
-}
-
-type deploymentResource struct {
-	Kind       string                       `yaml:"kind"`
-	Bindings   map[string]string            `yaml:"bindings"`
-	Images     map[string]deploymentImage   `yaml:"images"`
-	Services   map[string]deploymentService `yaml:"services"`
-	Volumes    map[string]deploymentVolume  `yaml:"volumes"`
-	Name       string                       `yaml:"name"`
-	Version    int                          `yaml:"version"`
-	Project    string                       `yaml:"project"`
-	Service    string                       `yaml:"service"`
-	Endpoint   deploymentEndpoint           `yaml:"endpoint"`
-	Health     deploymentHealth             `yaml:"health"`
-	Hostname   string                       `yaml:"hostname"`
-	Listener   string                       `yaml:"listener"`
-	Handlers   map[string]deploymentHandler `yaml:"handlers"`
-	Protocol   string                       `yaml:"protocol"`
-	URL        string                       `yaml:"url"`
-	Repository string                       `yaml:"repository"`
-	Branch     string                       `yaml:"branch"`
-	Domain     string                       `yaml:"domain"`
-	Source     deploymentSource             `yaml:"source"`
-	Capability string                       `yaml:"capability"`
-	Tenant     deploymentAuthentication     `yaml:"tenant"`
-	Access     deploymentAccess             `yaml:"access"`
-	TLS        deploymentTLS                `yaml:"tls"`
-	Verify     deploymentVerification       `yaml:"verification"`
-	Expected   int                          `yaml:"expected_status"`
-}
-
-type deploymentImage struct {
-	Repository string          `yaml:"repository"`
-	Build      deploymentBuild `yaml:"build"`
-}
-
-type deploymentBuild struct {
-	Context    string   `yaml:"context"`
-	Dockerfile string   `yaml:"dockerfile"`
-	Target     string   `yaml:"target"`
-	Platforms  []string `yaml:"platforms"`
-}
-
-type deploymentService struct {
-	Image       string                     `yaml:"image"`
-	Placement   map[string]string          `yaml:"placement"`
-	Environment map[string]deploymentValue `yaml:"environment"`
-	Mounts      map[string]deploymentMount `yaml:"mounts"`
-	Ports       map[string]map[string]int  `yaml:"ports"`
-	Readiness   deploymentHealth           `yaml:"readiness"`
-}
-
-type deploymentValue struct {
-	Value    string `yaml:"value"`
-	Resource string `yaml:"resource"`
-	Output   string `yaml:"output"`
-}
-
-type deploymentMount struct {
-	Volume   string `yaml:"volume"`
-	ReadOnly bool   `yaml:"read_only"`
-}
-
-type deploymentVolume struct {
-	Name      string `yaml:"name"`
-	Retention string `yaml:"retention"`
-}
-
-type deploymentEndpoint struct {
-	Scope  string `yaml:"scope"`
-	Scheme string `yaml:"scheme"`
-	Alias  string `yaml:"alias"`
-	Port   int    `yaml:"port"`
-}
-
-type deploymentHealth struct {
-	Protocol       string `yaml:"protocol"`
-	Port           int    `yaml:"port"`
-	Path           string `yaml:"path"`
-	ExpectedStatus int    `yaml:"expected_status"`
-}
-
-type deploymentHandler struct {
-	PathPrefix string              `yaml:"path_prefix"`
-	Upstream   string              `yaml:"upstream"`
-	Transport  deploymentTransport `yaml:"transport"`
-}
-
-type deploymentTransport struct {
-	Protocol                     string `yaml:"protocol"`
-	DialTimeoutSeconds           int    `yaml:"dial_timeout_seconds"`
-	ResponseHeaderTimeoutSeconds int    `yaml:"response_header_timeout_seconds"`
-	ReadTimeoutSeconds           int    `yaml:"read_timeout_seconds"`
-}
-
-type deploymentAccess struct {
-	RateLimit deploymentRateLimit `yaml:"rate_limit"`
-}
-
-type deploymentRateLimit struct {
-	Events        int `yaml:"events"`
-	WindowSeconds int `yaml:"window_seconds"`
-}
-
-type deploymentTLS struct {
-	Mode string `yaml:"mode"`
-}
-
-type deploymentVerification struct {
-	Path string `yaml:"path"`
-}
-
-type deploymentSource struct {
-	Kind       string `yaml:"kind"`
-	Context    string `yaml:"context"`
-	Dockerfile string `yaml:"dockerfile"`
-	Target     string `yaml:"target"`
-}
-
-type deploymentAuthentication struct {
-	ID                string              `yaml:"id"`
-	DisplayName       string              `yaml:"display_name"`
-	Origins           []string            `yaml:"origins"`
-	GoogleWebClientID deploymentReference `yaml:"google_web_client_id"`
-	JWTSigningKey     deploymentReference `yaml:"jwt_signing_key"`
-	Cookie            deploymentCookie    `yaml:"cookie"`
-}
-
-type deploymentReference struct {
-	Resource string `yaml:"resource"`
-	Output   string `yaml:"output"`
-}
-
-type deploymentCookie struct {
-	Domain      string `yaml:"domain"`
-	SessionName string `yaml:"session_name"`
-	RefreshName string `yaml:"refresh_name"`
-}
-
 func TestDeploymentManifestMatchesTheProductionProfile(testContext *testing.T) {
 	repositoryRoot := filepath.Join("..", "..")
-	profile, profileError := Load(filepath.Join(repositoryRoot, "configs", "production.yml"))
-	if profileError != nil {
-		testContext.Fatalf("load production profile: %v", profileError)
+	profile, err := Load(filepath.Join(repositoryRoot, "configs", "production.yml"))
+	if err != nil {
+		testContext.Fatal(err)
 	}
-	encodedManifest, readError := os.ReadFile(
-		filepath.Join(repositoryRoot, ".mprlab", "deploy", "resources.yml"),
-	)
-	if readError != nil {
-		testContext.Fatalf("read deployment manifest: %v", readError)
+	content, err := os.ReadFile(filepath.Join(repositoryRoot, ".mprlab", "deploy", "resources.yml"))
+	if err != nil {
+		testContext.Fatal(err)
 	}
-	var manifest deploymentManifest
-	if decodeError := yaml.Unmarshal(encodedManifest, &manifest); decodeError != nil {
-		testContext.Fatalf("decode deployment manifest: %v", decodeError)
-	}
-	if manifest.Resources.SchemaVersion != nil ||
-		manifest.Resources.Owner != "download-your-data" ||
-		manifest.Resources.Release.Scheme != "semver" {
-		testContext.Fatalf("deployment manifest envelope drifted: %+v", manifest.Resources)
-	}
-	if len(manifest.Resources.Resources) != 7 {
-		testContext.Fatalf("deployment resource count = %d; want 7", len(manifest.Resources.Resources))
-	}
-
-	private := requireDeploymentResource(testContext, manifest, "private_values", "private")
-	if len(private.Bindings) != 3 ||
-		private.Bindings["tmdb-read-token"] != "DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN" ||
-		private.Bindings["google-web-client-id"] != "DOWNLOAD_YOUR_DATA_GOOGLE_CLIENT_ID" ||
-		private.Bindings["tauth-jwt-signing-key"] != "DOWNLOAD_YOUR_DATA_TAUTH_JWT_SIGNING_KEY" {
-		testContext.Fatalf("private-value bindings drifted: %+v", private.Bindings)
-	}
-
-	runtime := requireDeploymentResource(testContext, manifest, "compose_project", "runtime")
-	if len(runtime.Images) != 1 || len(runtime.Services) != 1 || len(runtime.Volumes) != 1 {
-		testContext.Fatalf("runtime topology drifted: %+v", runtime)
-	}
-	image := runtime.Images["api-image"]
-	if image.Repository != "ghcr.io/marcopoloresearchlab/download-your-data" ||
-		image.Build.Context != "." ||
-		image.Build.Dockerfile != "Dockerfile" ||
-		image.Build.Target != "api" ||
-		len(image.Build.Platforms) != 1 ||
-		image.Build.Platforms[0] != "linux/amd64" {
-		testContext.Fatalf("production API image contract drifted: %+v", image)
-	}
-	service := runtime.Services["download-your-data-api"]
-	if service.Image != "api-image" ||
-		service.Placement["group"] != "gateway" ||
-		service.Placement["cardinality"] != "one" ||
-		service.Environment["DOWNLOAD_YOUR_DATA_ADDRESS"].Value != "0.0.0.0:8787" ||
-		service.Environment["DOWNLOAD_YOUR_DATA_DATA_DIR"].Value != profile.Runtime.DataMount ||
-		service.Readiness.Protocol != "http" ||
-		service.Readiness.Port != profile.Runtime.ContainerPort ||
-		service.Readiness.Path != profile.Runtime.HealthPath ||
-		service.Readiness.ExpectedStatus != 200 ||
-		len(service.Mounts) != 1 ||
-		service.Mounts[profile.Runtime.DataMount] != (deploymentMount{Volume: "data"}) ||
-		len(service.Ports) != 1 || service.Ports[strconv.Itoa(profile.Runtime.ContainerPort)] == nil || len(service.Ports[strconv.Itoa(profile.Runtime.ContainerPort)]) != 0 {
-		testContext.Fatalf("production API service contract drifted: %+v", service)
-	}
-	if runtime.Volumes["data"] != (deploymentVolume{Name: "mprlab-download-your-data-data", Retention: "retain"}) {
-		testContext.Fatalf("retained data volume drifted: %+v", runtime.Volumes["data"])
-	}
-	assertEnvironmentReference(testContext, service, "DOWNLOAD_YOUR_DATA_PUBLIC_ORIGIN", "website", "origin")
-	assertEnvironmentReference(testContext, service, "DOWNLOAD_YOUR_DATA_API_ORIGIN", "public-api", "origin")
-	assertEnvironmentReference(testContext, service, "DOWNLOAD_YOUR_DATA_TAUTH_URL", "public-api", "origin")
-	assertEnvironmentReference(testContext, service, "DOWNLOAD_YOUR_DATA_TAUTH_TENANT_ID", "authentication", "tenant-id")
-	assertEnvironmentReference(testContext, service, "DOWNLOAD_YOUR_DATA_GOOGLE_CLIENT_ID", "authentication", "google-web-client-id")
-	assertEnvironmentReference(testContext, service, "DOWNLOAD_YOUR_DATA_TAUTH_JWT_SIGNING_KEY", "authentication", "jwt-signing-key")
-	assertEnvironmentReference(testContext, service, "DOWNLOAD_YOUR_DATA_TAUTH_SESSION_COOKIE_NAME", "authentication", "session-cookie-name")
-	assertEnvironmentReference(testContext, service, "DOWNLOAD_YOUR_DATA_TAUTH_REFRESH_COOKIE_NAME", "authentication", "refresh-cookie-name")
-	assertEnvironmentReference(testContext, service, "DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN", "private", "tmdb-read-token")
-
-	capability := requireDeploymentResource(testContext, manifest, "runtime_capability", "http")
-	if capability.Name != "download-your-data.http" || capability.Version != 1 ||
-		capability.Project != "runtime" || capability.Service != "download-your-data-api" ||
-		capability.Endpoint.Scope != "same_host" ||
-		capability.Endpoint.Scheme != "http" ||
-		capability.Endpoint.Alias != "download-your-data-api" ||
-		capability.Endpoint.Port != profile.Runtime.ContainerPort ||
-		capability.Health.Protocol != "http" ||
-		capability.Health.Path != profile.Runtime.HealthPath ||
-		capability.Health.ExpectedStatus != 200 {
-		testContext.Fatalf("runtime capability drifted: %+v", capability)
-	}
-
-	publicAPI := requireDeploymentResource(testContext, manifest, "caddy_route", "public-api")
-	if publicAPI.Hostname != "dyd-api.mprlab.com" ||
-		publicAPI.Listener != "https" || publicAPI.TLS.Mode != "automatic" ||
-		publicAPI.Access.RateLimit != (deploymentRateLimit{Events: 300, WindowSeconds: 10}) ||
-		len(publicAPI.Handlers) != 3 ||
-		publicAPI.Handlers["shared-auth"] != expectedDeploymentHandler("/auth", "tauth.http") ||
-		publicAPI.Handlers["shared-profile"] != expectedDeploymentHandler("/me", "tauth.http") ||
-		publicAPI.Handlers["default"] != expectedDeploymentHandler("/", "download-your-data.http") {
-		testContext.Fatalf("public API route drifted: %+v", publicAPI)
-	}
-
-	health := requireDeploymentResource(testContext, manifest, "health_check", "public-health")
-	if health.Protocol != "http" ||
-		health.URL != profile.Browser.APIOrigin+profile.Runtime.HealthPath ||
-		health.Expected != 200 {
-		testContext.Fatalf("public health contract drifted: %+v", health)
-	}
-
-	website := requireDeploymentResource(testContext, manifest, "github_pages", "website")
-	if website.Repository != "marcopoloresearchlab/download_your_data" ||
-		website.Branch != "gh-pages" ||
-		website.Domain != "dyd.mprlab.com" ||
-		website.URL != profile.Browser.PublicOrigin+"/" ||
-		website.Source != (deploymentSource{Kind: "container", Context: ".", Dockerfile: "Dockerfile", Target: "pages"}) ||
-		website.Verify.Path != "/.mprlab-release.json" {
-		testContext.Fatalf("GitHub Pages contract drifted: %+v", website)
-	}
-
-	authentication := requireDeploymentResource(testContext, manifest, "tauth_tenant", "authentication")
-	if authentication.Capability != "tauth.tenants" || authentication.Version != 1 ||
-		authentication.Tenant.ID != profile.Browser.TenantID ||
-		len(authentication.Tenant.Origins) != 1 ||
-		authentication.Tenant.Origins[0] != profile.Browser.PublicOrigin ||
-		authentication.Tenant.Cookie.Domain != profile.Session.CookieDomain ||
-		authentication.Tenant.Cookie.SessionName != profile.Session.SessionCookieName ||
-		authentication.Tenant.Cookie.RefreshName != profile.Session.RefreshCookieName ||
-		authentication.Tenant.GoogleWebClientID != (deploymentReference{Resource: "private", Output: "google-web-client-id"}) ||
-		authentication.Tenant.JWTSigningKey != (deploymentReference{Resource: "private", Output: "tauth-jwt-signing-key"}) {
-		testContext.Fatalf("TAuth tenant contract drifted: %+v", authentication)
-	}
-}
-
-func expectedDeploymentHandler(pathPrefix string, upstream string) deploymentHandler {
-	return deploymentHandler{
-		PathPrefix: pathPrefix,
-		Upstream:   upstream,
-		Transport: deploymentTransport{
-			Protocol:                     "http",
-			DialTimeoutSeconds:           10,
-			ResponseHeaderTimeoutSeconds: 30,
-			ReadTimeoutSeconds:           80,
-		},
-	}
-}
-
-func requireDeploymentResource(
-	testContext *testing.T,
-	manifest deploymentManifest,
-	kind string,
-	id string,
-) deploymentResource {
-	testContext.Helper()
-	if resource, exists := manifest.Resources.Resources[id]; exists {
-		if resource.Kind == kind {
-			return resource
+	manifest := currentManifestContract(testContext, content)
+	requireCurrentContractYAML(testContext, "owner", manifest["owner"], `download-your-data`)
+	requireCurrentContractYAML(testContext, "release", manifest["release"], `scheme: semver`)
+	environment := currentContractMap(testContext, manifest["environment"])
+	inputs := currentContractIndex(testContext, environment["private_inputs"], "id")
+	for id, variable := range map[string]string{"download-your-data-tmdb-read-token": "DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN", "download-your-data-google-client-id": "DOWNLOAD_YOUR_DATA_GOOGLE_CLIENT_ID", "download-your-data-tauth-jwt-signing-key": "DOWNLOAD_YOUR_DATA_TAUTH_JWT_SIGNING_KEY"} {
+		if inputs[id]["variable"] != variable {
+			testContext.Fatalf("native private binding %s changed", id)
 		}
 	}
-	testContext.Fatalf("deployment resource %s/%s is missing", kind, id)
-	return deploymentResource{}
+	targets := currentContractMap(testContext, manifest["targets"])
+	projects := currentContractIndex(testContext, currentContractMap(testContext, targets["docker_compose"])["projects"], "id")
+	if len(projects) != 1 || projects["runtime"] == nil {
+		testContext.Fatal("runtime project missing")
+	}
+	project := projects["runtime"]
+	artifacts := currentContractMap(testContext, manifest["artifacts"])
+	publications := currentContractMap(testContext, manifest["publications"])
+	requireCurrentContractYAML(testContext, "artifacts.container_images", artifacts["container_images"], `[{id: api-image, build: {context: ., dockerfile: Dockerfile, target: api, platforms: [linux/amd64]}}]`)
+	requireCurrentContractYAML(testContext, "publications.ghcr", publications["ghcr"], `images: [{id: api-image, artifact: api-image, repository: ghcr.io/marcopoloresearchlab/download-your-data}]`)
+	services := currentContractIndex(testContext, project["services"], "id")
+	if len(services) != 1 || services["download-your-data-api"] == nil {
+		testContext.Fatal("runtime service count or identity changed")
+	}
+	service := services["download-your-data-api"]
+	requireCurrentContractYAML(testContext, "service.image", service["image"], `publication: api-image`)
+	requireCurrentContractYAML(testContext, "service.placement", service["placement"], `{group: gateway, cardinality: one}`)
+	env := currentContractIndex(testContext, service["environment"], "name")
+	literalBindings := map[string]string{"DOWNLOAD_YOUR_DATA_ADDRESS": "0.0.0.0:8787", "DOWNLOAD_YOUR_DATA_DATA_DIR": profile.Runtime.DataMount, "DOWNLOAD_YOUR_DATA_API_ORIGIN": profile.Browser.APIOrigin, "DOWNLOAD_YOUR_DATA_TAUTH_URL": profile.Browser.APIOrigin, "DOWNLOAD_YOUR_DATA_TAUTH_TENANT_ID": profile.Browser.TenantID, "DOWNLOAD_YOUR_DATA_TAUTH_SESSION_COOKIE_NAME": profile.Session.SessionCookieName, "DOWNLOAD_YOUR_DATA_TAUTH_REFRESH_COOKIE_NAME": profile.Session.RefreshCookieName}
+	for name, value := range literalBindings {
+		requireCurrentContractValue(testContext, name, env[name], map[string]any{"name": name, "value": value})
+	}
+	for name, input := range map[string]string{"DOWNLOAD_YOUR_DATA_GOOGLE_CLIENT_ID": "download-your-data-google-client-id", "DOWNLOAD_YOUR_DATA_TAUTH_JWT_SIGNING_KEY": "download-your-data-tauth-jwt-signing-key", "DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN": "download-your-data-tmdb-read-token"} {
+		requireCurrentContractValue(testContext, name, env[name], map[string]any{"name": name, "input": input})
+	}
+	requireCurrentContractYAML(testContext, "DOWNLOAD_YOUR_DATA_PUBLIC_ORIGIN", env["DOWNLOAD_YOUR_DATA_PUBLIC_ORIGIN"], `{name: DOWNLOAD_YOUR_DATA_PUBLIC_ORIGIN, target: website, output: origin}`)
+	requireCurrentContractValue(testContext, "service.mounts", service["mounts"], []any{map[string]any{"target": profile.Runtime.DataMount, "volume": "data", "read_only": false}})
+	requireCurrentContractValue(testContext, "service.ports", service["ports"], []any{map[string]any{"container_port": profile.Runtime.ContainerPort}})
+	requireCurrentContractYAML(testContext, "project.volumes", project["volumes"], `[{id: data, name: mprlab-download-your-data-data, retention: retain}]`)
+	endpoints := currentContractIndex(testContext, service["endpoints"], "id")
+	if len(endpoints) != 2 || endpoints["http"] == nil || endpoints["readiness"] == nil {
+		testContext.Fatal("unexpected service endpoints")
+	}
+	expectedEndpoint := map[string]any{"scope": "same_host", "scheme": "http", "alias": "download-your-data-api", "port": profile.Runtime.ContainerPort}
+	expectedHealth := map[string]any{"protocol": "http", "path": profile.Runtime.HealthPath, "expected_status": 200}
+	requireCurrentContractValue(testContext, "http", endpoints["http"], map[string]any{"id": "http", "name": "download-your-data.http", "version": 1, "endpoint": expectedEndpoint, "health": expectedHealth})
+	readinessID := currentContractMap(testContext, service["readiness"])["endpoint"].(string)
+	readiness := endpoints[readinessID]
+	requireCurrentContractValue(testContext, "service.readiness.health", readiness["health"], expectedHealth)
+	if currentContractMap(testContext, readiness["endpoint"])["port"] != profile.Runtime.ContainerPort {
+		testContext.Fatal("service readiness port changed")
+	}
+	routes := currentContractIndex(testContext, currentContractMap(testContext, currentContractMap(testContext, targets["ingress"])["caddy"])["routes"], "id")
+	if len(routes) != 1 || routes["public-api"] == nil {
+		testContext.Fatal("unexpected API routes")
+	}
+	route := currentContractDeclaration(testContext, currentContractMap(testContext, currentContractMap(testContext, targets["ingress"])["caddy"])["routes"], "public-api")
+	requireCurrentContractYAML(testContext, "route.hostname", route["hostname"], `dyd-api.mprlab.com`)
+	requireCurrentContractYAML(testContext, "route.listener", route["listener"], `https`)
+	requireCurrentContractYAML(testContext, "route.tls", route["tls"], `mode: automatic`)
+	requireCurrentContractYAML(testContext, "route.rate_limit", currentContractMap(testContext, route["access"])["rate_limit"], `{events: 300, window_seconds: 10}`)
+	handlers := currentContractIndex(testContext, route["handlers"], "id")
+	if len(handlers) != 3 {
+		testContext.Fatal("public API handler count changed")
+	}
+	for id, values := range map[string][2]string{"shared-auth": {"/auth", "tauth.http"}, "shared-profile": {"/me", "tauth.http"}, "default": {"/", "download-your-data.http"}} {
+		requireCurrentContractValue(testContext, "handler "+id, handlers[id], map[string]any{"id": id, "path_prefix": values[0], "upstream": values[1], "transport": map[string]any{"protocol": "http", "dial_timeout_seconds": 10, "response_header_timeout_seconds": 30, "read_timeout_seconds": 80}})
+	}
+	observations := currentContractIndex(testContext, currentContractMap(testContext, currentContractMap(testContext, manifest["lifecycle"])["observations"])["http"], "id")
+	if len(observations) != 1 || observations["public-health"] == nil {
+		testContext.Fatal("unexpected public observations")
+	}
+	health := currentContractDeclaration(testContext, currentContractMap(testContext, currentContractMap(testContext, manifest["lifecycle"])["observations"])["http"], "public-health")
+	requireCurrentContractValue(testContext, "public health", health, map[string]any{"id": "public-health", "protocol": "http", "url": profile.Browser.APIOrigin + profile.Runtime.HealthPath, "expected_status": 200})
+	requireCurrentContractYAML(testContext, "website publication", publications["github_pages"], `sites: [{id: website, artifact: website, repository: marcopoloresearchlab/download_your_data, branch: gh-pages, domain: dyd.mprlab.com, marker: {path: /.mprlab-release.json}}]`)
+	requireCurrentContractYAML(testContext, "website source", artifacts["web_bundles"], `[{id: website, format: directory, source: {kind: container, context: ., dockerfile: Dockerfile, target: pages}}]`)
+	requireCurrentContractValue(testContext, "website target", targets["github_pages"], map[string]any{"sites": []any{map[string]any{"id": "website", "publication": "website", "url": profile.Browser.PublicOrigin + "/"}}})
+	if profile.Session.CookieDomain != ".mprlab.com" {
+		testContext.Fatal("production browser cookie domain changed")
+	}
 }
 
-func assertEnvironmentReference(
-	testContext *testing.T,
-	service deploymentService,
-	name string,
-	resource string,
-	output string,
-) {
-	testContext.Helper()
-	value, exists := service.Environment[name]
-	if !exists || value != (deploymentValue{Resource: resource, Output: output}) {
-		testContext.Fatalf("environment %s = %+v; want %s/%s", name, value, resource, output)
+func currentContractMap(t *testing.T, value any) map[string]any {
+	t.Helper()
+	result, ok := value.(map[string]any)
+	if !ok {
+		t.Fatalf("expected native declaration mapping, got %#v", value)
+	}
+	return result
+}
+
+func currentManifestContract(t *testing.T, content []byte) map[string]any {
+	t.Helper()
+	var envelope map[string]any
+	if err := yaml.Unmarshal(content, &envelope); err != nil {
+		t.Fatalf("parse selected manifest: %v", err)
+	}
+	if len(envelope) != 1 {
+		t.Fatalf("unexpected manifest envelope: %#v", envelope)
+	}
+	actual := currentContractMap(t, envelope["mprlab_resources"])
+	keys := make([]string, 0, len(actual))
+	for key := range actual {
+		keys = append(keys, key)
+	}
+	slices.Sort(keys)
+	expected := []string{"artifacts", "environment", "lifecycle", "owner", "publications", "release", "targets"}
+	if !reflect.DeepEqual(keys, expected) {
+		t.Fatalf("selected manifest root keys=%v want=%v", keys, expected)
+	}
+	return actual
+}
+
+func currentContractDeclaration(t *testing.T, value any, identity string) map[string]any {
+	t.Helper()
+	items, ok := value.([]any)
+	if !ok {
+		t.Fatalf("expected explicit declaration list, got %#v", value)
+	}
+	var found map[string]any
+	for _, item := range items {
+		declaration := currentContractMap(t, item)
+		if declaration["id"] == identity {
+			if found != nil {
+				t.Fatalf("duplicate declaration %s", identity)
+			}
+			found = declaration
+		}
+	}
+	if found == nil {
+		t.Fatalf("missing native declaration %s", identity)
+	}
+	return found
+}
+
+func currentContractIndex(t *testing.T, value any, identityKey string) map[string]map[string]any {
+	t.Helper()
+	items, ok := value.([]any)
+	if !ok {
+		t.Fatalf("expected native declaration list, got %#v", value)
+	}
+	result := make(map[string]map[string]any, len(items))
+	for _, item := range items {
+		declaration := currentContractMap(t, item)
+		identity, ok := declaration[identityKey].(string)
+		if !ok || identity == "" || result[identity] != nil {
+			t.Fatalf("invalid or duplicate %s in %#v", identityKey, value)
+		}
+		result[identity] = declaration
+	}
+	return result
+}
+
+func requireCurrentContractYAML(t *testing.T, path string, actual any, expectedText string) {
+	t.Helper()
+	var expected any
+	if err := yaml.Unmarshal([]byte(expectedText), &expected); err != nil {
+		t.Fatalf("parse expected %s: %v", path, err)
+	}
+	requireCurrentContractValue(t, path, actual, expected)
+}
+
+func requireCurrentContractValue(t *testing.T, path string, actual, expected any) {
+	t.Helper()
+	switch wanted := expected.(type) {
+	case map[string]any:
+		mapping, ok := actual.(map[string]any)
+		if !ok {
+			t.Fatalf("%s requires a mapping, got %#v", path, actual)
+		}
+		if !strings.HasSuffix(path, ".assets[]") && len(mapping) != len(wanted) {
+			t.Fatalf("%s has unexpected fields: %#v", path, actual)
+		}
+		for key, value := range wanted {
+			observed, exists := mapping[key]
+			if !exists {
+				t.Fatalf("%s lacks %s", path, key)
+			}
+			requireCurrentContractValue(t, path+"."+key, observed, value)
+		}
+	case []any:
+		items, ok := actual.([]any)
+		if !ok || len(items) != len(wanted) {
+			t.Fatalf("%s list=%#v want=%#v", path, actual, wanted)
+		}
+		for index, value := range wanted {
+			observed := items[index]
+			if declaration, isMapping := value.(map[string]any); isMapping {
+				identityKey := "id"
+				if _, exists := declaration[identityKey]; !exists {
+					identityKey = "name"
+				}
+				if identity, exists := declaration[identityKey]; exists {
+					matches := 0
+					for _, candidate := range items {
+						if entry, valid := candidate.(map[string]any); valid && entry[identityKey] == identity {
+							observed = candidate
+							matches++
+						}
+					}
+					if matches != 1 {
+						t.Fatalf("%s requires one %s=%v, got %d", path, identityKey, identity, matches)
+					}
+				}
+			}
+			requireCurrentContractValue(t, path+"[]", observed, value)
+		}
+	default:
+		if !reflect.DeepEqual(actual, expected) {
+			t.Fatalf("%s=%#v want=%#v", path, actual, expected)
+		}
 	}
 }
