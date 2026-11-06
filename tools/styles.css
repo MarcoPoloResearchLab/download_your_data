@@ -1,0 +1,20 @@
+:root { --content: 1040px; }
+body { font-size: 14px; line-height: 1.45; }
+h1 { margin: 0 0 8px; font-size: 2rem; }
+h2 { margin: 0 0 12px; font-size: 1.15rem; }
+h3 { margin: 10px 0 6px; font-size: 1rem; }
+.site-header { min-height: 54px; }
+.breadcrumbs { padding-block: 12px 6px; }
+.tools-hero { padding-block: 12px 16px; border-bottom: 1px solid var(--border); }
+.tools-hero p { margin: 0; color: var(--muted); }
+.tools-section { padding-block: 20px; }
+.tools-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.tool-card { display: flex; min-width: 0; flex-direction: column; padding: 16px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); }
+.tool-card h3 a { color: var(--text); }
+.tool-card p { flex: 1; margin: 0 0 12px; color: var(--muted); }
+.tool-icons { display: flex; gap: 6px; }
+.tool-icons img { object-fit: contain; }
+.tool-detail { color: var(--faint); font-size: .75rem; }
+.tools-help { margin: 0 0 20px; font-size: .85rem; }
+.site-footer { min-height: 64px; padding-block: 16px; font-size: .75rem; }
+@media (max-width: 680px) { .tools-grid { grid-template-columns: 1fr; } }
