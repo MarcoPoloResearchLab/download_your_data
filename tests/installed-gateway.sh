@@ -44,8 +44,8 @@ unset MPRLAB_GATEWAY_EXECUTABLE MAKEFLAGS MFLAGS MAKEOVERRIDES TEST_GATEWAY_FAIL
 export CI=0
 export MPRLAB_GATEWAY_OPERATOR_ROOT="$fixture_root/operator with spaces"
 
-for operation in release publish deploy; do
-  expected="$(printf 'cwd=%s\narg=app-%s\narg=--app-root\narg=%s\nci=1\ninput=closed\noperator=%s' \
+for operation in deploy release publish; do
+  expected="$(printf 'cwd=%s\narg=%s\narg=--app-root\narg=%s\nci=1\ninput=closed\noperator=%s' \
     "$application_root" "$operation" "$application_root" "$MPRLAB_GATEWAY_OPERATOR_ROOT")"
   for selection in path explicit; do
     arguments=()

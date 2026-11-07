@@ -203,33 +203,34 @@ public/authenticated workflows.
 
 ## Release and deployment
 
-The obsolete macOS application archive and static download landing page have
-been removed. The repository now owns one permanent versionless selected
-manifest. It declares the static Pages artifact, Linux API image, retained
-user-data volume, TAuth tenant, Caddy route, and public health check. Its exact
+The repository owns one permanent versionless selected manifest.
+It declares the static Pages artifact, Linux API image, retained
+user-data volume, shared TAuth routes, Caddy route, and public health check. Its exact
 non-secret topology is recorded in [`configs/production.yml`](configs/production.yml) and
 [`docs/production-deployment.md`](docs/production-deployment.md).
 
-The canonical zero-argument lifecycle entrypoints are:
+Run the full deployment with one command:
 
 ```bash
-make release
-make publish
 make deploy
 ```
 
-Each target calls the installed Gateway runtime with this repository's Git root through `--app-root`.
+The target calls the installed Gateway `deploy` command with this repository's Git root through `--app-root`.
 Install `mprlab-gateway` on `PATH`, or set `MPRLAB_GATEWAY_EXECUTABLE` to the installed executable.
-Each wrapper sets `CI=1` and closes standard input.
-Release seals the declared Pages and container artifacts.
-Publication sends the container image to GHCR and the Pages files to a GitHub reference for the selected version.
-Deployment activates only the selected repository resources.
+The wrapper sets `CI=1` and closes standard input.
 
-The selected manifest explicitly declares `.mprlab/deploy/.env` with `environment_file`.
+Gateway v9 selects one version, reuses verified publications, and completes missing artifact preparation and publication before activation.
+It publishes the container image to GHCR and the Pages files to a GitHub reference for that version.
+It then activates the selected repository resources and verifies their basic health.
+The optional `make release` command prepares artifacts.
+The optional `make publish` command prepares and publishes artifacts.
+
+The selected manifest explicitly declares `.mprlab/deploy/.env` through `environment.source`.
 This field is optional when the process supplies all declared inputs.
 Process values take precedence over values in the selected file.
 The private file is ignored and excluded from Docker contexts.
 
 Use the installed Gateway commands `app-plan-release`, `app-plan-publish`, and `app-plan-deploy` for non-mutating verification.
 Supply this repository through `--app-root`.
+These plans can contact production for observations and access checks.
 Only the user runs `make deploy`.

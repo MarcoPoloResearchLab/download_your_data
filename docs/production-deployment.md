@@ -6,16 +6,18 @@ Download Your Data has one repository-owned versionless selected manifest.
 I016 changes the TMDB credential binding and the persisted Netflix contracts.
 The I016 implementation requires release, publication, and deployment before production uses the new behavior.
 
-The actual activation remains three distinct operator-owned lifecycle steps:
+Run the full deployment with one operator command:
 
 ```bash
-make release
-make publish
 make deploy
 ```
 
-An agent can prepare and run non-mutating plans. Only the user runs
-`make deploy`.
+Gateway v9 selects one version and completes missing artifact preparation and publication before activation.
+It reuses verified publications and verifies basic health after activation.
+The optional `make release` command prepares artifacts.
+The optional `make publish` command prepares and publishes artifacts.
+An agent can prepare and run non-mutating plans.
+Only the user runs `make deploy`.
 
 ## Exact Profile
 
@@ -64,12 +66,11 @@ The selected application asks the installed Gateway runtime to reconcile only th
 5. One public health check at
    `https://dyd-api.mprlab.com/api/health`.
 6. One container-rendered GitHub Pages artifact for `dyd.mprlab.com`.
-7. One `download-your-data` tenant contribution to the active
-   `tauth.tenants` handler.
 
 The app does not own Compose YAML, Ansible, host inventory, Caddy templates,
-TAuth configuration files, or gateway controllers. Those are generated and
-reconciled by `mprlab-gateway` only when this manifest requests them.
+or Gateway controllers.
+Gateway generates runtime configuration from the selected manifest and current shared declarations.
+The existing TAuth service owns its tenant configuration.
 
 ## Artifacts
 
@@ -100,10 +101,9 @@ DOWNLOAD_YOUR_DATA_TAUTH_JWT_SIGNING_KEY=<independent private signing key>
 DOWNLOAD_YOUR_DATA_TMDB_READ_TOKEN=<TMDB API Read Access Token>
 ```
 
-Release and publication do not read this file. Deployment reads it to generate
-the API environment and the selected TAuth tenant candidate without writing
-secret bytes into the resource manifest, generated Pages site, image, active
-registry, or lifecycle receipt.
+Gateway captures this file once at the selected manifest boundary.
+Deployment uses the captured values to generate the API environment.
+Secret values remain outside the resource manifest, Pages site, image, and lifecycle receipt.
 
 ## Current Capability Boundary
 
@@ -143,17 +143,17 @@ Run these installed Gateway commands:
 "${MPRLAB_GATEWAY_EXECUTABLE:-mprlab-gateway}" app-plan-deploy --app-root /absolute/path/to/download_your_data
 ```
 
-The deploy plan reads the private input and real operator inventory but does
-not connect to or mutate production. It must resolve one `gateway` placement
-and seal the `tauth.http` and `tauth.tenants` references, every private output,
-and the exact Pages/API output graph.
+The deploy plan reads the private input and real operator inventory.
+It can connect to production for read-only observations and access checks.
+It must resolve one `gateway` placement, the shared Caddy provider, and the `tauth.http` reference.
+It also validates the private outputs and the Pages/API resource graph.
 
 ## Activation And Acceptance
 
-After the source branch is reviewed and merged, the user runs the three
-zero-argument lifecycle commands in order. A successful release alone does not
-enable Pages. A successful publication alone does not activate Pages, Caddy,
-TAuth, or the API container. Deployment owns that activation.
+After source review and merge, use a clean default branch synchronized with `origin`.
+The user runs `make deploy` to prepare artifacts, publish them, and activate the selected resources.
+Gateway keeps the same selected version through each phase.
+A successful release or publication alone does not establish deployment success.
 
 After deployment, verify all of these public boundaries before calling the
 product live:

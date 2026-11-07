@@ -261,17 +261,18 @@ unavailable until their exact provider resources and private values are added.
 The lifecycle remains repository-owned:
 
 ```text
-make release
-make publish
 make deploy
 ```
 
-`make release` validates and seals the Pages artifact and backend container
-source identity. `make publish` publishes those exact immutable artifacts.
-Only the user runs `make deploy`, which applies the committed app-owned
-deployment resources. Non-mutating checks use the sibling gateway's sealed
-`plan-app-release`, `plan-app-publish`, and `plan-app-deploy` targets; the app
-does not add another lifecycle entrypoint.
+Gateway v9 runs the full deployment through `make deploy`.
+It selects one version and completes missing artifact preparation and publication before activation.
+It reuses verified publications and verifies basic health after activation.
+Only the user runs this command.
+The optional `make release` command prepares artifacts.
+The optional `make publish` command prepares and publishes artifacts.
+
+For non-mutating checks, use the installed Gateway commands `app-plan-release`, `app-plan-publish`, and `app-plan-deploy` with `--app-root`.
+These plans can contact production for observations and access checks.
 
 The current macOS executable artifact, end-user operator command surface,
 loopback-only production contract, embedded frontend, and Pages download
