@@ -87,7 +87,7 @@ export function resetAPI() {
   csrfToken = '';
 }
 
-/** @typedef {{file:string,row:number,generation_id:string}} MediaSource */
+/** @typedef {{file:string,row:number,generation_id:string,collection?:string,format?:string,status?:string,url?:string}} MediaSource */
 /** @typedef {{id:string,provider:string,kind:string,title:string,raw_title:string,title_status:string,date:string,date_precision:string,timestamp?:string,end_timestamp?:string,interval_status?:string,recorded_seconds:number|null,completion:string,content_type:string,profile_type:string,profile_label?:string,autoplay:boolean|null,deleted:boolean|null,device?:string,audio_language?:string,subtitle_language?:string,offer_type?:string,description?:string,source:MediaSource,search_title:string,title_identity:string,match_status:string,series_title?:string,season_number?:number,episode_title?:string,episode_identity?:string,metadata?:{tmdb_id:number,media_type:string,title:string,runtime_minutes?:number}}} MediaActivity */
 /** @typedef {{label:string,count:number}} MediaCount */
 /** @typedef {{id:string,title:string,media_type:string,match_status:string,activities:number,providers:string[]}} MediaTitle */
@@ -96,11 +96,14 @@ export function resetAPI() {
 /** @typedef {{id:string,file:string,rows:number,start_date?:string,end_date?:string}} PrimeDataset */
 /** @typedef {{id:string,state:string,analysis_level:string,datasets:string[],profile_label:string,record_count:number,completed_titles:number,total_titles:number,source_generation_id?:string,locale?:string,failure?:string,preview?:{datasets:PrimeDataset[],unsupported_files:string[],source_hash:string}}} PrimeGeneration */
 /** @typedef {{active_generation:PrimeGeneration|null,building_generation:PrimeGeneration|null,max_upload_bytes:number,max_expanded_bytes:number,tmdb_configured:boolean}} PrimeSnapshot */
+/** @typedef {{id:string,record_count:number,start_date:string,end_date:string}} CrunchyrollGeneration */
+/** @typedef {{revision:string,active_generation:CrunchyrollGeneration|null}} CrunchyrollSnapshot */
 
 const PRIME_PATH = '/api/providers/prime-video';
+const CRUNCHYROLL_PATH = '/api/providers/crunchyroll';
 const HISTORY_PATH = '/api/viewing-history';
 const PRIME_STATES = new Set(['receiving','validating','awaiting_confirmation','importing','enriching','ready','failed']);
-const MEDIA_PROVIDERS = new Set(['netflix','prime-video']);
+const MEDIA_PROVIDERS = new Set(['netflix','prime-video','crunchyroll']);
 const MEDIA_KINDS = new Set(['activity','playback','watch_summary','search','purchase','trailer']);
 const PRIME_DATASETS = new Set(['viewing','playback_details','watch_events','searches','purchases','trailers']);
 const MEDIA_MATCHES = new Set(['not_enriched',...MATCH_STATUSES]);
@@ -108,7 +111,10 @@ const MEDIA_CONTENT_TYPES = new Set(['content','promotion','trailer','live','unk
 const MEDIA_PROFILE_TYPES = new Set(['adult','child','unknown']);
 const MEDIA_TITLE_TYPES = new Set(['movie','series','unknown']);
 const MEDIA_WEEKDAYS = new Set(['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']);
-const MEDIA_TITLE_ID = /^(tmdb:(movie|series):[1-9][0-9]{0,18}|(netflix|prime-video):[a-f0-9]{64})$/;
+const MEDIA_TITLE_ID = /^(tmdb:(movie|series):[1-9][0-9]{0,18}|(netflix|prime-video|crunchyroll):[a-f0-9]{64})$/;
+const CRUNCHYROLL_REVISION = /^(empty|[a-f0-9]{64})$/;
+const CRUNCHYROLL_FORMATS = new Set(['Episode','Movie','Theatrical special']);
+const CALENDAR_DATE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/;
 
 /** @param {string} value @param {Set<string>} values @param {string} subject */
 function requireMember(value, values, subject) {
@@ -141,7 +147,7 @@ function validateMediaTitle(title) {
   requireMember(title.media_type,MEDIA_TITLE_TYPES,'media title type');
   requireMember(title.match_status,MEDIA_MATCHES,'media title match');
   assertArray(title.providers,'media title providers');
-  if (title.providers.length<1 || title.providers.length>2 || new Set(title.providers).size!==title.providers.length) throw new Error('invalid media title providers');
+  if (title.providers.length<1 || title.providers.length>MEDIA_PROVIDERS.size || new Set(title.providers).size!==title.providers.length) throw new Error('invalid media title providers');
   for (const provider of title.providers) requireMember(provider,MEDIA_PROVIDERS,'media title provider');
   assertCount(title.activities,'media title activities');
   if (title.metadata!==undefined) validateMediaMetadata(title.metadata);
@@ -230,6 +236,59 @@ export async function deletePrimeProvider(signal) {
   await mutateJSON(PRIME_PATH,'DELETE',{confirmation:'delete-prime-video-provider'},signal);
 }
 
+/** @returns {CrunchyrollSnapshot} */
+function validateCrunchyrollSnapshot(payload) {
+  assertObject(payload, 'Crunchyroll snapshot');
+  assertString(payload.revision, 'Crunchyroll revision');
+  if (!CRUNCHYROLL_REVISION.test(payload.revision)) throw new Error('invalid Crunchyroll revision');
+  const active = payload.active_generation;
+  if (active === null) {
+    if (payload.revision !== 'empty') throw new Error('invalid empty Crunchyroll revision');
+    return payload;
+  }
+  assertObject(active, 'Crunchyroll generation');
+  assertString(active.id, 'Crunchyroll identity');
+  if (!/^[a-f0-9]{64}$/.test(active.id) || payload.revision !== active.id) throw new Error('invalid Crunchyroll identity');
+  assertCount(active.record_count, 'Crunchyroll records');
+  if (!active.record_count) throw new Error('invalid empty Crunchyroll import');
+  for (const key of ['start_date', 'end_date']) {
+    assertString(active[key], `Crunchyroll ${key}`);
+    if (!CALENDAR_DATE.test(active[key]) || !Number.isFinite(Date.parse(active[key]))) throw new Error('invalid Crunchyroll date');
+  }
+  if (active.start_date > active.end_date) throw new Error('invalid Crunchyroll coverage');
+  return payload;
+}
+
+/** @returns {Promise<CrunchyrollSnapshot>} */
+export async function getCrunchyrollProvider(signal) {
+  return validateCrunchyrollSnapshot(await requestJSON(CRUNCHYROLL_PATH, {signal}));
+}
+
+function crunchyrollMutationHeaders(revision, contentType) {
+  if (!CRUNCHYROLL_REVISION.test(revision)) throw new Error('invalid Crunchyroll revision');
+  return mutationHeaders({'Content-Type': contentType, 'If-Match': `"${revision}"`});
+}
+
+/** @returns {Promise<CrunchyrollSnapshot>} */
+export async function uploadCrunchyrollHistory(file, revision, signal) {
+  if (!(file instanceof File)) throw new Error('Crunchyroll import requires a File');
+  return validateCrunchyrollSnapshot(await requestJSON(CRUNCHYROLL_PATH, {
+    method: 'PUT',
+    headers: crunchyrollMutationHeaders(revision, 'text/csv; charset=utf-8'),
+    body: file,
+    signal
+  }));
+}
+
+export async function deleteCrunchyrollProvider(revision, signal) {
+  await requestJSON(CRUNCHYROLL_PATH, {
+    method: 'DELETE',
+    headers: crunchyrollMutationHeaders(revision, 'application/json; charset=utf-8'),
+    body: JSON.stringify({confirmation: 'delete-crunchyroll-provider'}),
+    signal
+  });
+}
+
 export async function setNetflixProfileLabel(id,label,signal) {
   requireGenerationID(id);
   const payload = await mutateJSON(`/api/providers/netflix/generations/${encodeURIComponent(id)}/profile-label`,'PUT',{label},signal);
@@ -315,6 +374,18 @@ export async function getMediaReport(filter,signal,cursor = '',titlesCursor = ''
     assertString(record.source.file,'media source file');
     assertString(record.source.generation_id,'media source generation');
     assertInteger(record.source.row,'media source row');
+    if (record.provider === 'crunchyroll') {
+      for (const key of ['collection','format','status','url']) assertString(record.source[key], `Crunchyroll source ${key}`);
+      requireMember(record.source.format, CRUNCHYROLL_FORMATS, 'Crunchyroll source format');
+      const sourceURL = new URL(record.source.url);
+      if (
+        sourceURL.protocol !== 'https:' ||
+        sourceURL.host !== 'www.crunchyroll.com' ||
+        sourceURL.username || sourceURL.password ||
+        !sourceURL.pathname.startsWith('/watch/') ||
+        sourceURL.search || sourceURL.hash
+      ) throw new Error('invalid Crunchyroll source URL');
+    }
   }
   for (const title of payload.titles) validateMediaTitle(title);
   return payload;
