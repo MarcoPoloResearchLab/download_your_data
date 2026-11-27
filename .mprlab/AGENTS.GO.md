@@ -23,16 +23,17 @@ This file gives backend rules for Go code. Obey root `AGENTS.md` and `.mprlab/PO
 - Use structured logging when the repo has a logger.
 - Propagate `context.Context` through effectful boundaries.
 
+## Temporary Diagnostic Programs
+
+- Put diagnostic Go programs in `_scratch/<task-id>/` with one `main` package per directory.
+- Obey [Temporary Task Files](POLICY.md#temporary-task-files) for ownership and removal.
+
 ## Testing
 
-- For a behavior change, start with an integration test through the real HTTP, CLI, or public package entry point.
-- Use dependency injection for integration scenarios that are difficult to reproduce.
-- Keep the product logic under test real.
-- Prefer black-box integration tests through HTTP, CLI, or public package entry points.
-- Use table-driven scenarios where they cover contract permutations.
-- Use `t.TempDir()` for temporary filesystem work.
-- Use focused unit tests for complex algorithms, calculations, and isolated logic when useful.
-- Require integration coverage of public behavior for product acceptance.
+- Apply the test pyramid in `.mprlab/POLICY.md`.
+- Use table-driven unit tests for business cases that share setup and differ in inputs or expected outcomes.
+- Select one-off integration tests through HTTP, CLI, or public package entry points when the task needs evidence from real component interactions.
+- Use `t.TempDir()` for tests that need filesystem access.
 
 ## Validation
 
@@ -41,3 +42,10 @@ Use `.mprlab/POLICY.md` for validation.
 During the change, run the smallest Go target that validates the changed contract.
 
 When these tools are part of the repository contract, `make lint` must include `go vet`, `staticcheck`, and `ineffassign`.
+
+## Language Contract
+
+- Use smart constructors returning `(Type, error)` when a type has invariants.
+- Do not export invalid zero-values.
+- Wrap errors with `%w`.
+- `make lint` must include `go vet`, `staticcheck`, and `ineffassign` when those tools are part of the repo contract.

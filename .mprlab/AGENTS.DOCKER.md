@@ -26,18 +26,17 @@ Docker and container guidance for this repository. Use this guide only when Dock
 - Do not use local orchestration files as production lifecycle inputs.
 - For a deployable application, use `.mprlab/deploy/resources.yml` as the only
   tracked production deployment file.
-- Permit the ignored `.mprlab/deploy/.env` file as the canonical private deployment input.
+- Use `.mprlab/deploy/.env` only when the selected manifest explicitly declares that private input source.
 - A container can create a GitHub Pages artifact. The container does not own the public website hostname.
 - Publish the container output through the `github_pages` resource.
 - Keep each `caddy_route` on a hostname that differs from the GitHub Pages domain.
 
 ## Validation
 
-- For a behavior change, start with an integration test through the real container entry point.
-- Use dependency injection for integration scenarios that are difficult to reproduce.
-- Keep the product logic under test real.
+- Apply the test pyramid in `.mprlab/POLICY.md`.
+- Select a one-off integration check when a change needs evidence from real local orchestration or container behavior.
 - Use `.mprlab/POLICY.md` for validation.
 - During the change, run the smallest container target that validates the changed contract.
 - Build the image locally when Dockerfile changes affect runtime behavior.
-- Run the service or container smoke test when available.
+- Select a service or container smoke test when the task needs runtime evidence.
 - Confirm exposed ports, health checks, volumes, and env variables match the documented deployment contract.
