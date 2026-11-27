@@ -2,6 +2,12 @@
 
 export const MEDIA_COPY = {
   en: {
+    collection: 'Series or collection',
+    sourceStatus: 'Source status',
+    sourceFormat: 'Source format',
+    sourceLink: 'Source link',
+    revisionConflict: 'This service changed in another tab. The current version has loaded. Repeat your action.',
+    crunchyrollNote: 'Crunchyroll contains visible profile history entries. Calendar dates and source status are preserved. Recorded watch time is unknown.',
     heading: 'Viewing history',
     allServices: 'All services',
     provider: 'Service',
@@ -76,7 +82,7 @@ export const MEDIA_COPY = {
     chartEmpty: 'No data is available for this chart.',
     addFiles: 'Add files',
     uploadTitle: 'Upload your viewing history',
-    uploadHint: 'Netflix CSV or Prime Video ZIP',
+    uploadHint: 'Netflix or Crunchyroll CSV, Prime Video ZIP',
     close: 'Close',
     manageFiles: 'Manage files',
     analyzing: 'Analyzing your history…',
@@ -108,9 +114,15 @@ export const MEDIA_COPY = {
       'This removes the selected service’s imported history and title details.',
     aboutReport: 'About this report',
     netflixGuide: 'Netflix export guide',
-    invalidFiles: 'Choose one Netflix CSV and one Prime Video ZIP at most.'
+    invalidFiles: 'Choose one file per service.'
   },
   es: {
+    collection: 'Serie o colección',
+    sourceStatus: 'Estado de origen',
+    sourceFormat: 'Formato de origen',
+    sourceLink: 'Enlace de origen',
+    revisionConflict: 'Los datos de este servicio cambiaron en otra pestaña. Se ha cargado la versión actual. Repite la acción.',
+    crunchyrollNote: 'Crunchyroll contiene las entradas visibles del historial del perfil. Se conservan las fechas de calendario y el estado de origen. El tiempo de reproducción es desconocido.',
     heading: 'Historial de visualización',
     allServices: 'Todos los servicios',
     provider: 'Servicio',
@@ -185,7 +197,7 @@ export const MEDIA_COPY = {
     chartEmpty: 'No hay datos disponibles para este gráfico.',
     addFiles: 'Añadir archivos',
     uploadTitle: 'Subir tu historial de visualización',
-    uploadHint: 'CSV de Netflix o ZIP de Prime Video',
+    uploadHint: 'CSV de Netflix o Crunchyroll, ZIP de Prime Video',
     close: 'Cerrar',
     manageFiles: 'Gestionar archivos',
     analyzing: 'Analizando tu historial…',
@@ -218,9 +230,15 @@ export const MEDIA_COPY = {
     aboutReport: 'Acerca de este informe',
     netflixGuide: 'Guía de exportación de Netflix',
     invalidFiles:
-      'Selecciona como máximo un CSV de Netflix y un ZIP de Prime Video.'
+      'Selecciona un archivo por servicio.'
   },
   fr: {
+    collection: 'Série ou collection',
+    sourceStatus: 'Statut d’origine',
+    sourceFormat: 'Format d’origine',
+    sourceLink: 'Lien d’origine',
+    revisionConflict: 'Les données de ce service ont changé dans un autre onglet. La version actuelle est chargée. Répétez votre action.',
+    crunchyrollNote: 'Crunchyroll contient les entrées visibles de l’historique du profil. Les dates du calendrier et le statut d’origine sont conservés. Le temps de lecture est inconnu.',
     heading: 'Historique de visionnage',
     allServices: 'Tous les services',
     provider: 'Service',
@@ -295,7 +313,7 @@ export const MEDIA_COPY = {
     chartEmpty: 'Aucune donnée n’est disponible pour ce graphique.',
     addFiles: 'Ajouter des fichiers',
     uploadTitle: 'Importer votre historique',
-    uploadHint: 'CSV Netflix ou ZIP Prime Video',
+    uploadHint: 'CSV Netflix ou Crunchyroll, ZIP Prime Video',
     close: 'Fermer',
     manageFiles: 'Gérer les fichiers',
     analyzing: 'Analyse de votre historique…',
@@ -328,9 +346,15 @@ export const MEDIA_COPY = {
     aboutReport: 'À propos de ce rapport',
     netflixGuide: 'Guide d’exportation Netflix',
     invalidFiles:
-      'Sélectionnez au maximum un CSV Netflix et un ZIP Prime Video.'
+      'Sélectionnez un fichier par service.'
   },
   ru: {
+    collection: 'Сериал или коллекция',
+    sourceStatus: 'Статус в источнике',
+    sourceFormat: 'Формат в источнике',
+    sourceLink: 'Ссылка на источник',
+    revisionConflict: 'Данные этого сервиса изменились в другой вкладке. Текущая версия загружена. Повторите действие.',
+    crunchyrollNote: 'Crunchyroll содержит записи видимой истории профиля. Календарные даты и исходные статусы сохраняются. Длительность просмотра неизвестна.',
     heading: 'История просмотров',
     allServices: 'Все сервисы',
     provider: 'Сервис',
@@ -405,7 +429,7 @@ export const MEDIA_COPY = {
     chartEmpty: 'Для этого графика нет данных.',
     addFiles: 'Добавить файлы',
     uploadTitle: 'Загрузите историю просмотров',
-    uploadHint: 'CSV Netflix или ZIP Prime Video',
+    uploadHint: 'CSV Netflix или Crunchyroll, ZIP Prime Video',
     close: 'Закрыть',
     manageFiles: 'Управление файлами',
     analyzing: 'Анализ истории просмотров…',
@@ -438,6 +462,6 @@ export const MEDIA_COPY = {
     aboutReport: 'Об этом отчёте',
     netflixGuide: 'Инструкция по экспорту Netflix',
     invalidFiles:
-      'Выберите не более одного CSV Netflix и одного ZIP Prime Video.'
+      'Выберите по одному файлу для каждого сервиса.'
   }
 };

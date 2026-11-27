@@ -1,6 +1,6 @@
 # Shared Viewing History Contract
 
-F024 defines one private dashboard for Netflix and Prime Video.
+The private dashboard combines Netflix, Prime Video, and Crunchyroll viewing history.
 Open `#app/viewing-history` after shared authentication.
 The workspace provides Overview and History views.
 File management and source details use expandable controls.
@@ -9,8 +9,15 @@ Select all services or one service with the same date and title filters.
 ## Inputs
 
 Netflix accepts a profile CSV with the current `Title` and `Date` columns.
-The browser uses one file picker for Netflix CSV files and Prime Video ZIP archives.
+The browser uses one file picker for Netflix and Crunchyroll CSV files and Prime Video ZIP archives.
 Netflix retains each supplied calendar date.
+
+Crunchyroll accepts the captured profile history CSV defined in the [Crunchyroll source contract](crunchyroll-provider-plan.md).
+The file uses UTF-8 with an optional byte-order mark and the exact ordered header `history_date,series_or_collection,title,crunchyroll_status,format,crunchyroll_url`.
+The importer accepts up to 32 MiB, 250,000 rows, and 16 KiB per field. The title and collection fields have an 8 KiB limit.
+The source supplies calendar dates, collection and item titles, status text, item formats, and watch links.
+The importer keeps each supplied row, including repeated rows for the same item.
+Acquisition through Sony's privacy request remains a separate workflow.
 
 Prime accepts one ZIP archive with the exact schemas in [headers.json](../internal/providers/primevideo/headers.json).
 The importer validates recognized CSV files without file extraction.
@@ -42,6 +49,7 @@ The importer rejects unsafe paths, duplicate entries, unknown headers, and inval
 | Measure | Counting rule |
 | --- | --- |
 | Netflix activity | Count each supplied activity entry. |
+| Crunchyroll activity | Count each supplied history entry. Preserve the source status and item format. |
 | Prime activity | Count content playback with positive recorded seconds and no positive deletion flag. |
 | Recorded watch time | Sum supplied seconds from included Prime playback records. |
 | Unknown duration | Count activity and playback records that supply no seconds. |
@@ -52,7 +60,7 @@ The importer rejects unsafe paths, duplicate entries, unknown headers, and inval
 | Rentals and purchases | Count the selected purchase records by `Offer Type`. |
 | Purchase playback evidence | Count purchase records with included Prime playback for the same title identity in the filtered data. |
 
-Netflix activity entries and Prime playback records retain their respective units in service comparisons.
+The service comparison labels Netflix activity entries, Crunchyroll history entries, and Prime playback records with their respective units.
 Watch Events, searches, purchases, trailers, promotions, and zero-duration records stay outside consumption totals.
 Records with unknown duration or a positive deletion flag also stay outside Prime consumption totals.
 An unavailable deletion flag remains unknown.
@@ -66,7 +74,7 @@ Purchase records supply counts without prices or spending totals.
 
 UTC is the default display timezone.
 Prime calendar analysis uses the selected timezone.
-Netflix calendar dates remain unchanged.
+Netflix and Crunchyroll calendar dates remain unchanged.
 About this report shows complete selected coverage with dates in the display timezone.
 Import preview dates remain in UTC.
 
@@ -75,6 +83,12 @@ Import preview dates remain in UTC.
 Accepted TMDB identities join title history across services.
 Unresolved titles retain source identities for each provider.
 A series match joins series history without confirmation of episode identity.
+
+Crunchyroll keeps source title identities without external title queries.
+Episode rows group by the supplied collection and use the Crunchyroll watch ID for the distinct episode count.
+The source has no season field.
+The `Movie` format counts as a movie, `Episode` counts as series activity, and `Theatrical special` keeps an unknown shared media type.
+The status text remains available as source evidence. Recorded watch time and completion remain unknown.
 
 Prime source identities include the source classification.
 A title without series evidence and a title with series evidence have different source identities.
@@ -103,15 +117,17 @@ Its precision and recall describe those fixtures only.
 
 ## Lifecycle And Privacy
 
-Prime and Netflix generations remain independent.
+Prime Video, Netflix, and Crunchyroll generations remain independent.
 A validated replacement becomes active atomically.
 The active report remains available during import or enrichment.
 A repeat of the same Prime archive bytes and selection creates no duplicate activity.
+Repeating a Crunchyroll upload with the current revision and the same ordered rows keeps the same generation.
+Crunchyroll keeps one active snapshot. The digest covers each source field and row order, including changes to the status text.
 Enrichment keeps completed title checkpoints.
 The browser resumes pending Prime analysis automatically after restart.
 Cancellation removes pending data and preserves the active generation.
 Provider deletion removes Prime records and title results.
-Complete workspace deletion removes both providers for the authenticated user.
+Complete workspace deletion removes all provider data for the authenticated user.
 
 Source files are removed after validation.
 Private records remain inside the authenticated user workspace.
@@ -145,8 +161,14 @@ Mutations require the current Origin and CSRF authorization.
 | `DELETE` | `/api/providers/prime-video/generations/{id}` | Removal of pending generation data |
 | `DELETE` | `/api/providers/prime-video` | Provider deletion with `delete-prime-video-provider` confirmation |
 | `PUT` | `/api/providers/netflix/generations/{id}/profile-label` | Import label replacement |
+| `GET` | `/api/providers/crunchyroll` | Current revision and active generation summary |
+| `PUT` | `/api/providers/crunchyroll` | Atomic replacement with a validated `text/csv` upload |
+| `DELETE` | `/api/providers/crunchyroll` | Provider deletion with `delete-crunchyroll-provider` confirmation |
 | `GET` | `/api/viewing-history` | Filtered report with separate activity and title cursors |
 | `GET` | `/api/viewing-history/export` | Complete filtered CSV |
+
+Crunchyroll GET and PUT return the current revision and a strong ETag. Use that quoted ETag in `If-Match` for replacement or deletion. The empty provider has revision `empty`.
+The API returns HTTP 428 for a missing precondition, 412 for a stale revision, 409 while a writer holds the provider lease, and 422 for invalid CSV.
 
 Report filters are `provider`, `timezone`, `start_date`, `end_date`, `title`, `title_id`, `kind`, `match_status`, and `media_type`.
 `limit` defaults to 100 and has a maximum of 200.
@@ -162,6 +184,7 @@ Measures describe the complete filtered data rather than one page.
 CSV export uses the same filters and includes every filtered source row.
 It includes provider, counting unit, date precision, timezone, recorded seconds, source references, title identity, and match status.
 It also retains playback flags, interval evidence, episode fields, selected playback details, and accepted metadata runtime.
+The Crunchyroll source columns are `source_collection`, `source_format`, `source_status`, and `source_url`.
 Select one provider for a separate CSV.
 Netflix and Amazon analysis actions open `#app/viewing-history`.
 The obsolete `#app/netflix` route has no application handler.
@@ -178,6 +201,7 @@ Local acceptance does not establish publication or production availability.
 
 The current report identity is `viewing-history-report-v2`.
 The API and browser accept this identity only.
+The provider enum includes `crunchyroll`. Crunchyroll records include optional shared source fields `collection`, `format`, `status`, and `url`.
 All chart datasets describe complete filtered consumption activity before pagination.
 
 | Dataset | Measure |

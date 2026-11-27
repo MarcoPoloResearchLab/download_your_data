@@ -7,7 +7,9 @@ async page => {
   await page.goto(`${baseURL}/#app/viewing-history`,{waitUntil:'domcontentloaded'});
   await page.waitForFunction(()=>window.MPRUI?.testing);
   await page.evaluate(()=>window.MPRUI.testing.authenticate(document.querySelector('#app-header'),{user_id:'browser-media-user',user_email:'browser@example.invalid',user_display_name:'Media contract',user_avatar_url:'https://lh3.googleusercontent.com/a/browser-contract',display:'Media contract',avatar_url:'https://lh3.googleusercontent.com/a/browser-contract'}));
-  await page.locator('.media-workspace').waitFor();
+  await page.locator('.media-workspace').waitFor().catch(async failure=>{
+    throw new Error(`${failure.message}; page errors: ${errors.join('; ')}; notices: ${(await page.locator('[role="alert"],.notice').allTextContents()).join('; ')}`);
+  });
   await page.locator('[data-media-action="add-files"]').click();
   await page.locator('#media-files').setInputFiles('__VIEWING_CSV__');
   await page.waitForFunction(()=>document.querySelector('[data-media-chart="genres"] .bar-row'));
@@ -17,6 +19,7 @@ async page => {
   await page.waitForFunction(()=>document.querySelector('[data-media-kpi="activities"]')?.textContent==='2');
   await page.waitForFunction(()=>document.querySelector('[data-media-chart="media-types"]')?.textContent.includes('2'));
   await page.locator('.media-processing').waitFor({state:'detached'});
+  assert(await page.locator('[data-media-provider="crunchyroll"]').count()===1,'Crunchyroll service filter is missing');
   const names=['monthly','media-types','genres','original-languages','weekday-genres','year-genres'];
   for(const name of names)assert(await page.locator(`[data-media-chart="${name}"]`).isVisible(),`missing ${name} chart`);
   assert(await page.locator('[data-media-view]').count()===2,'redundant report tabs remain');
@@ -41,5 +44,77 @@ async page => {
   for(const width of [1440,736,360,320]){await page.setViewportSize({width,height:900});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),`page overflows at ${width}`);for(const name of names)assert(await page.locator(`[data-media-chart="${name}"]`).isVisible(),`${name} hidden at ${width}`);}
   await page.screenshot({path:'__SCREENSHOT_ROOT__/f024-narrow.png',fullPage:true});await page.setViewportSize({width:1440,height:1000});await page.screenshot({path:'__SCREENSHOT_ROOT__/f024-wide.png',fullPage:true});
   assert(await page.evaluate(()=>![...Object.values(localStorage),...Object.values(sessionStorage)].some(value=>value.includes('Synthetic Film'))),'private history persisted in browser storage');
+  const crunchyrollCSV='\ufeff"history_date","series_or_collection","title","crunchyroll_status","format","crunchyroll_url"\r\n2026-02-03,Synthetic Anime,First Episode,Watched,Episode,https://www.crunchyroll.com/watch/G00000001/first-episode\r\n2026-02-04,Synthetic Movie,Synthetic Movie,15m left,Movie,https://www.crunchyroll.com/watch/G00000002/synthetic-movie\r\n';
+  const selectCrunchyrollFile=async(csv=crunchyrollCSV)=>page.evaluate(csv=>{
+    const transfer=new DataTransfer();
+    transfer.items.add(new File([csv],'crunchyroll.csv',{type:'text/csv'}));
+    const input=document.querySelector('#media-files');
+    input.files=transfer.files;
+    input.dispatchEvent(new Event('change',{bubbles:true}));
+  },csv);
+  let crunchyrollUploads=0;
+  const trackCrunchyrollUpload=request=>{if(request.method()==='PUT'&&request.url().endsWith('/api/providers/crunchyroll'))crunchyrollUploads++;};
+  page.on('request',trackCrunchyrollUpload);
+  await page.evaluate(()=>{
+    const originalText=Blob.prototype.text;
+    window.crunchyrollInspectionStarted=false;
+    Blob.prototype.text=function(){
+      Blob.prototype.text=originalText;
+      window.crunchyrollInspectionStarted=true;
+      return new Promise(resolve=>{window.releaseCrunchyrollInspection=()=>originalText.call(this).then(resolve);});
+    };
+  });
+  await page.locator('[data-media-action="add-files"]').click();
+  await selectCrunchyrollFile();
+  await page.waitForFunction(()=>window.crunchyrollInspectionStarted===true);
+  await page.locator('[data-media-action="cancel-upload"]').click();
+  await page.evaluate(()=>window.releaseCrunchyrollInspection());
+  assert(crunchyrollUploads===0,'cancelled header inspection started an upload');
+  let netflixReplacements=0;
+  const trackNetflixReplacement=request=>{if(request.method()==='POST'&&request.url().endsWith('/api/providers/netflix/generations'))netflixReplacements++;};
+  page.on('request',trackNetflixReplacement);
+  await page.locator('[data-media-action="add-files"]').click();
+  await selectCrunchyrollFile(crunchyrollCSV.replace('"history_date"','"history_dates"'));
+  await page.waitForFunction(()=>document.querySelector('[role="alert"]')?.textContent.includes('Choose one file'));
+  assert(netflixReplacements===0&&crunchyrollUploads===0,'malformed Crunchyroll header created a provider replacement');
+  page.off('request',trackNetflixReplacement);
+  await page.locator('[data-media-action="add-files"]').click();
+  await selectCrunchyrollFile();
+  await page.waitForFunction(()=>document.querySelector('[data-media-kpi="activities"]')?.textContent==='4');
+  await page.locator('[data-media-provider="crunchyroll"]').click();
+  await page.waitForFunction(()=>document.querySelector('[data-media-kpi="activities"]')?.textContent==='2');
+  await page.route('**/api/providers/crunchyroll',async route=>{
+    if(route.request().method()==='PUT')await route.fulfill({status:412,contentType:'application/json',body:'{"error":{"code":"precondition_failed"}}'});
+    else await route.continue();
+  });
+  await page.locator('[data-media-action="add-files"]').click();
+  await selectCrunchyrollFile();
+  await page.waitForFunction(()=>document.querySelector('[role="alert"]')?.textContent.includes('another tab'));
+  assert(crunchyrollUploads===2,'stale replacement retried automatically');
+  assert(await page.locator('[data-media-kpi="activities"]').textContent()==='2','stale replacement lost active history');
+  await page.unroute('**/api/providers/crunchyroll');
+  page.off('request',trackCrunchyrollUpload);
+  assert(!await page.locator('[data-media-kpi="watch-time"]').isVisible(),'Crunchyroll acquired invented watch time');
+  await chooseView('history');
+  assert(await page.locator('.media-records > tbody > tr').count()===2,'Crunchyroll history lost an entry');
+  await page.locator('.media-records details').first().locator('summary').click();
+  assert(await page.locator('.media-records').innerText().then(text=>text.includes('Watched')||text.includes('15m left')),'Crunchyroll source status is missing');
+  const crunchyDownloadPromise=page.waitForEvent('download');
+  await page.locator('[data-media-action="export"]').click();
+  const crunchyDownload=await crunchyDownloadPromise;
+  const crunchyStream=await crunchyDownload.createReadStream();let crunchyCSV='';
+  for await(const chunk of crunchyStream)crunchyCSV+=chunk.toString('utf8');
+  assert(crunchyCSV.includes('crunchyroll,')&&crunchyCSV.includes('15m left'),'Crunchyroll export lost source evidence');
+  await page.reload({waitUntil:'domcontentloaded'});
+  await page.waitForFunction(()=>window.MPRUI?.testing);
+  await page.evaluate(()=>window.MPRUI.testing.authenticate(document.querySelector('#app-header'),{user_id:'browser-media-user',user_email:'browser@example.invalid',user_display_name:'Media contract'}));
+  await page.locator('[data-media-provider="crunchyroll"]').waitFor();
+  await page.locator('[data-media-action="manage-files"]').click();
+  await page.locator('[data-media-action="delete-crunchyroll"]').click();
+  await page.locator('[data-media-confirm="true"]').click();
+  await page.waitForFunction(()=>!document.querySelector('[data-media-action="delete-crunchyroll"]'));
+  await page.locator('[data-media-provider="all"]').click();
+  await chooseView('overview');
+  await page.waitForFunction(()=>document.querySelector('[data-media-kpi="activities"]')?.textContent==='2');
   assert(errors.length===0,errors.join('; '));
 }

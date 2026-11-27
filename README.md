@@ -27,7 +27,7 @@ provider remains entirely on that provider's own site.
 The [Password Merger contract](docs/password-merger.md) defines local CSV import, conflict selection, and export.
 This browser tool operates without an account and keeps credentials out of application servers.
 
-The [shared viewing history contract](docs/streaming-history-contract.md) defines combined Netflix and Prime Video reports and CSV export.
+The [shared viewing history contract](docs/streaming-history-contract.md) defines combined Netflix, Prime Video, and Crunchyroll reports and CSV export.
 Each service retains its source records, counting units, and date precision.
 F023 implementation requires local acceptance before publication.
 
@@ -47,6 +47,7 @@ inventory, evidence model, indexing rules, and publication boundary.
 | Platform | Surface Type | Primary Input / Scope | Capabilities & Status |
 | --- | --- | --- | --- |
 | **Netflix** | Interactive Workspace & Guide | Viewing activity CSV (`Title`, `Date`) | **Shared Workspace (`#app/viewing-history`) & Guide (`#guide/netflix`)** — Automatic CSV import and title analysis, six charts, shared filters, history, CSV export, and provider deletion. |
+| **Crunchyroll** | Shared Workspace | [Captured profile-history CSV](docs/crunchyroll-provider-plan.md) | **Shared Workspace (`#app/viewing-history`)** — CSV import, history and source status, shared filters, CSV export, and provider deletion. |
 | **OpenAI** | Interactive Workspace & Guide | ChatGPT Data Export ZIP (`conversations.json`) | **Live Guide (`#guide/openai`) & Workspace in Progress (`#app/openai`)** — Step-by-step export guide live; user-owned archive ingest, indexing, and hybrid semantic search engine contract in active development. |
 | **Facebook** | Visual Export Guide | Meta Accounts Center Information Archive | **Live Guide (`#guide/facebook`)** — Product-specific visual export walkthrough, Accounts Center navigation, file format/media options, and first-party help links. |
 | **Instagram** | Visual Export Guide | Meta Accounts Center Information Archive | **Live Guide (`#guide/instagram`)** — Product-specific visual export walkthrough, Accounts Center download steps, data type selection, and first-party help links. |

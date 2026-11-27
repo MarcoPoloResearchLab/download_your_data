@@ -27,6 +27,8 @@ var allowedCORSMethods = []string{
 	http.MethodDelete,
 }
 
+var allowedCORSHeaders = []string{"Content-Type", csrfHeaderName}
+
 type deleteUserWorkspaceRequest struct {
 	Confirmation string `json:"confirmation"`
 }
@@ -171,9 +173,13 @@ func applyRequestBoundary(
 			setCredentialedCORSHeaders(responseWriter, allowedOrigin)
 		}
 		if request.Method == http.MethodOptions {
+			headers := allowedCORSHeaders
+			if request.URL.Path == crunchyrollProviderPath {
+				headers = append(slices.Clone(headers), ifMatchHeader)
+			}
 			if origin == "" ||
 				!validPreflightMethod(request.Header.Get("Access-Control-Request-Method")) ||
-				!validPreflightHeaders(request.Header.Get("Access-Control-Request-Headers")) {
+				!validPreflightHeaders(request.Header.Get("Access-Control-Request-Headers"), headers) {
 				writeRequestError(responseWriter, http.StatusForbidden, "invalid_preflight")
 				return
 			}
@@ -183,7 +189,7 @@ func applyRequestBoundary(
 			)
 			responseWriter.Header().Set(
 				"Access-Control-Allow-Headers",
-				"Content-Type, "+csrfHeaderName,
+				strings.Join(headers, ", "),
 			)
 			responseWriter.Header().Set("Access-Control-Max-Age", "600")
 			responseWriter.WriteHeader(http.StatusNoContent)
@@ -213,13 +219,13 @@ func validPreflightMethod(method string) bool {
 	return slices.Contains(allowedCORSMethods, method)
 }
 
-func validPreflightHeaders(rawHeaders string) bool {
+func validPreflightHeaders(rawHeaders string, allowedHeaders []string) bool {
 	if strings.TrimSpace(rawHeaders) == "" {
 		return true
 	}
 	for _, rawHeader := range strings.Split(rawHeaders, ",") {
-		header := strings.ToLower(strings.TrimSpace(rawHeader))
-		if header != "content-type" && header != strings.ToLower(csrfHeaderName) {
+		header := strings.TrimSpace(rawHeader)
+		if !slices.ContainsFunc(allowedHeaders, func(allowed string) bool { return strings.EqualFold(header, allowed) }) {
 			return false
 		}
 	}

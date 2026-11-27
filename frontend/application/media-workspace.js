@@ -9,10 +9,13 @@ import {
   createTMDBGeneration,
   deleteNetflixProvider,
   deletePrimeProvider,
+  deleteCrunchyrollProvider,
   exportMediaCSV,
   getMediaReport,
   getNetflixProvider,
   getPrimeProvider,
+  getCrunchyrollProvider,
+  uploadCrunchyrollHistory,
   uploadPrimeArchive,
   uploadViewingActivity
 } from './api.js';
@@ -24,10 +27,13 @@ import {dashboardCharts, observeDashboardCharts} from './media-charts.js';
 let report = null;
 /** @type {import('./api.js').PrimeSnapshot|null} */
 let prime = null;
+/** @type {import('./api.js').CrunchyrollSnapshot|null} */
+let crunchyroll = null;
 let netflix = null;
 let filter = newFilter();
 let view = 'overview',
   busy = false,
+  uploading = false,
   error = '',
   enabled = false,
   uploadOpen = false,
@@ -56,6 +62,15 @@ const LOCALE_TO_TITLE_LANGUAGE = {
   ru: 'ru-RU'
 };
 const VIEWS = ['overview', 'history'];
+const PROVIDER_NAMES = Object.freeze({
+  netflix: 'Netflix',
+  'prime-video': 'Prime Video',
+  crunchyroll: 'Crunchyroll'
+});
+const CRUNCHYROLL_HEADER = [
+  'history_date', 'series_or_collection', 'title',
+  'crunchyroll_status', 'format', 'crunchyroll_url'
+];
 function newFilter() {
   return {
     provider: 'all',
@@ -73,15 +88,23 @@ function resetPagination() {
   cursors = [];
 }
 function providerName(provider) {
-  return provider === 'netflix' ? 'Netflix' : 'Prime Video';
+  return PROVIDER_NAMES[provider];
 }
 function updateProviders(providers) {
   if (
     prime?.active_generation?.id !== providers[0].active_generation?.id ||
-    netflix?.active_generation?.id !== providers[1].active_generation?.id
+    netflix?.active_generation?.id !== providers[1].active_generation?.id ||
+    crunchyroll?.revision !== providers[2].revision
   )
     resetPagination();
-  [prime, netflix] = providers;
+  [prime, netflix, crunchyroll] = providers;
+}
+function loadProviders(signal) {
+  return Promise.all([
+    getPrimeProvider(signal),
+    getNetflixProvider(signal),
+    getCrunchyrollProvider(signal)
+  ]);
 }
 export function clearMediaWorkspace() {
   enabled = false;
@@ -95,8 +118,10 @@ export function clearMediaWorkspace() {
   objectURLs.clear();
   report = null;
   prime = null;
+  crunchyroll = null;
   netflix = null;
   busy = false;
+  uploading = false;
   error = '';
   view = 'overview';
   filter = newFilter();
@@ -112,10 +137,7 @@ export function clearMediaWorkspace() {
 export async function hydrateMediaWorkspace(signal, currentLocale) {
   enabled = true;
   locale = currentLocale;
-  const providers = await Promise.all([
-    getPrimeProvider(signal),
-    getNetflixProvider(signal)
-  ]);
+  const providers = await loadProviders(signal);
   if (signal.aborted || !enabled) return;
   updateProviders(providers);
   const currentReport = await getMediaReport(filter, signal);
@@ -154,9 +176,9 @@ async function advanceAnalysis(signal) {
       if (!datasets.includes('viewing'))
         throw new Error('viewing dataset is required');
       await confirmPrimeSelection(pending.id, datasets, '', signal);
-      updateProviders(
-        await Promise.all([getPrimeProvider(signal), getNetflixProvider(signal)])
-      );
+      const providers = await loadProviders(signal);
+      if (signal.aborted || !enabled) return;
+      updateProviders(providers);
     } else if (pending?.state === 'enriching' && !resumed.has(pending.id)) {
       resumed.add(pending.id);
       await createPrimeGeneration(signal, {
@@ -220,9 +242,9 @@ async function advanceAnalysis(signal) {
       error = 'analysis_failed';
     }
   }
-  updateProviders(
-    await Promise.all([getPrimeProvider(signal), getNetflixProvider(signal)])
-  );
+  const providers = await loadProviders(signal);
+  if (signal.aborted || !enabled) return;
+  updateProviders(providers);
 }
 async function refresh() {
   if (!enabled || busy) {
@@ -232,10 +254,7 @@ async function refresh() {
   controller?.abort();
   const request = new AbortController();
   controller = request;
-  const providers = await Promise.all([
-    getPrimeProvider(request.signal),
-    getNetflixProvider(request.signal)
-  ]);
+  const providers = await loadProviders(request.signal);
   if (request.signal.aborted || !enabled) return;
   updateProviders(providers);
   try {
@@ -391,9 +410,11 @@ export function renderMediaWorkspace(common, currentLocale, onRender) {
         ? copy.analysisFailed
         : error === 'invalid_files'
           ? copy.invalidFiles
-          : error === 'request_failed'
-            ? copy.error_notice
-            : copy.importFailed;
+          : error === 'revision_conflict'
+            ? copy.revisionConflict
+            : error === 'request_failed'
+              ? copy.error_notice
+              : copy.importFailed;
     root.append(element('p', {class: 'notice', role: 'alert', text}));
     if (error === 'analysis_failed')
       root.append(button(copy.retry, 'retry-analysis'));
@@ -438,6 +459,8 @@ export function renderMediaWorkspace(common, currentLocale, onRender) {
             {disabled: false}
           )
         );
+    if (uploading)
+      progress.append(button(copy.cancel, 'cancel-upload', {disabled: false}));
     root.append(progress);
   }
   if (report?.sources.length) {
@@ -496,7 +519,7 @@ export function renderMediaWorkspace(common, currentLocale, onRender) {
         )
       );
       if (
-        filter.provider !== 'netflix' &&
+        ['all', 'prime-video'].includes(filter.provider) &&
         report.sources.some((source) => source.provider === 'prime-video')
       )
         metrics.append(
@@ -610,7 +633,8 @@ function renderFilters(copy) {
   for (const [id, name] of [
     ['all', copy.allServices],
     ['netflix', 'Netflix'],
-    ['prime-video', 'Prime Video']
+    ['prime-video', 'Prime Video'],
+    ['crunchyroll', 'Crunchyroll']
   ])
     services.append(
       element('button', {
@@ -703,6 +727,17 @@ function renderHistory(panel, copy) {
               [copy.sourceFile, record.source.file],
               [copy.sourceRow, String(record.source.row)],
               [copy.title, record.raw_title],
+              ...(record.provider === 'crunchyroll' ? [
+                [copy.collection, record.source.collection],
+                [copy.sourceStatus, record.source.status],
+                [copy.sourceFormat, record.source.format],
+                [copy.sourceLink, element('a', {
+                  href: record.source.url,
+                  target: '_blank',
+                  rel: 'noreferrer',
+                  text: 'Crunchyroll'
+                })]
+              ] : []),
               [copy.devices, record.device || copy.unknown],
               [copy.audioLanguages, record.audio_language || copy.unknown],
               [copy.subtitleLanguages, record.subtitle_language || copy.unknown]
@@ -727,7 +762,8 @@ function renderManagement(copy) {
   });
   for (const [provider, snapshot] of [
     ['netflix', netflix],
-    ['prime-video', prime]
+    ['prime-video', prime],
+    ['crunchyroll', crunchyroll]
   ])
     if (snapshot?.active_generation)
       root.append(
@@ -758,6 +794,9 @@ function renderAbout(copy) {
     element('p', {text: copy.sourceNote}),
     element('p', {text: copy.watchNote}),
     element('p', {text: copy.timeNote}),
+    report.sources.some((source) => source.provider === 'crunchyroll')
+      ? element('p', {text: copy.crunchyrollNote})
+      : null,
     table(
       [copy.provider, copy.source_rows, copy.start_date, copy.end_date],
       report.sources.map((source) => [
@@ -817,23 +856,9 @@ async function confirmDeletion(copy, provider) {
   });
 }
 async function uploadFiles(files) {
-  if (busy) return;
-  const providers = files.map((file) =>
-    file.name.toLowerCase().endsWith('.csv')
-      ? 'netflix'
-      : file.name.toLowerCase().endsWith('.zip')
-        ? 'prime-video'
-        : 'invalid'
-  );
-  if (
-    providers.includes('invalid') ||
-    new Set(providers).size !== providers.length
-  ) {
-    error = 'invalid_files';
-    redraw();
-    return;
-  }
+  if (busy || !enabled) return;
   busy = true;
+  uploading = true;
   error = '';
   uploadOpen = false;
   controller?.abort();
@@ -841,7 +866,18 @@ async function uploadFiles(files) {
   controller = request;
   redraw();
   try {
+    const providers = await Promise.all(files.map(importProvider));
+    if (request.signal.aborted || !enabled || controller !== request) return;
+    if (
+      providers.includes('invalid') ||
+      new Set(providers).size !== providers.length
+    ) {
+      error = 'invalid_files';
+      uploadOpen = true;
+      return;
+    }
     for (let index = 0; index < files.length; index++) {
+      if (request.signal.aborted || !enabled || controller !== request) return;
       const provider = providers[index];
       suspended.delete(provider);
       if (provider === 'netflix') {
@@ -854,23 +890,65 @@ async function uploadFiles(files) {
           files[index],
           request.signal
         );
-      } else {
+      } else if (provider === 'prime-video') {
         const generation = await createPrimeGeneration(request.signal);
         if (request.signal.aborted || !enabled) return;
         prime = {...prime, building_generation: generation};
         redraw();
         await uploadPrimeArchive(generation.id, files[index], request.signal);
+      } else {
+        const current =
+          crunchyroll || await getCrunchyrollProvider(request.signal);
+        if (request.signal.aborted || !enabled || controller !== request) return;
+        const imported = await uploadCrunchyrollHistory(
+          files[index],
+          current.revision,
+          request.signal
+        );
+        if (request.signal.aborted || !enabled || controller !== request) return;
+        if (crunchyroll?.revision !== imported.revision) resetPagination();
+        crunchyroll = imported;
       }
     }
   } catch (failure) {
     if (failure.name === 'AbortError') return;
-    error = 'import_failed';
+    error = failure.status === 412 ? 'revision_conflict' : 'import_failed';
   } finally {
-    if (controller === request) busy = false;
+    if (controller === request) {
+      busy = false;
+      uploading = false;
+      redraw();
+    }
   }
   if (!request.signal.aborted && enabled) await refresh();
 }
+/** @param {File} file @returns {Promise<string>} */
+async function importProvider(file) {
+  if (file.name.toLowerCase().endsWith('.zip')) return 'prime-video';
+  if (!file.name.toLowerCase().endsWith('.csv')) return 'invalid';
+  const text = await file.slice(0, 4096).text();
+  const header = text.replace(/^\uFEFF/, '').split(/[\r\n]/)
+    .find((line) => line.trim() !== '') || '';
+  const fields = header.split(',').map((field) =>
+    /^"[^"]*"$/.test(field) ? field.slice(1, -1) : field
+  );
+  if (fields.length === CRUNCHYROLL_HEADER.length &&
+    fields.every((field, index) => field === CRUNCHYROLL_HEADER[index])
+  ) return 'crunchyroll';
+  if (fields.some((field) => /crunchyroll|history_date|series_or_collection/.test(field))) return 'invalid';
+  return fields.includes('Title') && fields.includes('Date') ? 'netflix' : 'invalid';
+}
 async function perform(action, copy) {
+  if (action === 'cancel-upload') {
+    if (!uploading) return;
+    controller?.abort();
+    busy = false;
+    uploading = false;
+    error = '';
+    redraw();
+    await refresh();
+    return;
+  }
   if (action === 'add-files') {
     uploadOpen = true;
     redraw();
@@ -903,9 +981,15 @@ async function perform(action, copy) {
     return;
   }
   if (busy && !action.startsWith('cancel-')) return;
-  const provider = action.endsWith('netflix') ? 'netflix' : 'prime-video';
-  if (action.startsWith('delete-') && !(await confirmDeletion(copy, provider)))
-    return;
+  const provider = action.endsWith('crunchyroll')
+    ? 'crunchyroll'
+    : action.endsWith('netflix')
+      ? 'netflix'
+      : 'prime-video';
+  const deletionRevision = crunchyroll?.revision;
+  if (action.startsWith('delete-')) {
+    if (!(await confirmDeletion(copy, provider)) || !enabled || busy) return;
+  }
   controller?.abort();
   const request = new AbortController();
   controller = request;
@@ -922,7 +1006,8 @@ async function perform(action, copy) {
     } else if (action.startsWith('delete-')) {
       suspended.add(provider);
       if (provider === 'netflix') await deleteNetflixProvider(request.signal);
-      else await deletePrimeProvider(request.signal);
+      else if (provider === 'prime-video') await deletePrimeProvider(request.signal);
+      else await deleteCrunchyrollProvider(deletionRevision, request.signal);
     } else if (action === 'retry-analysis') {
       suspended.clear();
       attempted.clear();
@@ -940,12 +1025,9 @@ async function perform(action, copy) {
         !netflix?.building_generation
       )
         netflix = {...netflix, latest_failed_generation: null};
-      updateProviders(
-        await Promise.all([
-          getPrimeProvider(request.signal),
-          getNetflixProvider(request.signal)
-        ])
-      );
+      const providers = await loadProviders(request.signal);
+      if (request.signal.aborted || !enabled) return;
+      updateProviders(providers);
       if (
         netflix?.active_generation?.analysis_level === 'local' &&
         !netflix?.building_generation &&
@@ -974,7 +1056,7 @@ async function perform(action, copy) {
     }
   } catch (failure) {
     if (failure.name === 'AbortError') return;
-    error = 'analysis_failed';
+    error = failure.status === 412 ? 'revision_conflict' : 'analysis_failed';
   } finally {
     if (controller === request) busy = false;
   }

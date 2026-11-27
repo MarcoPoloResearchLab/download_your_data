@@ -47,7 +47,9 @@ func NewFilter(provider, timezone, start, end, title, kind, matchStatus, titleID
 	if matchStatus == "" {
 		matchStatus = "all"
 	}
-	if provider != "all" && provider != string(Netflix) && provider != string(PrimeVideo) {
+	switch provider {
+	case "all", string(Netflix), string(PrimeVideo), string(Crunchyroll):
+	default:
 		return Filter{}, errors.New("media.invalid_filter")
 	}
 	location, err := time.LoadLocation(timezone)
@@ -87,7 +89,7 @@ func NewFilter(provider, timezone, start, end, title, kind, matchStatus, titleID
 	return Filter{MediaType: mediaType, Provider: provider, Timezone: timezone, StartDate: start, EndDate: end, Title: title, Kind: kind, MatchStatus: matchStatus, TitleID: titleID, location: location}, nil
 }
 
-var titleIDPattern = regexp.MustCompile(`^(tmdb:(movie|series):[1-9][0-9]{0,18}|(netflix|prime-video):[a-f0-9]{64})$`)
+var titleIDPattern = regexp.MustCompile(`^(tmdb:(movie|series):[1-9][0-9]{0,18}|(netflix|prime-video|crunchyroll):[a-f0-9]{64})$`)
 
 // Count is one named categorical count.
 type Count struct {
@@ -331,12 +333,9 @@ func titles(records []Record) []Title {
 		key := identity(value)
 		group, ok := groups[key]
 		if !ok {
-			group = &Title{ID: key, Title: value.SearchTitle, MediaType: "unknown", MatchStatus: value.MatchStatus, Providers: []Provider{}, Metadata: record.Snapshot().Metadata}
+			group = &Title{ID: key, Title: value.SearchTitle, MediaType: mediaType(value), MatchStatus: value.MatchStatus, Providers: []Provider{}, Metadata: record.Snapshot().Metadata}
 			if value.Metadata != nil {
 				group.Title = value.Metadata.Title
-				group.MediaType = value.Metadata.MediaType
-			} else if value.SeriesTitle != "" {
-				group.MediaType = "series"
 			}
 			groups[key] = group
 		}
@@ -420,15 +419,11 @@ func aggregate(records []Record) Overview {
 			result.UnavailableTitleRecords++
 		}
 		if value.EpisodeIdentity != "" {
-			episodes[value.EpisodeIdentity] = true
+			episodes[string(value.Provider)+":"+value.EpisodeIdentity] = true
 		}
 		service, ok := services[value.Provider]
 		if !ok {
-			unit := "playback records"
-			if value.Provider == Netflix {
-				unit = "activity entries"
-			}
-			service = &Service{Provider: value.Provider, Unit: unit}
+			service = &Service{Provider: value.Provider, Unit: countingUnit(value)}
 			services[value.Provider] = service
 		}
 		service.Activities++
@@ -510,10 +505,27 @@ func mediaType(value Activity) string {
 	if value.Metadata != nil {
 		return value.Metadata.MediaType
 	}
+	if value.Provider == Crunchyroll && value.Source.Format == CrunchyrollMovie {
+		return "movie"
+	}
 	if value.SeriesTitle != "" {
 		return "series"
 	}
 	return "unknown"
+}
+
+func countingUnit(value Activity) string {
+	if value.Provider == Crunchyroll {
+		return "history entries"
+	}
+	switch value.Kind {
+	case ActivityEntry:
+		return "activity entries"
+	case Playback:
+		return "playback records"
+	default:
+		return string(value.Kind)
+	}
 }
 func periodCounts(values map[string]int) []PeriodCount {
 	result := []PeriodCount{}
@@ -573,24 +585,20 @@ func sourceSummaries(records []Record, filter Filter) []SourceSummary {
 // ExportCSV streams every filtered source record with its counting unit and provenance.
 func ExportCSV(writer io.Writer, records []Record, filter Filter) error {
 	csvWriter := csv.NewWriter(writer)
-	if err := csvWriter.Write([]string{"provider", "kind", "title", "raw_title", "source_date", "date", "date_precision", "timestamp_utc", "recorded_seconds", "counting_unit", "included_in_consumption", "completion", "content_type", "profile_type", "profile_label", "source_file", "source_row", "generation_id", "match_status", "title_identity", "tmdb_id", "media_type", "metadata_runtime_minutes", "display_timezone", "title_status", "end_timestamp_utc", "interval_status", "series_title", "season_number", "episode_title", "episode_identity", "autoplay", "deleted", "device", "audio_language", "subtitle_language", "offer_type", "description", "imdb_id"}); err != nil {
+	if err := csvWriter.Write([]string{"provider", "kind", "title", "raw_title", "source_date", "date", "date_precision", "timestamp_utc", "recorded_seconds", "counting_unit", "included_in_consumption", "completion", "content_type", "profile_type", "profile_label", "source_file", "source_row", "generation_id", "match_status", "title_identity", "tmdb_id", "media_type", "metadata_runtime_minutes", "display_timezone", "title_status", "end_timestamp_utc", "interval_status", "series_title", "season_number", "episode_title", "episode_identity", "autoplay", "deleted", "device", "audio_language", "subtitle_language", "offer_type", "description", "imdb_id", "source_collection", "source_format", "source_status", "source_url"}); err != nil {
 		return err
 	}
 	for _, record := range FilterRecords(records, filter) {
 		value := record.value
-		seconds, tmdbID, mediaType, runtime, imdbID, season := "", "", "", "", "", ""
-		unit := string(value.Kind)
-		if value.Kind == ActivityEntry {
-			unit = "activity entries"
-		} else if value.Kind == Playback {
-			unit = "playback records"
+		seconds, tmdbID, exportMediaType, runtime, imdbID, season := "", "", "", "", "", ""
+		if value.Provider == Crunchyroll || value.Metadata != nil {
+			exportMediaType = mediaType(value)
 		}
 		if value.RecordedSeconds != nil {
 			seconds = strconv.FormatFloat(*value.RecordedSeconds, 'f', -1, 64)
 		}
 		if value.Metadata != nil {
 			tmdbID = strconv.FormatInt(value.Metadata.TMDBID, 10)
-			mediaType = value.Metadata.MediaType
 			imdbID = value.Metadata.IMDbID
 			if value.Metadata.RuntimeMinutes != nil {
 				runtime = strconv.Itoa(*value.Metadata.RuntimeMinutes)
@@ -599,7 +607,7 @@ func ExportCSV(writer io.Writer, records []Record, filter Filter) error {
 		if value.SeasonNumber > 0 {
 			season = strconv.Itoa(value.SeasonNumber)
 		}
-		if err := csvWriter.Write([]string{string(value.Provider), string(value.Kind), value.Title, value.RawTitle, value.SourceDate, value.Date, string(value.DatePrecision), value.Timestamp, seconds, unit, strconv.FormatBool(record.IsConsumption()), value.Completion, value.ContentType, value.ProfileType, value.ProfileLabel, value.Source.File, strconv.Itoa(value.Source.Row), value.Source.GenerationID, value.MatchStatus, identity(value), tmdbID, mediaType, runtime, filter.Timezone, value.TitleStatus, value.EndTimestamp, value.IntervalStatus, value.SeriesTitle, season, value.EpisodeTitle, value.EpisodeIdentity, csvFlag(value.Autoplay), csvFlag(value.Deleted), value.Device, value.AudioLanguage, value.SubtitleLanguage, value.OfferType, value.Description, imdbID}); err != nil {
+		if err := csvWriter.Write([]string{string(value.Provider), string(value.Kind), value.Title, value.RawTitle, value.SourceDate, value.Date, string(value.DatePrecision), value.Timestamp, seconds, countingUnit(value), strconv.FormatBool(record.IsConsumption()), value.Completion, value.ContentType, value.ProfileType, value.ProfileLabel, value.Source.File, strconv.Itoa(value.Source.Row), value.Source.GenerationID, value.MatchStatus, identity(value), tmdbID, exportMediaType, runtime, filter.Timezone, value.TitleStatus, value.EndTimestamp, value.IntervalStatus, value.SeriesTitle, season, value.EpisodeTitle, value.EpisodeIdentity, csvFlag(value.Autoplay), csvFlag(value.Deleted), value.Device, value.AudioLanguage, value.SubtitleLanguage, value.OfferType, value.Description, imdbID, value.Source.Collection, value.Source.Format, value.Source.Status, value.Source.URL}); err != nil {
 			return err
 		}
 	}

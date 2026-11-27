@@ -1,6 +1,29 @@
 # Confident Programming
 
-This policy controls all agent work in this repository.
+This core policy controls all agent work. Product and platform requirements apply through the conditional guides in root `AGENTS.md`.
+
+## Repository Policy Sections
+
+Governor generates this core policy and the product and deployment guides from shared templates and optional `.mprlab/POLICY.REPOSITORY.md` sections.
+A local section replaces the shared section with the same level-2 heading in its owning guide.
+Unknown local sections extend this core policy. The repository source requires unique headings and the title `# Repository Policy Sections`.
+
+- Put repository-specific requirements in that source and run the normalizer after a source change.
+- Read this core policy for every task. Read the product and deployment guides only for the conditions listed in root `AGENTS.md`.
+- Keep deployment specification and execution policy in the selected application manifest.
+
+## Temporary Task Files
+
+- Put temporary diagnostic files in `_scratch/<task-id>/`.
+- Use a unique task identifier for each directory.
+- Keep `/_scratch/` in the repository `.gitignore`.
+- Record the directory and its task in the task plan before use.
+- Keep files from an interrupted task until that task resumes or its owner authorizes removal.
+- Before task completion, preserve useful results in maintained tests, tools, or documentation.
+- Remove only the temporary directory owned by the completed task.
+- Verify that this directory is absent before reporting task completion.
+- Preserve directories owned by other tasks.
+- If removal fails, report the remaining path and keep task completion pending.
 
 ## Operator Rules
 
@@ -13,38 +36,34 @@ This policy controls all agent work in this repository.
 - After boundary validation, do not repeat validation in core modules.
 - Keep interfaces narrow. Prefer domain types instead of loose strings, maps, booleans, or `any` values.
 - Centralize reusable literals: paths, operation names, event names, config keys, status values, and shared messages.
-- Tests target public contracts and invariants, not defensive branches.
-- Prefer black-box integration and end-to-end tests through real entry points.
 
 ## Test-Driven Development
 
-- Use test-driven development with an inverted test pyramid.
-- Integration tests are the primary test layer.
-- Use focused unit tests for complex algorithms, calculations, and isolated logic when useful.
-- Require integration coverage of public behavior for product acceptance.
-- An integration test must use a real public entry point.
-- For a behavior change, start with the integration test that represents the required public behavior.
-- Run the new or changed integration test before you change production code.
-- Confirm that the integration test fails because the required behavior is absent or incorrect.
-- After this failure, use focused unit tests to guide complex internal implementation when useful.
-- Change the minimum production code necessary to make the integration test pass.
-- Refactor only while the applicable integration tests pass.
-- For a refactor with no behavior change, run the applicable integration tests before you change production code.
-- If focused coverage is absent, add a characterization test before the refactor.
-- Use deterministic local infrastructure for repository-owned databases, filesystems, queues, servers, and browsers.
-- At an external provider boundary, use a provider sandbox or a local protocol implementation for routine integration tests.
-- Keep live-provider acceptance as a separate qualification step.
+- Start with a focused unit test of the requested behavior. If the behavior depends on a real boundary, select a separate check for that boundary. Run the applicable check before implementation or configuration changes.
+- For new business behavior, write a unit test that fails because the behavior is absent. For a defect, write a regression test at the smallest layer that reproduces the failure and confirm its cause before the fix.
+- For a behavior change, add or update tests of the changed contract through the relevant entry point.
+- For a refactor, run relevant existing coverage first. Add characterization tests for behavior that lacks coverage.
+- For prose and static configuration, run applicable document, schema, build, or structural checks before and after the edit.
+
+### Test Pyramid
+
+- Make fast, deterministic, in-process unit tests the base of the test pyramid. Run unit tests as the routine behavior suite during development and CI. Control time, randomness, and external effects.
+- Derive unit test cases from expected business behavior. Name the scenario and assert its observable outcome through the unit's callable interface. Cover expected successes, rejections, edge cases, invariants, and meaningful failures.
+- Aim for 100% code coverage from the unit suite through tests of expected behavior. Use uncovered lines and branches to identify missing scenarios. Add tests for uncovered scenarios with a defined, observable outcome.
+- Select a one-off integration check when the task needs evidence from real component interactions, such as transport, persistence, or dependency wiring. Use deterministic local infrastructure for owned dependencies and a provider sandbox or local protocol implementation when applicable.
+- Select a one-off end-to-end check when the task needs evidence for a critical user journey through real entry points. Keep integration and end-to-end checks in separately selected validation runs.
+
+### Dependency Injection And Test Doubles
+
+- Pass effectful dependencies explicitly through constructors or function parameters with narrow contracts. Supply real implementations when assembling the application.
+- Keep the business logic under test real. Choose a mock, stub, fake, spy, or test shim for a dependency that needs a controlled result, failure, or recorded interaction. Scope shims to the test and restore patched state during cleanup.
+- Assert observable outcomes such as returned values, errors, and state changes. Assert collaborator calls when they are part of the contract, such as charging an order once.
 
 ## Dependency Injection In Integration Tests
 
-- Use dependency injection for integration scenarios that are difficult to reproduce.
-- Inject the dependency that creates the test condition.
-- Use controlled clocks, dependency failures, or unusual responses when the scenario requires them.
-- Keep the product logic under test and its related internal interactions real.
-- Assert observable results through the public contract.
-- Keep integration coverage with real dependency implementations.
-- Injected scenarios prove behavior under the specified conditions. They do not prove actual provider connectivity.
-- Qualify actual provider connectivity separately from injected scenarios.
+- In an integration test, inject the dependency that creates a hard-to-reproduce condition, such as a timeout or unusual response.
+- Keep the product logic and component interactions under test real. Assert the result through the boundary under test.
+- Use live-provider tests when the requested test scope includes actual provider behavior. Use production observations as auxiliary evidence.
 
 ## Prohibited Patterns
 
@@ -75,90 +94,70 @@ This policy controls all agent work in this repository.
 - The values `0600` and `7777` have no governance meaning.
 - This rule does not change service authorization or operation authority.
 
-## Selected Manifest Contract
+## Credential Discovery
 
-The operator approved the v8 source cutover for this application.
-This cutover preserves existing provider data and the permanent state-v1 contract.
+Use this gate when credentials are necessary for the selected task.
 
-- Keep the selected application manifest versionless.
-- Keep `owner`, `release`, and `lifecycle` as the required baseline fields.
-- Use the fixed `artifacts`, `publications`, and `targets` catalogs.
-- Use explicit identity lists and ordered command lists.
-- Declare CI and execution policy in the selected manifest's `lifecycle` field.
-- Reject obsolete root collection shapes, unknown fields, and `schema_version`.
+- Examine only credential sources specified in the active command documentation and only the specified variable names.
+- Use tracked example and sample environment files as documentation only.
+- Do not show, record, or copy secret values during diagnosis.
+- Use each provider's non-mutating authentication command when available.
+- Request replacement credentials only after verification rejects the selected input. Report the exact missing or incorrect input.
+- For Gateway operations, also read the credential and selected-input rules in `.mprlab/AGENTS.DEPLOYMENT.md`.
+- Preserve the user's account boundaries and global sign-in preparation rules.
 
-## Static Website Hosting
+## Issue Closure
 
-Apply this section to deployment or publication work for a browser frontend.
+Apply the Validation section and complete applicable independent review and authorization requirements before issue closure.
 
-- Use GitHub Pages as the production host for each deployable browser frontend.
-- Declare the browser frontend with a `targets.github_pages.sites[]` declaration in `.mprlab/deploy/resources.yml`.
-- Use `gh-pages` as the publication branch.
-- The GitHub Pages repository can differ from the application repository.
-- Keep API and service routes on hostnames that differ from the website hostname.
-- Reserve the GitHub Pages domain and its `www` hostname for GitHub Pages.
-- Treat a container as an artifact source only when its static output goes to GitHub Pages.
-- Verify publication through the public website and `/.mprlab-release.json`.
-- Run the Governor check after each selected manifest change and before each release, publish, or deploy operation.
+- Close an issue when its required implementation, documentation, and code validation are completed.
+- Keep release, publication, deployment, production DNS/TLS, and live acceptance outside implementation issue acceptance criteria.
+- Do not keep an implementation issue open or blocked because production operations are not completed.
+- Record pending production operations in a runbook or separate operational record.
+- Select an isolated boundary check when a deployment tooling or infrastructure change needs evidence from real interactions.
+
+Failed or missing required code validation prevents closure.
+Code validation includes tests for the issue's required behavior and any selected final CI gate.
+Reproduce suspected defects and cover untested expected behavior before closure.
 
 ## Validation
 
-- Preserve the expected failing integration-test result as implementation evidence.
-- Use repository-native `make` targets when available.
-- Use a satisfactory CI result only when the source code, tests, config, dependencies, and build files stay the same.
-- If there is no applicable satisfactory result, run `make ci` once before you change files.
-- During the change, run the smallest repository target that validates the changed contract.
-- After the last source, test, config, dependency, or build change, run `make ci` once.
-- If this run reports an error, run the target that reports the error during the correction.
-- After the last correction, run `make ci` once.
-- When `make ci` includes `make fmt`, `make lint`, and `make test`, use its result for those targets.
-- During the change or error diagnosis, run the necessary component target.
-- Run a component target when `make ci` does not include the necessary check.
-- For documentation-only work, run the applicable document and repository checks.
-- For `.mprlab/`-only work, run the Governor check and `git diff --check`.
-- These are the repository checks for `.mprlab/`-only work. Changed prose also requires the documentation-language review.
-- For read-only work, use source facts and run only the necessary checks.
-- For frontend behavior, verify through a browser test when the behavior is user-visible.
-- For services and CLIs, verify through HTTP, CLI, or public API entry points.
+Tests provide implementation evidence. Task completion also requires applicable independent reviews, authorization, and selected CI gates.
+The repository policy owns CI selection. Global instructions own final-CI timing.
+
+- Use repository-native test targets and the smallest meaningful scope for the changed contract.
+- Preserve the failing test and its passing result after the change.
+- Report test commands, results, and the behavior covered. Keep untested claims explicit.
+- Add a focused test for a suspected defect or an untested contract.
+- Use production observations and diagnostics to inform test design.
+- Keep release, publication, deployment, and benchmark execution separate from implementation validation and issue closure.
+- Reuse passing results while the tested state remains unchanged, regardless of whether they ran locally or in CI.
+- Run full CI when the user explicitly selects it or the repository policy requires it. A repository requirement counts as explicit selection.
+- Read any Repository CI Requirements section in this policy when selecting CI. Maintain that local section in `.mprlab/POLICY.REPOSITORY.md` so shared validation rules continue to receive updates.
+- Run selected full CI at the final checkpoint after all other authorized work, review findings, acceptance checks, and documentation are complete.
+- Use equivalent successful pull-request CI when it supplies all selected checks. Wait for the selected gate before merge or completion.
+- When the user prohibits full CI, finish the authorized work with focused checks and report the omitted run. Apply the prohibition to commands, wrappers, delegated work, and actions that trigger CI automatically. If a separate delivery control requires a passing result and none applies, keep its gated delivery pending.
+- Use focused checks to correct failures. Repeat selected full CI only at the next final checkpoint after corrections and all other work are complete.
+- Run `make verify` only when the user explicitly selects the complete qualification lane.
+- For documentation and governance, use the applicable document, schema, and normalizer contract checks and review changed prose.
+- When a change needs real browser, service, or CLI evidence, select a focused boundary check for the task. Record the contract and result separately from routine unit validation.
+- For read-only work, report source facts and existing test evidence and run only checks necessary for the requested analysis.
 
 ## Documentation Language
 
-- Write new or changed English technical prose in ASD-STE100 Simplified Technical English, Issue 9.
-- Read `.mprlab/AGENTS.DOCS.md` and `.mprlab/TERMINOLOGY.md` before you write technical prose.
-- Apply this rule to PRDs, architecture documents, issues, plans, policies, ADRs, READMEs, runbooks, and API documents.
-- Do not change technical meaning to make the language simpler.
-- Run the skill `prepare-ste-reference` script to retrieve and verify the official Issue 9 PDF.
-- Run the skill `check-ste` script on each technical document that you change.
-- The producing agent must review Part 1 writing rules and the Part 2 dictionary.
-- Do not assign the reference retrieval or language review to the end user.
-- If the official reference is not available, report a blocker and do not claim compliance.
+- Use concise, consistent American English for technical prose.
+- Preserve facts, product decisions, requirements, conditions, source literals, and ownership boundaries.
+- Read `.mprlab/AGENTS.DOCS.md` and repository terminology before technical prose changes.
+- Use formal ASD-STE100 compliance only when the user or an applicable document contract explicitly requires it.
+- For that selected scope, read `.mprlab/AGENTS.STE.md` and complete its reference and review gates.
+- Report the scope and limits of each review. Mechanical checks alone do not prove factual accuracy or formal language compliance.
 
-## Language Rules
+## JavaScript Modules
 
-### Go
-
-- Use smart constructors returning `(Type, error)` when a type has invariants.
-- Do not export invalid zero-values.
-- Wrap errors with `%w`.
-- Prefer integration tests through real HTTP, CLI, or package entry points.
-- `make lint` must include `go vet`, `staticcheck`, and `ineffassign` when those tools are part of the repo contract.
-
-### Python
-
-- Use `@dataclass(frozen=True)` or Pydantic when already in use.
-- Validate in constructors or edge adapters.
-- Use type hints throughout.
-- Prefer pytest scenarios through public entry points.
-- Use focused unit tests for complex algorithms, calculations, and isolated logic when useful.
-- Require integration coverage of public behavior for product acceptance.
-
-### JavaScript And Frontend
+Apply these language rules to JavaScript modules, including Node services and command-line tools.
 
 - Put `// @ts-check` at the top of new or edited JavaScript modules when the repo uses checked JS.
 - Use JSDoc typedefs for domain objects and payload contracts.
-- Components render validated state and emit intent.
-- Backend clients own request construction and response validation.
-- User-visible behavior belongs in browser or integration coverage.
 
 ## Self-Check
 
@@ -168,5 +167,17 @@ Before claiming completion:
 - Core modules consume validated domain values.
 - Error paths include operation and subject context.
 - Reusable literals are centralized.
-- Public behavior is covered through public entry points.
+- Tests verify expected behavior at the smallest layer that can exercise the changed contract.
 - Repo-native validation was run or a concrete blocker is documented.
+
+## Repository Guide Requirements
+
+These guides retain repository-specific product or operational contracts.
+Preserve those contracts during shared-governance updates. Apply current agent procedures from the core policy.
+
+- Read and retain `.mprlab/AGENTS.DOCKER.md` for its task-specific scope.
+
+## Repository CI Requirements
+
+Implementation and shared-contract changes require final full CI. Use equivalent passing pull request CI for the same state or run the repository CI target locally.
+For read-only audits, use source inspection. For documentation-only changes, run the applicable document and repository checks. For changes confined to `.mprlab/`, run the Governor consistency check and `git diff --check`, and review changed prose.

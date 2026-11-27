@@ -24,14 +24,10 @@ This file gives backend rules for Python code. Obey root `AGENTS.md` and `.mprla
 
 ## Testing
 
-- For a behavior change, start with an integration test through the real HTTP, CLI, or public package entry point.
-- Use dependency injection for integration scenarios that are difficult to reproduce.
-- Keep the product logic under test real.
-- Use pytest.
-- Prefer black-box integration tests through CLI, HTTP, or public package entry points.
-- Use fixtures and `tmp_path` to isolate side effects.
-- Use focused unit tests for complex algorithms, calculations, and isolated logic when useful.
-- Require integration coverage of public behavior for product acceptance.
+- Apply the test pyramid in `.mprlab/POLICY.md`.
+- Use pytest for unit tests, integration tests, and end-to-end tests.
+- Use fixtures for reusable test doubles and `tmp_path` for tests that need filesystem access.
+- Select a one-off check through the CLI, HTTP, or public package entry point when the task needs evidence from real component interactions.
 
 ## Validation
 
@@ -40,3 +36,9 @@ Use `.mprlab/POLICY.md` for validation.
 During the change, run the smallest Python target that validates the changed contract.
 
 When the repository contract includes it, lint must run mypy or pyright for typed Python surfaces.
+
+## Language Contract
+
+- Use `@dataclass(frozen=True)` or Pydantic when already in use.
+- Validate in constructors or edge adapters.
+- Use type hints throughout.

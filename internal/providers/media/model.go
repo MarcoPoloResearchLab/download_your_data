@@ -15,8 +15,16 @@ import (
 type Provider string
 
 const (
-	Netflix    Provider = "netflix"
-	PrimeVideo Provider = "prime-video"
+	Netflix     Provider = "netflix"
+	PrimeVideo  Provider = "prime-video"
+	Crunchyroll Provider = "crunchyroll"
+)
+
+// Crunchyroll history captures supply these item formats.
+const (
+	CrunchyrollEpisode           = "Episode"
+	CrunchyrollMovie             = "Movie"
+	CrunchyrollTheatricalSpecial = "Theatrical special"
 )
 
 // Kind identifies what a source row can prove.
@@ -44,9 +52,13 @@ type Source struct {
 	File         string `json:"file"`
 	Row          int    `json:"row"`
 	GenerationID string `json:"generation_id"`
+	Collection   string `json:"collection,omitempty"`
+	Format       string `json:"format,omitempty"`
+	Status       string `json:"status,omitempty"`
+	URL          string `json:"url,omitempty"`
 }
 
-// Metadata is accepted title evidence shared by both provider adapters.
+// Metadata is accepted title evidence shared across provider adapters.
 type Metadata struct {
 	MediaType        string   `json:"media_type"`
 	TMDBID           int64    `json:"tmdb_id"`
@@ -100,11 +112,17 @@ type Record struct{ value Activity }
 
 // NewRecord validates a source or persistence boundary exactly once.
 func NewRecord(value Activity) (Record, error) {
-	if value.Provider != Netflix && value.Provider != PrimeVideo {
+	switch value.Provider {
+	case Netflix, Crunchyroll:
+		if value.Kind != ActivityEntry || value.DatePrecision != CalendarDate || value.RecordedSeconds != nil {
+			return Record{}, errors.New("media.invalid_source_contract")
+		}
+	case PrimeVideo:
+		if value.Kind == ActivityEntry || value.DatePrecision != Timestamp {
+			return Record{}, errors.New("media.invalid_source_contract")
+		}
+	default:
 		return Record{}, errors.New("media.invalid_provider")
-	}
-	if (value.Provider == Netflix && (value.Kind != ActivityEntry || value.DatePrecision != CalendarDate || value.RecordedSeconds != nil)) || (value.Provider == PrimeVideo && (value.Kind == ActivityEntry || value.DatePrecision != Timestamp)) {
-		return Record{}, errors.New("media.invalid_source_contract")
 	}
 	switch value.Kind {
 	case ActivityEntry, Playback, WatchSummary, Search, Purchase, Trailer:
@@ -164,19 +182,27 @@ func NewRecord(value Activity) (Record, error) {
 	if value.Metadata != nil && (value.Metadata.TMDBID <= 0 || (value.Metadata.MediaType != "movie" && value.Metadata.MediaType != "series") || value.Metadata.Title == "") {
 		return Record{}, errors.New("media.invalid_metadata")
 	}
-	if value.SeasonNumber < 0 || value.SeasonNumber > 999 || (value.SeasonNumber > 0) != (value.SeriesTitle != "") || (value.EpisodeTitle != "" && value.SeriesTitle == "") {
-		return Record{}, errors.New("media.invalid_episode")
-	}
-	if value.EpisodeTitle != "" {
-		digest := sha256.Sum256([]byte(fmt.Sprintf("%s\x00%s\x00%d\x00%s", value.Provider, value.SeriesTitle, value.SeasonNumber, value.EpisodeTitle)))
-		value.EpisodeIdentity = hex.EncodeToString(digest[:])
+	if value.Provider == Crunchyroll {
+		if !validCrunchyrollSource(value) {
+			return Record{}, errors.New("media.invalid_crunchyroll_source")
+		}
+	} else {
+		if value.SeasonNumber < 0 || value.SeasonNumber > 999 || (value.SeasonNumber > 0) != (value.SeriesTitle != "") || (value.EpisodeTitle != "" && value.SeriesTitle == "") {
+			return Record{}, errors.New("media.invalid_episode")
+		}
+		if value.EpisodeTitle != "" {
+			digest := sha256.Sum256([]byte(fmt.Sprintf("%s\x00%s\x00%d\x00%s", value.Provider, value.SeriesTitle, value.SeasonNumber, value.EpisodeTitle)))
+			value.EpisodeIdentity = hex.EncodeToString(digest[:])
+		}
 	}
 	if value.SearchTitle == "" {
 		value.SearchTitle = value.Title
 	}
 	if value.TitleIdentity == "" {
 		classification := "unclassified"
-		if value.SeriesTitle != "" {
+		if value.Provider == Crunchyroll {
+			classification = value.Source.Format
+		} else if value.SeriesTitle != "" {
 			classification = "series"
 		}
 		identityInput := string(value.Provider) + "\x00" + classification + "\x00" + value.SearchTitle
@@ -191,6 +217,24 @@ func NewRecord(value Activity) (Record, error) {
 		value.ID = hex.EncodeToString(digest[:])
 	}
 	return Record{value: cloneActivity(value)}, nil
+}
+
+func validCrunchyrollSource(value Activity) bool {
+	source := value.Source
+	if source.Collection == "" || source.Status == "" || source.URL == "" ||
+		value.Title == "" || value.RawTitle == "" || value.SourceDate != value.Date ||
+		value.SeasonNumber != 0 || value.MatchStatus != "not_enriched" || value.ContentType != "content" {
+		return false
+	}
+	switch source.Format {
+	case CrunchyrollEpisode:
+		return value.SeriesTitle == source.Collection && value.EpisodeTitle == value.Title &&
+			value.SearchTitle == source.Collection && len(value.EpisodeIdentity) == sha256.Size*2
+	case CrunchyrollMovie, CrunchyrollTheatricalSpecial:
+		return value.SeriesTitle == "" && value.EpisodeTitle == "" && value.EpisodeIdentity == ""
+	default:
+		return false
+	}
 }
 
 // Snapshot returns detached reader data.
