@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/authentication"
+	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/crunchyroll"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/media"
 	"github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix/enrichment"
 	netflixlibrary "github.com/MarcoPoloResearchLab/download_your_data/internal/providers/netflix/library"
@@ -220,7 +221,19 @@ func registerMediaRoutes(routes *http.ServeMux, operations *primeOperations, reg
 				return
 			}
 			records = append(records, netflixRecords...)
+			paths, err := operations.config.UserWorkspace(user)
+			if err != nil {
+				writeMediaError(writer, logger, err)
+				return
+			}
+			crunchyrollArchive, err := crunchyroll.Read(request.Context(), paths.Root())
+			if err != nil {
+				writeCrunchyrollError(writer, logger, err)
+				return
+			}
+			records = append(records, crunchyrollArchive.Records()...)
 			if export {
+				writer.Header().Set("Cache-Control", "no-store")
 				writer.Header().Set("Content-Type", "text/csv; charset=utf-8")
 				writer.Header().Set("Content-Disposition", `attachment; filename="viewing-history.csv"`)
 				if err := media.ExportCSV(writer, records, filter); err != nil {

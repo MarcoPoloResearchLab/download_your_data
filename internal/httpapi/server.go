@@ -209,6 +209,7 @@ func newApplicationHandlerWithNetflixMetadata(
 	protectedRoutes.HandleFunc("GET "+capabilitiesPath, writeCapabilities(config, logger))
 	registerOpenAIRoutes(protectedRoutes, config, logger)
 	registerNetflixRoutes(protectedRoutes, workspaceRegistry, logger)
+	registerCrunchyrollRoutes(protectedRoutes, config, logger)
 	registerMediaRoutes(protectedRoutes, primeOperations, workspaceRegistry, logger)
 	protectedRoutes.HandleFunc(
 		"DELETE "+userWorkspacePath,
